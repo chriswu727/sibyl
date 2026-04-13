@@ -103,6 +103,12 @@ class Researcher:
         good_pages = [p for p in pages if p.text and not p.error]
         progress(f"Successfully read {len(good_pages)} pages")
 
+        # Step 4b: Source relevance filtering
+        if len(good_pages) > 4:
+            progress("Evaluating source relevance...")
+            good_pages = await self._filter_sources(query, good_pages)
+            progress(f"Kept {len(good_pages)} most relevant sources")
+
         # Step 5: Per-sub-question analysis (depth 2+)
         sub_analyses = []
         if depth >= 2 and sub_questions and good_pages:
@@ -147,6 +153,12 @@ class Researcher:
         progress("Synthesizing final report...")
         lang = language or self.config.language
         report = await self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang)
+
+        # Step 9: Review and refine (depth 2+)
+        if depth >= 2 and report.summary:
+            progress("Reviewing and refining report...")
+            report = await self._review_and_refine(report, good_pages, lang)
+
         report.search_queries = search_queries
         report.sub_questions = sub_questions
         report.cross_analysis = cross_analysis_text
@@ -188,6 +200,94 @@ Return ONLY the queries, one per line."""
         if query not in queries:
             queries.insert(0, query)
         return queries[:num_queries + 1]
+
+    async def _filter_sources(self, query: str, pages: List[WebPage]) -> List[WebPage]:
+        """Have LLM rank sources by relevance, keep top ones."""
+        provider = self.config.get_provider("general")
+
+        source_list = "\n".join(
+            f"{i}. [{page.title}] — {page.text[:150]}"
+            for i, page in enumerate(pages, 1)
+        )
+
+        prompt = f"""Rate the relevance of each source for researching: {query}
+
+Sources:
+{source_list}
+
+Return ONLY the numbers of the RELEVANT sources (score 7+/10), comma-separated.
+Example: 1,3,4,7"""
+
+        text = await self._llm_call(provider, prompt, max_tokens=100)
+
+        try:
+            indices = [int(x.strip()) - 1 for x in text.split(",") if x.strip().isdigit()]
+            filtered = [pages[i] for i in indices if 0 <= i < len(pages)]
+            return filtered if len(filtered) >= 3 else pages[:8]
+        except Exception:
+            return pages[:8]
+
+    async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
+        """Review the draft report and refine it for quality."""
+        provider = self.config.get_provider("analysis")
+
+        draft = f"""Summary: {report.summary}
+
+Key Findings:
+{chr(10).join(f'- {f}' for f in report.key_findings)}
+
+Analysis: {report.analysis}
+
+Predictions: {report.predictions}"""
+
+        lang_instruction = ""
+        if language == "zh":
+            lang_instruction = "回复必须使用中文。"
+
+        prompt = f"""You are a senior editor reviewing a research report draft.
+
+RESEARCH QUESTION: {report.query}
+
+DRAFT:
+{draft}
+
+Review this draft and provide an IMPROVED version with:
+1. More specific data points and numbers (add if missing)
+2. Stronger source citations
+3. More nuanced analysis (not just listing facts but explaining WHY)
+4. Clearer structure and better flow
+5. A definitive conclusion that directly answers the research question
+
+{lang_instruction}
+
+Output the improved version in the same format:
+
+## Summary
+[improved summary — 3-4 detailed paragraphs]
+
+## Key Findings
+[improved findings — more specific, better cited]"""
+
+        text = await self._llm_call(provider, prompt, max_tokens=3000)
+
+        # Parse improved version
+        new_summary = (self._extract_section(text, "Summary", "Key Findings")
+                      or self._extract_section(text, "摘要", "关键发现")
+                      or self._extract_section(text, "摘要", "要点"))
+        new_findings_text = (self._extract_section(text, "Key Findings", "Analysis")
+                            or self._extract_section(text, "关键发现", "分析")
+                            or self._extract_section(text, "要点", "分析")
+                            or self._extract_section(text, "Key Findings", ""))
+
+        if new_summary and len(new_summary) > len(report.summary) * 0.5:
+            report.summary = new_summary.strip()
+        if new_findings_text:
+            new_findings = [f.strip().lstrip("- ").lstrip("* ") for f in new_findings_text.splitlines()
+                           if f.strip() and (f.strip()[0] in "-*0123456789")]
+            if len(new_findings) >= len(report.key_findings) * 0.5:
+                report.key_findings = new_findings
+
+        return report
 
     async def _analyze_sub_question(self, question: str, pages: List[WebPage]) -> str:
         """Analyze a single sub-question against the scraped sources."""
@@ -286,7 +386,7 @@ Based on all evidence:
 - What are the 3 biggest uncertainties?
 - Rate your overall confidence (low/medium/high) with a clear explanation."""
 
-        prompt = f"""You are a senior research analyst writing a comprehensive report.
+        prompt = f"""You are a senior research analyst at a top consulting firm writing a comprehensive report for a client.
 
 RESEARCH QUESTION: {query}
 
@@ -294,21 +394,30 @@ SOURCES:
 {context}
 {sub_context}
 
-Create a thorough, well-structured report:
+Write a thorough, executive-quality report. This must be detailed enough to make decisions from.
 
 ## Summary
-3-4 paragraphs providing a complete answer to the research question. Be specific with data and citations.
+Write 3-4 substantive paragraphs that FULLY answer the research question. Include:
+- The current state with specific data (numbers, percentages, dates)
+- Key drivers and causes
+- The outlook and what it means for the reader
+- Cite sources throughout as [Source N]
 
 ## Key Findings
-List 6-10 key findings. Each must cite at least one source [Source N]. Include specific data points, percentages, and figures where available.
+List 8-12 key findings. EACH finding must:
+- Start with a bold claim or data point
+- Include at least one specific number, percentage, or date
+- Cite the source [Source N]
+- Explain WHY this matters, not just what happened
 {analysis_prompt}
 {prediction_prompt}
 
-IMPORTANT:
-- Cite sources by [Source N] throughout
-- Include specific numbers, dates, and data points
-- Distinguish facts from opinions
-- Note where sources disagree
+QUALITY REQUIREMENTS:
+- Every paragraph must cite at least one source [Source N]
+- Include specific numbers: dollar amounts, percentages, dates, rankings
+- Distinguish facts (from data) vs opinions (from experts) vs projections (from forecasts)
+- Where sources disagree, present BOTH sides with their evidence
+- Write with authority — this is for decision-makers, not casual readers
 {f'- Write the ENTIRE report in Chinese (中文). Use Chinese for all text except source URLs and proper nouns.' if language == 'zh' else ''}{f'- Write the ENTIRE report in {language}.' if language not in ('auto', 'en', 'zh', '') else ''}"""
 
         max_tok = {1: 2000, 2: 3500, 3: 5000}.get(depth, 3000)
