@@ -53,16 +53,20 @@ class Config:
         """Create config from environment/CLI args."""
         import os
         if not model:
-            # Auto-detect from env vars
-            if os.environ.get("DEEPSEEK_API_KEY"):
-                model = "deepseek/deepseek-chat"
-                api_key = os.environ["DEEPSEEK_API_KEY"]
-            elif os.environ.get("OPENAI_API_KEY"):
-                model = "gpt-4o-mini"
-                api_key = os.environ["OPENAI_API_KEY"]
-            elif os.environ.get("ANTHROPIC_API_KEY"):
-                model = "claude-sonnet-4-20250514"
-                api_key = os.environ["ANTHROPIC_API_KEY"]
+            # Auto-detect from env vars (check all providers)
+            env_providers = [
+                ("DEEPSEEK_API_KEY", "deepseek/deepseek-chat", ""),
+                ("OPENAI_API_KEY", "gpt-4o-mini", ""),
+                ("ANTHROPIC_API_KEY", "claude-sonnet-4-20250514", ""),
+                ("GEMINI_API_KEY", "gemini/gemini-2.5-flash", ""),
+                ("ZHIPUAI_API_KEY", "openai/glm-4-flash", "https://open.bigmodel.cn/api/paas/v4"),
+            ]
+            for env_key, env_model, env_base in env_providers:
+                if os.environ.get(env_key):
+                    model = env_model
+                    api_key = os.environ[env_key]
+                    api_base = env_base or api_base
+                    break
             else:
                 model = "deepseek/deepseek-chat"
 

@@ -22,16 +22,17 @@ console = Console()
 @click.option("--output", "-o", default=".", help="Output directory for reports")
 @click.option("--pdf", is_flag=True, help="Generate PDF report")
 @click.option("--md", is_flag=True, help="Generate Markdown report")
-def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md):
+@click.option("--symbols", "-s", default="", help="Fetch market data for these symbols (e.g. NVDA,GOOGL,SPY)")
+def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols):
     """Sibyl -- AI-powered deep research agent.
 
-    Research any topic with web search + LLM analysis.
+    Research any topic with web search + LLM analysis + market data.
 
     \b
     Examples:
         sibyl "Canadian housing market outlook 2026"
-        sibyl "Impact of AI on software engineering jobs" -d 3 --pdf
-        sibyl "Bitcoin price prediction" --md --pdf -o reports/
+        sibyl "AI industry analysis" -d 3 --pdf --symbols NVDA,GOOGL,META
+        sibyl "Bitcoin price prediction" -s BTC-USD,ETH-USD --pdf -o reports/
     """
     if config_file:
         cfg = Config.from_yaml(config_file)
@@ -42,9 +43,12 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
     cfg.max_sources = max_sources
 
     console.print(f"\n[bold blue]Sibyl[/] researching: [cyan]{query}[/]")
-    console.print(f"[dim]Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}[/]\n")
+    console.print(f"[dim]Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}[/]")
+    if symbols:
+        console.print(f"[dim]Market data: {symbols}[/]")
+    console.print()
 
-    result = asyncio.run(_run(cfg, query, depth))
+    result = asyncio.run(_run(cfg, query, depth, symbols))
 
     # Terminal output
     from .mcp_server import _format_report
@@ -71,10 +75,24 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
         console.print(f"[bold green]Markdown saved:[/] {md_path}")
 
 
-async def _run(cfg: Config, query: str, depth: int):
+async def _run(cfg, query, depth, symbols=""):
     researcher = Researcher(cfg)
-    return await researcher.research(
+    result = await researcher.research(
         query,
         depth=depth,
         on_progress=lambda msg: console.print(f"  [dim]{msg}[/]"),
     )
+
+    # Fetch market data if symbols provided
+    if symbols:
+        from .data import fetch_multiple, format_data_summary, generate_chart
+        symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+        console.print(f"  [dim]Fetching market data for {', '.join(symbol_list)}...[/]")
+        series = await fetch_multiple(symbol_list, "1y")
+        if series:
+            result.market_data_summary = format_data_summary(series)
+            chart_path = generate_chart(series, f"{', '.join(s.name for s in series)} — 1 Year")
+            result.charts.append(chart_path)
+            console.print(f"  [dim]Chart generated: {chart_path}[/]")
+
+    return result
