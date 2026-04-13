@@ -126,11 +126,18 @@ Return ONLY the queries, one per line, no numbering or bullets."""
         """Synthesize scraped content into a research report."""
         provider = self.config.get_provider("analysis")
 
-        # Build context from scraped pages
+        # Build context from scraped pages (or search snippets as fallback)
         context_parts = []
-        for i, page in enumerate(pages[:8], 1):
-            context_parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:2000]}\n")
+        if pages:
+            for i, page in enumerate(pages[:8], 1):
+                context_parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:2000]}\n")
+        else:
+            # Fallback: use search snippets if scraping failed
+            for i, sr in enumerate(search_results[:10], 1):
+                context_parts.append(f"[Source {i}: {sr.title}]\nURL: {sr.url}\n{sr.snippet}\n")
         context = "\n---\n".join(context_parts)
+        if not context:
+            context = "(No sources could be retrieved. Answer based on your knowledge.)"
 
         analysis_prompt = ""
         if depth >= 2:
@@ -169,7 +176,8 @@ List 5-8 key findings, each as a bullet point with the source cited.
 
 Be specific, cite sources by number [Source N], and distinguish facts from opinions."""
 
-        text = await self._llm_call(provider, prompt, max_tokens=3000)
+        max_tok = {1: 1500, 2: 2500, 3: 4000}.get(depth, 2500)
+        text = await self._llm_call(provider, prompt, max_tokens=max_tok)
 
         # Parse the response into structured sections
         summary = self._extract_section(text, "Summary", "Key Findings")
@@ -220,12 +228,14 @@ Be specific, cite sources by number [Source N], and distinguish facts from opini
     @staticmethod
     def _extract_section(text: str, start_header: str, end_header: str) -> str:
         """Extract content between two markdown headers."""
+        import re
         lines = text.splitlines()
         start_idx = None
         end_idx = len(lines)
 
         for i, line in enumerate(lines):
-            clean = line.strip().lstrip("#").strip()
+            # Strip markdown: ##, **, *, etc.
+            clean = re.sub(r'[#*_`]', '', line).strip()
             if clean.lower().startswith(start_header.lower()) and start_idx is None:
                 start_idx = i + 1
             elif end_header and clean.lower().startswith(end_header.lower()) and start_idx is not None:
@@ -233,5 +243,8 @@ Be specific, cite sources by number [Source N], and distinguish facts from opini
                 break
 
         if start_idx is None:
+            # Fallback: return everything if we can't find sections
+            if not end_header:
+                return text
             return ""
         return "\n".join(lines[start_idx:end_idx])
