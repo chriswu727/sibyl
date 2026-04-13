@@ -20,7 +20,7 @@ class Provider:
 @dataclass
 class Config:
     providers: List[Provider] = field(default_factory=list)
-    search_engine: str = "duckduckgo"   # duckduckgo (free) or google/brave (needs key)
+    search_engine: str = "all"   # all (ddg+news+reddit+wiki), or duckduckgo only
     max_sources: int = 10
     max_depth: int = 2      # research depth: 1=quick, 2=standard, 3=deep
     language: str = "auto"  # auto, en, zh

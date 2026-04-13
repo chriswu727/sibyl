@@ -31,6 +31,7 @@ class ResearchReport:
     sources: List[Source]
     analysis: str = ""
     predictions: str = ""
+    cross_analysis: str = ""  # sentiment + consensus + disagreements
     confidence: str = ""
     timestamp: datetime = field(default_factory=datetime.now)
     model_used: str = ""
@@ -131,11 +132,22 @@ class Researcher:
                     progress(f"Total sources: {len(good_pages)}")
                 search_queries.extend(gaps[:3])
 
-        # Step 7: Final synthesis
+        # Step 7: Cross-source analysis (depth 2+)
+        cross_analysis_text = ""
+        if depth >= 2 and good_pages:
+            progress("Cross-referencing sources (sentiment + consensus + disagreements)...")
+            from .analyzer import analyze_sources, format_cross_analysis
+            provider = self.config.get_provider("analysis")
+            cross = await analyze_sources(good_pages, query, provider)
+            cross_analysis_text = format_cross_analysis(cross)
+            progress(f"Sentiment: {cross.overall_sentiment} | Consensus: {len(cross.consensus_points)} | Disagreements: {len(cross.disagreement_points)}")
+
+        # Step 8: Final synthesis
         progress("Synthesizing final report...")
         report = await self._synthesize(query, unique_results, good_pages, depth, sub_analyses)
         report.search_queries = search_queries
         report.sub_questions = sub_questions
+        report.cross_analysis = cross_analysis_text
 
         progress("Research complete!")
         return report

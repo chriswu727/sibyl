@@ -121,6 +121,18 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         body(report.analysis)
         separator()
 
+    # Cross-analysis
+    if report.cross_analysis:
+        heading("Source Cross-Analysis", 14)
+        import re
+        for line in report.cross_analysis.splitlines():
+            clean = re.sub(r'[#]', '', line).strip()
+            if clean:
+                if clean.startswith("**") and clean.endswith("**"):
+                    heading(clean.strip("* "), 11)
+                else:
+                    body(clean, 9)
+
     # Predictions
     if report.predictions:
         heading("Predictions", 14)

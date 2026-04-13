@@ -79,6 +79,10 @@ def _format_report(report: ResearchReport) -> str:
         lines.append("")
         lines.append(f"**Confidence:** {report.confidence}")
 
+    if report.cross_analysis:
+        lines.append("")
+        lines.append(report.cross_analysis)
+
     lines.append("")
     lines.append(f"## Sources ({len(report.sources)})")
     for i, src in enumerate(report.sources, 1):
