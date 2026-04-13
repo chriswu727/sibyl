@@ -157,8 +157,15 @@ async def quick_search(query: str, max_results: int = 5) -> str:
 async def read_url(url: str) -> str:
     """Read and extract clean text content from a URL.
 
+    Fetches the page, strips navigation/scripts/ads, and returns the main
+    article or body text. Useful for reading a specific source in detail
+    before or after running research().
+
+    Returns the page title, URL, and up to 8000 characters of clean text.
+    Handles retries, anti-bot protection, and Google Cache fallback.
+
     Args:
-        url: The URL to read
+        url: The full URL to read (e.g. "https://www.reuters.com/article/...")
     """
     from .scraper import scrape_url
     page = await scrape_url(url, max_chars=8000)
@@ -179,9 +186,15 @@ async def read_url(url: str) -> str:
 async def analyze(text: str, question: str) -> str:
     """Analyze provided text with a specific question using LLM.
 
+    Takes any text (article, report, data, transcript) and answers a specific
+    question about it using the configured LLM provider. Useful for follow-up
+    analysis on content from read_url() or research().
+
+    Returns a structured analysis with clear reasoning and evidence from the text.
+
     Args:
-        text: The text content to analyze
-        question: What to analyze about the text
+        text: The text content to analyze (article, report, data — up to 5000 chars)
+        question: The specific question to answer about the text (e.g. "What are the main risks mentioned?" or "Summarize the key arguments for and against")
     """
     config = _get_config()
     provider = config.get_provider("analysis")
@@ -331,12 +344,18 @@ async def fetch_market_data(symbols: str, period: str = "1y") -> str:
 
 @mcp.tool()
 async def chart(symbols: str, period: str = "1y", title: str = "") -> str:
-    """Generate a price chart for one or more symbols and save as PNG.
+    """Generate a price history line chart for one or more financial symbols.
+
+    Fetches historical price data from Yahoo Finance and creates a professional
+    multi-line chart saved as PNG. The chart is automatically attached to the
+    current research report and embedded in PDF output when save_report() is called.
+
+    Supports stocks, ETFs, indices, crypto, and commodities.
 
     Args:
-        symbols: Comma-separated ticker symbols (e.g. "AAPL,MSFT")
-        period: Time period (default: 1y)
-        title: Chart title (auto-generated if empty)
+        symbols: Comma-separated ticker symbols (e.g. "NVDA,AMD,INTC" for stocks, "BTC-USD,ETH-USD" for crypto, "GC=F" for gold)
+        period: Historical time period — "1mo", "3mo", "6mo", "1y", "2y", "5y" (default: "1y")
+        title: Custom chart title. If empty, auto-generated from symbol names and period.
     """
     from .data import fetch_multiple, generate_chart
 
