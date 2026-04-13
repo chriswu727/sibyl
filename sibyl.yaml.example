@@ -1,0 +1,28 @@
+# Sibyl configuration example
+# Copy to ~/.sibyl.yaml or pass with --config
+
+providers:
+  - model: deepseek/deepseek-chat
+    api_key: sk-your-deepseek-key
+    role: analysis    # Best for reasoning and analysis
+
+  - model: openai/glm-4-flash
+    api_key: your-glm-key
+    api_base: https://open.bigmodel.cn/api/paas/v4
+    role: chinese     # Best for Chinese content
+
+  - model: gemini/gemini-2.5-flash
+    api_key: your-gemini-key
+    role: fast        # Fast and free for simple tasks
+
+# Search engine (duckduckgo is free, no key needed)
+search_engine: duckduckgo
+
+# Max sources to scrape per research
+max_sources: 10
+
+# Default research depth (1=quick, 2=standard, 3=deep)
+max_depth: 2
+
+# Language (auto, en, zh)
+language: auto

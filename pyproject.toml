@@ -1,0 +1,37 @@
+[project]
+name = "sibyl-research"
+version = "0.1.0"
+description = "AI-powered deep research agent — market analysis, trend prediction, topic research with multi-LLM support"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Yichen Wu", email = "yichenwujob@gmail.com"}]
+urls = {Homepage = "https://github.com/chriswu727/sibyl", Repository = "https://github.com/chriswu727/sibyl"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["research", "ai", "deep-research", "mcp", "llm", "analysis", "prediction"]
+dependencies = [
+    "litellm>=1.40.0",
+    "mcp[cli]>=1.0.0",
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+sibyl = "sibyl.cli:main"
+sibyl-mcp = "sibyl.mcp_server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["sibyl"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
