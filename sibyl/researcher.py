@@ -96,12 +96,22 @@ class Researcher:
                 unique_results.append(r)
         progress(f"Found {len(unique_results)} unique sources")
 
-        # Step 4: Scrape top sources (more content per page)
-        urls_to_scrape = [r.url for r in unique_results[:self.config.max_sources]]
+        # Step 4: Scrape top sources — try more URLs to compensate for failures
+        scrape_count = min(len(unique_results), self.config.max_sources * 2)  # Try 2x to get enough
+        urls_to_scrape = [r.url for r in unique_results[:scrape_count]]
         progress(f"Reading {len(urls_to_scrape)} sources...")
         pages = await scrape_urls(urls_to_scrape, max_chars=6000)
-        good_pages = [p for p in pages if p.text and not p.error]
-        progress(f"Successfully read {len(good_pages)} pages")
+        good_pages = [p for p in pages if p.text and len(p.text) > 100 and not p.error]
+
+        # Supplement with search snippets for failed pages
+        scraped_urls = {p.url for p in good_pages}
+        for r in unique_results:
+            if r.url not in scraped_urls and r.snippet and len(r.snippet) > 50:
+                good_pages.append(WebPage(url=r.url, title=r.title, text=r.snippet))
+                if len(good_pages) >= self.config.max_sources + 5:
+                    break
+
+        progress(f"Total usable sources: {len(good_pages)} ({sum(1 for p in good_pages if len(p.text) > 200)} full, rest snippets)")
 
         # Step 4b: Source relevance filtering
         if len(good_pages) > 4:
