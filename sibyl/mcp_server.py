@@ -203,6 +203,94 @@ async def analyze(text: str, question: str) -> str:
 
 
 @mcp.tool()
+async def compare(items: str, query: str = "") -> str:
+    """Generate a structured comparison table for 2-5 items.
+
+    Researches each item and produces a side-by-side markdown table with
+    key metrics, strengths, weaknesses, and a bottom-line recommendation.
+
+    Args:
+        items: Comma-separated items to compare (e.g. "NVDA,AMD,INTC" or "React,Vue,Angular")
+        query: Context for the comparison (e.g. "for AI/ML workloads" or "for a startup in 2026")
+    """
+    config = _get_config()
+    provider = config.get_provider("analysis")
+
+    item_list = [i.strip() for i in items.split(",") if i.strip()]
+    full_query = f"Compare {', '.join(item_list)}"
+    if query:
+        full_query += f" — {query}"
+
+    # Quick research for context
+    researcher = Researcher(config)
+    report = await researcher.research(full_query, depth=1)
+
+    context = report.summary + "\n" + "\n".join(report.key_findings)
+    from .tools import generate_comparison
+    return await generate_comparison(item_list, context, provider)
+
+
+@mcp.tool()
+async def swot(subject: str) -> str:
+    """Generate a SWOT analysis (Strengths, Weaknesses, Opportunities, Threats).
+
+    Researches the subject and produces a structured SWOT with specific data points.
+
+    Args:
+        subject: What to analyze (e.g. "Tesla", "Canadian housing market", "remote work trend")
+    """
+    config = _get_config()
+    provider = config.get_provider("analysis")
+
+    researcher = Researcher(config)
+    report = await researcher.research(f"SWOT analysis {subject}", depth=1)
+
+    context = report.summary + "\n" + "\n".join(report.key_findings)
+    from .tools import generate_swot
+    return await generate_swot(subject, context, provider)
+
+
+@mcp.tool()
+async def trends(keywords: str, timeframe: str = "today 12-m") -> str:
+    """Get Google Trends data for keywords — real search interest over time.
+
+    Shows current interest level, trend direction, peak, and rising related searches.
+
+    Args:
+        keywords: Comma-separated keywords (max 5, e.g. "ChatGPT,Claude,Gemini")
+        timeframe: "today 1-m", "today 3-m", "today 12-m", "today 5-y" (default: 12 months)
+    """
+    from .tools import fetch_google_trends, format_trends
+    kw_list = [k.strip() for k in keywords.split(",") if k.strip()][:5]
+    data = await fetch_google_trends(kw_list, timeframe)
+    return format_trends(data)
+
+
+@mcp.tool()
+async def timeline(topic: str) -> str:
+    """Generate a chronological timeline of key events for a topic.
+
+    Researches the topic and extracts specific dates, events, and milestones
+    into a structured timeline table.
+
+    Args:
+        topic: The topic to build a timeline for (e.g. "OpenAI history", "Canada immigration policy changes 2024-2026")
+    """
+    config = _get_config()
+    provider = config.get_provider("analysis")
+
+    researcher = Researcher(config)
+    report = await researcher.research(f"timeline of key events {topic}", depth=1)
+
+    context = report.summary + "\n" + "\n".join(report.key_findings)
+    for src in report.sources:
+        context += f"\n{src.snippet}"
+
+    from .tools import generate_timeline
+    return await generate_timeline(topic, context, provider)
+
+
+@mcp.tool()
 async def fetch_market_data(symbols: str, period: str = "1y") -> str:
     """Fetch real financial/stock/ETF data from Yahoo Finance.
 
