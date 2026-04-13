@@ -84,8 +84,14 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
 
     def body(text, size=10):
         try:
+            import re
+            # Strip markdown formatting for PDF
+            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', text)  # **bold** → bold
+            clean = re.sub(r'\*(.+?)\*', r'\1', clean)      # *italic* → italic
+            clean = re.sub(r'^#{1,4}\s*', '', clean, flags=re.MULTILINE)  # ## headers → plain
+            clean = re.sub(r'^\d+\.\s*\d+\.', lambda m: m.group().split('.')[0] + '.', clean, flags=re.MULTILINE)  # "1. 1." → "1."
             pdf.set_font(font_name, "", size)
-            pdf.multi_cell(0, 6, text)
+            pdf.multi_cell(0, 6, clean)
             pdf.ln(2)
         except Exception:
             pass
@@ -109,7 +115,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     body(report.summary)
     separator()
 
-    # Key Findings
+    # Key Findings (strip duplicate numbering like "1. 1.")
     heading("Key Findings", 14)
     for i, finding in enumerate(report.key_findings, 1):
         body(f"{i}. {finding}")
@@ -127,6 +133,9 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         import re
         for line in report.cross_analysis.splitlines():
             clean = re.sub(r'[#]', '', line).strip()
+            # Skip duplicate heading
+            if clean.lower().replace("*", "").strip().startswith("source cross"):
+                continue
             if clean:
                 if clean.startswith("**") and clean.endswith("**"):
                     heading(clean.strip("* "), 11)
@@ -173,8 +182,10 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         pdf.multi_cell(0, 5, f"{i}. {src.title[:80]}")
         pdf.set_font(font_name, "", 7)
         pdf.set_text_color(50, 50, 200)
-        url_display = src.url if len(src.url) < 90 else src.url[:87] + "..."
-        pdf.cell(0, 4, url_display, new_x="LMARGIN", new_y="NEXT")
+        try:
+            pdf.multi_cell(0, 4, src.url)
+        except Exception:
+            pdf.cell(0, 4, src.url[:80] + "...", new_x="LMARGIN", new_y="NEXT")
         pdf.set_text_color(0, 0, 0)
         pdf.ln(2)
 
