@@ -105,9 +105,30 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     heading(report.query, 18)
     pdf.set_font(font_name, "", 8)
     pdf.set_text_color(128, 128, 128)
-    pdf.cell(0, 5, f"Generated {report.timestamp.strftime('%Y-%m-%d %H:%M')} | Model: {report.model_used}")
+    pdf.cell(0, 5, f"Generated {report.timestamp.strftime('%Y-%m-%d %H:%M')} | Model: {report.model_used} | Sources: {len(report.sources)}")
     pdf.ln(8)
     pdf.set_text_color(0, 0, 0)
+    separator()
+
+    # Table of Contents
+    heading("Table of Contents", 12)
+    toc_items = ["1. Summary", "2. Key Findings"]
+    if report.analysis:
+        toc_items.append("3. Analysis")
+    if report.cross_analysis:
+        toc_items.append(f"{len(toc_items)+1}. Source Cross-Analysis")
+    if report.predictions:
+        toc_items.append(f"{len(toc_items)+1}. Predictions")
+    if report.market_data_summary or report.charts:
+        toc_items.append(f"{len(toc_items)+1}. Market Data")
+    toc_items.append(f"{len(toc_items)+1}. Sources ({len(report.sources)})")
+    for item in toc_items:
+        pdf.set_font(font_name, "", 10)
+        try:
+            pdf.cell(0, 6, item, new_x="LMARGIN", new_y="NEXT")
+        except Exception:
+            pass
+    pdf.ln(4)
     separator()
 
     # Summary
@@ -176,18 +197,24 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         separator()
 
     # Sources
-    heading("Sources", 14)
+    heading(f"Sources ({len(report.sources)})", 14)
     for i, src in enumerate(report.sources, 1):
-        pdf.set_font(font_name, "B", 9)
-        pdf.multi_cell(0, 5, f"{i}. {src.title[:80]}")
-        pdf.set_font(font_name, "", 7)
-        pdf.set_text_color(50, 50, 200)
         try:
-            pdf.multi_cell(0, 4, src.url)
+            pdf.set_font(font_name, "B", 9)
+            pdf.multi_cell(0, 5, f"{i}. {src.title}")
+            pdf.set_font(font_name, "", 8)
+            pdf.set_text_color(30, 30, 180)
+            # Ensure full URL is displayed with word wrap
+            pdf.multi_cell(0, 4, f"   {src.url}")
+            pdf.set_text_color(0, 0, 0)
+            if src.snippet:
+                pdf.set_font(font_name, "", 7)
+                pdf.set_text_color(100, 100, 100)
+                pdf.multi_cell(0, 4, f"   {src.snippet[:150]}")
+                pdf.set_text_color(0, 0, 0)
+            pdf.ln(3)
         except Exception:
-            pdf.cell(0, 4, src.url[:80] + "...", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_text_color(0, 0, 0)
-        pdf.ln(2)
+            pass
 
     # Save
     out = Path(output_dir)

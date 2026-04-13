@@ -233,9 +233,9 @@ Example: 1,3,4,7"""
         try:
             indices = [int(x.strip()) - 1 for x in text.split(",") if x.strip().isdigit()]
             filtered = [pages[i] for i in indices if 0 <= i < len(pages)]
-            return filtered if len(filtered) >= 3 else pages[:8]
+            return filtered if len(filtered) >= 3 else pages[:12]
         except Exception:
-            return pages[:8]
+            return pages[:12]
 
     async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
         """Review the draft report and refine it for quality."""
@@ -305,7 +305,7 @@ Output the improved version in the same format:
 
         # Find most relevant pages for this sub-question
         context_parts = []
-        for i, page in enumerate(pages[:6], 1):
+        for i, page in enumerate(pages[:10], 1):
             context_parts.append(f"[Source {i}]: {page.text[:1500]}")
         context = "\n---\n".join(context_parts)
 
@@ -357,7 +357,7 @@ Return ONLY the queries, one per line."""
         # Build source context (more content per page)
         context_parts = []
         if pages:
-            for i, page in enumerate(pages[:10], 1):
+            for i, page in enumerate(pages[:12], 1):
                 context_parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:4000]}\n")
         else:
             for i, sr in enumerate(search_results[:10], 1):
