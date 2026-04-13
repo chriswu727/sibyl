@@ -75,14 +75,20 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         font_name = "Helvetica"
 
     def heading(text, size=18, style="B"):
-        pdf.set_font(font_name, style, size)
-        pdf.multi_cell(0, 8, text)
-        pdf.ln(2)
+        try:
+            pdf.set_font(font_name, style, size)
+            pdf.multi_cell(0, 8, text[:200])
+            pdf.ln(2)
+        except Exception:
+            pass
 
     def body(text, size=10):
-        pdf.set_font(font_name, "", size)
-        pdf.multi_cell(0, 6, text)
-        pdf.ln(2)
+        try:
+            pdf.set_font(font_name, "", size)
+            pdf.multi_cell(0, 6, text)
+            pdf.ln(2)
+        except Exception:
+            pass
 
     def separator():
         pdf.set_draw_color(200, 200, 200)
@@ -119,6 +125,33 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     if report.predictions:
         heading("Predictions", 14)
         body(report.predictions)
+        separator()
+
+    # Market Data + Charts
+    if report.market_data_summary or report.charts:
+        heading("Market Data", 14)
+        if report.market_data_summary:
+            import re
+            clean_data = re.sub(r'[#*]', '', report.market_data_summary)
+            for line in clean_data.strip().splitlines():
+                line = line.strip()
+                if line:
+                    try:
+                        pdf.set_font(font_name, "", 9)
+                        pdf.multi_cell(0, 5, line)
+                    except Exception:
+                        pass
+            pdf.ln(4)
+
+        for chart_path in report.charts:
+            if Path(chart_path).exists():
+                # Calculate image width to fit page
+                page_w = pdf.w - pdf.l_margin - pdf.r_margin
+                try:
+                    pdf.image(chart_path, x=pdf.l_margin, w=page_w)
+                    pdf.ln(6)
+                except Exception:
+                    body(f"[Chart: {chart_path}]")
         separator()
 
     # Sources

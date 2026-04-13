@@ -35,6 +35,8 @@ class ResearchReport:
     timestamp: datetime = field(default_factory=datetime.now)
     model_used: str = ""
     search_queries: List[str] = field(default_factory=list)
+    charts: List[str] = field(default_factory=list)  # paths to chart PNGs
+    market_data_summary: str = ""  # formatted market data text
 
 
 class Researcher:

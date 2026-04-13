@@ -86,6 +86,10 @@ def _format_report(report: ResearchReport) -> str:
         if src.snippet:
             lines.append(f"   {src.snippet[:100]}")
 
+    if report.market_data_summary:
+        lines.append("")
+        lines.append(report.market_data_summary)
+
     lines.append("")
     lines.append(f"*Search queries used: {', '.join(report.search_queries)}*")
     return "\n".join(lines)
@@ -220,7 +224,13 @@ async def fetch_market_data(symbols: str, period: str = "1y") -> str:
     if not series:
         return f"Could not fetch data for: {symbols}"
 
-    return format_data_summary(series)
+    summary = format_data_summary(series)
+
+    # Attach to last report if available
+    if _last_report is not None:
+        _last_report.market_data_summary = summary
+
+    return summary
 
 
 @mcp.tool()
@@ -241,6 +251,11 @@ async def chart(symbols: str, period: str = "1y", title: str = "") -> str:
 
     chart_title = title or f"{', '.join(s.name for s in series)} — {period}"
     path = generate_chart(series, chart_title)
+
+    # Attach to last report if available
+    if _last_report is not None:
+        _last_report.charts.append(path)
+
     return f"Chart saved: {path}"
 
 
