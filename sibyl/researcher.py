@@ -119,14 +119,17 @@ class Researcher:
             good_pages = await self._filter_sources(query, good_pages)
             progress(f"Kept {len(good_pages)} most relevant sources")
 
-        # Step 5: Per-sub-question analysis (depth 2+)
+        # Step 5: Per-sub-question analysis — PARALLEL (depth 2+)
         sub_analyses = []
         if depth >= 2 and sub_questions and good_pages:
-            progress("Analyzing each sub-question...")
-            for i, sq in enumerate(sub_questions):
-                progress(f"  Analyzing: {sq}")
-                analysis = await self._analyze_sub_question(sq, good_pages)
-                sub_analyses.append((sq, analysis))
+            progress(f"Analyzing {len(sub_questions)} sub-questions in parallel...")
+            tasks = [self._analyze_sub_question(sq, good_pages) for sq in sub_questions]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for sq, result in zip(sub_questions, results):
+                if isinstance(result, str):
+                    sub_analyses.append((sq, result))
+                else:
+                    sub_analyses.append((sq, f"(Analysis failed: {result})"))
 
         # Step 6: Identify knowledge gaps and do a second search round (depth 3)
         if depth >= 3 and good_pages:
@@ -379,8 +382,8 @@ Return ONLY the queries, one per line."""
 
         base_prompt = f"RESEARCH QUESTION: {query}\n\nSOURCES:\n{context}{sub_context}{lang_inst}"
 
-        # ── Section 1: Summary ──
-        summary = await self._llm_call(provider, f"""{base_prompt}
+        # ── Sections 1 & 2: Summary + Findings (PARALLEL) ──
+        summary_prompt = f"""{base_prompt}
 
 You are a senior research analyst. Write a comprehensive SUMMARY that fully answers the research question.
 
@@ -389,10 +392,9 @@ Requirements:
 - Every paragraph must cite sources as [Source N]
 - Include specific data: numbers, percentages, dollar amounts, dates
 - Cover: current state, key drivers, outlook, implications
-- Write with authority for decision-makers""", max_tokens=2000)
+- Write with authority for decision-makers"""
 
-        # ── Section 2: Key Findings ──
-        findings_text = await self._llm_call(provider, f"""{base_prompt}
+        findings_prompt = f"""{base_prompt}
 
 Based on all sources, list 10-15 KEY FINDINGS. Each finding must:
 - Lead with a specific, bold claim backed by data
@@ -400,15 +402,32 @@ Based on all sources, list 10-15 KEY FINDINGS. Each finding must:
 - Cite the source [Source N]
 - Explain the significance (WHY does this matter?)
 
-Format each as a numbered item. Be specific, not generic.""", max_tokens=2500)
+Format each as a numbered item. Be specific, not generic."""
+
+        summary, findings_text = await asyncio.gather(
+            self._llm_call(provider, summary_prompt, max_tokens=2000),
+            self._llm_call(provider, findings_prompt, max_tokens=2500),
+        )
+
+        # Quality checks (sequential since they depend on results)
+        if len(summary) < 800:
+            summary = await self._llm_call(provider, summary_prompt + "\n\nIMPORTANT: Write AT LEAST 4 substantial paragraphs with specific data points.", max_tokens=2500)
 
         findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
                      if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
 
-        # ── Section 3: Analysis (depth 2+) ──
+        if len(findings) < 5:
+            findings_text = await self._llm_call(provider, f"""{base_prompt}
+
+List exactly 10 KEY FINDINGS as numbered items. Each must include a specific number and cite [Source N]. Be detailed.""", max_tokens=2500)
+            findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
+                         if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
+
+        # ── Sections 3 & 4: Analysis + Predictions (PARALLEL for depth 3) ──
         analysis = ""
-        if depth >= 2:
-            analysis = await self._llm_call(provider, f"""{base_prompt}
+        predictions = ""
+
+        analysis_prompt = f"""{base_prompt}
 
 Write a DEEP ANALYSIS section. Cover:
 1. Conflicting viewpoints — what do different sources/experts disagree on? Present both sides with evidence.
@@ -416,12 +435,9 @@ Write a DEEP ANALYSIS section. Cover:
 3. Second-order effects — what consequences might people be overlooking?
 4. Historical context — how does the current situation compare to past patterns?
 
-Cite sources as [Source N]. Be analytical, not just descriptive.""", max_tokens=2000)
+Cite sources as [Source N]. Be analytical, not just descriptive."""
 
-        # ── Section 4: Predictions (depth 3) ──
-        predictions = ""
-        if depth >= 3:
-            predictions = await self._llm_call(provider, f"""{base_prompt}
+        predictions_prompt = f"""{base_prompt}
 
 SUMMARY SO FAR: {summary[:500]}
 
@@ -432,7 +448,16 @@ Write a PREDICTIONS section:
 4. Key uncertainties — the 3 things that could change everything
 5. Confidence rating (low/medium/high) with detailed justification
 
-Be concrete — give specific numbers, dates, and thresholds where possible.""", max_tokens=2000)
+Be concrete — give specific numbers, dates, and thresholds where possible."""
+
+        if depth >= 3:
+            # Parallel: analysis + predictions
+            analysis, predictions = await asyncio.gather(
+                self._llm_call(provider, analysis_prompt, max_tokens=2000),
+                self._llm_call(provider, predictions_prompt, max_tokens=2000),
+            )
+        elif depth >= 2:
+            analysis = await self._llm_call(provider, analysis_prompt, max_tokens=2000)
 
         confidence = ""
         for line in (predictions or "").splitlines():

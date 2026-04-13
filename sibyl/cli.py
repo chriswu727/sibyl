@@ -87,7 +87,7 @@ async def _run(cfg, query, depth, symbols="", language="auto"):
 
     # Fetch market data if symbols provided
     if symbols:
-        from .data import fetch_multiple, format_data_summary, generate_chart
+        from .data import fetch_multiple, format_data_summary, generate_chart, generate_comparison_chart
         symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
         console.print(f"  [dim]Fetching market data for {', '.join(symbol_list)}...[/]")
         series = await fetch_multiple(symbol_list, "1y")
@@ -95,6 +95,10 @@ async def _run(cfg, query, depth, symbols="", language="auto"):
             result.market_data_summary = format_data_summary(series)
             chart_path = generate_chart(series, f"{', '.join(s.name for s in series)} — 1 Year")
             result.charts.append(chart_path)
+            # Also generate comparison bar chart if multiple symbols
+            if len(series) > 1:
+                comp_path = generate_comparison_chart(series, f"Performance Comparison — 1 Year")
+                result.charts.append(comp_path)
             console.print(f"  [dim]Chart generated: {chart_path}[/]")
 
     return result

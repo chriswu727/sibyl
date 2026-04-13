@@ -157,6 +157,47 @@ def generate_chart(
     return output_path
 
 
+def generate_comparison_chart(
+    series_list: List[DataSeries],
+    title: str = "Performance Comparison",
+    output_path: str = "",
+) -> str:
+    """Generate a bar chart comparing % change across symbols."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    names = [s.symbol for s in series_list]
+    changes = [s.change_pct for s in series_list]
+    colors = ["#22c55e" if c >= 0 else "#ef4444" for c in changes]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = ax.bar(names, changes, color=colors, width=0.6, edgecolor="white")
+
+    # Add value labels on bars
+    for bar, val in zip(bars, changes):
+        y = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, y + (0.5 if y >= 0 else -1.5),
+                f"{val:+.1f}%", ha="center", va="bottom" if y >= 0 else "top",
+                fontsize=11, fontweight="bold")
+
+    ax.set_title(title, fontsize=14, fontweight="bold")
+    ax.set_ylabel("Change (%)")
+    ax.axhline(y=0, color="black", linewidth=0.5)
+    ax.grid(True, alpha=0.2, axis="y")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    plt.tight_layout()
+
+    if not output_path:
+        output_path = f"/tmp/sibyl_comparison_{datetime.now().strftime('%H%M%S')}.png"
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+
+
 def format_data_summary(series_list: List[DataSeries]) -> str:
     """Format data series into a text summary for LLM context."""
     lines = ["## Market Data"]
