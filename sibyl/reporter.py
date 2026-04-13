@@ -202,15 +202,18 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         try:
             pdf.set_font(font_name, "B", 9)
             pdf.multi_cell(0, 5, f"{i}. {src.title}")
-            pdf.set_font(font_name, "", 8)
+            pdf.set_font(font_name, "", 7)
             pdf.set_text_color(30, 30, 180)
-            # Ensure full URL is displayed with word wrap
-            pdf.multi_cell(0, 4, f"   {src.url}")
+            # Break long URLs into chunks for wrapping
+            url = src.url
+            # Insert zero-width spaces after / and ? for line breaking
+            breakable_url = url.replace("/", "/ ").replace("?", "? ").replace("&", "& ")
+            pdf.multi_cell(0, 4, breakable_url)
             pdf.set_text_color(0, 0, 0)
             if src.snippet:
                 pdf.set_font(font_name, "", 7)
                 pdf.set_text_color(100, 100, 100)
-                pdf.multi_cell(0, 4, f"   {src.snippet[:150]}")
+                pdf.multi_cell(0, 4, src.snippet[:200])
                 pdf.set_text_color(0, 0, 0)
             pdf.ln(3)
         except Exception:
