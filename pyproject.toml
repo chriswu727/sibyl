@@ -23,6 +23,7 @@ dependencies = [
     "click>=8.0.0",
     "rich>=13.0.0",
     "pyyaml>=6.0",
+    "fpdf2>=2.7.0",
 ]
 
 [project.scripts]

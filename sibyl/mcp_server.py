@@ -28,6 +28,7 @@ Tips:
 )
 
 _config: Optional[Config] = None
+_last_report: Optional[ResearchReport] = None
 
 
 def _get_config() -> Config:
@@ -103,7 +104,9 @@ async def research(query: str, depth: int = 2) -> str:
     def on_progress(msg: str):
         progress_lines.append(msg)
 
+    global _last_report
     report = await researcher.research(query, depth=depth, on_progress=on_progress)
+    _last_report = report
     return _format_report(report)
 
 
@@ -184,6 +187,44 @@ async def analyze(text: str, question: str) -> str:
 
     response = await litellm.acompletion(**kwargs)
     return response.choices[0].message.content.strip()
+
+
+@mcp.tool()
+async def save_report(format: str = "both", output_dir: str = ".") -> str:
+    """Save the last research report as PDF and/or Markdown file.
+
+    Call this after research() to save the report.
+
+    Args:
+        format: "pdf", "md", or "both" (default: both)
+        output_dir: Directory to save files (default: current directory)
+    """
+    if _last_report is None:
+        return "No research report to save. Run research() first."
+
+    from .reporter import generate_pdf, _report_to_markdown
+    from pathlib import Path
+    from datetime import datetime
+
+    results = []
+
+    if format in ("pdf", "both"):
+        try:
+            path = generate_pdf(_last_report, output_dir)
+            results.append(f"PDF saved: {path}")
+        except Exception as e:
+            results.append(f"PDF failed: {e}")
+
+    if format in ("md", "both"):
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        safe_q = "".join(c if c.isalnum() or c in " -_" else "" for c in _last_report.query)[:50].strip()
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        md_path = out / f"sibyl_{safe_q}_{ts}.md"
+        md_path.write_text(_report_to_markdown(_last_report), encoding="utf-8")
+        results.append(f"Markdown saved: {md_path}")
+
+    return "\n".join(results)
 
 
 def main():

@@ -19,16 +19,19 @@ console = Console()
 @click.option("--api-base", default="", help="Custom API base URL")
 @click.option("--config", "-c", "config_file", default="", help="YAML config file")
 @click.option("--max-sources", "-n", default=10, help="Max sources to read")
-def main(query, depth, model, api_key, api_base, config_file, max_sources):
-    """Sibyl — AI-powered deep research agent.
+@click.option("--output", "-o", default=".", help="Output directory for reports")
+@click.option("--pdf", is_flag=True, help="Generate PDF report")
+@click.option("--md", is_flag=True, help="Generate Markdown report")
+def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md):
+    """Sibyl -- AI-powered deep research agent.
 
     Research any topic with web search + LLM analysis.
 
     \b
     Examples:
         sibyl "Canadian housing market outlook 2026"
-        sibyl "Impact of AI on software engineering jobs" -d 3
-        sibyl "Bitcoin price prediction" --model deepseek/deepseek-chat
+        sibyl "Impact of AI on software engineering jobs" -d 3 --pdf
+        sibyl "Bitcoin price prediction" --md --pdf -o reports/
     """
     if config_file:
         cfg = Config.from_yaml(config_file)
@@ -43,10 +46,29 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources):
 
     result = asyncio.run(_run(cfg, query, depth))
 
-    # Format report
+    # Terminal output
     from .mcp_server import _format_report
     report_text = _format_report(result)
     console.print(Markdown(report_text))
+
+    # PDF output
+    if pdf:
+        from .reporter import generate_pdf
+        path = generate_pdf(result, output)
+        console.print(f"\n[bold green]PDF saved:[/] {path}")
+
+    # Markdown output
+    if md:
+        from .reporter import _report_to_markdown
+        from pathlib import Path
+        from datetime import datetime
+        out = Path(output)
+        out.mkdir(parents=True, exist_ok=True)
+        safe_q = "".join(c if c.isalnum() or c in " -_" else "" for c in query)[:50].strip()
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        md_path = out / f"sibyl_{safe_q}_{ts}.md"
+        md_path.write_text(_report_to_markdown(result), encoding="utf-8")
+        console.print(f"[bold green]Markdown saved:[/] {md_path}")
 
 
 async def _run(cfg: Config, query: str, depth: int):
