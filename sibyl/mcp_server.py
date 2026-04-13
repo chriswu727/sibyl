@@ -16,14 +16,19 @@ mcp = FastMCP(
 analyze markets, predict trends, and generate comprehensive reports.
 
 Workflow:
-1. research(query) — Run a full research cycle: search → scrape → analyze → report
-2. quick_search(query) — Fast search without deep analysis
-3. analyze(text, question) — Analyze provided text with a specific question
+1. research(query) — Full research: search web → scrape → analyze → report
+2. fetch_market_data(symbols) — Pull real financial data (prices, trends, moving averages)
+3. chart(symbols) — Generate price trend charts as PNG
+4. analyze(text, question) — Analyze text with LLM
+5. save_report(format) — Save last report as PDF/Markdown
+
+For financial/market research, combine research() + fetch_market_data() for
+data-backed analysis. Use chart() to visualize trends.
 
 Tips:
-- Use depth=1 for quick answers, depth=2 for standard research, depth=3 for deep analysis with predictions
-- For market/stock/economy questions, use depth=3 to get predictions
-- For factual questions, depth=1 is usually enough
+- depth=1 for quick answers, depth=2 for standard, depth=3 for deep with predictions
+- Common symbols: SPY, QQQ (US), XIU.TO, XRE.TO (Canada), BTC-USD (crypto), GC=F (gold)
+- Always save reports with save_report() when done
 """,
 )
 
@@ -187,6 +192,56 @@ async def analyze(text: str, question: str) -> str:
 
     response = await litellm.acompletion(**kwargs)
     return response.choices[0].message.content.strip()
+
+
+@mcp.tool()
+async def fetch_market_data(symbols: str, period: str = "1y") -> str:
+    """Fetch real financial/stock/ETF data from Yahoo Finance.
+
+    Returns current price, trend, moving averages, 52-week range, and % change.
+
+    Args:
+        symbols: Comma-separated ticker symbols (e.g. "AAPL,MSFT,SPY" or "XIU.TO,XRE.TO" for Canadian ETFs)
+        period: Time period — "1mo", "3mo", "6mo", "1y", "2y", "5y" (default: 1y)
+
+    Common symbols:
+        US: SPY (S&P 500), QQQ (Nasdaq), DIA (Dow), VTI (total market)
+        Canada: XIU.TO (TSX 60), XRE.TO (REIT), XIC.TO (composite)
+        Crypto: BTC-USD, ETH-USD
+        Commodities: GC=F (gold), CL=F (oil)
+    """
+    from .data import fetch_multiple, format_data_summary
+
+    symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    if not symbol_list:
+        return "Error: provide at least one symbol"
+
+    series = await fetch_multiple(symbol_list, period)
+    if not series:
+        return f"Could not fetch data for: {symbols}"
+
+    return format_data_summary(series)
+
+
+@mcp.tool()
+async def chart(symbols: str, period: str = "1y", title: str = "") -> str:
+    """Generate a price chart for one or more symbols and save as PNG.
+
+    Args:
+        symbols: Comma-separated ticker symbols (e.g. "AAPL,MSFT")
+        period: Time period (default: 1y)
+        title: Chart title (auto-generated if empty)
+    """
+    from .data import fetch_multiple, generate_chart
+
+    symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+    series = await fetch_multiple(symbol_list, period)
+    if not series:
+        return f"Could not fetch data for: {symbols}"
+
+    chart_title = title or f"{', '.join(s.name for s in series)} — {period}"
+    path = generate_chart(series, chart_title)
+    return f"Chart saved: {path}"
 
 
 @mcp.tool()
