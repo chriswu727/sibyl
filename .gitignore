@@ -10,3 +10,7 @@ venv/
 .env
 *.yaml
 !sibyl.yaml.example
+reports/
+*.pdf
+*.md
+!README.md

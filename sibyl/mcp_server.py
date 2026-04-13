@@ -119,9 +119,12 @@ async def research(query: str, depth: int = 2, language: str = "auto") -> str:
         progress_lines.append(msg)
 
     global _last_report
-    report = await researcher.research(query, depth=depth, language=language, on_progress=on_progress)
-    _last_report = report
-    return _format_report(report)
+    try:
+        report = await researcher.research(query, depth=depth, language=language, on_progress=on_progress)
+        _last_report = report
+        return _format_report(report)
+    except Exception as e:
+        return f"Research failed: {str(e)[:200]}\n\nProgress so far:\n" + "\n".join(progress_lines)
 
 
 @mcp.tool()

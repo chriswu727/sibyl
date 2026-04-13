@@ -463,7 +463,7 @@ Be concrete — give specific numbers, dates, and thresholds where possible.""",
         )
 
     async def _llm_call(self, provider: Provider, prompt: str, max_tokens: int = 1500) -> str:
-        """Call an LLM provider via LiteLLM."""
+        """Call an LLM provider via LiteLLM with retry."""
         kwargs = {
             "model": provider.model,
             "max_tokens": max_tokens,
@@ -474,8 +474,14 @@ Be concrete — give specific numbers, dates, and thresholds where possible.""",
         if provider.api_base:
             kwargs["api_base"] = provider.api_base
 
-        response = await litellm.acompletion(**kwargs)
-        return response.choices[0].message.content.strip()
+        for attempt in range(3):
+            try:
+                response = await litellm.acompletion(**kwargs)
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                if attempt == 2:
+                    return f"(LLM call failed after 3 attempts: {str(e)[:100]})"
+                await asyncio.sleep(1 * (attempt + 1))
 
     @staticmethod
     def _extract_section(text: str, start_header: str, end_header: str) -> str:

@@ -161,6 +161,51 @@ async def search_wikipedia(query: str, max_results: int = 3) -> List[SearchResul
     return results
 
 
+# ── Semantic Scholar (academic papers) ────────────────────────────
+
+async def search_semantic_scholar(query: str, max_results: int = 5) -> List[SearchResult]:
+    """Search academic papers via Semantic Scholar API (free, no key needed)."""
+    results = []
+    try:
+        import asyncio as _aio
+        async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
+            resp = None
+            for attempt in range(3):
+                resp = await client.get(
+                    "https://api.semanticscholar.org/graph/v1/paper/search",
+                    params={
+                        "query": query,
+                        "limit": max_results,
+                        "fields": "title,abstract,year,citationCount,url",
+                    },
+                    headers=_HEADERS,
+                )
+                if resp.status_code == 429:
+                    await _aio.sleep(2 * (attempt + 1))
+                    continue
+                break
+            if resp is None or resp.status_code != 200:
+                return results
+
+            data = resp.json()
+            for paper in data.get("data", []):
+                title = paper.get("title", "")
+                url = paper.get("url", "")
+                abstract = paper.get("abstract", "") or ""
+                year = paper.get("year", "")
+                citations = paper.get("citationCount", 0)
+                if title and url:
+                    results.append(SearchResult(
+                        title=f"[Paper, {year}] {title} ({citations} citations)",
+                        url=url,
+                        snippet=abstract[:200],
+                        source="academic",
+                    ))
+    except Exception:
+        pass
+    return results
+
+
 # ── Unified search ────────────────────────────────────────────────
 
 async def search_web(
@@ -186,5 +231,12 @@ async def search_web(
     for res in results_lists:
         if isinstance(res, list):
             all_results.extend(res)
+
+    # Academic search (sequential, rate-limited API)
+    try:
+        academic = await search_semantic_scholar(query, min(max_results, 3))
+        all_results.extend(academic)
+    except Exception:
+        pass
 
     return all_results
