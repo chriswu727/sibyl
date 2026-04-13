@@ -51,6 +51,7 @@ class Researcher:
         self,
         query: str,
         depth: int = 0,
+        language: str = "",
         on_progress: Optional[callable] = None,
     ) -> ResearchReport:
         depth = depth or self.config.max_depth
@@ -144,7 +145,8 @@ class Researcher:
 
         # Step 8: Final synthesis
         progress("Synthesizing final report...")
-        report = await self._synthesize(query, unique_results, good_pages, depth, sub_analyses)
+        lang = language or self.config.language
+        report = await self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang)
         report.search_queries = search_queries
         report.sub_questions = sub_questions
         report.cross_analysis = cross_analysis_text
@@ -237,6 +239,7 @@ Return ONLY the queries, one per line."""
         pages: List[WebPage],
         depth: int,
         sub_analyses: list = None,
+        language: str = "auto",
     ) -> ResearchReport:
         """Synthesize all collected data into a final report."""
         provider = self.config.get_provider("analysis")
@@ -305,18 +308,25 @@ IMPORTANT:
 - Cite sources by [Source N] throughout
 - Include specific numbers, dates, and data points
 - Distinguish facts from opinions
-- Note where sources disagree"""
+- Note where sources disagree
+{f'- Write the ENTIRE report in Chinese (中文). Use Chinese for all text except source URLs and proper nouns.' if language == 'zh' else ''}{f'- Write the ENTIRE report in {language}.' if language not in ('auto', 'en', 'zh', '') else ''}"""
 
         max_tok = {1: 2000, 2: 3500, 3: 5000}.get(depth, 3000)
         text = await self._llm_call(provider, prompt, max_tokens=max_tok)
 
-        # Parse sections
-        summary = self._extract_section(text, "Summary", "Key Findings")
-        findings_text = self._extract_section(text, "Key Findings", "Analysis")
+        # Parse sections (support both English and Chinese headers)
+        summary = (self._extract_section(text, "Summary", "Key Findings")
+                   or self._extract_section(text, "摘要", "关键发现")
+                   or self._extract_section(text, "摘要", "要点"))
+        findings_text = (self._extract_section(text, "Key Findings", "Analysis")
+                        or self._extract_section(text, "关键发现", "分析")
+                        or self._extract_section(text, "要点", "分析"))
         findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
                      if f.strip() and (f.strip()[0] in "-*0123456789")]
-        analysis = self._extract_section(text, "Analysis", "Predictions") if depth >= 2 else ""
-        predictions = self._extract_section(text, "Predictions", "") if depth >= 3 else ""
+        analysis = (self._extract_section(text, "Analysis", "Predictions")
+                    or self._extract_section(text, "分析", "预测")) if depth >= 2 else ""
+        predictions = (self._extract_section(text, "Predictions", "")
+                      or self._extract_section(text, "预测", "")) if depth >= 3 else ""
 
         confidence = ""
         for line in (predictions or "").splitlines():

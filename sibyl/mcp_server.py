@@ -100,7 +100,7 @@ def _format_report(report: ResearchReport) -> str:
 
 
 @mcp.tool()
-async def research(query: str, depth: int = 2) -> str:
+async def research(query: str, depth: int = 2, language: str = "auto") -> str:
     """Run a deep research cycle on any topic.
 
     Searches the web, reads multiple sources, and synthesizes a comprehensive
@@ -109,6 +109,7 @@ async def research(query: str, depth: int = 2) -> str:
     Args:
         query: The research question (e.g. "What's the outlook for Canadian housing market in 2026?")
         depth: Research depth. 1=quick (2 queries), 2=standard (4 queries), 3=deep with predictions (6 queries)
+        language: Output language. "auto" (match query language), "en", "zh" (Chinese), or any language name
     """
     config = _get_config()
     researcher = Researcher(config)
@@ -118,7 +119,7 @@ async def research(query: str, depth: int = 2) -> str:
         progress_lines.append(msg)
 
     global _last_report
-    report = await researcher.research(query, depth=depth, on_progress=on_progress)
+    report = await researcher.research(query, depth=depth, language=language, on_progress=on_progress)
     _last_report = report
     return _format_report(report)
 

@@ -23,7 +23,8 @@ console = Console()
 @click.option("--pdf", is_flag=True, help="Generate PDF report")
 @click.option("--md", is_flag=True, help="Generate Markdown report")
 @click.option("--symbols", "-s", default="", help="Fetch market data for these symbols (e.g. NVDA,GOOGL,SPY)")
-def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols):
+@click.option("--language", "-l", default="auto", help="Output language: auto, en, zh (Chinese), etc.")
+def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language):
     """Sibyl -- AI-powered deep research agent.
 
     Research any topic with web search + LLM analysis + market data.
@@ -48,7 +49,7 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
         console.print(f"[dim]Market data: {symbols}[/]")
     console.print()
 
-    result = asyncio.run(_run(cfg, query, depth, symbols))
+    result = asyncio.run(_run(cfg, query, depth, symbols, language))
 
     # Terminal output
     from .mcp_server import _format_report
@@ -75,11 +76,12 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
         console.print(f"[bold green]Markdown saved:[/] {md_path}")
 
 
-async def _run(cfg, query, depth, symbols=""):
+async def _run(cfg, query, depth, symbols="", language="auto"):
     researcher = Researcher(cfg)
     result = await researcher.research(
         query,
         depth=depth,
+        language=language,
         on_progress=lambda msg: console.print(f"  [dim]{msg}[/]"),
     )
 
