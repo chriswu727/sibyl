@@ -99,7 +99,7 @@ class Researcher:
         # Step 4: Scrape top sources (more content per page)
         urls_to_scrape = [r.url for r in unique_results[:self.config.max_sources]]
         progress(f"Reading {len(urls_to_scrape)} sources...")
-        pages = await scrape_urls(urls_to_scrape, max_chars=4000)
+        pages = await scrape_urls(urls_to_scrape, max_chars=6000)
         good_pages = [p for p in pages if p.text and not p.error]
         progress(f"Successfully read {len(good_pages)} pages")
 
@@ -341,14 +341,14 @@ Return ONLY the queries, one per line."""
         sub_analyses: list = None,
         language: str = "auto",
     ) -> ResearchReport:
-        """Synthesize all collected data into a final report."""
+        """Synthesize via section-by-section generation for maximum depth."""
         provider = self.config.get_provider("analysis")
 
-        # Build source context
+        # Build source context (more content per page)
         context_parts = []
         if pages:
             for i, page in enumerate(pages[:10], 1):
-                context_parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:3000]}\n")
+                context_parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:4000]}\n")
         else:
             for i, sr in enumerate(search_results[:10], 1):
                 context_parts.append(f"[Source {i}: {sr.title}]\nURL: {sr.url}\n{sr.snippet}\n")
@@ -356,86 +356,73 @@ Return ONLY the queries, one per line."""
         if not context:
             context = "(No sources retrieved. Use your knowledge.)"
 
-        # Include sub-question analyses as additional context
         sub_context = ""
         if sub_analyses:
-            sub_parts = []
-            for sq, analysis in sub_analyses:
-                sub_parts.append(f"Sub-question: {sq}\nAnalysis: {analysis}")
-            sub_context = f"""
-PRELIMINARY ANALYSIS (from sub-question research):
-{chr(10).join(sub_parts)}
+            sub_parts = [f"Sub-question: {sq}\nAnalysis: {a}" for sq, a in sub_analyses]
+            sub_context = "\n\nPRELIMINARY ANALYSIS:\n" + "\n".join(sub_parts)
 
-Use the above analysis as additional context. Cross-reference with the sources."""
+        lang_inst = ""
+        if language == "zh":
+            lang_inst = "\n\nIMPORTANT: Write ENTIRELY in Chinese (中文). Only keep source URLs and proper nouns in English."
+        elif language not in ("auto", "en", ""):
+            lang_inst = f"\n\nIMPORTANT: Write ENTIRELY in {language}."
 
-        analysis_prompt = ""
-        if depth >= 2:
-            analysis_prompt = """
-## Analysis
-Provide deeper analysis:
-- What are the conflicting viewpoints and what evidence supports each?
-- What are the underlying trends driving this topic?
-- What do experts agree on vs disagree on?"""
+        base_prompt = f"RESEARCH QUESTION: {query}\n\nSOURCES:\n{context}{sub_context}{lang_inst}"
 
-        prediction_prompt = ""
-        if depth >= 3:
-            prediction_prompt = """
-## Predictions
-Based on all evidence:
-- What is most likely to happen next? Give specific, actionable predictions.
-- What are the 3 biggest uncertainties?
-- Rate your overall confidence (low/medium/high) with a clear explanation."""
+        # ── Section 1: Summary ──
+        summary = await self._llm_call(provider, f"""{base_prompt}
 
-        prompt = f"""You are a senior research analyst at a top consulting firm writing a comprehensive report for a client.
+You are a senior research analyst. Write a comprehensive SUMMARY that fully answers the research question.
 
-RESEARCH QUESTION: {query}
+Requirements:
+- 4-5 detailed paragraphs
+- Every paragraph must cite sources as [Source N]
+- Include specific data: numbers, percentages, dollar amounts, dates
+- Cover: current state, key drivers, outlook, implications
+- Write with authority for decision-makers""", max_tokens=2000)
 
-SOURCES:
-{context}
-{sub_context}
+        # ── Section 2: Key Findings ──
+        findings_text = await self._llm_call(provider, f"""{base_prompt}
 
-Write a thorough, executive-quality report. This must be detailed enough to make decisions from.
-
-## Summary
-Write 3-4 substantive paragraphs that FULLY answer the research question. Include:
-- The current state with specific data (numbers, percentages, dates)
-- Key drivers and causes
-- The outlook and what it means for the reader
-- Cite sources throughout as [Source N]
-
-## Key Findings
-List 8-12 key findings. EACH finding must:
-- Start with a bold claim or data point
-- Include at least one specific number, percentage, or date
+Based on all sources, list 10-15 KEY FINDINGS. Each finding must:
+- Lead with a specific, bold claim backed by data
+- Include at least one number, percentage, or date
 - Cite the source [Source N]
-- Explain WHY this matters, not just what happened
-{analysis_prompt}
-{prediction_prompt}
+- Explain the significance (WHY does this matter?)
 
-QUALITY REQUIREMENTS:
-- Every paragraph must cite at least one source [Source N]
-- Include specific numbers: dollar amounts, percentages, dates, rankings
-- Distinguish facts (from data) vs opinions (from experts) vs projections (from forecasts)
-- Where sources disagree, present BOTH sides with their evidence
-- Write with authority — this is for decision-makers, not casual readers
-{f'- Write the ENTIRE report in Chinese (中文). Use Chinese for all text except source URLs and proper nouns.' if language == 'zh' else ''}{f'- Write the ENTIRE report in {language}.' if language not in ('auto', 'en', 'zh', '') else ''}"""
+Format each as a numbered item. Be specific, not generic.""", max_tokens=2500)
 
-        max_tok = {1: 2000, 2: 3500, 3: 5000}.get(depth, 3000)
-        text = await self._llm_call(provider, prompt, max_tokens=max_tok)
-
-        # Parse sections (support both English and Chinese headers)
-        summary = (self._extract_section(text, "Summary", "Key Findings")
-                   or self._extract_section(text, "摘要", "关键发现")
-                   or self._extract_section(text, "摘要", "要点"))
-        findings_text = (self._extract_section(text, "Key Findings", "Analysis")
-                        or self._extract_section(text, "关键发现", "分析")
-                        or self._extract_section(text, "要点", "分析"))
         findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
-                     if f.strip() and (f.strip()[0] in "-*0123456789")]
-        analysis = (self._extract_section(text, "Analysis", "Predictions")
-                    or self._extract_section(text, "分析", "预测")) if depth >= 2 else ""
-        predictions = (self._extract_section(text, "Predictions", "")
-                      or self._extract_section(text, "预测", "")) if depth >= 3 else ""
+                     if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
+
+        # ── Section 3: Analysis (depth 2+) ──
+        analysis = ""
+        if depth >= 2:
+            analysis = await self._llm_call(provider, f"""{base_prompt}
+
+Write a DEEP ANALYSIS section. Cover:
+1. Conflicting viewpoints — what do different sources/experts disagree on? Present both sides with evidence.
+2. Underlying trends — what structural forces are driving this topic?
+3. Second-order effects — what consequences might people be overlooking?
+4. Historical context — how does the current situation compare to past patterns?
+
+Cite sources as [Source N]. Be analytical, not just descriptive.""", max_tokens=2000)
+
+        # ── Section 4: Predictions (depth 3) ──
+        predictions = ""
+        if depth >= 3:
+            predictions = await self._llm_call(provider, f"""{base_prompt}
+
+SUMMARY SO FAR: {summary[:500]}
+
+Write a PREDICTIONS section:
+1. Most likely scenario (60%+ probability) — be specific with numbers and timeframes
+2. Bull case — what could go better than expected?
+3. Bear case — what could go wrong?
+4. Key uncertainties — the 3 things that could change everything
+5. Confidence rating (low/medium/high) with detailed justification
+
+Be concrete — give specific numbers, dates, and thresholds where possible.""", max_tokens=2000)
 
         confidence = ""
         for line in (predictions or "").splitlines():
@@ -445,11 +432,14 @@ QUALITY REQUIREMENTS:
 
         sources = [
             Source(url=r.url, title=r.title, snippet=r.snippet)
-            for r in search_results[:len(pages)] if r.url in {p.url for p in pages}
+            for r in search_results if pages and r.url in {p.url for p in pages}
         ] if pages else [
             Source(url=r.url, title=r.title, snippet=r.snippet)
             for r in search_results[:10]
         ]
+        # Include all scraped sources
+        if pages and not sources:
+            sources = [Source(url=p.url, title=p.title, snippet=p.text[:100]) for p in pages]
 
         return ResearchReport(
             query=query,
