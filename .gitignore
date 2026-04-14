@@ -14,3 +14,4 @@ reports/
 *.pdf
 *.md
 !README.md
+!AGENTS.md
