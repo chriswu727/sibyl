@@ -1,8 +1,9 @@
 """Web search — multiple engines (all free, no API keys needed)."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 from urllib.parse import unquote, urlparse, parse_qs, quote_plus
 
 import httpx
@@ -31,18 +32,24 @@ def _extract_ddg_url(ddg_url: str) -> str:
     return ddg_url
 
 
-async def search_duckduckgo(query: str, max_results: int = 10) -> List[SearchResult]:
+async def search_duckduckgo(
+    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
     results = []
-    async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
+    try:
         resp = await client.get(
             "https://lite.duckduckgo.com/lite/",
             params={"q": query},
             headers=_HEADERS,
+            timeout=10.0,
         )
         if resp.status_code != 200:
             return results
 
-        soup = BeautifulSoup(resp.text, "html.parser")
+        soup = BeautifulSoup(resp.text, "lxml")
         links = soup.select("a.result-link")
         snippets = soup.select("td.result-snippet")
 
@@ -53,156 +60,193 @@ async def search_duckduckgo(query: str, max_results: int = 10) -> List[SearchRes
             snippet = snippets[i].get_text(strip=True) if i < len(snippets) else ""
             if url and title and not url.startswith("//duckduckgo"):
                 results.append(SearchResult(title=title, url=url, snippet=snippet, source="web"))
+    finally:
+        if own_client:
+            await client.aclose()
     return results
 
 
 # ── Google News (via RSS) ─────────────────────────────────────────
 
-async def search_google_news(query: str, max_results: int = 8) -> List[SearchResult]:
+async def search_google_news(
+    query: str, max_results: int = 8, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
     """Search Google News via RSS feed (free, no API key)."""
     results = []
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
-            resp = await client.get(
-                f"https://news.google.com/rss/search?q={quote_plus(query)}&hl=en",
-                headers=_HEADERS,
-            )
-            if resp.status_code != 200:
-                return results
+        resp = await client.get(
+            f"https://news.google.com/rss/search?q={quote_plus(query)}&hl=en",
+            headers=_HEADERS,
+            timeout=10.0,
+        )
+        if resp.status_code != 200:
+            return results
 
-            soup = BeautifulSoup(resp.text, "xml")
-            items = soup.find_all("item")
+        soup = BeautifulSoup(resp.text, "xml")
+        items = soup.find_all("item")
 
-            for item in items[:max_results]:
-                title = item.find("title")
-                link = item.find("link")
-                desc = item.find("description")
-                if title and link:
-                    results.append(SearchResult(
-                        title=title.get_text(strip=True),
-                        url=link.get_text(strip=True),
-                        snippet=BeautifulSoup(desc.get_text(), "html.parser").get_text(strip=True)[:200] if desc else "",
-                        source="news",
-                    ))
+        for item in items[:max_results]:
+            title = item.find("title")
+            link = item.find("link")
+            desc = item.find("description")
+            if title and link:
+                results.append(SearchResult(
+                    title=title.get_text(strip=True),
+                    url=link.get_text(strip=True),
+                    snippet=BeautifulSoup(desc.get_text(), "lxml").get_text(strip=True)[:200] if desc else "",
+                    source="news",
+                ))
     except Exception:
         pass
+    finally:
+        if own_client:
+            await client.aclose()
     return results
 
 
 # ── Reddit (via JSON API) ────────────────────────────────────────
 
-async def search_reddit(query: str, max_results: int = 5) -> List[SearchResult]:
+async def search_reddit(
+    query: str, max_results: int = 5, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
     """Search Reddit via its public JSON API (no API key needed)."""
     results = []
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
-            resp = await client.get(
-                "https://www.reddit.com/search.json",
-                params={"q": query, "sort": "relevance", "limit": max_results},
-                headers={**_HEADERS, "User-Agent": "Sibyl/1.0 research agent"},
-            )
-            if resp.status_code != 200:
-                return results
+        resp = await client.get(
+            "https://www.reddit.com/search.json",
+            params={"q": query, "sort": "relevance", "limit": max_results},
+            headers={**_HEADERS, "User-Agent": "Sibyl/1.0 research agent"},
+            timeout=10.0,
+        )
+        if resp.status_code != 200:
+            return results
 
-            data = resp.json()
-            for post in data.get("data", {}).get("children", [])[:max_results]:
-                d = post.get("data", {})
-                title = d.get("title", "")
-                url = f"https://reddit.com{d.get('permalink', '')}"
-                snippet = d.get("selftext", "")[:200]
-                subreddit = d.get("subreddit", "")
-                score = d.get("score", 0)
-                if title:
-                    results.append(SearchResult(
-                        title=f"[r/{subreddit}] {title} ({score} upvotes)",
-                        url=url,
-                        snippet=snippet,
-                        source="reddit",
-                    ))
+        data = resp.json()
+        for post in data.get("data", {}).get("children", [])[:max_results]:
+            d = post.get("data", {})
+            title = d.get("title", "")
+            url = f"https://reddit.com{d.get('permalink', '')}"
+            snippet = d.get("selftext", "")[:200]
+            subreddit = d.get("subreddit", "")
+            score = d.get("score", 0)
+            if title:
+                results.append(SearchResult(
+                    title=f"[r/{subreddit}] {title} ({score} upvotes)",
+                    url=url,
+                    snippet=snippet,
+                    source="reddit",
+                ))
     except Exception:
         pass
+    finally:
+        if own_client:
+            await client.aclose()
     return results
 
 
 # ── Wikipedia ─────────────────────────────────────────────────────
 
-async def search_wikipedia(query: str, max_results: int = 3) -> List[SearchResult]:
+async def search_wikipedia(
+    query: str, max_results: int = 3, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
     """Search Wikipedia via its free API."""
     results = []
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
-            resp = await client.get(
-                "https://en.wikipedia.org/w/api.php",
-                params={
-                    "action": "query",
-                    "list": "search",
-                    "srsearch": query,
-                    "format": "json",
-                    "srlimit": max_results,
-                },
-                headers=_HEADERS,
-            )
-            if resp.status_code != 200:
-                return results
+        resp = await client.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "query",
+                "list": "search",
+                "srsearch": query,
+                "format": "json",
+                "srlimit": max_results,
+            },
+            headers=_HEADERS,
+            timeout=10.0,
+        )
+        if resp.status_code != 200:
+            return results
 
-            data = resp.json()
-            for item in data.get("query", {}).get("search", []):
-                title = item.get("title", "")
-                snippet = BeautifulSoup(item.get("snippet", ""), "html.parser").get_text(strip=True)
-                url = f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}"
-                results.append(SearchResult(
-                    title=f"[Wikipedia] {title}",
-                    url=url,
-                    snippet=snippet,
-                    source="wikipedia",
-                ))
+        data = resp.json()
+        for item in data.get("query", {}).get("search", []):
+            title = item.get("title", "")
+            snippet = BeautifulSoup(item.get("snippet", ""), "lxml").get_text(strip=True)
+            url = f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}"
+            results.append(SearchResult(
+                title=f"[Wikipedia] {title}",
+                url=url,
+                snippet=snippet,
+                source="wikipedia",
+            ))
     except Exception:
         pass
+    finally:
+        if own_client:
+            await client.aclose()
     return results
 
 
 # ── Semantic Scholar (academic papers) ────────────────────────────
 
-async def search_semantic_scholar(query: str, max_results: int = 5) -> List[SearchResult]:
+async def search_semantic_scholar(
+    query: str, max_results: int = 5, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
     """Search academic papers via Semantic Scholar API (free, no key needed)."""
     results = []
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
     try:
-        import asyncio as _aio
-        async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
-            resp = None
-            for attempt in range(3):
-                resp = await client.get(
-                    "https://api.semanticscholar.org/graph/v1/paper/search",
-                    params={
-                        "query": query,
-                        "limit": max_results,
-                        "fields": "title,abstract,year,citationCount,url",
-                    },
-                    headers=_HEADERS,
-                )
-                if resp.status_code == 429:
-                    await _aio.sleep(2 * (attempt + 1))
-                    continue
-                break
-            if resp is None or resp.status_code != 200:
-                return results
+        resp = None
+        # Academic is a nice-to-have that runs alongside the fast engines and
+        # gates the search phase, so back off cheaply rather than the old
+        # 2s+4s and skip if still rate-limited.
+        for attempt in range(2):
+            resp = await client.get(
+                "https://api.semanticscholar.org/graph/v1/paper/search",
+                params={
+                    "query": query,
+                    "limit": max_results,
+                    "fields": "title,abstract,year,citationCount,url",
+                },
+                headers=_HEADERS,
+                timeout=6.0,
+            )
+            if resp.status_code == 429 and attempt == 0:
+                await asyncio.sleep(1.2)
+                continue
+            break
+        if resp is None or resp.status_code != 200:
+            return results
 
-            data = resp.json()
-            for paper in data.get("data", []):
-                title = paper.get("title", "")
-                url = paper.get("url", "")
-                abstract = paper.get("abstract", "") or ""
-                year = paper.get("year", "")
-                citations = paper.get("citationCount", 0)
-                if title and url:
-                    results.append(SearchResult(
-                        title=f"[Paper, {year}] {title} ({citations} citations)",
-                        url=url,
-                        snippet=abstract[:200],
-                        source="academic",
-                    ))
+        data = resp.json()
+        for paper in data.get("data", []):
+            title = paper.get("title", "")
+            url = paper.get("url", "")
+            abstract = paper.get("abstract", "") or ""
+            year = paper.get("year", "")
+            citations = paper.get("citationCount", 0)
+            if title and url:
+                results.append(SearchResult(
+                    title=f"[Paper, {year}] {title} ({citations} citations)",
+                    url=url,
+                    snippet=abstract[:200],
+                    source="academic",
+                ))
     except Exception:
         pass
+    finally:
+        if own_client:
+            await client.aclose()
     return results
 
 
@@ -212,31 +256,40 @@ async def search_web(
     query: str,
     engine: str = "all",
     max_results: int = 10,
+    client: Optional[httpx.AsyncClient] = None,
+    include_academic: bool = False,
 ) -> List[SearchResult]:
-    """Search across multiple sources."""
-    if engine == "duckduckgo":
-        return await search_duckduckgo(query, max_results)
+    """Search across multiple sources over a shared, pooled client.
 
-    # "all" — search all sources in parallel
-    import asyncio
-    tasks = [
-        search_duckduckgo(query, max_results),
-        search_google_news(query, min(max_results, 5)),
-        search_reddit(query, min(max_results, 3)),
-        search_wikipedia(query, 2),
-    ]
-    results_lists = await asyncio.gather(*tasks, return_exceptions=True)
+    ``include_academic`` is opt-in: Semantic Scholar is aggressively
+    rate-limited, so callers that fan out many queries should enable it on
+    only a couple of them rather than every call.
+    """
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
 
-    all_results = []
-    for res in results_lists:
-        if isinstance(res, list):
-            all_results.extend(res)
-
-    # Academic search (sequential, rate-limited API)
     try:
-        academic = await search_semantic_scholar(query, min(max_results, 3))
-        all_results.extend(academic)
-    except Exception:
-        pass
+        if engine == "duckduckgo":
+            return await search_duckduckgo(query, max_results, client=client)
 
-    return all_results
+        # "all" — search every engine concurrently
+        tasks = [
+            search_duckduckgo(query, max_results, client=client),
+            search_google_news(query, min(max_results, 5), client=client),
+            search_reddit(query, min(max_results, 3), client=client),
+            search_wikipedia(query, 2, client=client),
+        ]
+        if include_academic:
+            tasks.append(search_semantic_scholar(query, min(max_results, 3), client=client))
+
+        results_lists = await asyncio.gather(*tasks, return_exceptions=True)
+
+        all_results = []
+        for res in results_lists:
+            if isinstance(res, list):
+                all_results.extend(res)
+        return all_results
+    finally:
+        if own_client:
+            await client.aclose()

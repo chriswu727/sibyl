@@ -75,16 +75,21 @@ Be specific and cite source numbers."""
 
     kwargs = {
         "model": provider.model,
-        "max_tokens": 1500,
+        "max_tokens": 1800,
         "messages": [{"role": "user", "content": prompt}],
     }
     if provider.api_key:
         kwargs["api_key"] = provider.api_key
     if provider.api_base:
         kwargs["api_base"] = provider.api_base
+    # Structured extraction, not reasoning — disabling DeepSeek V4 thinking keeps
+    # the output format predictable and stops reasoning from eating the token
+    # budget before the CONSENSUS/DISAGREEMENT sections are emitted.
+    if "deepseek" in provider.model:
+        kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
 
     response = await litellm.acompletion(**kwargs)
-    text = response.choices[0].message.content.strip()
+    text = (response.choices[0].message.content or "").strip()
 
     # Parse the response
     overall_sentiment = "mixed"
@@ -126,8 +131,11 @@ Be specific and cite source numbers."""
             current_section = "disagreements"
         elif "UNIQUE" in line.upper():
             current_section = "unique"
-        elif line.startswith("-"):
-            item = line.lstrip("- ").strip()
+        elif line[0] in "-*•·—" or (line[0].isdigit() and line[:3].strip(".)0123456789") == ""):
+            # Accept -, *, •, ·, — and "1." / "1)" numbered bullets
+            item = line.lstrip("-*•·—0123456789.) ").strip()
+            if not item:
+                continue
             if current_section == "consensus":
                 consensus.append(item)
             elif current_section == "disagreements":

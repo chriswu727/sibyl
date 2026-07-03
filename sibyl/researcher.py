@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
 
+import httpx
 import litellm
 
 from .config import Config, Provider
@@ -54,6 +55,25 @@ class Researcher:
         language: str = "",
         on_progress: Optional[callable] = None,
     ) -> ResearchReport:
+        # One pooled client for the whole run — reuses TCP/TLS connections
+        # across the many search + scrape calls to the same hosts.
+        self._http = httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=12.0,
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        )
+        try:
+            return await self._do_research(query, depth, language, on_progress)
+        finally:
+            await self._http.aclose()
+
+    async def _do_research(
+        self,
+        query: str,
+        depth: int = 0,
+        language: str = "",
+        on_progress: Optional[callable] = None,
+    ) -> ResearchReport:
         depth = depth or self.config.max_depth
 
         def progress(msg: str):
@@ -67,12 +87,15 @@ class Researcher:
             sub_questions = await self._decompose_question(query, depth)
             progress(f"Sub-questions: {sub_questions}")
 
-        # Step 2: Generate search queries (for main query + sub-questions)
+        # Step 2: Generate search queries (main query + sub-questions) in parallel
         progress("Generating search queries...")
-        all_queries = await self._generate_search_queries(query, depth)
-        for sq in sub_questions:
-            extra = await self._generate_search_queries(sq, 1)
-            all_queries.extend(extra)
+        gen_tasks = [self._generate_search_queries(query, depth)]
+        gen_tasks += [self._generate_search_queries(sq, 1) for sq in sub_questions]
+        gen_results = await asyncio.gather(*gen_tasks, return_exceptions=True)
+        all_queries = []
+        for lst in gen_results:
+            if isinstance(lst, list):
+                all_queries.extend(lst)
         # Deduplicate
         seen_q = set()
         search_queries = []
@@ -82,12 +105,24 @@ class Researcher:
                 search_queries.append(q)
         progress(f"Total search queries: {len(search_queries)}")
 
-        # Step 3: Search the web
+        # Step 3: Search the web — all queries concurrently (bounded)
         progress("Searching the web...")
+        search_sem = asyncio.Semaphore(8)
+
+        async def _run_search(q: str, academic: bool) -> List[SearchResult]:
+            async with search_sem:
+                return await search_web(
+                    q, self.config.search_engine, max_results=5,
+                    client=self._http, include_academic=academic,
+                )
+
+        # Academic API is heavily rate-limited — enable it on the first 2 queries only
+        search_tasks = [_run_search(q, i < 2) for i, q in enumerate(search_queries)]
+        results_lists = await asyncio.gather(*search_tasks, return_exceptions=True)
         all_results: List[SearchResult] = []
-        for sq in search_queries:
-            results = await search_web(sq, self.config.search_engine, max_results=5)
-            all_results.extend(results)
+        for res in results_lists:
+            if isinstance(res, list):
+                all_results.extend(res)
         seen_urls = set()
         unique_results = []
         for r in all_results:
@@ -100,7 +135,7 @@ class Researcher:
         scrape_count = min(len(unique_results), self.config.max_sources * 2)  # Try 2x to get enough
         urls_to_scrape = [r.url for r in unique_results[:scrape_count]]
         progress(f"Reading {len(urls_to_scrape)} sources...")
-        pages = await scrape_urls(urls_to_scrape, max_chars=6000)
+        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http)
         good_pages = [p for p in pages if p.text and len(p.text) > 100 and not p.error]
 
         # Supplement with search snippets for failed pages
@@ -137,35 +172,46 @@ class Researcher:
             gaps = await self._identify_gaps(query, sub_analyses, good_pages)
             if gaps:
                 progress(f"Found gaps, searching for: {gaps}")
-                for gap_query in gaps[:3]:
-                    results = await search_web(gap_query, self.config.search_engine, max_results=3)
+                gap_lists = await asyncio.gather(*[
+                    search_web(gap_query, self.config.search_engine, max_results=3, client=self._http)
+                    for gap_query in gaps[:3]
+                ], return_exceptions=True)
+                for results in gap_lists:
+                    if not isinstance(results, list):
+                        continue
                     for r in results:
                         if r.url not in seen_urls:
                             seen_urls.add(r.url)
                             unique_results.append(r)
                 # Scrape new sources
-                new_urls = [r.url for r in unique_results if r.url not in {p.url for p in pages}][:5]
+                scraped_page_urls = {p.url for p in pages}
+                new_urls = [r.url for r in unique_results if r.url not in scraped_page_urls][:5]
                 if new_urls:
                     progress(f"Reading {len(new_urls)} additional sources...")
-                    new_pages = await scrape_urls(new_urls, max_chars=4000)
+                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http)
                     good_pages.extend([p for p in new_pages if p.text and not p.error])
                     progress(f"Total sources: {len(good_pages)}")
                 search_queries.extend(gaps[:3])
 
-        # Step 7: Cross-source analysis (depth 2+)
-        cross_analysis_text = ""
-        if depth >= 2 and good_pages:
-            progress("Cross-referencing sources (sentiment + consensus + disagreements)...")
+        # Steps 7 & 8: Cross-source analysis runs concurrently with synthesis —
+        # the cross-analysis output is only attached to the report at the end,
+        # so it has no dependency on the synthesized sections.
+        async def _cross_analysis():
+            if not (depth >= 2 and good_pages):
+                return "", None
             from .analyzer import analyze_sources, format_cross_analysis
             provider = self.config.get_provider("analysis")
             cross = await analyze_sources(good_pages, query, provider)
-            cross_analysis_text = format_cross_analysis(cross)
-            progress(f"Sentiment: {cross.overall_sentiment} | Consensus: {len(cross.consensus_points)} | Disagreements: {len(cross.disagreement_points)}")
+            return format_cross_analysis(cross), cross
 
-        # Step 8: Final synthesis
-        progress("Synthesizing final report...")
+        progress("Synthesizing report + cross-referencing sources in parallel...")
         lang = language or self.config.language
-        report = await self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang)
+        report, (cross_analysis_text, cross) = await asyncio.gather(
+            self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang),
+            _cross_analysis(),
+        )
+        if cross:
+            progress(f"Sentiment: {cross.overall_sentiment} | Consensus: {len(cross.consensus_points)} | Disagreements: {len(cross.disagreement_points)}")
 
         # Step 9: Review and refine (depth 2+)
         if depth >= 2 and report.summary:
@@ -231,7 +277,7 @@ Sources:
 Return ONLY the numbers of the RELEVANT sources (score 7+/10), comma-separated.
 Example: 1,3,4,7"""
 
-        text = await self._llm_call(provider, prompt, max_tokens=100)
+        text = await self._llm_call(provider, prompt, max_tokens=200)
 
         try:
             indices = [int(x.strip()) - 1 for x in text.split(",") if x.strip().isdigit()]
@@ -241,7 +287,8 @@ Example: 1,3,4,7"""
             return pages[:12]
 
     async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
-        """Review the draft report and refine it for quality."""
+        """Review the draft and refine summary + findings — two independent
+        refinements run in parallel."""
         provider = self.config.get_provider("analysis")
 
         draft = f"""Summary: {report.summary}
@@ -253,44 +300,44 @@ Analysis: {report.analysis}
 
 Predictions: {report.predictions}"""
 
-        lang_instruction = ""
-        if language == "zh":
-            lang_instruction = "回复必须使用中文。"
+        lang_instruction = "回复必须使用中文。" if language == "zh" else ""
 
-        prompt = f"""You are a senior editor reviewing a research report draft.
+        summary_prompt = f"""You are a senior editor improving the SUMMARY of a research report.
 
 RESEARCH QUESTION: {report.query}
 
 DRAFT:
 {draft}
 
-Review this draft and provide an IMPROVED version with:
+Rewrite the summary to be stronger:
 1. More specific data points and numbers (add if missing)
 2. Stronger source citations
-3. More nuanced analysis (not just listing facts but explaining WHY)
-4. Clearer structure and better flow
+3. Explain WHY, not just what
+4. Clearer structure and flow
 5. A definitive conclusion that directly answers the research question
 
 {lang_instruction}
 
-Output the improved version in the same format:
+Output ONLY the improved summary — 3-4 detailed paragraphs, no headers."""
 
-## Summary
-[improved summary — 3-4 detailed paragraphs]
+        findings_prompt = f"""You are a senior editor improving the KEY FINDINGS of a research report.
 
-## Key Findings
-[improved findings — more specific, better cited]"""
+RESEARCH QUESTION: {report.query}
 
-        text = await self._llm_call(provider, prompt, max_tokens=3000)
+DRAFT:
+{draft}
 
-        # Parse improved version
-        new_summary = (self._extract_section(text, "Summary", "Key Findings")
-                      or self._extract_section(text, "摘要", "关键发现")
-                      or self._extract_section(text, "摘要", "要点"))
-        new_findings_text = (self._extract_section(text, "Key Findings", "Analysis")
-                            or self._extract_section(text, "关键发现", "分析")
-                            or self._extract_section(text, "要点", "分析")
-                            or self._extract_section(text, "Key Findings", ""))
+Rewrite the key findings to be stronger: each must lead with a specific claim
+backed by a number/percentage/date, cite [Source N], and explain why it matters.
+
+{lang_instruction}
+
+Output ONLY the improved findings as a numbered list, no headers."""
+
+        new_summary, new_findings_text = await asyncio.gather(
+            self._llm_call(provider, summary_prompt, max_tokens=2000),
+            self._llm_call(provider, findings_prompt, max_tokens=2000),
+        )
 
         if new_summary and len(new_summary) > len(report.summary) * 0.5:
             report.summary = new_summary.strip()
@@ -404,10 +451,28 @@ Based on all sources, list 10-15 KEY FINDINGS. Each finding must:
 
 Format each as a numbered item. Be specific, not generic."""
 
-        summary, findings_text = await asyncio.gather(
+        # Analysis depends only on the sources (not on summary/findings), so it
+        # joins this first parallel batch at depth 2+ instead of running after.
+        analysis_prompt = f"""{base_prompt}
+
+Write a DEEP ANALYSIS section. Cover:
+1. Conflicting viewpoints — what do different sources/experts disagree on? Present both sides with evidence.
+2. Underlying trends — what structural forces are driving this topic?
+3. Second-order effects — what consequences might people be overlooking?
+4. Historical context — how does the current situation compare to past patterns?
+
+Cite sources as [Source N]. Be analytical, not just descriptive."""
+
+        batch = [
             self._llm_call(provider, summary_prompt, max_tokens=2000),
             self._llm_call(provider, findings_prompt, max_tokens=2500),
-        )
+        ]
+        if depth >= 2:
+            batch.append(self._llm_call(provider, analysis_prompt, max_tokens=2000))
+        batch_results = await asyncio.gather(*batch)
+        summary, findings_text = batch_results[0], batch_results[1]
+        analysis = batch_results[2] if depth >= 2 else ""
+        predictions = ""
 
         # Quality checks (sequential since they depend on results)
         if len(summary) < 800:
@@ -423,21 +488,9 @@ List exactly 10 KEY FINDINGS as numbered items. Each must include a specific num
             findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
                          if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
 
-        # ── Sections 3 & 4: Analysis + Predictions (PARALLEL for depth 3) ──
-        analysis = ""
-        predictions = ""
-
-        analysis_prompt = f"""{base_prompt}
-
-Write a DEEP ANALYSIS section. Cover:
-1. Conflicting viewpoints — what do different sources/experts disagree on? Present both sides with evidence.
-2. Underlying trends — what structural forces are driving this topic?
-3. Second-order effects — what consequences might people be overlooking?
-4. Historical context — how does the current situation compare to past patterns?
-
-Cite sources as [Source N]. Be analytical, not just descriptive."""
-
-        predictions_prompt = f"""{base_prompt}
+        # ── Predictions (depth 3) — needs the finished summary, so runs last ──
+        if depth >= 3:
+            predictions_prompt = f"""{base_prompt}
 
 SUMMARY SO FAR: {summary[:500]}
 
@@ -450,14 +503,7 @@ Write a PREDICTIONS section:
 
 Be concrete — give specific numbers, dates, and thresholds where possible."""
 
-        if depth >= 3:
-            # Parallel: analysis + predictions
-            analysis, predictions = await asyncio.gather(
-                self._llm_call(provider, analysis_prompt, max_tokens=2000),
-                self._llm_call(provider, predictions_prompt, max_tokens=2000),
-            )
-        elif depth >= 2:
-            analysis = await self._llm_call(provider, analysis_prompt, max_tokens=2000)
+            predictions = await self._llm_call(provider, predictions_prompt, max_tokens=2000)
 
         confidence = ""
         for line in (predictions or "").splitlines():
@@ -465,9 +511,10 @@ Be concrete — give specific numbers, dates, and thresholds where possible."""
                 confidence = line.strip()
                 break
 
+        page_urls = {p.url for p in pages} if pages else set()
         sources = [
             Source(url=r.url, title=r.title, snippet=r.snippet)
-            for r in search_results if pages and r.url in {p.url for p in pages}
+            for r in search_results if r.url in page_urls
         ] if pages else [
             Source(url=r.url, title=r.title, snippet=r.snippet)
             for r in search_results[:10]
@@ -487,8 +534,22 @@ Be concrete — give specific numbers, dates, and thresholds where possible."""
             model_used=provider.model,
         )
 
-    async def _llm_call(self, provider: Provider, prompt: str, max_tokens: int = 1500) -> str:
-        """Call an LLM provider via LiteLLM with retry."""
+    async def _llm_call(
+        self,
+        provider: Provider,
+        prompt: str,
+        max_tokens: int = 1500,
+        thinking: bool = False,
+    ) -> str:
+        """Call an LLM provider via LiteLLM with retry.
+
+        Thinking is disabled by default: a head-to-head found DeepSeek V4's
+        reasoning pass gives no quality gain on sibyl's generation tasks (the
+        non-thinking output was comparable or more concrete) while adding latency
+        and, on short-output calls, starving the content budget. Pass
+        ``thinking=True`` only if a future call genuinely needs step-by-step
+        reasoning. The toggle is a no-op for non-DeepSeek providers.
+        """
         kwargs = {
             "model": provider.model,
             "max_tokens": max_tokens,
@@ -498,11 +559,20 @@ Be concrete — give specific numbers, dates, and thresholds where possible."""
             kwargs["api_key"] = provider.api_key
         if provider.api_base:
             kwargs["api_base"] = provider.api_base
+        if not thinking and "deepseek" in provider.model:
+            kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
 
         for attempt in range(3):
             try:
                 response = await litellm.acompletion(**kwargs)
-                return response.choices[0].message.content.strip()
+                content = (response.choices[0].message.content or "").strip()
+                # V4 thinking can occasionally spend the whole budget on
+                # reasoning and return empty content — retry rather than emit an
+                # empty section.
+                if not content and attempt < 2:
+                    await asyncio.sleep(1)
+                    continue
+                return content
             except Exception as e:
                 if attempt == 2:
                     return f"(LLM call failed after 3 attempts: {str(e)[:100]})"

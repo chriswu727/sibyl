@@ -1,6 +1,7 @@
 """Web scraper — extract clean text content from URLs with anti-block techniques."""
 from __future__ import annotations
 
+import asyncio
 import random
 from dataclasses import dataclass
 from typing import List, Optional
@@ -40,8 +41,8 @@ def _get_headers() -> dict:
 
 
 def _extract_content(html: str, url: str, max_chars: int) -> WebPage:
-    """Parse HTML and extract clean text."""
-    soup = BeautifulSoup(html, "html.parser")
+    """Parse HTML and extract clean text. CPU-bound — run off the event loop."""
+    soup = BeautifulSoup(html, "lxml")
 
     # Remove noise elements
     for tag in soup(["script", "style", "nav", "footer", "header", "aside",
@@ -77,23 +78,32 @@ def _extract_content(html: str, url: str, max_chars: int) -> WebPage:
     return WebPage(url=url, title=title, text=text)
 
 
-async def scrape_url(url: str, max_chars: int = 6000) -> WebPage:
-    """Fetch a URL with retry and anti-block techniques."""
+async def scrape_url(
+    url: str,
+    max_chars: int = 6000,
+    client: Optional[httpx.AsyncClient] = None,
+) -> WebPage:
+    """Fetch a URL with retry and anti-block techniques.
+
+    Reuses a shared ``client`` when provided so connections/TLS are pooled
+    across a batch; otherwise creates a short-lived one.
+    """
     # Skip non-HTTP URLs
     if not url.startswith("http"):
         return WebPage(url=url, title="", text="", error="Invalid URL")
 
-    for attempt in range(2):
-        try:
-            async with httpx.AsyncClient(
-                follow_redirects=True,
-                timeout=12.0,
-                headers=_get_headers(),
-            ) as client:
-                resp = await client.get(url)
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
+
+    try:
+        for attempt in range(2):
+            try:
+                # Rotate User-Agent per request (shared client → set on request)
+                resp = await client.get(url, headers=_get_headers(), timeout=8.0)
 
                 if resp.status_code == 200:
-                    return _extract_content(resp.text, url, max_chars)
+                    return await asyncio.to_thread(_extract_content, resp.text, url, max_chars)
 
                 # Retry on 403/429 with different User-Agent
                 if resp.status_code in (403, 429) and attempt == 0:
@@ -101,49 +111,75 @@ async def scrape_url(url: str, max_chars: int = 6000) -> WebPage:
 
                 # Try Google Cache as fallback on 403
                 if resp.status_code == 403 and attempt == 1:
-                    cache_page = await _try_google_cache(url, max_chars)
+                    cache_page = await _try_google_cache(url, max_chars, client)
                     if cache_page and cache_page.text:
                         return cache_page
 
                 return WebPage(url=url, title="", text="", error=f"HTTP {resp.status_code}")
 
-        except Exception as e:
-            if attempt == 0:
-                continue
-            return WebPage(url=url, title="", text="", error=str(e)[:200])
+            except httpx.TimeoutException:
+                # A slow site won't get faster on a second try with the same
+                # timeout — fail fast so it doesn't stall the whole scrape batch.
+                return WebPage(url=url, title="", text="", error="timeout")
+            except Exception as e:
+                if attempt == 0:
+                    continue
+                return WebPage(url=url, title="", text="", error=str(e)[:200])
 
-    return WebPage(url=url, title="", text="", error="All attempts failed")
+        return WebPage(url=url, title="", text="", error="All attempts failed")
+    finally:
+        if own_client:
+            await client.aclose()
 
 
-async def _try_google_cache(url: str, max_chars: int) -> Optional[WebPage]:
+async def _try_google_cache(
+    url: str,
+    max_chars: int,
+    client: Optional[httpx.AsyncClient] = None,
+) -> Optional[WebPage]:
     """Try fetching from Google's web cache."""
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
     try:
         cache_url = f"https://webcache.googleusercontent.com/search?q=cache:{url}"
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=10.0,
-            headers=_get_headers(),
-        ) as client:
-            resp = await client.get(cache_url)
-            if resp.status_code == 200:
-                page = _extract_content(resp.text, url, max_chars)
-                if page.text and len(page.text) > 100:
-                    return page
+        resp = await client.get(cache_url, headers=_get_headers(), timeout=10.0)
+        if resp.status_code == 200:
+            page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars)
+            if page.text and len(page.text) > 100:
+                return page
     except Exception:
         pass
+    finally:
+        if own_client:
+            await client.aclose()
     return None
 
 
-async def scrape_urls(urls: List[str], max_chars: int = 6000) -> List[WebPage]:
-    """Scrape multiple URLs concurrently with rate limiting."""
-    import asyncio
+async def scrape_urls(
+    urls: List[str],
+    max_chars: int = 6000,
+    concurrency: int = 8,
+    client: Optional[httpx.AsyncClient] = None,
+) -> List[WebPage]:
+    """Scrape multiple URLs concurrently over a single pooled client."""
+    semaphore = asyncio.Semaphore(concurrency)
 
-    # Limit concurrency to avoid being blocked
-    semaphore = asyncio.Semaphore(5)
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=12.0,
+            limits=httpx.Limits(max_connections=concurrency * 2,
+                                max_keepalive_connections=concurrency),
+        )
 
     async def _limited_scrape(url: str) -> WebPage:
         async with semaphore:
-            return await scrape_url(url, max_chars)
+            return await scrape_url(url, max_chars, client=client)
 
-    tasks = [_limited_scrape(url) for url in urls]
-    return await asyncio.gather(*tasks)
+    try:
+        return await asyncio.gather(*[_limited_scrape(url) for url in urls])
+    finally:
+        if own_client:
+            await client.aclose()

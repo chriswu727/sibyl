@@ -1,6 +1,7 @@
 """Data collection and analysis — financial data, trends, charts."""
 from __future__ import annotations
 
+import asyncio
 import io
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -36,7 +37,15 @@ async def fetch_stock_data(
     symbol: str,
     period: str = "1y",
 ) -> Optional[DataSeries]:
-    """Fetch stock/ETF/index data from Yahoo Finance."""
+    """Fetch stock/ETF/index data from Yahoo Finance.
+
+    yfinance is synchronous and network-bound — run it off the event loop so
+    it doesn't block concurrent research work.
+    """
+    return await asyncio.to_thread(_fetch_stock_data_sync, symbol, period)
+
+
+def _fetch_stock_data_sync(symbol: str, period: str = "1y") -> Optional[DataSeries]:
     import yfinance as yf
 
     try:
@@ -109,14 +118,12 @@ async def fetch_stock_data(
 
 
 async def fetch_multiple(symbols: List[str], period: str = "1y") -> List[DataSeries]:
-    """Fetch data for multiple symbols."""
-    import asyncio
-    results = []
-    for sym in symbols:
-        ds = await fetch_stock_data(sym, period)
-        if ds:
-            results.append(ds)
-    return results
+    """Fetch data for multiple symbols concurrently."""
+    fetched = await asyncio.gather(
+        *[fetch_stock_data(sym, period) for sym in symbols],
+        return_exceptions=True,
+    )
+    return [ds for ds in fetched if isinstance(ds, DataSeries)]
 
 
 def generate_chart(

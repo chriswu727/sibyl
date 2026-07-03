@@ -52,10 +52,25 @@ class Config:
     def from_env(cls, model: str = "", api_key: str = "", api_base: str = "") -> Config:
         """Create config from environment/CLI args."""
         import os
+
+        # DeepSeek V4 (latest). Head-to-head on sibyl's long-form structured
+        # tasks: v4-flash is faster (~30s vs ~41s), lower-variance, and actually
+        # *completes* its output at a 2000-token budget, whereas v4-pro reasons
+        # more and truncates mid-section (and occasionally spends the whole
+        # budget on reasoning, returning empty). Comparable insight. So flash is
+        # used across the board — mechanical steps disable thinking at call time,
+        # analytical steps keep it on.
+        if not model and os.environ.get("DEEPSEEK_API_KEY"):
+            key = os.environ["DEEPSEEK_API_KEY"]
+            return cls(providers=[
+                Provider(model="deepseek/deepseek-v4-flash", api_key=key, role="general"),
+                Provider(model="deepseek/deepseek-v4-flash", api_key=key, role="fast"),
+                Provider(model="deepseek/deepseek-v4-flash", api_key=key, role="analysis"),
+            ])
+
         if not model:
             # Auto-detect from env vars (check all providers)
             env_providers = [
-                ("DEEPSEEK_API_KEY", "deepseek/deepseek-chat", ""),
                 ("OPENAI_API_KEY", "gpt-4o-mini", ""),
                 ("ANTHROPIC_API_KEY", "claude-sonnet-4-20250514", ""),
                 ("GEMINI_API_KEY", "gemini/gemini-2.5-flash", ""),
@@ -68,7 +83,7 @@ class Config:
                     api_base = env_base or api_base
                     break
             else:
-                model = "deepseek/deepseek-chat"
+                model = "deepseek/deepseek-v4-pro"
 
         providers = [Provider(model=model, api_key=api_key, api_base=api_base, role="general")]
         return cls(providers=providers)
