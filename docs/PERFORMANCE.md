@@ -103,7 +103,7 @@ for marginal speed.
 Depth-2 run (DeepSeek V4, averaged over trials): **183s → ~46s (~4x)**, per-run
 variance down from ±40% to a few seconds, and report quality held or improved
 (longer complete analysis, no truncated findings, working cross-analysis).
-Depth-1 ~15s, depth-3 ~80s.
+Depth-1 ~15s, depth-3 ~56s (down from ~80s).
 
 ## Research pipeline parallelization (v0.2.2)
 
@@ -115,11 +115,12 @@ Measured depth-2 run (DeepSeek V4): **183s → ~80s** across these changes.
   hides fully under synthesis (the long pole). Note: pairing cross with
   *synthesis* beats pairing it with *sub-question analysis*, because synthesis
   is the longer of the two and absorbs cross entirely.
-- **Analysis joins the first synthesis batch.** In `_synthesize`, the deep-
-  analysis section depends only on the sources, not on summary/findings, so at
-  depth 2+ it runs in the same `gather` as summary+findings instead of as a
-  separate serial call. Predictions (depth 3) still run after, since they
-  reference the finished summary.
+- **Analysis and predictions join the first synthesis batch.** In
+  `_synthesize`, the deep-analysis (depth 2+) and predictions (depth 3) sections
+  depend only on the sources, not on summary/findings — A/Bs confirmed feeding
+  them the finished summary gave no quality gain. So they run in the same
+  `gather` as summary+findings instead of as serial follow-up calls. This alone
+  took depth-3 from ~80s to ~56s.
 - **Review/refine split into two parallel calls.** `_review_and_refine` used
   one giant call to regenerate summary + findings together; they're independent
   outputs, so they now refine in parallel (~38s → ~20s).

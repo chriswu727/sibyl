@@ -467,16 +467,35 @@ Write a DEEP ANALYSIS section. Cover:
 
 Cite sources as [Source N]. Be analytical, not just descriptive."""
 
+        # Predictions (depth 3) also depends only on the sources — an A/B showed
+        # feeding it the finished summary gave no quality gain — so it joins the
+        # same parallel batch instead of running as a serial second round.
+        predictions_prompt = f"""{base_prompt}
+
+Write a PREDICTIONS section:
+1. Most likely scenario (60%+ probability) — be specific with numbers and timeframes
+2. Bull case — what could go better than expected?
+3. Bear case — what could go wrong?
+4. Key uncertainties — the 3 things that could change everything
+5. Confidence rating (low/medium/high) with detailed justification
+
+Be concrete — give specific numbers, dates, and thresholds where possible."""
+
         batch = [
             self._llm_call(provider, summary_prompt, max_tokens=2000),
             self._llm_call(provider, findings_prompt, max_tokens=2500),
         ]
+        slot = {}
         if depth >= 2:
+            slot["analysis"] = len(batch)
             batch.append(self._llm_call(provider, analysis_prompt, max_tokens=2000))
+        if depth >= 3:
+            slot["predictions"] = len(batch)
+            batch.append(self._llm_call(provider, predictions_prompt, max_tokens=2000))
         batch_results = await asyncio.gather(*batch)
         summary, findings_text = batch_results[0], batch_results[1]
-        analysis = batch_results[2] if depth >= 2 else ""
-        predictions = ""
+        analysis = batch_results[slot["analysis"]] if "analysis" in slot else ""
+        predictions = batch_results[slot["predictions"]] if "predictions" in slot else ""
 
         # Quality checks (sequential since they depend on results)
         if len(summary) < 800:
@@ -491,23 +510,6 @@ Cite sources as [Source N]. Be analytical, not just descriptive."""
 List exactly 10 KEY FINDINGS as numbered items. Each must include a specific number and cite [Source N]. Be detailed.""", max_tokens=2500)
             findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
                          if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
-
-        # ── Predictions (depth 3) — needs the finished summary, so runs last ──
-        if depth >= 3:
-            predictions_prompt = f"""{base_prompt}
-
-SUMMARY SO FAR: {summary[:500]}
-
-Write a PREDICTIONS section:
-1. Most likely scenario (60%+ probability) — be specific with numbers and timeframes
-2. Bull case — what could go better than expected?
-3. Bear case — what could go wrong?
-4. Key uncertainties — the 3 things that could change everything
-5. Confidence rating (low/medium/high) with detailed justification
-
-Be concrete — give specific numbers, dates, and thresholds where possible."""
-
-            predictions = await self._llm_call(provider, predictions_prompt, max_tokens=2000)
 
         confidence = ""
         for line in (predictions or "").splitlines():
