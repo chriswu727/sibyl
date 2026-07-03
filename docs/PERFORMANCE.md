@@ -76,11 +76,34 @@ disables thinking (it's structured extraction), bumps the budget to 1800, and
 the parser now accepts `-`, `*`, `•`, `·`, `—` and numbered bullets rather than
 only `-`.
 
+### Sub-question analysis is depth-3 only
+
+The per-sub-question analysis step (Step 5) generated 3 parallel LLM calls
+(~8-14s) and fed the results to synthesis as "preliminary analysis" context. An
+A/B (synthesis with vs without that context, identical sources) found the two
+summaries equivalent in quality — the synthesis model does the analysis just as
+well straight from the sources. So Step 5 is gated to depth 3, where it's still
+needed as input to gap-finding. Depth-2 dropped ~54s → ~46s with no quality loss
+(cross-analysis actually surfaced more consensus/disagreement points).
+
+### What was NOT cut: the review step
+
+The review/refine pass (~12s) was A/B'd the same way (draft vs reviewed). It
+earns its keep: the reviewed summary leads with a definitive thesis that answers
+the question up front (the draft buried it), tightens prose, and strengthens
+causal reasoning — clearly better, not just shorter. Kept.
+
+This is roughly the floor. The remaining depth-2 time is ~9s mechanical +
+~23s synthesis‖cross + ~12s review; the last two are irreducible long-form
+generation on flash and both earn their quality. Cutting further trades quality
+for marginal speed.
+
 ## Result
 
-Depth-2 run (DeepSeek V4, same query): **183s → ~60s (~3x)**, with per-run
+Depth-2 run (DeepSeek V4, averaged over trials): **183s → ~46s (~4x)**, per-run
 variance down from ±40% to a few seconds, and report quality held or improved
-(longer, complete analysis; findings that no longer truncate).
+(longer complete analysis, no truncated findings, working cross-analysis).
+Depth-1 ~15s, depth-3 ~80s.
 
 ## Research pipeline parallelization (v0.2.2)
 

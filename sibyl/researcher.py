@@ -154,9 +154,13 @@ class Researcher:
             good_pages = await self._filter_sources(query, good_pages)
             progress(f"Kept {len(good_pages)} most relevant sources")
 
-        # Step 5: Per-sub-question analysis — PARALLEL (depth 2+)
+        # Step 5: Per-sub-question analysis — PARALLEL (depth 3 only).
+        # A/B testing showed feeding these pre-digested analyses to synthesis
+        # gives no quality gain over synthesizing straight from the sources, so
+        # at depth 2 we skip the ~14s step. Depth 3 still needs them as input to
+        # gap-finding below.
         sub_analyses = []
-        if depth >= 2 and sub_questions and good_pages:
+        if depth >= 3 and sub_questions and good_pages:
             progress(f"Analyzing {len(sub_questions)} sub-questions in parallel...")
             tasks = [self._analyze_sub_question(sq, good_pages) for sq in sub_questions]
             results = await asyncio.gather(*tasks, return_exceptions=True)
