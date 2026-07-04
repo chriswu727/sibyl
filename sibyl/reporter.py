@@ -82,19 +82,54 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         except Exception:
             pass
 
-    def body(text, size=10):
+    def _plain(line, size):
+        # Last-resort render if markdown parsing raises: strip the syntax.
+        import re
+        clean = re.sub(r'\*\*(.+?)\*\*', r'\1', line)
+        clean = re.sub(r'^#{1,6}\s*', '', clean)
         try:
-            import re
-            # Strip markdown formatting for PDF
-            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', text)  # **bold** → bold
-            clean = re.sub(r'\*(.+?)\*', r'\1', clean)      # *italic* → italic
-            clean = re.sub(r'^#{1,4}\s*', '', clean, flags=re.MULTILINE)  # ## headers → plain
-            clean = re.sub(r'^\d+\.\s*\d+\.', lambda m: m.group().split('.')[0] + '.', clean, flags=re.MULTILINE)  # "1. 1." → "1."
             pdf.set_font(font_name, "", size)
             pdf.multi_cell(0, 6, clean)
-            pdf.ln(2)
         except Exception:
             pass
+
+    def body(text, size=10):
+        """Render markdown text preserving structure: ## headers become sub-
+        headings, bullets keep their marker, and **bold** renders inline (the LLM
+        emits real markdown — the old renderer flattened all of it to plain text)."""
+        import re
+        if not text:
+            return
+        for raw in text.splitlines():
+            line = raw.rstrip()
+            if not line.strip():
+                pdf.ln(2)
+                continue
+            stripped = line.strip()
+            hm = re.match(r'^(#{1,6})\s+(.*)$', stripped)
+            if hm:
+                hsize = {1: 15, 2: 13, 3: 12}.get(len(hm.group(1)), 11)
+                try:
+                    pdf.set_font(font_name, "B", hsize)
+                    pdf.multi_cell(0, 6, hm.group(2), markdown=True)
+                    pdf.ln(1)
+                except Exception:
+                    _plain(stripped, size)
+                continue
+            bm = re.match(r'^[-*•]\s+(.*)$', stripped)
+            if bm:
+                try:
+                    pdf.set_font(font_name, "", size)
+                    pdf.multi_cell(0, 6, "   •  " + bm.group(1), markdown=True)
+                except Exception:
+                    _plain(stripped, size)
+                continue
+            try:
+                pdf.set_font(font_name, "", size)
+                pdf.multi_cell(0, 6, line, markdown=True)
+            except Exception:
+                _plain(line, size)
+        pdf.ln(2)
 
     def separator():
         pdf.set_draw_color(200, 200, 200)
