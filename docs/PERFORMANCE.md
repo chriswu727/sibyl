@@ -132,17 +132,17 @@ in YAML. Fast mode keeps search/scrape/synthesis/cross-analysis and skips only
 review, for ~12-20% lower latency at the cost of a little polish. Default stays
 full-quality.
 
-### Prefix caching — a cost lever, not a speed one
+### Prefix caching — a cost win (wired in)
 
-Profiling showed `cache_hit=0`: the ~3670-token source context is reprocessed
-by every synthesis call (they run in parallel and all miss DeepSeek's prefix
-cache). A warm-up call (max_tokens=1 with the shared prefix) before the batch
-makes the batch hit the cache (measured `cache_hit` 0 → 11264 tokens), which
-cuts input-token cost ~10× on that portion. But it's **latency-neutral**
-(15.2s → 15.4s — the warm call's prefill offsets the batch's prefill savings),
-so it's deliberately NOT wired in: it would add complexity for a cost win only,
-and decode (not prefill) dominates latency. Revisit if cost becomes the
-priority over speed.
+Profiling showed `cache_hit=0`: the ~3670-token source context was reprocessed
+by every synthesis call (they run in parallel and all missed DeepSeek's prefix
+cache). `Researcher._warm_cache` now fires one max_tokens=1 request with the
+shared prefix before the synthesis batch, so the batch cache-hits it. Measured
+end-to-end on a real depth-2 run: **51% of all input tokens cached** (was 0),
+~10× cheaper on that portion, and **latency-neutral** (the warm call's prefill
+is offset by the batch skipping it). Gated to DeepSeek models with a substantial
+context. This is a cost optimization — it does not make runs faster (decode, not
+prefill, dominates latency), but it's free to keep.
 
 ## Result
 

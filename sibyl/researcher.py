@@ -505,6 +505,11 @@ Be concrete — give specific numbers, dates, and thresholds where possible.{DEN
         if depth >= 3:
             slot["predictions"] = len(batch)
             batch.append(self._llm_call(provider, predictions_prompt, max_tokens=2200))
+
+        # These calls share the whole source context as a prefix — warm the
+        # cache once so the parallel batch hits it instead of each re-billing it.
+        if len(batch) >= 2 and "deepseek" in provider.model and len(context) > 2000:
+            await self._warm_cache(provider, base_prompt)
         batch_results = await asyncio.gather(*batch)
         summary, findings_text = batch_results[0], batch_results[1]
         analysis = batch_results[slot["analysis"]] if "analysis" in slot else ""
@@ -552,6 +557,30 @@ List exactly 10 KEY FINDINGS as numbered items. Each must include a specific num
             confidence=confidence,
             model_used=provider.model,
         )
+
+    async def _warm_cache(self, provider: Provider, prefix: str) -> None:
+        """Fire a 1-token request to populate DeepSeek's prefix cache.
+
+        The synthesis calls run in parallel and share a large source-context
+        prefix; without warming they all cache-miss and re-bill that prefix.
+        One cheap warm-up first makes them cache-hit (~10x cheaper input tokens),
+        and its prefill is offset by the batch skipping prefill, so it's roughly
+        latency-neutral. Best-effort: failures are swallowed.
+        """
+        kwargs = {
+            "model": provider.model,
+            "max_tokens": 1,
+            "messages": [{"role": "user", "content": prefix}],
+            "extra_body": {"thinking": {"type": "disabled"}},
+        }
+        if provider.api_key:
+            kwargs["api_key"] = provider.api_key
+        if provider.api_base:
+            kwargs["api_base"] = provider.api_base
+        try:
+            await litellm.acompletion(**kwargs)
+        except Exception:
+            pass
 
     async def _llm_call(
         self,
