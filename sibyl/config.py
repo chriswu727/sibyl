@@ -10,7 +10,7 @@ import yaml
 
 @dataclass
 class Provider:
-    model: str          # LiteLLM model string, e.g. "deepseek/deepseek-chat"
+    model: str          # LiteLLM model string, e.g. "deepseek/deepseek-v4-flash"
     api_key: str = ""
     api_base: str = ""
     role: str = "general"   # general, analysis, search, chinese, fast
@@ -34,7 +34,7 @@ class Config:
             if p.role == role:
                 return p
         # Fallback to first provider
-        return self.providers[0] if self.providers else Provider(model="deepseek/deepseek-chat")
+        return self.providers[0] if self.providers else Provider(model="deepseek/deepseek-v4-flash")
 
     @classmethod
     def from_yaml(cls, path: str) -> Config:
