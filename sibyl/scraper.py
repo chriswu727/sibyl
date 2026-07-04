@@ -132,12 +132,14 @@ async def scrape_url(
                 if resp.status_code == 200:
                     return await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
 
-                # Retry on 403/429 with different User-Agent
+                # Retry 403/429 once with a different User-Agent (may clear).
                 if resp.status_code in (403, 429) and attempt == 0:
                     continue
 
-                # On a hard block, optionally recover via Jina Reader (opt-in).
-                if resp.status_code in (401, 403, 429, 451) and attempt == 1 and jina_fallback:
+                # On a hard block we won't (further) retry — 401/451 don't
+                # benefit from a UA swap, 403/429 have already been retried —
+                # optionally recover via Jina Reader (opt-in).
+                if resp.status_code in (401, 403, 429, 451) and jina_fallback:
                     jina_page = await _try_jina(url, max_chars, client)
                     if jina_page and jina_page.text:
                         return jina_page

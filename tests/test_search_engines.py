@@ -115,6 +115,16 @@ class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
         moj.assert_called_once()
         self.assertEqual(res[0].url, "https://m.com")
 
+    async def test_ddg_raises_still_fails_over(self):
+        # A DDG timeout/reset (raises) must still fail over to Mojeek, not propagate.
+        import httpx
+        ddg = mock.AsyncMock(side_effect=httpx.ConnectError("reset"))
+        moj = mock.AsyncMock(return_value=[SearchResult("M", "https://m.com", "s", "web")])
+        with mock.patch("sibyl.search.search_duckduckgo", ddg), mock.patch("sibyl.search.search_mojeek", moj):
+            res = await _search_general_web("q", 5)
+        moj.assert_called_once()
+        self.assertEqual(res[0].url, "https://m.com")
+
 
 class TestGoogleNews(unittest.IsolatedAsyncioTestCase):
     async def test_parses_rss(self):

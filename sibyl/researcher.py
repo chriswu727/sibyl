@@ -637,18 +637,25 @@ Return json: an object with key "findings" whose value is a JSON array of exactl
         """Parse findings from a JSON `{"findings": [...]}` object, falling back
         to the legacy numbered/bulleted-line split so nothing regresses if the
         model ignores JSON mode or the JSON is truncated."""
+        import re
+        # Strip a leading list enumerator ("1. ", "2) ", "- ", "* ") so the
+        # renderer's own numbering doesn't produce "1. 1. ...".
+        def _clean(s: str) -> str:
+            return re.sub(r'^\s*(?:\d+[.)]\s*|[-*•]\s*)', '', s).strip()
+
         stripped = (text or "").strip()
         if stripped.startswith("{") or stripped.startswith("["):
             try:
                 data = json.loads(stripped)
                 items = data.get("findings") if isinstance(data, dict) else data
                 if isinstance(items, list):
-                    out = [str(x).strip() for x in items if str(x).strip()]
+                    out = [_clean(str(x)) for x in items if str(x).strip()]
+                    out = [x for x in out if x]
                     if out:
                         return out
             except (json.JSONDecodeError, AttributeError, TypeError):
                 pass
-        return [f.strip().lstrip("- ").lstrip("* ") for f in stripped.splitlines()
+        return [_clean(f) for f in stripped.splitlines()
                 if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
 
     @staticmethod

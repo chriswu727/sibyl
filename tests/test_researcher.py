@@ -134,6 +134,12 @@ class TestParseFindings(unittest.TestCase):
         self.assertEqual(Researcher._parse_findings(""), [])
         self.assertEqual(Researcher._parse_findings('{"findings": []}'), [])
 
+    def test_strips_leading_enumerator(self):
+        # A pre-numbered finding must not survive as "1. ..." (renderer adds its own)
+        out = Researcher._parse_findings('{"findings": ["1. Revenue grew 40% [Source 1]", "2) Margins fell"]}')
+        self.assertEqual(out[0], "Revenue grew 40% [Source 1]")
+        self.assertEqual(out[1], "Margins fell")
+
     def test_malformed_json_falls_back(self):
         # truncated JSON → fall back to line parse of whatever is there
         out = Researcher._parse_findings('{"findings": ["good finding that is long enough to survive"')

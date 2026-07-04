@@ -26,6 +26,19 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         jina.assert_not_called()
         self.assertTrue(page.error and "403" in page.error)
 
+    async def test_triggered_on_451_first_attempt(self):
+        # 451 doesn't retry (no UA-swap continue) — the fallback must still fire.
+        client = mock.Mock()
+        client.get = mock.AsyncMock(return_value=_resp(451))
+        from sibyl.scraper import WebPage
+
+        async def fake_jina(url, max_chars, c=None):
+            return WebPage(url=url, title="Recovered", text="clean content " * 20)
+
+        with mock.patch("sibyl.scraper._try_jina", fake_jina):
+            page = await scrape_url("https://legal-block.com/x", client=client, jina_fallback=True)
+        self.assertEqual(page.title, "Recovered")
+
     async def test_triggered_on_block_when_enabled(self):
         client = mock.Mock()
         client.get = mock.AsyncMock(return_value=_resp(403))

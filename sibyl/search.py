@@ -113,10 +113,14 @@ async def _search_general_web(
     query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     """General-web search with failover: DuckDuckGo first (its lite HTML endpoint
-    is increasingly CAPTCHA/rate-limit gated in 2026); if it returns nothing,
-    fall over to Mojeek's independent index. Keeps the keyless value while
-    surviving a DDG block."""
-    results = await search_duckduckgo(query, max_results, client=client)
+    is increasingly CAPTCHA/rate-limit gated in 2026); if it returns nothing — or
+    raises (a timeout/connection reset is a common block symptom) — fall over to
+    Mojeek's independent index. Keeps the keyless value while surviving a DDG
+    block."""
+    try:
+        results = await search_duckduckgo(query, max_results, client=client)
+    except Exception:
+        results = []
     if not results:
         results = await search_mojeek(query, max_results, client=client)
     return results

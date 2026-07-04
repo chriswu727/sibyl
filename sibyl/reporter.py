@@ -171,7 +171,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     body(report.summary)
     separator()
 
-    # Key Findings (strip duplicate numbering like "1. 1.")
+    # Key Findings (findings are enumerator-stripped in _parse_findings)
     heading("Key Findings", 14)
     for i, finding in enumerate(report.key_findings, 1):
         body(f"{i}. {finding}")
