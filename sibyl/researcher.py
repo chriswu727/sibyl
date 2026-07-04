@@ -433,17 +433,25 @@ Return ONLY the queries, one per line."""
 
         base_prompt = f"RESEARCH QUESTION: {query}\n\nSOURCES:\n{context}{sub_context}{lang_inst}"
 
+        # Density directive — A/B showed a length-bounded "every sentence adds a
+        # distinct fact, no filler" instruction produces output that is both
+        # faster to generate (fewer tokens) AND sharper (the verbose variant was
+        # padding). Generation is decode-bound, so fewer tokens = real latency.
+        DENSITY = ("\n\nBe information-dense: every sentence must add a distinct "
+                   "fact or insight. No filler, no restating the question, no "
+                   "throat-clearing preamble. Tight analytical prose.")
+
         # ── Sections 1 & 2: Summary + Findings (PARALLEL) ──
         summary_prompt = f"""{base_prompt}
 
 You are a senior research analyst. Write a comprehensive SUMMARY that fully answers the research question.
 
 Requirements:
-- 4-5 detailed paragraphs
+- 4-5 substantial paragraphs
 - Every paragraph must cite sources as [Source N]
 - Include specific data: numbers, percentages, dollar amounts, dates
 - Cover: current state, key drivers, outlook, implications
-- Write with authority for decision-makers"""
+- Write with authority for decision-makers{DENSITY}"""
 
         findings_prompt = f"""{base_prompt}
 
@@ -453,19 +461,19 @@ Based on all sources, list 10-15 KEY FINDINGS. Each finding must:
 - Cite the source [Source N]
 - Explain the significance (WHY does this matter?)
 
-Format each as a numbered item. Be specific, not generic."""
+Format each as a numbered item. Be specific, not generic.{DENSITY}"""
 
         # Analysis depends only on the sources (not on summary/findings), so it
         # joins this first parallel batch at depth 2+ instead of running after.
         analysis_prompt = f"""{base_prompt}
 
-Write a DEEP ANALYSIS section. Cover:
+Write a DEEP ANALYSIS section covering:
 1. Conflicting viewpoints — what do different sources/experts disagree on? Present both sides with evidence.
 2. Underlying trends — what structural forces are driving this topic?
 3. Second-order effects — what consequences might people be overlooking?
 4. Historical context — how does the current situation compare to past patterns?
 
-Cite sources as [Source N]. Be analytical, not just descriptive."""
+Cite sources as [Source N]. Be analytical, not just descriptive.{DENSITY}"""
 
         # Predictions (depth 3) also depends only on the sources — an A/B showed
         # feeding it the finished summary gave no quality gain — so it joins the
@@ -479,19 +487,22 @@ Write a PREDICTIONS section:
 4. Key uncertainties — the 3 things that could change everything
 5. Confidence rating (low/medium/high) with detailed justification
 
-Be concrete — give specific numbers, dates, and thresholds where possible."""
+Be concrete — give specific numbers, dates, and thresholds where possible.{DENSITY}"""
 
         batch = [
-            self._llm_call(provider, summary_prompt, max_tokens=2000),
-            self._llm_call(provider, findings_prompt, max_tokens=2500),
+            self._llm_call(provider, summary_prompt, max_tokens=1600),
+            self._llm_call(provider, findings_prompt, max_tokens=2000),
         ]
         slot = {}
         if depth >= 2:
             slot["analysis"] = len(batch)
-            batch.append(self._llm_call(provider, analysis_prompt, max_tokens=2000))
+            # Sized to fit a complete 4-part analysis even on a verbose run —
+            # the density directive shortens the average, but length varies, and
+            # a tight cap truncates mid-section (the old 2000 cap did too).
+            batch.append(self._llm_call(provider, analysis_prompt, max_tokens=2400))
         if depth >= 3:
             slot["predictions"] = len(batch)
-            batch.append(self._llm_call(provider, predictions_prompt, max_tokens=2000))
+            batch.append(self._llm_call(provider, predictions_prompt, max_tokens=2200))
         batch_results = await asyncio.gather(*batch)
         summary, findings_text = batch_results[0], batch_results[1]
         analysis = batch_results[slot["analysis"]] if "analysis" in slot else ""

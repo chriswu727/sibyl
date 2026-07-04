@@ -98,11 +98,35 @@ This is roughly the floor. The remaining depth-2 time is ~9s mechanical +
 generation on flash and both earn their quality. Cutting further trades quality
 for marginal speed.
 
+### Density prompts + truncation fix
+
+Profiling the real synthesis batch showed it is **decode-bound**: wall time is
+gated by whichever section generates the most tokens (usually the deep
+analysis), at ~85 tok/s. You cannot parallelize your way out of generating N
+tokens — an A/B splitting analysis into two parallel halves gave only 1.2x
+because each half still filled its own budget. The one real lever is generating
+*fewer* tokens: an A/B found a "be information-dense, every sentence adds a
+distinct fact, no filler" directive produced output that was both ~1.7x faster
+*and* sharper (the verbose variant was padding). So all synthesis sections carry
+that directive.
+
+Profiling also surfaced a latent bug: the analysis/predictions sections were
+**truncating at their token caps** (the old 2000 cap was below what a full
+4-part analysis needs — even the pre-density version was cut off mid-section).
+Caps are now sized to fit a complete section (analysis 2400, predictions 2200);
+the density directive keeps the average well under that, so most runs finish
+faster while verbose runs still complete instead of truncating.
+
+Net: this stage is at the decode floor. Density buys tighter reports and a
+faster average, not a step change — the remaining time is each section
+generating its complete content, which is irreducible without thinning the
+report.
+
 ## Result
 
-Depth-2 run (DeepSeek V4, averaged over trials): **183s → ~46s (~4x)**, per-run
-variance down from ±40% to a few seconds, and report quality held or improved
-(longer complete analysis, no truncated findings, working cross-analysis).
+Depth-2 run (DeepSeek V4, averaged over trials): **183s → ~40-46s (~4x)**,
+per-run variance down from ±40% to a few seconds, report quality improved
+(denser prose, no truncated sections, working cross-analysis).
 Depth-1 ~15s, depth-3 ~56s (down from ~80s).
 
 ## Research pipeline parallelization (v0.2.2)
