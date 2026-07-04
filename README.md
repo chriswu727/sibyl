@@ -116,11 +116,14 @@ Sibyl works with any LLM. Auto-detects from environment variables:
 
 | Provider | Env var | Model |
 |----------|---------|-------|
-| DeepSeek | `DEEPSEEK_API_KEY` | `deepseek/deepseek-chat` |
+| DeepSeek | `DEEPSEEK_API_KEY` | `deepseek/deepseek-v4-flash` |
 | OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
 | Anthropic | `ANTHROPIC_API_KEY` | `claude-sonnet-4-20250514` |
 | Gemini | `GEMINI_API_KEY` | `gemini/gemini-2.5-flash` |
 | GLM (ZhipuAI) | `ZHIPUAI_API_KEY` | `glm-4-flash` |
+
+DeepSeek uses the V4 flash tier by default. If DeepSeek renames it, set
+`DEEPSEEK_MODEL=deepseek-<new-name>` to switch without a code change.
 
 Or configure multiple providers with roles:
 

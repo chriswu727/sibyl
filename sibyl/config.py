@@ -64,10 +64,16 @@ class Config:
         # analytical steps keep it on.
         if not model and os.environ.get("DEEPSEEK_API_KEY"):
             key = os.environ["DEEPSEEK_API_KEY"]
+            # Default to the latest V4 tier, but honor a DEEPSEEK_MODEL override so
+            # a rename (DeepSeek already went deepseek-chat -> v4-flash) doesn't
+            # require a code change — just set DEEPSEEK_MODEL=deepseek-<new>.
+            ds_model = os.environ.get("DEEPSEEK_MODEL", "deepseek/deepseek-v4-flash")
+            if "/" not in ds_model:
+                ds_model = f"deepseek/{ds_model}"
             return cls(providers=[
-                Provider(model="deepseek/deepseek-v4-flash", api_key=key, role="general"),
-                Provider(model="deepseek/deepseek-v4-flash", api_key=key, role="fast"),
-                Provider(model="deepseek/deepseek-v4-flash", api_key=key, role="analysis"),
+                Provider(model=ds_model, api_key=key, role="general"),
+                Provider(model=ds_model, api_key=key, role="fast"),
+                Provider(model=ds_model, api_key=key, role="analysis"),
             ])
 
         if not model:

@@ -27,6 +27,20 @@ class TestFromEnv(unittest.TestCase):
         self.assertEqual(len(cfg.providers), 1)
         self.assertEqual(cfg.providers[0].model, "gpt-4o-mini")
 
+    def test_deepseek_model_override(self):
+        with mock.patch.dict(os.environ,
+                             {"DEEPSEEK_API_KEY": "sk-test", "DEEPSEEK_MODEL": "deepseek-v5-flash"},
+                             clear=True):
+            cfg = Config.from_env()
+        self.assertTrue(all(p.model == "deepseek/deepseek-v5-flash" for p in cfg.providers))
+
+    def test_deepseek_model_override_keeps_explicit_prefix(self):
+        with mock.patch.dict(os.environ,
+                             {"DEEPSEEK_API_KEY": "sk-test", "DEEPSEEK_MODEL": "deepseek/custom-x"},
+                             clear=True):
+            cfg = Config.from_env()
+        self.assertEqual(cfg.providers[0].model, "deepseek/custom-x")
+
     def test_explicit_model_beats_env(self):
         with mock.patch.dict(os.environ, {"DEEPSEEK_API_KEY": "sk-test"}, clear=True):
             cfg = Config.from_env(model="gemini/gemini-2.5-flash", api_key="k")
