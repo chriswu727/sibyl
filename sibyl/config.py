@@ -26,6 +26,7 @@ class Config:
     language: str = "auto"  # auto, en, zh
     fast: bool = False      # skip the review/refine pass for ~20% faster runs
     extractor: str = "bs4"  # HTML content extractor: "bs4" (default) or "trafilatura"
+    jina_fallback: bool = False  # on scrape block/403, retry via r.jina.ai (needs JINA_API_KEY)
 
     def get_provider(self, role: str = "general") -> Provider:
         """Get the best provider for a given role."""
@@ -50,6 +51,7 @@ class Config:
             language=data.get("language", "auto"),
             fast=data.get("fast", False),
             extractor=data.get("extractor", "bs4"),
+            jina_fallback=data.get("jina_fallback", False),
         )
 
     @classmethod

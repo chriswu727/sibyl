@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import random
 from dataclasses import dataclass
 from typing import List, Optional
@@ -107,6 +108,7 @@ async def scrape_url(
     max_chars: int = 6000,
     client: Optional[httpx.AsyncClient] = None,
     extractor: str = "bs4",
+    jina_fallback: bool = False,
 ) -> WebPage:
     """Fetch a URL with retry and anti-block techniques.
 
@@ -134,11 +136,11 @@ async def scrape_url(
                 if resp.status_code in (403, 429) and attempt == 0:
                     continue
 
-                # Try Google Cache as fallback on 403
-                if resp.status_code == 403 and attempt == 1:
-                    cache_page = await _try_google_cache(url, max_chars, client, extractor)
-                    if cache_page and cache_page.text:
-                        return cache_page
+                # On a hard block, optionally recover via Jina Reader (opt-in).
+                if resp.status_code in (401, 403, 429, 451) and attempt == 1 and jina_fallback:
+                    jina_page = await _try_jina(url, max_chars, client)
+                    if jina_page and jina_page.text:
+                        return jina_page
 
                 return WebPage(url=url, title="", text="", error=f"HTTP {resp.status_code}")
 
@@ -157,23 +159,35 @@ async def scrape_url(
             await client.aclose()
 
 
-async def _try_google_cache(
+async def _try_jina(
     url: str,
     max_chars: int,
     client: Optional[httpx.AsyncClient] = None,
-    extractor: str = "bs4",
 ) -> Optional[WebPage]:
-    """Try fetching from Google's web cache."""
+    """Fallback via Jina Reader (r.jina.ai): server-side renders JS and returns
+    clean markdown for pages our direct fetch couldn't get (JS/thin/403 — not
+    hard auth-walls). Uses JINA_API_KEY when set (the keyless tier's ~20 RPM
+    trips instantly under concurrency). Timeout is capped BELOW the primary 8s
+    scrape timeout so this branch can't become the slowest path in the batch."""
     own_client = client is None
     if own_client:
-        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
+        client = httpx.AsyncClient(follow_redirects=True, timeout=7.0)
     try:
-        cache_url = f"https://webcache.googleusercontent.com/search?q=cache:{url}"
-        resp = await client.get(cache_url, headers=_get_headers(), timeout=10.0)
+        headers = {"X-Return-Format": "markdown", "Accept": "text/plain"}
+        key = os.environ.get("JINA_API_KEY")
+        if key:
+            headers["Authorization"] = f"Bearer {key}"
+        resp = await client.get(f"https://r.jina.ai/{url}", headers=headers, timeout=7.0)
         if resp.status_code == 200:
-            page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
-            if page.text and len(page.text) > 100:
-                return page
+            # Jina already returns clean markdown — no HTML parsing needed.
+            text = "\n".join(l.strip() for l in resp.text.splitlines() if len(l.strip()) > 5)[:max_chars]
+            if text and len(text) > 100:
+                title = url
+                for line in resp.text.splitlines():
+                    if line.startswith("Title:"):
+                        title = line[6:].strip()
+                        break
+                return WebPage(url=url, title=title, text=text)
     except Exception:
         pass
     finally:
@@ -188,6 +202,7 @@ async def scrape_urls(
     concurrency: int = 8,
     client: Optional[httpx.AsyncClient] = None,
     extractor: str = "bs4",
+    jina_fallback: bool = False,
 ) -> List[WebPage]:
     """Scrape multiple URLs concurrently over a single pooled client."""
     semaphore = asyncio.Semaphore(concurrency)
@@ -203,7 +218,8 @@ async def scrape_urls(
 
     async def _limited_scrape(url: str) -> WebPage:
         async with semaphore:
-            return await scrape_url(url, max_chars, client=client, extractor=extractor)
+            return await scrape_url(url, max_chars, client=client, extractor=extractor,
+                                    jina_fallback=jina_fallback)
 
     try:
         return await asyncio.gather(*[_limited_scrape(url) for url in urls])

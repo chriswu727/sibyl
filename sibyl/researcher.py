@@ -136,7 +136,7 @@ class Researcher:
         scrape_count = min(len(unique_results), self.config.max_sources * 2)  # Try 2x to get enough
         urls_to_scrape = [r.url for r in unique_results[:scrape_count]]
         progress(f"Reading {len(urls_to_scrape)} sources...")
-        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http, extractor=self.config.extractor)
+        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http, extractor=self.config.extractor, jina_fallback=self.config.jina_fallback)
         good_pages = [p for p in pages if p.text and len(p.text) > 100 and not p.error]
 
         # Supplement with search snippets for failed pages
@@ -193,7 +193,7 @@ class Researcher:
                 new_urls = [r.url for r in unique_results if r.url not in scraped_page_urls][:5]
                 if new_urls:
                     progress(f"Reading {len(new_urls)} additional sources...")
-                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http, extractor=self.config.extractor)
+                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http, extractor=self.config.extractor, jina_fallback=self.config.jina_fallback)
                     good_pages.extend([p for p in new_pages if p.text and not p.error])
                     progress(f"Total sources: {len(good_pages)}")
                 search_queries.extend(gaps[:3])
