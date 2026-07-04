@@ -24,6 +24,7 @@ class Config:
     max_sources: int = 15
     max_depth: int = 2      # research depth: 1=quick, 2=standard, 3=deep
     language: str = "auto"  # auto, en, zh
+    fast: bool = False      # skip the review/refine pass for ~20% faster runs
 
     def get_provider(self, role: str = "general") -> Provider:
         """Get the best provider for a given role."""
@@ -46,6 +47,7 @@ class Config:
             max_sources=data.get("max_sources", 10),
             max_depth=data.get("max_depth", 2),
             language=data.get("language", "auto"),
+            fast=data.get("fast", False),
         )
 
     @classmethod

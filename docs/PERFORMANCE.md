@@ -122,9 +122,32 @@ faster average, not a step change — the remaining time is each section
 generating its complete content, which is irreducible without thinning the
 report.
 
+### Fast mode (opt-in) — the last real speed lever
+
+The review/refine pass (~5-10s) is the only remaining step that can be cut for
+speed, and it A/B'd as genuinely valuable (leads with a definitive thesis,
+tightens prose). So instead of dropping it, it's gated behind an opt-in
+`Config.fast` flag: CLI `--fast`, MCP `research(..., fast=True)`, or `fast: true`
+in YAML. Fast mode keeps search/scrape/synthesis/cross-analysis and skips only
+review, for ~12-20% lower latency at the cost of a little polish. Default stays
+full-quality.
+
+### Prefix caching — a cost lever, not a speed one
+
+Profiling showed `cache_hit=0`: the ~3670-token source context is reprocessed
+by every synthesis call (they run in parallel and all miss DeepSeek's prefix
+cache). A warm-up call (max_tokens=1 with the shared prefix) before the batch
+makes the batch hit the cache (measured `cache_hit` 0 → 11264 tokens), which
+cuts input-token cost ~10× on that portion. But it's **latency-neutral**
+(15.2s → 15.4s — the warm call's prefill offsets the batch's prefill savings),
+so it's deliberately NOT wired in: it would add complexity for a cost win only,
+and decode (not prefill) dominates latency. Revisit if cost becomes the
+priority over speed.
+
 ## Result
 
-Depth-2 run (DeepSeek V4, averaged over trials): **183s → ~40-46s (~4x)**,
+Depth-2 run (DeepSeek V4, averaged over trials): **183s → ~40-46s (~4x)**
+(fast mode ~34s),
 per-run variance down from ±40% to a few seconds, report quality improved
 (denser prose, no truncated sections, working cross-analysis).
 Depth-1 ~15s, depth-3 ~56s (down from ~80s).

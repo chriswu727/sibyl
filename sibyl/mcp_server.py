@@ -100,7 +100,7 @@ def _format_report(report: ResearchReport) -> str:
 
 
 @mcp.tool()
-async def research(query: str, depth: int = 2, language: str = "auto") -> str:
+async def research(query: str, depth: int = 2, language: str = "auto", fast: bool = False) -> str:
     """Run a deep research cycle on any topic.
 
     Searches the web, reads multiple sources, and synthesizes a comprehensive
@@ -110,8 +110,10 @@ async def research(query: str, depth: int = 2, language: str = "auto") -> str:
         query: The research question (e.g. "What's the outlook for Canadian housing market in 2026?")
         depth: Research depth. 1=quick (2 queries), 2=standard (4 queries), 3=deep with predictions (6 queries)
         language: Output language. "auto" (match query language), "en", "zh" (Chinese), or any language name
+        fast: Skip the review/refine pass for ~20% faster results with slightly less polish
     """
     config = _get_config()
+    config.fast = fast
     researcher = Researcher(config)
 
     progress_lines = []

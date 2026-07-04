@@ -217,8 +217,10 @@ class Researcher:
         if cross:
             progress(f"Sentiment: {cross.overall_sentiment} | Consensus: {len(cross.consensus_points)} | Disagreements: {len(cross.disagreement_points)}")
 
-        # Step 9: Review and refine (depth 2+)
-        if depth >= 2 and report.summary:
+        # Step 9: Review and refine (depth 2+; skipped in fast mode).
+        # An A/B showed review meaningfully improves the report, so it's on by
+        # default — fast mode trades that polish for ~20% lower latency.
+        if depth >= 2 and report.summary and not self.config.fast:
             progress("Reviewing and refining report...")
             report = await self._review_and_refine(report, good_pages, lang)
 
