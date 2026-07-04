@@ -62,6 +62,27 @@ class TestAnalyzeSources(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ca.overall_sentiment, "mixed")
         self.assertEqual(ca.consensus_points, [])
 
+    async def test_scalar_list_field_does_not_crash(self):
+        # {"consensus": 5} must not raise TypeError (would kill the whole run)
+        async def fake(**kwargs):
+            return _resp(json.dumps({"overall_sentiment": "positive", "consensus": 5,
+                                     "disagreements": None, "unique": ["ok point"]}))
+
+        with mock.patch("sibyl.analyzer.litellm.acompletion", fake):
+            ca = await analyze_sources(_pages(), "q", Provider(model="deepseek/deepseek-v4-flash", api_key="k"))
+        self.assertEqual(ca.consensus_points, [])
+        self.assertEqual(ca.disagreement_points, [])
+        self.assertEqual(ca.unique_insights, ["ok point"])
+
+    async def test_string_list_field_not_split_into_chars(self):
+        # {"consensus": "text"} must degrade to [], not ['t','e','x','t']
+        async def fake(**kwargs):
+            return _resp(json.dumps({"overall_sentiment": "neutral", "consensus": "sources agree on growth"}))
+
+        with mock.patch("sibyl.analyzer.litellm.acompletion", fake):
+            ca = await analyze_sources(_pages(), "q", Provider(model="deepseek/deepseek-v4-flash", api_key="k"))
+        self.assertEqual(ca.consensus_points, [])
+
     async def test_requests_json_object_format(self):
         captured = {}
 

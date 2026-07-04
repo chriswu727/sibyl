@@ -117,9 +117,14 @@ Cite source numbers. Be specific."""
                     sentiment_breakdown[k] = int(raw.get(k, 0))
                 except (ValueError, TypeError):
                     pass
-        consensus = [str(x).strip() for x in (data.get("consensus") or []) if str(x).strip()]
-        disagreements = [str(x).strip() for x in (data.get("disagreements") or []) if str(x).strip()]
-        unique = [str(x).strip() for x in (data.get("unique") or []) if str(x).strip()]
+        # Guard the list shape: JSON mode guarantees valid JSON, not schema
+        # conformance. A scalar here (e.g. "consensus": 5, or a bare string) must
+        # degrade to [] — not crash the run or iterate a string into per-char items.
+        def _as_list(v):
+            return [str(x).strip() for x in v if str(x).strip()] if isinstance(v, list) else []
+        consensus = _as_list(data.get("consensus"))
+        disagreements = _as_list(data.get("disagreements"))
+        unique = _as_list(data.get("unique"))
 
     return CrossAnalysis(
         consensus_points=consensus,
