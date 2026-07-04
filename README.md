@@ -62,7 +62,7 @@ You ask a question
   │
   ├─ Step 1: Decompose into 3-5 focused sub-questions
   ├─ Step 2: Generate 15-20 diverse search queries
-  ├─ Step 3: Search across 4 engines (DuckDuckGo, Google News, Reddit, Wikipedia)
+  ├─ Step 3: Search across 4 engines (DuckDuckGo, Google News, Reddit, Wikipedia; Mojeek fails over if DuckDuckGo is blocked)
   ├─ Step 4: Scrape 15-20 sources (realistic browser headers, retry, Google Cache fallback)
   ├─ Step 5: Filter sources by relevance (LLM-scored)
   ├─ Step 6: Analyze each sub-question independently

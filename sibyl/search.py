@@ -66,6 +66,62 @@ async def search_duckduckgo(
     return results
 
 
+# ── Mojeek (independent keyless index — failover when DDG is blocked) ──
+
+async def search_mojeek(
+    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
+    """Scrape Mojeek — an independent search index (its own crawler), keyless and
+    scraper-tolerant. Independence matters: it does not fail in correlation with
+    DuckDuckGo, so it's a real failover rather than a second view of the same
+    provider."""
+    results = []
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=10.0)
+    try:
+        resp = await client.get(
+            "https://www.mojeek.com/search",
+            params={"q": query},
+            headers=_HEADERS,
+            timeout=10.0,
+        )
+        if resp.status_code != 200:
+            return results
+
+        soup = BeautifulSoup(resp.text, "lxml")
+        for li in soup.select("ul.results-standard li")[:max_results]:
+            h2 = li.find("h2")
+            a = h2.find("a") if h2 else li.select_one("a.ob")
+            if not a:
+                continue
+            url = a.get("href", "")
+            title = a.get_text(strip=True)
+            snippet_el = li.select_one("p.s")
+            snippet = snippet_el.get_text(strip=True) if snippet_el else ""
+            if url.startswith("http") and title:
+                results.append(SearchResult(title=title, url=url, snippet=snippet, source="web"))
+    except Exception:
+        pass
+    finally:
+        if own_client:
+            await client.aclose()
+    return results
+
+
+async def _search_general_web(
+    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+) -> List[SearchResult]:
+    """General-web search with failover: DuckDuckGo first (its lite HTML endpoint
+    is increasingly CAPTCHA/rate-limit gated in 2026); if it returns nothing,
+    fall over to Mojeek's independent index. Keeps the keyless value while
+    surviving a DDG block."""
+    results = await search_duckduckgo(query, max_results, client=client)
+    if not results:
+        results = await search_mojeek(query, max_results, client=client)
+    return results
+
+
 # ── Google News (via RSS) ─────────────────────────────────────────
 
 async def search_google_news(
@@ -271,11 +327,12 @@ async def search_web(
 
     try:
         if engine == "duckduckgo":
-            return await search_duckduckgo(query, max_results, client=client)
+            return await _search_general_web(query, max_results, client=client)
 
-        # "all" — search every engine concurrently
+        # "all" — search every engine concurrently. General web uses a
+        # DDG→Mojeek failover so a DuckDuckGo block doesn't wipe out web results.
         tasks = [
-            search_duckduckgo(query, max_results, client=client),
+            _search_general_web(query, max_results, client=client),
             search_google_news(query, min(max_results, 5), client=client),
             search_reddit(query, min(max_results, 3), client=client),
             search_wikipedia(query, 2, client=client),
