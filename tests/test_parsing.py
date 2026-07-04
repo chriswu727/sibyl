@@ -35,6 +35,23 @@ class TestExtractContent(unittest.TestCase):
         self.assertLessEqual(len(page.text), 200)
 
 
+class TestExtractorChoice(unittest.TestCase):
+    def test_bs4_default_unchanged(self):
+        html = "<html><head><title>T</title></head><body><article><p>the real body content here for the test</p></article></body></html>"
+        page = _extract_content(html, "https://ex.com/a", 6000)  # default extractor
+        self.assertIn("real body content", page.text)
+
+    def test_trafilatura_length_compare_never_shrinks(self):
+        # A page where BS4 would extract more than a thin trafilatura result:
+        # the length-comparison fallback must keep the longer (bs4) text.
+        body = " ".join(f"sentence number {i} with enough words to count" for i in range(40))
+        html = f"<html><head><title>T</title></head><body><article><p>{body}</p></article></body></html>"
+        traf = _extract_content(html, "https://ex.com/b", 6000, extractor="trafilatura")
+        bs4 = _extract_content(html, "https://ex.com/b", 6000, extractor="bs4")
+        self.assertGreaterEqual(len(traf.text), len(bs4.text) - 5)
+        self.assertIn("sentence number 20", traf.text)
+
+
 class TestScrapeUrlGuards(unittest.IsolatedAsyncioTestCase):
     async def test_non_http_url_returns_error_without_network(self):
         page = await scrape_url("ftp://example.com/file")

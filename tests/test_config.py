@@ -58,6 +58,25 @@ class TestGetProvider(unittest.TestCase):
         self.assertEqual(cfg.get_provider("nonexistent").model, "m-general")
 
 
+class TestExtractor(unittest.TestCase):
+    def test_defaults_bs4(self):
+        self.assertEqual(Config().extractor, "bs4")
+
+    def test_from_yaml_reads_extractor(self):
+        import tempfile, textwrap
+        with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
+            f.write(textwrap.dedent("""
+                providers:
+                  - model: deepseek/deepseek-v4-flash
+                    api_key: sk-x
+                extractor: trafilatura
+            """))
+            path = f.name
+        cfg = Config.from_yaml(path)
+        self.assertEqual(cfg.extractor, "trafilatura")
+        os.unlink(path)
+
+
 class TestFastFlag(unittest.TestCase):
     def test_defaults_off(self):
         self.assertFalse(Config().fast)

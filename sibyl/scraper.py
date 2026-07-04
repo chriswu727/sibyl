@@ -40,20 +40,17 @@ def _get_headers() -> dict:
     }
 
 
-def _extract_content(html: str, url: str, max_chars: int) -> WebPage:
-    """Parse HTML and extract clean text. CPU-bound — run off the event loop."""
-    soup = BeautifulSoup(html, "lxml")
+def _clean_lines(text: str, max_chars: int) -> str:
+    lines = []
+    for line in text.splitlines():
+        line = line.strip()
+        if line and len(line) > 5:  # Skip very short lines (likely UI elements)
+            lines.append(line)
+    return "\n".join(lines)[:max_chars]
 
-    # Remove noise elements
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside",
-                      "noscript", "iframe", "form", "button"]):
-        tag.decompose()
 
-    title = ""
-    if soup.title and soup.title.string:
-        title = soup.title.string.strip()
-
-    # Try multiple content extraction strategies
+def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
+    """Legacy BeautifulSoup body extraction (noise-stripped soup)."""
     main = (
         soup.find("article")
         or soup.find("main")
@@ -64,16 +61,43 @@ def _extract_content(html: str, url: str, max_chars: int) -> WebPage:
         ))
         or soup.find("body")
     )
-
     text = main.get_text(separator="\n", strip=True) if main else ""
+    return _clean_lines(text, max_chars)
 
-    # Clean up
-    lines = []
-    for line in text.splitlines():
-        line = line.strip()
-        if line and len(line) > 5:  # Skip very short lines (likely UI elements)
-            lines.append(line)
-    text = "\n".join(lines)[:max_chars]
+
+def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4") -> WebPage:
+    """Parse HTML and extract clean text. CPU-bound — run off the event loop.
+
+    ``extractor='trafilatura'`` runs trafilatura (favor_recall) and takes the
+    LONGER of trafilatura vs the BeautifulSoup body — a length-comparison
+    fallback, so a short-but-non-empty trafilatura result can never shrink the
+    usable text below what bs4 would have extracted. Title always comes from the
+    cheap <title> tag.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    for tag in soup(["script", "style", "nav", "footer", "header", "aside",
+                      "noscript", "iframe", "form", "button"]):
+        tag.decompose()
+
+    title = ""
+    if soup.title and soup.title.string:
+        title = soup.title.string.strip()
+
+    bs4_text = _bs4_body_text(soup, max_chars)
+    text = bs4_text
+
+    if extractor == "trafilatura":
+        try:
+            import trafilatura
+            traf = trafilatura.extract(
+                html, favor_recall=True, output_format="txt",
+                include_comments=False, include_tables=True,
+            ) or ""
+            traf_text = _clean_lines(traf, max_chars)
+            if len(traf_text) > len(bs4_text):
+                text = traf_text
+        except Exception:
+            pass  # any trafilatura failure keeps the bs4 result
 
     return WebPage(url=url, title=title, text=text)
 
@@ -82,6 +106,7 @@ async def scrape_url(
     url: str,
     max_chars: int = 6000,
     client: Optional[httpx.AsyncClient] = None,
+    extractor: str = "bs4",
 ) -> WebPage:
     """Fetch a URL with retry and anti-block techniques.
 
@@ -103,7 +128,7 @@ async def scrape_url(
                 resp = await client.get(url, headers=_get_headers(), timeout=8.0)
 
                 if resp.status_code == 200:
-                    return await asyncio.to_thread(_extract_content, resp.text, url, max_chars)
+                    return await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
 
                 # Retry on 403/429 with different User-Agent
                 if resp.status_code in (403, 429) and attempt == 0:
@@ -111,7 +136,7 @@ async def scrape_url(
 
                 # Try Google Cache as fallback on 403
                 if resp.status_code == 403 and attempt == 1:
-                    cache_page = await _try_google_cache(url, max_chars, client)
+                    cache_page = await _try_google_cache(url, max_chars, client, extractor)
                     if cache_page and cache_page.text:
                         return cache_page
 
@@ -136,6 +161,7 @@ async def _try_google_cache(
     url: str,
     max_chars: int,
     client: Optional[httpx.AsyncClient] = None,
+    extractor: str = "bs4",
 ) -> Optional[WebPage]:
     """Try fetching from Google's web cache."""
     own_client = client is None
@@ -145,7 +171,7 @@ async def _try_google_cache(
         cache_url = f"https://webcache.googleusercontent.com/search?q=cache:{url}"
         resp = await client.get(cache_url, headers=_get_headers(), timeout=10.0)
         if resp.status_code == 200:
-            page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars)
+            page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
             if page.text and len(page.text) > 100:
                 return page
     except Exception:
@@ -161,6 +187,7 @@ async def scrape_urls(
     max_chars: int = 6000,
     concurrency: int = 8,
     client: Optional[httpx.AsyncClient] = None,
+    extractor: str = "bs4",
 ) -> List[WebPage]:
     """Scrape multiple URLs concurrently over a single pooled client."""
     semaphore = asyncio.Semaphore(concurrency)
@@ -176,7 +203,7 @@ async def scrape_urls(
 
     async def _limited_scrape(url: str) -> WebPage:
         async with semaphore:
-            return await scrape_url(url, max_chars, client=client)
+            return await scrape_url(url, max_chars, client=client, extractor=extractor)
 
     try:
         return await asyncio.gather(*[_limited_scrape(url) for url in urls])

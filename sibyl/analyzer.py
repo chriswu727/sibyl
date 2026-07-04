@@ -1,6 +1,8 @@
 """Advanced analysis — sentiment, cross-referencing, source evaluation."""
 from __future__ import annotations
 
+import asyncio
+import json
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -45,103 +47,79 @@ async def analyze_sources(
 
     context = "\n---\n".join(source_summaries)
 
+    # JSON mode with the sentiment keys pinned to exactly what
+    # format_cross_analysis reads (positive/negative/neutral) — a differently
+    # keyed breakdown would silently zero the sentiment line.
     prompt = f"""Analyze these {len(source_summaries)} sources about: {query}
 
 {context}
 
-Provide a structured analysis in this EXACT format:
-
-OVERALL_SENTIMENT: [positive/negative/mixed/neutral]
-
-SENTIMENT_COUNTS:
-positive: [number]
-negative: [number]
-neutral: [number]
-
-CONSENSUS (points most sources agree on):
-- [point 1]
-- [point 2]
-- [point 3]
-
-DISAGREEMENTS (where sources conflict):
-- [point 1 — Source X says A, Source Y says B]
-- [point 2]
-
-UNIQUE_INSIGHTS (notable points from only one source):
-- [Source N: insight]
-- [Source N: insight]
-
-Be specific and cite source numbers."""
+Return json: an object with EXACTLY these keys:
+{{
+  "overall_sentiment": "positive | negative | mixed | neutral",
+  "sentiment_breakdown": {{"positive": <int>, "negative": <int>, "neutral": <int>}},
+  "consensus": ["point most sources agree on", "..."],
+  "disagreements": ["point where sources conflict — Source X says A, Source Y says B", "..."],
+  "unique": ["Source N: a notable point from only one source", "..."]
+}}
+Cite source numbers. Be specific."""
 
     kwargs = {
         "model": provider.model,
         "max_tokens": 1800,
         "messages": [{"role": "user", "content": prompt}],
+        "response_format": {"type": "json_object"},
     }
     if provider.api_key:
         kwargs["api_key"] = provider.api_key
     if provider.api_base:
         kwargs["api_base"] = provider.api_base
     # Structured extraction, not reasoning — disabling DeepSeek V4 thinking keeps
-    # the output format predictable and stops reasoning from eating the token
-    # budget before the CONSENSUS/DISAGREEMENT sections are emitted.
+    # the output predictable and stops reasoning from eating the token budget.
     if "deepseek" in provider.model:
         kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
 
-    response = await litellm.acompletion(**kwargs)
-    text = (response.choices[0].message.content or "").strip()
-
-    # Parse the response
+    # Defaults preserved from the legacy parser so a failure degrades gracefully
+    # rather than crashing (json.loads on empty content would raise).
     overall_sentiment = "mixed"
     sentiment_breakdown = {"positive": 0, "negative": 0, "neutral": 0}
-    consensus = []
-    disagreements = []
-    unique = []
+    consensus: List[str] = []
+    disagreements: List[str] = []
+    unique: List[str] = []
 
-    current_section = ""
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
+    data = None
+    for attempt in range(3):
+        try:
+            response = await litellm.acompletion(**kwargs)
+            text = (response.choices[0].message.content or "").strip()
+            if not text:
+                if attempt < 2:
+                    await asyncio.sleep(1)
+                    continue
+                break
+            data = json.loads(text)
+            break
+        except json.JSONDecodeError:
+            break  # non-JSON: keep defaults
+        except Exception:
+            if attempt == 2:
+                break
+            await asyncio.sleep(1 * (attempt + 1))
 
-        if line.startswith("OVERALL_SENTIMENT:"):
-            s = line.split(":", 1)[1].strip().lower()
-            if s in ("positive", "negative", "mixed", "neutral"):
-                overall_sentiment = s
-
-        elif line.startswith("positive:"):
-            try:
-                sentiment_breakdown["positive"] = int(line.split(":")[1].strip())
-            except ValueError:
-                pass
-        elif line.startswith("negative:"):
-            try:
-                sentiment_breakdown["negative"] = int(line.split(":")[1].strip())
-            except ValueError:
-                pass
-        elif line.startswith("neutral:"):
-            try:
-                sentiment_breakdown["neutral"] = int(line.split(":")[1].strip())
-            except ValueError:
-                pass
-
-        elif "CONSENSUS" in line.upper():
-            current_section = "consensus"
-        elif "DISAGREEMENT" in line.upper():
-            current_section = "disagreements"
-        elif "UNIQUE" in line.upper():
-            current_section = "unique"
-        elif line[0] in "-*•·—" or (line[0].isdigit() and line[:3].strip(".)0123456789") == ""):
-            # Accept -, *, •, ·, — and "1." / "1)" numbered bullets
-            item = line.lstrip("-*•·—0123456789.) ").strip()
-            if not item:
-                continue
-            if current_section == "consensus":
-                consensus.append(item)
-            elif current_section == "disagreements":
-                disagreements.append(item)
-            elif current_section == "unique":
-                unique.append(item)
+    if isinstance(data, dict):
+        s = str(data.get("overall_sentiment", "")).strip().lower()
+        if s in ("positive", "negative", "mixed", "neutral"):
+            overall_sentiment = s
+        raw = data.get("sentiment_breakdown") or {}
+        if isinstance(raw, dict):
+            for k in ("positive", "negative", "neutral"):
+                try:
+                    sentiment_breakdown[k] = int(raw.get(k, 0))
+                except (ValueError, TypeError):
+                    pass
+        consensus = [str(x).strip() for x in (data.get("consensus") or []) if str(x).strip()]
+        disagreements = [str(x).strip() for x in (data.get("disagreements") or []) if str(x).strip()]
+        unique = [str(x).strip() for x in (data.get("unique") or []) if str(x).strip()]
 
     return CrossAnalysis(
         consensus_points=consensus,

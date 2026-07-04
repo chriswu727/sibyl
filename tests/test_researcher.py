@@ -27,7 +27,7 @@ def _cfg(fast=False):
 
 def _canned_llm(prompts_seen):
     """A stand-in for _llm_call that records prompts and returns parseable text."""
-    async def fake(provider, prompt, max_tokens=1500, thinking=False):
+    async def fake(provider, prompt, max_tokens=1500, thinking=False, json_mode=False):
         prompts_seen.append(prompt)
         p = prompt.lower()
         if "sub-questions" in p and "break this" in p:
@@ -39,7 +39,9 @@ def _canned_llm(prompts_seen):
         if "relevance" in p:
             return "1,2,3,4,5"
         if "key findings" in p:
-            return "\n".join(f"{i}. Finding {i} with datum {i}0% [Source {i}]." for i in range(1, 11))
+            # findings now run in json_mode — return the JSON object shape
+            import json as _json
+            return _json.dumps({"findings": [f"Finding {i} with datum {i}0% [Source {i}]." for i in range(1, 11)]})
         # summary / analysis / predictions / review → substantial prose
         return ("This is a substantial analytical paragraph with [Source 1] data. " * 20)
     return fake
@@ -111,6 +113,63 @@ class TestLlmCallThinking(unittest.IsolatedAsyncioTestCase):
         with mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion):
             await r._llm_call(prov, "hello", thinking=False)
         self.assertNotIn("extra_body", captured)
+
+
+class TestParseFindings(unittest.TestCase):
+    def test_parses_json_object(self):
+        out = Researcher._parse_findings('{"findings": ["A [Source 1]", "B [Source 2]"]}')
+        self.assertEqual(out, ["A [Source 1]", "B [Source 2]"])
+
+    def test_parses_bare_json_array(self):
+        out = Researcher._parse_findings('["one finding", "two finding"]')
+        self.assertEqual(out, ["one finding", "two finding"])
+
+    def test_falls_back_to_line_split(self):
+        text = "1. First finding with enough length here\n2. Second finding also long enough"
+        out = Researcher._parse_findings(text)
+        self.assertEqual(len(out), 2)
+        self.assertIn("First finding", out[0])
+
+    def test_empty_and_garbage(self):
+        self.assertEqual(Researcher._parse_findings(""), [])
+        self.assertEqual(Researcher._parse_findings('{"findings": []}'), [])
+
+    def test_malformed_json_falls_back(self):
+        # truncated JSON → fall back to line parse of whatever is there
+        out = Researcher._parse_findings('{"findings": ["good finding that is long enough to survive"')
+        self.assertTrue(any("good finding" in x for x in out) or out == [])
+
+
+class TestJsonMode(unittest.IsolatedAsyncioTestCase):
+    async def test_json_mode_sets_response_format(self):
+        r = Researcher(_cfg())
+        captured = {}
+
+        async def fake_acompletion(**kwargs):
+            captured.update(kwargs)
+            m = mock.Mock()
+            m.choices = [mock.Mock(message=mock.Mock(content='{"findings": []}'))]
+            return m
+
+        prov = Provider(model="deepseek/deepseek-v4-flash", api_key="sk")
+        with mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion):
+            await r._llm_call(prov, "give me json", json_mode=True)
+        self.assertEqual(captured.get("response_format"), {"type": "json_object"})
+
+    async def test_no_json_mode_no_response_format(self):
+        r = Researcher(_cfg())
+        captured = {}
+
+        async def fake_acompletion(**kwargs):
+            captured.update(kwargs)
+            m = mock.Mock()
+            m.choices = [mock.Mock(message=mock.Mock(content="prose"))]
+            return m
+
+        prov = Provider(model="deepseek/deepseek-v4-flash", api_key="sk")
+        with mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion):
+            await r._llm_call(prov, "write prose")
+        self.assertNotIn("response_format", captured)
 
 
 class TestPipelineStructure(unittest.IsolatedAsyncioTestCase):

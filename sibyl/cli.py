@@ -25,7 +25,8 @@ console = Console()
 @click.option("--symbols", "-s", default="", help="Fetch market data for these symbols (e.g. NVDA,GOOGL,SPY)")
 @click.option("--language", "-l", default="auto", help="Output language: auto, en, zh (Chinese), etc.")
 @click.option("--fast", is_flag=True, help="Skip the review/refine pass (~20% faster, slightly less polished)")
-def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast):
+@click.option("--extractor", type=click.Choice(["bs4", "trafilatura"]), default="bs4", help="HTML content extractor")
+def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor):
     """Sibyl -- AI-powered deep research agent.
 
     Research any topic with web search + LLM analysis + market data.
@@ -44,6 +45,7 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
     cfg.max_depth = depth
     cfg.max_sources = max_sources
     cfg.fast = fast
+    cfg.extractor = extractor
 
     console.print(f"\n[bold blue]Sibyl[/] researching: [cyan]{query}[/]")
     console.print(f"[dim]Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}[/]")

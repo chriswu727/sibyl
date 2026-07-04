@@ -16,11 +16,15 @@ classifiers = [
 ]
 keywords = ["research", "ai", "deep-research", "mcp", "llm", "analysis", "prediction"]
 dependencies = [
-    "litellm>=1.40.0",
+    # Floor tested to pass response_format json_object through to deepseek/ and
+    # register v4-flash; ceiling pinned so a future release can't silently break
+    # the extra_body={"thinking":...} contract the whole pipeline relies on.
+    "litellm>=1.83.0,<2.0.0",
     "mcp[cli]>=1.0.0",
     "httpx>=0.27.0",
     "beautifulsoup4>=4.12.0",
-    "lxml>=5.0.0",
+    "lxml>=6.1.1",
+    "trafilatura>=2.0,<3.0",
     "click>=8.0.0",
     "rich>=13.0.0",
     "pyyaml>=6.0",

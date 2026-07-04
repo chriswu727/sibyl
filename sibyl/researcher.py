@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -135,7 +136,7 @@ class Researcher:
         scrape_count = min(len(unique_results), self.config.max_sources * 2)  # Try 2x to get enough
         urls_to_scrape = [r.url for r in unique_results[:scrape_count]]
         progress(f"Reading {len(urls_to_scrape)} sources...")
-        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http)
+        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http, extractor=self.config.extractor)
         good_pages = [p for p in pages if p.text and len(p.text) > 100 and not p.error]
 
         # Supplement with search snippets for failed pages
@@ -192,7 +193,7 @@ class Researcher:
                 new_urls = [r.url for r in unique_results if r.url not in scraped_page_urls][:5]
                 if new_urls:
                     progress(f"Reading {len(new_urls)} additional sources...")
-                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http)
+                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http, extractor=self.config.extractor)
                     good_pages.extend([p for p in new_pages if p.text and not p.error])
                     progress(f"Total sources: {len(good_pages)}")
                 search_queries.extend(gaps[:3])
@@ -334,22 +335,21 @@ DRAFT:
 {draft}
 
 Rewrite the key findings to be stronger: each must lead with a specific claim
-backed by a number/percentage/date, cite [Source N], and explain why it matters.
+backed by a number/percentage/date, cite [Source N] inline, and explain why it matters.
 
 {lang_instruction}
 
-Output ONLY the improved findings as a numbered list, no headers."""
+Return json: an object with key "findings" whose value is a JSON array of strings, one improved finding per string. Example: {{"findings": ["Improved finding with data [Source 2]", "..."]}}."""
 
         new_summary, new_findings_text = await asyncio.gather(
             self._llm_call(provider, summary_prompt, max_tokens=2000),
-            self._llm_call(provider, findings_prompt, max_tokens=2000),
+            self._llm_call(provider, findings_prompt, max_tokens=2000, json_mode=True),
         )
 
         if new_summary and len(new_summary) > len(report.summary) * 0.5:
             report.summary = new_summary.strip()
         if new_findings_text:
-            new_findings = [f.strip().lstrip("- ").lstrip("* ") for f in new_findings_text.splitlines()
-                           if f.strip() and (f.strip()[0] in "-*0123456789")]
+            new_findings = self._parse_findings(new_findings_text)
             if len(new_findings) >= len(report.key_findings) * 0.5:
                 report.key_findings = new_findings
 
@@ -460,10 +460,10 @@ Requirements:
 Based on all sources, list 10-15 KEY FINDINGS. Each finding must:
 - Lead with a specific, bold claim backed by data
 - Include at least one number, percentage, or date
-- Cite the source [Source N]
+- Cite the source inline as [Source N]
 - Explain the significance (WHY does this matter?)
 
-Format each as a numbered item. Be specific, not generic.{DENSITY}"""
+Return json: an object with a single key "findings" whose value is a JSON array of strings, one finding per string with its [Source N] citation inline. Example: {{"findings": ["Revenue grew 12% to $4.1B in Q2 [Source 3], signaling accelerating demand", "..."]}}. Be specific, not generic.{DENSITY}"""
 
         # Analysis depends only on the sources (not on summary/findings), so it
         # joins this first parallel batch at depth 2+ instead of running after.
@@ -493,7 +493,7 @@ Be concrete — give specific numbers, dates, and thresholds where possible.{DEN
 
         batch = [
             self._llm_call(provider, summary_prompt, max_tokens=1600),
-            self._llm_call(provider, findings_prompt, max_tokens=2000),
+            self._llm_call(provider, findings_prompt, max_tokens=2000, json_mode=True),
         ]
         slot = {}
         if depth >= 2:
@@ -519,15 +519,13 @@ Be concrete — give specific numbers, dates, and thresholds where possible.{DEN
         if len(summary) < 800:
             summary = await self._llm_call(provider, summary_prompt + "\n\nIMPORTANT: Write AT LEAST 4 substantial paragraphs with specific data points.", max_tokens=2500)
 
-        findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
-                     if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
+        findings = self._parse_findings(findings_text)
 
         if len(findings) < 5:
             findings_text = await self._llm_call(provider, f"""{base_prompt}
 
-List exactly 10 KEY FINDINGS as numbered items. Each must include a specific number and cite [Source N]. Be detailed.""", max_tokens=2500)
-            findings = [f.strip().lstrip("- ").lstrip("* ") for f in findings_text.splitlines()
-                         if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
+Return json: an object with key "findings" whose value is a JSON array of exactly 10 strings. Each string is one key finding with a specific number and an inline [Source N] citation. Example: {{"findings": ["Finding one with a datum [Source 1]", "..."]}}. Be detailed.""", max_tokens=2500, json_mode=True)
+            findings = self._parse_findings(findings_text)
 
         confidence = ""
         for line in (predictions or "").splitlines():
@@ -588,6 +586,7 @@ List exactly 10 KEY FINDINGS as numbered items. Each must include a specific num
         prompt: str,
         max_tokens: int = 1500,
         thinking: bool = False,
+        json_mode: bool = False,
     ) -> str:
         """Call an LLM provider via LiteLLM with retry.
 
@@ -597,6 +596,11 @@ List exactly 10 KEY FINDINGS as numbered items. Each must include a specific num
         and, on short-output calls, starving the content budget. Pass
         ``thinking=True`` only if a future call genuinely needs step-by-step
         reasoning. The toggle is a no-op for non-DeepSeek providers.
+
+        ``json_mode=True`` requests a JSON object response (DeepSeek's json_object
+        mode) for machine-parsed calls — the prompt must contain the word "json"
+        and an example. Keep ``max_tokens`` generous: a truncated JSON string
+        fails to parse and triggers the empty-content retry.
         """
         kwargs = {
             "model": provider.model,
@@ -609,6 +613,8 @@ List exactly 10 KEY FINDINGS as numbered items. Each must include a specific num
             kwargs["api_base"] = provider.api_base
         if not thinking and "deepseek" in provider.model:
             kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+        if json_mode:
+            kwargs["response_format"] = {"type": "json_object"}
 
         for attempt in range(3):
             try:
@@ -625,6 +631,25 @@ List exactly 10 KEY FINDINGS as numbered items. Each must include a specific num
                 if attempt == 2:
                     return f"(LLM call failed after 3 attempts: {str(e)[:100]})"
                 await asyncio.sleep(1 * (attempt + 1))
+
+    @staticmethod
+    def _parse_findings(text: str) -> List[str]:
+        """Parse findings from a JSON `{"findings": [...]}` object, falling back
+        to the legacy numbered/bulleted-line split so nothing regresses if the
+        model ignores JSON mode or the JSON is truncated."""
+        stripped = (text or "").strip()
+        if stripped.startswith("{") or stripped.startswith("["):
+            try:
+                data = json.loads(stripped)
+                items = data.get("findings") if isinstance(data, dict) else data
+                if isinstance(items, list):
+                    out = [str(x).strip() for x in items if str(x).strip()]
+                    if out:
+                        return out
+            except (json.JSONDecodeError, AttributeError, TypeError):
+                pass
+        return [f.strip().lstrip("- ").lstrip("* ") for f in stripped.splitlines()
+                if f.strip() and len(f.strip()) > 20 and (f.strip()[0] in "-*0123456789")]
 
     @staticmethod
     def _extract_section(text: str, start_header: str, end_header: str) -> str:
