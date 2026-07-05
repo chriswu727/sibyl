@@ -30,6 +30,33 @@ class TestMarkdownReport(unittest.TestCase):
         self.assertIn("Example", md)
 
 
+class TestVerificationRendering(unittest.TestCase):
+    def test_unverified_marker_in_markdown(self):
+        from sibyl.verifier import FindingVerification
+        rep = _report()
+        rep.finding_verifications = [
+            FindingVerification(1, True, "high", [1], ""),
+            FindingVerification(2, False, "low", [], "no support"),
+        ]
+        md = _report_to_markdown(rep)
+        self.assertIn("confidence: high", md)
+        self.assertIn("(unverified)", md)
+
+    def test_empty_verifications_no_markers(self):
+        rep = _report()
+        rep.finding_verifications = []
+        md = _report_to_markdown(rep)
+        self.assertNotIn("(unverified)", md)
+        self.assertNotIn("confidence:", md)
+
+    def test_length_mismatch_no_crash(self):
+        from sibyl.verifier import FindingVerification
+        rep = _report()  # 2 findings
+        rep.finding_verifications = [FindingVerification(1, True, "high", [1], "")]  # only 1
+        md = _report_to_markdown(rep)  # must not IndexError
+        self.assertIn("confidence: high", md)
+
+
 class TestPdfGeneration(unittest.TestCase):
     def test_pdf_generates_without_crashing(self):
         with tempfile.TemporaryDirectory() as d:

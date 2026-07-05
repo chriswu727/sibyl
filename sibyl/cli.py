@@ -28,7 +28,12 @@ console = Console()
 @click.option("--extractor", type=click.Choice(["bs4", "trafilatura"]), default="bs4", help="HTML content extractor")
 @click.option("--jina-fallback", is_flag=True, help="On a blocked scrape, retry via r.jina.ai (set JINA_API_KEY)")
 @click.option("--js-render/--no-js-render", default=True, help="Render thin/JS pages via r.jina.ai (keyless)")
-def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor, jina_fallback, js_render):
+@click.option("--effort", "-e", type=click.Choice(["quick", "standard", "deep"]), default="", help="Effort tier (overrides --depth)")
+@click.option("--compact", is_flag=True, help="Compact each source before synthesis to weigh more sources")
+@click.option("--reflect-rounds", default=0, help="Extra reflect->search->re-synthesize cycles (0=off)")
+@click.option("--perspectives/--no-perspectives", default=True, help="Perspective-guided query generation")
+@click.option("--verify/--no-verify", default=True, help="Verify each finding against its cited source")
+def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor, jina_fallback, js_render, effort, compact, reflect_rounds, perspectives, verify):
     """Sibyl -- AI-powered deep research agent.
 
     Research any topic with web search + LLM analysis + market data.
@@ -44,12 +49,21 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
     else:
         cfg = Config.from_env(model=model, api_key=api_key, api_base=api_base)
 
+    if effort:
+        from .config import TIERS
+        depth = TIERS[effort].depth  # effort tier wins over --depth
     cfg.max_depth = depth
     cfg.max_sources = max_sources
     cfg.fast = fast
     cfg.extractor = extractor
     cfg.jina_fallback = jina_fallback
     cfg.js_render = js_render
+    cfg.compact_sources = compact
+    if compact and cfg.max_synth_sources == 12:
+        cfg.max_synth_sources = 40  # compaction makes more sources affordable
+    cfg.reflect_rounds = reflect_rounds
+    cfg.perspectives = perspectives
+    cfg.verify_claims = verify
 
     console.print(f"\n[bold blue]Sibyl[/] researching: [cyan]{query}[/]")
     console.print(f"[dim]Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}[/]")

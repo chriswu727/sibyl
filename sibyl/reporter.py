@@ -23,8 +23,13 @@ def _report_to_markdown(report: ResearchReport) -> str:
         "## Key Findings",
         "",
     ]
+    fv = report.finding_verifications or []
     for i, finding in enumerate(report.key_findings, 1):
-        lines.append(f"{i}. {finding}")
+        v = fv[i - 1] if i - 1 < len(fv) else None
+        tag = ""
+        if v is not None:
+            tag = f"  _[confidence: {v.confidence}]_" if v.supported else "  _(unverified)_"
+        lines.append(f"{i}. {finding}{tag}")
     lines.append("")
 
     if report.analysis:
@@ -39,11 +44,14 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append(report.predictions)
         lines.append("")
 
-    lines.append("## Sources")
+    lines.append("## References")
     lines.append("")
     for i, src in enumerate(report.sources, 1):
         lines.append(f"{i}. **{src.title}**  ")
         lines.append(f"   {src.url}")
+        evidence = src.supporting_snippet or src.snippet
+        if evidence:
+            lines.append(f"   > {evidence}")
     lines.append("")
 
     if report.search_queries:
@@ -171,10 +179,15 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     body(report.summary)
     separator()
 
-    # Key Findings (findings are enumerator-stripped in _parse_findings)
+    # Key Findings — annotate each with its verification verdict (if present).
     heading("Key Findings", 14)
+    fv = report.finding_verifications or []
     for i, finding in enumerate(report.key_findings, 1):
-        body(f"{i}. {finding}")
+        v = fv[i - 1] if i - 1 < len(fv) else None
+        tag = ""
+        if v is not None:
+            tag = f"  [confidence: {v.confidence}]" if v.supported else "  (unverified)"
+        body(f"{i}. {finding}{tag}")
     separator()
 
     # Analysis

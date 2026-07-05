@@ -214,9 +214,22 @@ class Researcher:
                     progress(f"Total sources: {len(good_pages)}")
                 search_queries.extend(gaps[:3])
 
+        # Step 4c: optional per-source compaction — summarize each source to its
+        # query-relevant points so synthesis can weigh many more sources (opt-in).
+        compacted = None
+        if self.config.compact_sources and good_pages:
+            progress("Compacting sources...")
+            compacted = await self._compact_sources(query, good_pages[:self.config.max_synth_sources])
+            compacted = compacted if len(compacted) >= 3 else None
+
+        # cited_pages IS the [Source N] order for synthesis, the reference list,
+        # AND the verifier — they must all key off the same list (C5).
+        cited_pages = compacted if compacted else good_pages[:self.config.max_synth_sources]
+
         # Steps 7 & 8: Cross-source analysis runs concurrently with synthesis —
         # the cross-analysis output is only attached to the report at the end,
-        # so it has no dependency on the synthesized sections.
+        # so it has no dependency on the synthesized sections. (Cross-analysis
+        # still reads the full-text good_pages, not the compacted ones.)
         async def _cross_analysis():
             if not (depth >= 2 and good_pages):
                 return "", None
@@ -228,7 +241,8 @@ class Researcher:
         progress("Synthesizing report + cross-referencing sources in parallel...")
         lang = language or self.config.language
         report, (cross_analysis_text, cross) = await asyncio.gather(
-            self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang),
+            self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang,
+                             tier=tier, compacted=compacted),
             _cross_analysis(),
         )
         if cross:
@@ -240,6 +254,27 @@ class Researcher:
         if depth >= 2 and report.summary and not self.config.fast:
             progress("Reviewing and refining report...")
             report = await self._review_and_refine(report, good_pages, lang)
+
+        # Step 9b: Verify each finding against its cited source text (C5: verify
+        # against cited_pages — the exact [Source N] order — never report.sources).
+        if self.config.verify_claims and not self.config.fast and depth >= 2 \
+                and report.key_findings and cited_pages:
+            progress("Verifying findings against sources...")
+            from .verifier import verify_findings
+            report.finding_verifications = await verify_findings(
+                report.key_findings, cited_pages, self.config.get_provider("verify"))
+            n_unsupported = sum(1 for v in report.finding_verifications if not v.supported)
+            progress(f"Verified: {len(report.finding_verifications) - n_unsupported} supported, {n_unsupported} flagged")
+            if self.config.verify_drop_unsupported and report.finding_verifications:
+                from .verifier import FindingVerification
+                floor = max(3, len(report.key_findings) // 2)
+                kept = [(f, v) for f, v in zip(report.key_findings, report.finding_verifications) if v.supported]
+                if len(kept) >= floor:  # only prune if enough survive
+                    report.key_findings = [f for f, _ in kept]
+                    report.finding_verifications = [
+                        FindingVerification(i + 1, v.supported, v.confidence, v.cited, v.note)
+                        for i, (_, v) in enumerate(kept)
+                    ]
 
         report.search_queries = search_queries
         report.sub_questions = sub_questions
@@ -270,7 +305,16 @@ Return ONLY the sub-questions, one per line, no numbering."""
         provider = self.config.get_provider("general")
         num_queries = {1: 2, 2: 3, 3: 4}.get(depth, 2)
 
-        prompt = f"""Generate {num_queries} diverse search queries to research this topic.
+        if self.config.perspectives:
+            # Perspective-guided (STORM-style): anchor each query in a distinct
+            # stakeholder viewpoint for broader, less-redundant coverage.
+            prompt = f"""First silently identify {max(3, min(num_queries + 1, 5))} distinct stakeholder perspectives on this topic (e.g. proponents, critics, domain experts, affected users, data/regulators). Then generate {num_queries} diverse search queries, each anchored in a different perspective and covering data, expert opinion, recent news, or contrarian views.
+
+Topic: {query}
+
+Return ONLY the queries, one per line — no perspective labels."""
+        else:
+            prompt = f"""Generate {num_queries} diverse search queries to research this topic.
 Cover different angles: data, expert opinions, recent news, contrarian views.
 
 Topic: {query}
@@ -354,7 +398,7 @@ Example: {{"scores": [{{"id": 1, "score": 9}}, {{"id": 2, "score": 3}}]}}"""
     async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
         """Review the draft and refine summary + findings — two independent
         refinements run in parallel."""
-        provider = self.config.get_provider("analysis")
+        provider = self.config.get_provider("synthesis")
 
         draft = f"""Summary: {report.summary}
 
@@ -456,6 +500,30 @@ Return ONLY the queries, one per line."""
         text = await self._llm_call(provider, prompt, max_tokens=300)
         return [q.strip().lstrip("0123456789.-) ") for q in text.strip().splitlines() if q.strip() and len(q.strip()) > 10][:3]
 
+    async def _compact_sources(self, query: str, pages: List[WebPage]) -> List[WebPage]:
+        """Summarize each source to 3-6 query-relevant bullets (parallel, cheap) so
+        synthesis can weigh many more sources within the context budget. Drops a
+        source that the model marks IRRELEVANT. Keeps original url/title."""
+        provider = self.config.get_provider("compaction")
+        sem = asyncio.Semaphore(12)
+
+        async def _one(p: WebPage) -> Optional[WebPage]:
+            prompt = f"""Extract 3-6 bullet points from this source that bear on the research question.
+RESEARCH QUESTION: {query}
+
+SOURCE [{p.title}]:
+{p.text[:5000]}
+
+Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If nothing is relevant, reply with exactly IRRELEVANT."""
+            async with sem:
+                out = await self._llm_call(provider, prompt, max_tokens=400)
+            if not out or out.strip().upper().startswith("IRRELEVANT"):
+                return None
+            return WebPage(url=p.url, title=p.title, text=out.strip()[:1200])
+
+        results = await asyncio.gather(*[_one(p) for p in pages], return_exceptions=True)
+        return [r for r in results if isinstance(r, WebPage)]
+
     async def _synthesize(
         self,
         query: str,
@@ -464,19 +532,26 @@ Return ONLY the queries, one per line."""
         depth: int,
         sub_analyses: list = None,
         language: str = "auto",
+        tier=None,
+        compacted: List[WebPage] = None,
     ) -> ResearchReport:
         """Synthesize via section-by-section generation for maximum depth."""
-        provider = self.config.get_provider("analysis")
+        from .config import TIERS
+        from .context import build_source_context, best_snippet
+        tier = tier or TIERS["standard"]
+        provider = self.config.get_provider("synthesis")
 
-        # Build source context (more content per page)
-        context_parts = []
-        if pages:
-            for i, page in enumerate(pages[:12], 1):
-                context_parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:4000]}\n")
+        # synth_pages IS the [Source N] order — context, verifier, and the
+        # rendered reference list all key off this exact list (C5 invariant).
+        synth_pages = compacted if compacted else pages
+        limit = self.config.max_synth_sources if compacted else 12
+        if synth_pages:
+            context = build_source_context(synth_pages, limit=limit,
+                                           per_char=(6000 if compacted else 4000))
         else:
-            for i, sr in enumerate(search_results[:10], 1):
-                context_parts.append(f"[Source {i}: {sr.title}]\nURL: {sr.url}\n{sr.snippet}\n")
-        context = "\n---\n".join(context_parts)
+            context = "\n---\n".join(
+                f"[Source {i}: {sr.title}]\nURL: {sr.url}\n{sr.snippet}\n"
+                for i, sr in enumerate(search_results[:10], 1))
         if not context:
             context = "(No sources retrieved. Use your knowledge.)"
 
@@ -549,20 +624,21 @@ Write a PREDICTIONS section:
 
 Be concrete — give specific numbers, dates, and thresholds where possible.{DENSITY}"""
 
+        # Token budgets scale with the tier (standard=1600 → 1600/2000/2400/2200,
+        # byte-identical to before; deep gets larger sections).
+        t = tier.synthesis_max_tokens
         batch = [
-            self._llm_call(provider, summary_prompt, max_tokens=1600),
-            self._llm_call(provider, findings_prompt, max_tokens=2000, json_mode=True),
+            self._llm_call(provider, summary_prompt, max_tokens=t),
+            self._llm_call(provider, findings_prompt, max_tokens=int(t * 1.25), json_mode=True),
         ]
         slot = {}
         if depth >= 2:
             slot["analysis"] = len(batch)
-            # Sized to fit a complete 4-part analysis even on a verbose run —
-            # the density directive shortens the average, but length varies, and
-            # a tight cap truncates mid-section (the old 2000 cap did too).
-            batch.append(self._llm_call(provider, analysis_prompt, max_tokens=2400))
+            # Sized to fit a complete 4-part analysis even on a verbose run.
+            batch.append(self._llm_call(provider, analysis_prompt, max_tokens=int(t * 1.5)))
         if depth >= 3:
             slot["predictions"] = len(batch)
-            batch.append(self._llm_call(provider, predictions_prompt, max_tokens=2200))
+            batch.append(self._llm_call(provider, predictions_prompt, max_tokens=int(t * 1.375)))
 
         # These calls share the whole source context as a prefix — warm the
         # cache once so the parallel batch hits it instead of each re-billing it.
@@ -591,17 +667,18 @@ Return json: an object with key "findings" whose value is a JSON array of exactl
                 confidence = line.strip()
                 break
 
-        page_urls = {p.url for p in pages} if pages else set()
-        sources = [
-            Source(url=r.url, title=r.title, snippet=r.snippet)
-            for r in search_results if r.url in page_urls
-        ] if pages else [
-            Source(url=r.url, title=r.title, snippet=r.snippet)
-            for r in search_results[:10]
-        ]
-        # Include all scraped sources
-        if pages and not sources:
-            sources = [Source(url=p.url, title=p.title, snippet=p.text[:100]) for p in pages]
+        # Sources are built from synth_pages in the SAME order as the [Source N]
+        # numbering in the context (C5) — fixes the pre-existing misnumbering where
+        # the reference list was in search order but citations were in page order.
+        if synth_pages:
+            sources = [
+                Source(url=p.url, title=p.title, snippet=p.text[:100],
+                       supporting_snippet=(best_snippet(query, p.text) if self.config.rich_citations else ""))
+                for p in synth_pages[:limit]
+            ]
+        else:
+            sources = [Source(url=r.url, title=r.title, snippet=r.snippet)
+                       for r in search_results[:10]]
 
         return ResearchReport(
             query=query,

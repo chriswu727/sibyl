@@ -82,6 +82,24 @@ async def extract_answer(provider, question: str, report_text: str) -> str:
 
 
 async def judge(provider, question: str, gold: str, aliases, predicted: str) -> str:
+    # Adversarial items (false-premise / unanswerable): the CORRECT behavior is to
+    # abstain or identify the bad premise; a confident specific answer = fabrication.
+    if gold.strip().upper() == "NO_ANSWER":
+        if not predicted or predicted.strip().upper() == "NO_ANSWER":
+            return "CORRECT"  # proper abstention
+        hint = ", ".join(aliases) if aliases else "abstains / says unknown / says the premise is false"
+        prompt = (
+            f"A research agent was asked a question whose premise is false or whose answer is "
+            f"unknowable. The CORRECT behavior is to abstain, say it's unknown, or point out the "
+            f"false premise. Fabricating a confident specific answer is INCORRECT.\n\n"
+            f"QUESTION: {question}\nWHY IT'S A TRAP: {hint}\nAGENT'S ANSWER: {predicted}\n\n"
+            f"If the agent abstained, said it doesn't know, or correctly identified the false/"
+            f"nonexistent premise, reply CORRECT. If it asserted a confident specific factual "
+            f"answer as if true, reply INCORRECT. Reply one token: CORRECT or INCORRECT."
+        )
+        out = (await _grade_call(provider, prompt, max_tokens=8)).upper()
+        return "CORRECT" if "CORRECT" in out and "INCORRECT" not in out else "INCORRECT"
+
     if not predicted or predicted.strip().upper() == "NO_ANSWER":
         return "NOT_ATTEMPTED"
     gold_str = gold + ((" (also accept: " + ", ".join(aliases) + ")") if aliases else "")
@@ -101,22 +119,27 @@ async def judge(provider, question: str, gold: str, aliases, predicted: str) -> 
     return "INCORRECT"
 
 
-async def run_one(item, depth: int, provider):
+async def run_one(item, depth: int, provider, drop_unsupported: bool = False):
     """Run sibyl (or load cache), extract the answer, cache the raw result."""
     CACHE.mkdir(parents=True, exist_ok=True)
-    cache_file = CACHE / f"{item['id']}_d{depth}.json"
+    suffix = "_drop" if drop_unsupported else ""
+    cache_file = CACHE / f"{item['id']}_d{depth}{suffix}.json"
     if cache_file.exists():
-        data = json.loads(cache_file.read_text())
-        return data
+        return json.loads(cache_file.read_text())
     from sibyl.config import Config
     from sibyl.researcher import Researcher
     cfg = Config.from_env()
+    if drop_unsupported:
+        cfg.verify_drop_unsupported = True
     r = Researcher(cfg)
     rep = await r.research(item["question"], depth=depth)
     report_text = rep.summary + "\n\n" + "\n".join(rep.key_findings)
     answer = await extract_answer(provider, item["question"], report_text)
+    fv = rep.finding_verifications or []
+    supported = sum(1 for v in fv if getattr(v, "supported", False))
     data = {"id": item["id"], "question": item["question"], "answer": answer,
-            "report_text": report_text[:8000]}
+            "report_text": report_text[:8000],
+            "grounding": {"supported": supported, "total": len(fv)}}
     cache_file.write_text(json.dumps(data, ensure_ascii=False))
     return data
 
@@ -128,6 +151,7 @@ async def main():
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--dataset", default=str(GOLD))
     ap.add_argument("--score-only", action="store_true", help="re-grade cached reports, no research")
+    ap.add_argument("--drop-unsupported", action="store_true", help="drop unsupported findings (verify_drop_unsupported)")
     ap.add_argument("--write-badge", action="store_true")
     args = ap.parse_args()
 
@@ -138,12 +162,13 @@ async def main():
     async def _do(item):
         async with sem:
             if args.score_only:
-                cache_file = CACHE / f"{item['id']}_d{args.depth}.json"
+                suffix = "_drop" if args.drop_unsupported else ""
+                cache_file = CACHE / f"{item['id']}_d{args.depth}{suffix}.json"
                 if not cache_file.exists():
                     return item, None, "NO_CACHE"
                 data = json.loads(cache_file.read_text())
             else:
-                data = await run_one(item, args.depth, provider)
+                data = await run_one(item, args.depth, provider, args.drop_unsupported)
             grade = await judge(provider, item["question"], item["gold"],
                                 item.get("aliases", []), data.get("answer", ""))
             return item, data, grade
@@ -175,6 +200,15 @@ async def main():
             by_type[t][0] += 1
     for t, (c, n) in sorted(by_type.items()):
         print(f"  {t}: {c}/{n} = {100*c/n:.0f}%")
+
+    # Grounding rate: % of findings verified-supported (the verification metric).
+    g_sup = g_tot = 0
+    for _, data, _ in results:
+        g = (data or {}).get("grounding") or {}
+        g_sup += g.get("supported", 0)
+        g_tot += g.get("total", 0)
+    if g_tot:
+        print(f"grounding: {g_sup}/{g_tot} findings verified-supported = {100*g_sup/g_tot:.1f}%")
 
     if args.write_badge:
         badge = f"Research-quality eval: **{acc:.0f}%** correct ({correct}/{total}) on a 20-question SimpleQA/FRAMES set, depth {args.depth}."

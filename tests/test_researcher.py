@@ -63,9 +63,14 @@ def _patch_io():
     async def fake_acompletion(**kwargs):  # _warm_cache
         return mock.Mock()
 
+    async def fake_verify(findings, pages, provider):
+        from sibyl.verifier import FindingVerification
+        return [FindingVerification(i + 1, True, "high", [1], "") for i in range(len(findings))]
+
     return (mock.patch("sibyl.researcher.search_web", fake_search),
             mock.patch("sibyl.researcher.scrape_urls", fake_scrape),
             mock.patch("sibyl.analyzer.analyze_sources", fake_cross),
+            mock.patch("sibyl.verifier.verify_findings", fake_verify),
             mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion))
 
 
