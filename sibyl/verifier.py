@@ -69,7 +69,9 @@ async def verify_findings(findings: List[str], pages: List[WebPage],
     if not findings:
         return []
     pages = pages or []
-    context = build_source_context(pages)
+    # limit=len(pages): the verifier must see EVERY cited source, or a finding
+    # citing [Source 15] gets falsely flagged when synthesis numbered 1..N>12.
+    context = build_source_context(pages, limit=len(pages) or 1)
     numbered = "\n".join(f"{i}. {f}" for i, f in enumerate(findings, 1))
     prompt = f"""SOURCES:
 {context}

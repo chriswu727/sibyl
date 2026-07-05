@@ -86,6 +86,21 @@ class TestVerifyFindings(unittest.IsolatedAsyncioTestCase):
         out = await verify_findings([], _pages(), Provider(model="deepseek/deepseek-v4-flash", api_key="k"))
         self.assertEqual(out, [])
 
+    async def test_verifier_sees_all_sources_beyond_12(self):
+        # With >12 cited sources, a finding citing [Source 15] must be shown to
+        # the verifier (not truncated at 12). Capture the prompt and assert it.
+        pages = [WebPage(url=f"u{i}", title=f"T{i}", text=f"body of source {i} " * 20) for i in range(20)]
+        captured = {}
+
+        async def fake(**kwargs):
+            captured["prompt"] = kwargs["messages"][0]["content"]
+            return _resp(json.dumps({"verdicts": [{"index": 1, "supported": True, "confidence": "high", "cited": [15]}]}))
+
+        with mock.patch("sibyl.verifier.litellm.acompletion", fake):
+            await verify_findings(["Claim [Source 15]"], pages, Provider(model="deepseek/deepseek-v4-flash", api_key="k"))
+        self.assertIn("[Source 15", captured["prompt"])   # source 15 is present
+        self.assertIn("[Source 20", captured["prompt"])   # all 20 shown
+
 
 if __name__ == "__main__":
     unittest.main()
