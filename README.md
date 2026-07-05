@@ -4,15 +4,26 @@
 
 Not just another search summarizer. Sibyl is a **research analysis platform** — it does structured comparisons, SWOT analysis, Google Trends tracking, event timelines, and financial data visualization. All from a single question.
 
-Every finding is **verified against its cited source** (unsupported claims are flagged), and the pipeline ships a reproducible eval:
+Every finding is **verified against its cited source** (unsupported claims are flagged), and the pipeline ships a reproducible eval. The honest scorecard:
 
-| Metric | Result | Set |
+| Set | Result | What it measures |
 |---|---|---|
-| Factual accuracy | **100%** | 20 SimpleQA/FRAMES + 24 obscure/multi-hop questions |
-| Citation grounding | **80.8%** of findings verified-supported | factual set, depth 2 |
-| Hallucination resistance | **92%** correct (abstains on false premises) | 12 adversarial/unanswerable questions |
+| **Real SimpleQA (30, official gold)** | **17% correct** | long-tail obscure facts — the honest ceiling |
+| Mainstream facts (20 curated) | 100% correct | findable/well-known facts |
+| Adversarial (12 false-premise) | 92% correct | abstaining instead of fabricating |
+| Citation grounding | 66–81% of findings verified-supported | does a finding cite what its source says |
 
-Reproduce: `python scripts/eval.py --depth 2` (needs a provider key; grading is a temp-0 LLM judge on the SimpleQA CORRECT/INCORRECT/NOT_ATTEMPTED rubric). All keyless for search — no API keys needed to search the web.
+The two numbers that matter most are the first and last, and they're humbling:
+on **real long-tail SimpleQA sibyl scores ~17%** — when it can't retrieve an
+obscure fact it tends to fabricate a plausible famous answer (e.g. "Novak
+Djokovic" for an obscure Serbian player). Keyless search is the bottleneck on the
+long tail. And **grounding is not correctness**: a finding can be "supported" by
+its cited source yet still be about the wrong entity. sibyl is strong on
+mainstream/findable facts, weak on obscure long-tail ones.
+
+Reproduce: `python scripts/eval.py --depth 2 --dataset evals/gold/simpleqa_real_30.jsonl`
+(temp-0 LLM judge, SimpleQA CORRECT/INCORRECT/NOT_ATTEMPTED rubric). All keyless
+for search — no API keys needed to search the web.
 
 ## What Makes Sibyl Different
 

@@ -1,0 +1,30 @@
+{"id": "real01", "type": "simpleqa_official", "question": "At which university did Jurgen Aschoff study medicine?", "gold": "University of Bonn.", "aliases": []}
+{"id": "real02", "type": "simpleqa_official", "question": "In which specific issue did Black Condor II perish?", "gold": "Infinite Crisis #1", "aliases": []}
+{"id": "real03", "type": "simpleqa_official", "question": "Where is Sagg Eco Village located in Jammu & Kashmir, India?", "gold": "Ganderbal", "aliases": []}
+{"id": "real04", "type": "simpleqa_official", "question": "What is the birth name of the Mexican artist Peso Pluma?", "gold": "Hassan Emilio Kabande Laija", "aliases": []}
+{"id": "real05", "type": "simpleqa_official", "question": "Can you provide me with the DOI of the paper \"Generating Semantic Maps through Multidimensional Scaling: Linguistic Applications and Theory\"?", "gold": "10.1515/cllt-2021-0018", "aliases": []}
+{"id": "real06", "type": "simpleqa_official", "question": "What were the month, day, and year when the construction of the UN headquarters in New York City was completed?", "gold": "October 9, 1952", "aliases": []}
+{"id": "real07", "type": "simpleqa_official", "question": "What's the month, day, and year of the online publication of the paper \"Articulatory constraints on stop insertion and elision in consonant clusters\"?", "gold": "5th September, 2011", "aliases": []}
+{"id": "real08", "type": "simpleqa_official", "question": "What's the secret identity of the third Phantom Lady?", "gold": "Stormy Knight", "aliases": []}
+{"id": "real09", "type": "simpleqa_official", "question": "At the 2006 census, what was the population of Darrud, Iran?", "gold": "4,979", "aliases": []}
+{"id": "real10", "type": "simpleqa_official", "question": "What month, day, and year was House Resolution 7004, \"Addressing the Governor's unacceptable actions in matters related to the appraiser certification program,\" introduced against Governor Kristi Noem?", "gold": "February 24, 2022", "aliases": []}
+{"id": "real11", "type": "simpleqa_official", "question": "In TWD Season 11, Episode 10, we learn that Connie got whose uncle kicked out of Congress before the apocalypse?", "gold": "Pamela Milton's uncle", "aliases": []}
+{"id": "real12", "type": "simpleqa_official", "question": "What year did Kinoko Teikoku release their first single \"Taikutsu Shinogi\" (退屈しのぎ)?", "gold": "2012", "aliases": []}
+{"id": "real13", "type": "simpleqa_official", "question": "In which year did Clint Ballard Jr. adopt the alias Buddy Clinton to cut a two-sided single?", "gold": "1960", "aliases": []}
+{"id": "real14", "type": "simpleqa_official", "question": "In which year did Habiba Ghribi win the junior race of the Pan Arab Cross Country Championships?", "gold": "2002", "aliases": []}
+{"id": "real15", "type": "simpleqa_official", "question": "What change did Patch 0.7 make to the spell Crusader Strike in the beta of World of Warcraft?", "gold": "Damage increased and instant cast spell.", "aliases": []}
+{"id": "real16", "type": "simpleqa_official", "question": "After the War of 1812, Edward William McBride (1791-1834) worked as what for the king's printer, John Cameron, on the York Gazette until April 1815?", "gold": "Assistant", "aliases": []}
+{"id": "real17", "type": "simpleqa_official", "question": "What patch changed the required amount of titanium ore to make a titanium bar from 5 to 4 in Terraria?", "gold": "Desktop 1.4.1", "aliases": []}
+{"id": "real18", "type": "simpleqa_official", "question": "Who appointed the Chief Justice of India, Kailas Nath Wanchoo, in 1967?", "gold": "Sarvepalli Radhakrishnan", "aliases": []}
+{"id": "real19", "type": "simpleqa_official", "question": "What Serbian player played in the quarterfinals of the 2018 Madrid Open men's singles?", "gold": "Dušan Lajović", "aliases": []}
+{"id": "real20", "type": "simpleqa_official", "question": "What year did Seiko release their first 300m diver watch?", "gold": "1968", "aliases": []}
+{"id": "real21", "type": "simpleqa_official", "question": "What is the first and last name of the first individual to be inducted into the Gospel Music Hall of Fame by the Gospel Music Association who was not a musician?", "gold": "Billy Graham ", "aliases": []}
+{"id": "real22", "type": "simpleqa_official", "question": "How many units of the Infanterikanonvagn 72 (1952) were delivered to the Swedish army from 1953 to 1954?", "gold": "36.", "aliases": []}
+{"id": "real23", "type": "simpleqa_official", "question": "Who was the rector of Hacettepe University in 2006?", "gold": "Prof. Dr. Tunçalp ÖZGEN", "aliases": []}
+{"id": "real24", "type": "simpleqa_official", "question": "On what day, month, and year did Gopalaswami Parthasarathy assume the charge of Vice Chancellor of Jawaharlal Nehru University?", "gold": "April 28, 1969", "aliases": []}
+{"id": "real25", "type": "simpleqa_official", "question": "Which piece of art by Raphael was sold by Joseph Joel Duveen to Peter Arrell Browne Widener in 1913?", "gold": "Small Cowper Madonna", "aliases": []}
+{"id": "real26", "type": "simpleqa_official", "question": "Up to how many meters high does the Pittosporum divaricatum grow?", "gold": "3 metres", "aliases": []}
+{"id": "real27", "type": "simpleqa_official", "question": "In which year was the municipality of Macanal, Boyacá, Colombia, founded?", "gold": "1807", "aliases": []}
+{"id": "real28", "type": "simpleqa_official", "question": "The Visvim FBT's name is influenced by the name of what music group?", "gold": "Fun Boy Three", "aliases": []}
+{"id": "real29", "type": "simpleqa_official", "question": "From which university did Teresa Czerwińska earn her Ph.D.?", "gold": "University of Gdańsk", "aliases": []}
+{"id": "real30", "type": "simpleqa_official", "question": "The first brief description of Agrilus planipennis was published by Léon Fairmaire in which French journal in 1888?", "gold": "Revue d'Entomologie ", "aliases": []}
