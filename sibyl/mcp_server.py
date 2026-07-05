@@ -12,23 +12,26 @@ from .researcher import Researcher, ResearchReport
 
 mcp = FastMCP(
     "sibyl",
-    instructions="""Sibyl is an AI-powered deep research agent. Use these tools to research topics,
-analyze markets, predict trends, and generate comprehensive reports.
+    instructions="""Sibyl gives you keyless web research. Two modes — pick based on who should do the reasoning:
 
-Workflow:
-1. research(query) — Full research: search web → scrape → analyze → report
-2. fetch_market_data(symbols) — Pull real financial data (prices, trends, moving averages)
-3. chart(symbols) — Generate price trend charts as PNG
-4. analyze(text, question) — Analyze text with LLM
-5. save_report(format) — Save last report as PDF/Markdown
+RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU reason:
+  • gather_sources(query) — keyless search + scrape + dedup; returns the top FULL-TEXT
+    sources for a query WITHOUT writing an answer. Call it several times with different
+    sub-queries, read the returned sources, cross-reference them, and synthesize the
+    answer YOURSELF — citing sources and saying "not found" rather than guessing when
+    the sources don't contain it. This uses no API key and gives the best quality,
+    because YOUR reasoning is applied to real retrieved evidence.
+  • quick_search(query) — raw search hits (title/url/snippet), no scraping.
+  • read_url(url) — clean full text of one page.
 
-For financial/market research, combine research() + fetch_market_data() for
-data-backed analysis. Use chart() to visualize trends.
+ONE-SHOT — sibyl does the whole thing with its own model (needs sibyl's provider key):
+  • research(query, depth) — full pipeline (search→scrape→rank→synthesize→verify→report)
+    run by sibyl's configured LLM (e.g. DeepSeek). Findings are verified against sources.
+    Use when you want a finished report in one call and accept sibyl's model/key does it.
 
-Tips:
-- depth=1 for quick answers, depth=2 for standard, depth=3 for deep with predictions
-- Common symbols: SPY, QQQ (US), XIU.TO, XRE.TO (Canada), BTC-USD (crypto), GC=F (gold)
-- Always save reports with save_report() when done
+Also: fetch_market_data(symbols), chart(symbols), compare/swot/timeline/trends, save_report().
+For factual questions, prefer gather_sources + your own synthesis — it beats the one-shot
+pipeline on hard questions and never fabricates. depth=1/2/3 = quick/standard/deep.
 """,
 )
 
@@ -97,6 +100,58 @@ def _format_report(report: ResearchReport) -> str:
     lines.append("")
     lines.append(f"*Search queries used: {', '.join(report.search_queries)}*")
     return "\n".join(lines)
+
+
+@mcp.tool()
+async def gather_sources(query: str, max_sources: int = 8, chars_per_source: int = 3000) -> str:
+    """Keyless web retrieval: search + scrape + dedup, returning the top FULL-TEXT
+    sources for a query WITHOUT writing an answer — so YOU (the calling model)
+    read the evidence and reason over it yourself.
+
+    Use this to research a question: call it several times with different focused
+    sub-queries, read the numbered [Source N] blocks it returns, cross-reference
+    them, then write the answer yourself with citations. If the sources don't
+    contain the answer, gather more or say you don't know — do not guess. No API
+    key required.
+
+    Args:
+        query: One focused search query (issue several calls for a multi-part question)
+        max_sources: How many sources to return (default 8)
+        chars_per_source: Max characters of text per source (default 3000)
+    """
+    import httpx
+    from .search import search_web
+    from .scraper import scrape_urls, WebPage
+    from .dedup import dedup_pages
+    from .context import build_source_context
+
+    async with httpx.AsyncClient(
+        follow_redirects=True, timeout=12.0,
+        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+    ) as client:
+        results = await search_web(query, "all", max_results=6, client=client, include_academic=True)
+        seen, urls = set(), []
+        for r in results:
+            if r.url.startswith("http") and r.url not in seen:
+                seen.add(r.url)
+                urls.append(r.url)
+        pages = await scrape_urls(urls[:max(max_sources * 2, 12)], max_chars=chars_per_source,
+                                  client=client, js_render=True)
+        good = [p for p in pages if p.text and len(p.text) > 150 and not p.error]
+        scraped = {p.url for p in good}
+        for r in results:  # supplement failed scrapes with their search snippet
+            if r.url not in scraped and r.snippet and len(r.snippet) > 50:
+                good.append(WebPage(url=r.url, title=r.title, text=r.snippet))
+        good = dedup_pages(good)
+        substantive = [p for p in good if len(p.text) > 200]
+        chosen = (substantive if len(substantive) >= 3 else good)[:max_sources]
+
+    if not chosen:
+        return f"No sources found for query: {query!r}. Try a different phrasing."
+    ctx = build_source_context(chosen, limit=len(chosen), per_char=chars_per_source)
+    return (f"Retrieved {len(chosen)} sources for query {query!r}. Reason over these and "
+            f"cite [Source N]; if the answer isn't here, gather more or say you don't know.\n\n"
+            + ctx)
 
 
 @mcp.tool()

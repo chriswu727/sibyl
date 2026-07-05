@@ -6,8 +6,33 @@ This file helps AI agents (Claude Code, Cursor, etc.) use Sibyl effectively via 
 
 ```bash
 pip install sibyl-research
+# Retrieval-provider mode (recommended) needs NO key — you do the reasoning:
+claude mcp add sibyl -- sibyl-mcp
+# For the one-shot research() tool, add a provider key so sibyl's own model runs it:
 claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
 ```
+
+## Two modes — who does the reasoning?
+
+**Recommended: YOU (the host model) research; sibyl only retrieves.** This is
+keyless and gives the best quality, because YOUR reasoning is applied to real
+evidence — a mid-tier model doing the synthesis fabricates on hard questions,
+whereas you can cross-reference sources and abstain when they don't answer.
+
+```
+# research a question yourself:
+gather_sources("Serbian quarterfinalist 2018 Madrid Open men's singles")
+gather_sources("2018 Madrid Open men's singles draw results")   # call again with sub-queries
+→ read the returned [Source N] blocks, cross-reference, answer WITH citations.
+→ if the sources don't contain it, gather more or say you don't know — never guess.
+```
+
+**One-shot: sibyl does everything with its own model** (needs a provider key):
+```
+research(query, depth=2)   # search→scrape→rank→synthesize→verify→report, by sibyl's LLM
+```
+Prefer `gather_sources` + your own synthesis for factual/hard questions; use
+`research()` when you want a finished report in one call.
 
 ## Recommended Workflows
 
@@ -56,6 +81,7 @@ timeline("OpenAI company history")
 | Event timeline | `timeline(topic)` |
 | Stock/ETF data | `fetch_market_data(symbols)` |
 | Price chart | `chart(symbols, period)` |
+| **Research a question yourself (keyless)** | **`gather_sources(query)` — retrieves full-text sources; you synthesize** |
 | Quick web search | `quick_search(query)` |
 | Read a specific page | `read_url(url)` |
 | Analyze text | `analyze(text, question)` |
