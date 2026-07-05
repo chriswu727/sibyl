@@ -223,8 +223,15 @@ class Researcher:
             compacted = compacted if len(compacted) >= 3 else None
 
         # cited_pages IS the [Source N] order for synthesis, the reference list,
-        # AND the verifier — they must all key off the same list (C5).
-        cited_pages = compacted if compacted else good_pages[:self.config.max_synth_sources]
+        # AND the verifier — they must all key off the same list (C5). Prefer
+        # substantive (full-text) sources: citing a 92-char snippet-supplemented
+        # source for a detailed claim is ungrounded by construction.
+        if compacted:
+            cited_pages = compacted[:self.config.max_synth_sources]
+        else:
+            substantive = [p for p in good_pages if len(p.text) > 200]
+            base = substantive if len(substantive) >= 3 else good_pages
+            cited_pages = base[:self.config.max_synth_sources]
 
         # Steps 7 & 8: Cross-source analysis runs concurrently with synthesis —
         # the cross-analysis output is only attached to the report at the end,
@@ -241,8 +248,7 @@ class Researcher:
         progress("Synthesizing report + cross-referencing sources in parallel...")
         lang = language or self.config.language
         report, (cross_analysis_text, cross) = await asyncio.gather(
-            self._synthesize(query, unique_results, good_pages, depth, sub_analyses, lang,
-                             tier=tier, compacted=compacted),
+            self._synthesize(query, unique_results, cited_pages, depth, sub_analyses, lang, tier=tier),
             _cross_analysis(),
         )
         if cross:
@@ -533,7 +539,6 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
         sub_analyses: list = None,
         language: str = "auto",
         tier=None,
-        compacted: List[WebPage] = None,
     ) -> ResearchReport:
         """Synthesize via section-by-section generation for maximum depth."""
         from .config import TIERS
@@ -541,13 +546,13 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
         tier = tier or TIERS["standard"]
         provider = self.config.get_provider("synthesis")
 
-        # synth_pages IS the [Source N] order — context, verifier, and the
-        # rendered reference list all key off this exact list (C5 invariant).
-        synth_pages = compacted if compacted else pages
-        limit = self.config.max_synth_sources if compacted else 12
+        # `pages` IS cited_pages — already substantive-filtered, ordered, and
+        # capped upstream. It defines the [Source N] numbering that synthesis,
+        # the verifier, and the reference list all key off (C5 invariant).
+        synth_pages = pages
+        limit = len(synth_pages)
         if synth_pages:
-            context = build_source_context(synth_pages, limit=limit,
-                                           per_char=(6000 if compacted else 4000))
+            context = build_source_context(synth_pages, limit=limit, per_char=4000)
         else:
             context = "\n---\n".join(
                 f"[Source {i}: {sr.title}]\nURL: {sr.url}\n{sr.snippet}\n"

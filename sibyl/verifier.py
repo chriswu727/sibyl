@@ -77,11 +77,13 @@ async def verify_findings(findings: List[str], pages: List[WebPage],
 FINDINGS TO VERIFY:
 {numbered}
 
-For each finding, check whether the text of its cited [Source N] actually supports
-the finding's specific claim (exact numbers, dates, entities). A finding is NOT
-supported if it cites a [Source N] not shown above, cites nothing, or makes a claim
-no cited source states (including confident claims about fictional or nonexistent
-entities). Judge only against the source text, not your own knowledge.
+For each finding, check whether its cited [Source N] text substantiates the
+finding's claim. The source counts as support if it states OR clearly implies the
+claim — exact wording may differ, and a close paraphrase or a figure rounded/
+reformatted from the source still counts. Mark NOT supported only when the finding
+cites a [Source N] not shown above, cites nothing, or asserts something the cited
+source does not contain or contradicts (including confident claims about fictional
+or nonexistent entities). Judge against the source text, not your own knowledge.
 
 Return json: {{"verdicts": [{{"index": <1-based>, "supported": <bool>, "confidence": "high|medium|low", "cited": [<n>...], "note": "<=12 words"}}]}}, one per finding."""
 
