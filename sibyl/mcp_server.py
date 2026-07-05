@@ -103,7 +103,7 @@ def _format_report(report: ResearchReport) -> str:
 
 
 @mcp.tool()
-async def gather_sources(query: str, max_sources: int = 8, chars_per_source: int = 3000) -> str:
+async def gather_sources(query: str, max_sources: int = 10, chars_per_source: int = 7000) -> str:
     """Keyless web retrieval: search + scrape + dedup, returning the top FULL-TEXT
     sources for a query WITHOUT writing an answer — so YOU (the calling model)
     read the evidence and reason over it yourself.
@@ -123,7 +123,7 @@ async def gather_sources(query: str, max_sources: int = 8, chars_per_source: int
     from .search import search_web
     from .scraper import scrape_urls, WebPage
     from .dedup import dedup_pages
-    from .context import build_source_context
+    from .context import relevant_window
 
     async with httpx.AsyncClient(
         follow_redirects=True, timeout=12.0,
@@ -135,12 +135,16 @@ async def gather_sources(query: str, max_sources: int = 8, chars_per_source: int
             if r.url.startswith("http") and r.url not in seen:
                 seen.add(r.url)
                 urls.append(r.url)
-        pages = await scrape_urls(urls[:max(max_sources * 2, 12)], max_chars=chars_per_source,
+        # Scrape DEEP (full page), then window each source to its answer region —
+        # many facts live in a tail History table / infobox / deep paragraph that a
+        # top-of-page slice never reaches.
+        pages = await scrape_urls(urls[:max(max_sources * 2, 12)], max_chars=30000,
                                   client=client, js_render=True)
         good = [p for p in pages if p.text and len(p.text) > 150 and not p.error]
         scraped = {p.url for p in good}
-        for r in results:  # supplement failed scrapes with their search snippet
-            if r.url not in scraped and r.snippet and len(r.snippet) > 50:
+        for r in results:  # supplement failed scrapes with their snippet — but only
+            # substantive ones (title-only Google-News RSS stubs are noise, not evidence)
+            if r.url not in scraped and r.snippet and len(r.snippet) > 120:
                 good.append(WebPage(url=r.url, title=r.title, text=r.snippet))
         good = dedup_pages(good)
         substantive = [p for p in good if len(p.text) > 200]
@@ -148,10 +152,13 @@ async def gather_sources(query: str, max_sources: int = 8, chars_per_source: int
 
     if not chosen:
         return f"No sources found for query: {query!r}. Try a different phrasing."
-    ctx = build_source_context(chosen, limit=len(chosen), per_char=chars_per_source)
+    parts = []
+    for i, p in enumerate(chosen, 1):
+        window = relevant_window(query, p.text, width=chars_per_source)
+        parts.append(f"[Source {i}: {p.title}]\nURL: {p.url}\n{window}\n")
     return (f"Retrieved {len(chosen)} sources for query {query!r}. Reason over these and "
             f"cite [Source N]; if the answer isn't here, gather more or say you don't know.\n\n"
-            + ctx)
+            + "\n---\n".join(parts))
 
 
 @mcp.tool()

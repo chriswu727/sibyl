@@ -22,6 +22,31 @@ def build_source_context(pages: List[WebPage], limit: int = 12, per_char: int = 
     return "\n---\n".join(parts)
 
 
+def relevant_window(query: str, text: str, width: int = 6000) -> str:
+    """Return the ~width-char slice of a long page with the highest query-keyword
+    density — so the answer region of a long article (a tail History table, a deep
+    paragraph) is returned instead of just the page head. Falls back to the head
+    for short text or a query with no ASCII tokens."""
+    text = text or ""
+    if len(text) <= width:
+        return text
+    q_words = {w for w in re.findall(r"[a-z0-9]{3,}", (query or "").lower())}
+    if not q_words:
+        return text[:width]
+    step = max(500, width // 4)
+    best_start, best_score = 0, -1
+    for start in range(0, len(text) - width + 1, step):
+        chunk = text[start:start + width].lower()
+        score = sum(1 for w in q_words if w in chunk)
+        if score > best_score:
+            best_score, best_start = score, start
+    # Prefer the head on ties — intros carry key facts and read cleaner.
+    if sum(1 for w in q_words if w in text[:width].lower()) >= best_score:
+        best_start = 0
+    prefix = "" if best_start == 0 else "…"
+    return prefix + text[best_start:best_start + width]
+
+
 def best_snippet(query: str, text: str, max_len: int = 240) -> str:
     """Pick the sentence from `text` with the most query-word overlap — the
     supporting evidence for a citation. Falls back to the head of the text for an
