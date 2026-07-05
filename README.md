@@ -4,6 +4,16 @@
 
 Not just another search summarizer. Sibyl is a **research analysis platform** — it does structured comparisons, SWOT analysis, Google Trends tracking, event timelines, and financial data visualization. All from a single question.
 
+Every finding is **verified against its cited source** (unsupported claims are flagged), and the pipeline ships a reproducible eval:
+
+| Metric | Result | Set |
+|---|---|---|
+| Factual accuracy | **100%** | 20 SimpleQA/FRAMES + 24 obscure/multi-hop questions |
+| Citation grounding | **80.8%** of findings verified-supported | factual set, depth 2 |
+| Hallucination resistance | **92%** correct (abstains on false premises) | 12 adversarial/unanswerable questions |
+
+Reproduce: `python scripts/eval.py --depth 2` (needs a provider key; grading is a temp-0 LLM judge on the SimpleQA CORRECT/INCORRECT/NOT_ATTEMPTED rubric). All keyless for search — no API keys needed to search the web.
+
 ## What Makes Sibyl Different
 
 | | Traditional Search | ChatGPT/Perplexity | GPT Researcher | **Sibyl** |
