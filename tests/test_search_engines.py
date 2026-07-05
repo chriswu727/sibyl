@@ -12,7 +12,8 @@ from unittest import mock
 
 from sibyl.search import (
     search_duckduckgo, search_reddit, search_wikipedia, search_google_news,
-    search_mojeek, _search_general_web, fetch_wikipedia_extract, SearchResult,
+    search_mojeek, _search_general_web, fetch_wikipedia_extract, wikipedia_lookup,
+    SearchResult,
 )
 
 
@@ -72,6 +73,28 @@ class TestWikipediaExtract(unittest.IsolatedAsyncioTestCase):
         payload = {"query": {"pages": {"1": {"extract": "too short"}}}}
         self.assertIsNone(await fetch_wikipedia_extract(
             "https://en.wikipedia.org/wiki/X", client=_client_returning(payload=payload)))
+
+
+class TestWikipediaLookup(unittest.IsolatedAsyncioTestCase):
+    async def test_opensearch_then_extract(self):
+        # A client that answers opensearch vs extract calls by their params.
+        def dispatch(url, params=None, **kw):
+            resp = mock.Mock()
+            resp.status_code = 200
+            if params.get("action") == "opensearch":
+                resp.json = mock.Mock(return_value=[
+                    "kinoko", ["Kinoko Teikoku"], ["desc"],
+                    ["https://en.wikipedia.org/wiki/Kinoko_Teikoku"]])
+            else:
+                resp.json = mock.Mock(return_value={"query": {"pages": {
+                    "1": {"extract": "Kinoko Teikoku released Taikutsu Shinogi in 2012. " * 10}}}})
+            return resp
+        client = mock.Mock()
+        client.get = mock.AsyncMock(side_effect=dispatch)
+        pages = await wikipedia_lookup("Kinoko Teikoku", client=client)
+        self.assertEqual(len(pages), 1)
+        self.assertIn("Kinoko Teikoku", pages[0].title)
+        self.assertIn("2012", pages[0].text)
 
 
 class TestReddit(unittest.IsolatedAsyncioTestCase):

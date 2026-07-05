@@ -120,7 +120,7 @@ async def gather_sources(query: str, max_sources: int = 10, chars_per_source: in
         chars_per_source: Max characters of text per source (default 3000)
     """
     import httpx
-    from .search import search_web, fetch_wikipedia_extract
+    from .search import search_web, fetch_wikipedia_extract, wikipedia_lookup
     from .scraper import scrape_urls, WebPage
     from .dedup import dedup_pages
     from .context import relevant_window
@@ -148,6 +148,13 @@ async def gather_sources(query: str, max_sources: int = 10, chars_per_source: in
                 good.append(WebPage(url=r.url, title=r.title, text=r.snippet))
         good = dedup_pages(good)
         substantive = [p for p in good if len(p.text) > 200]
+        # Encyclopedic fallback: when general web search came up thin (obscure entity,
+        # or engines rate-limited), pull the matching Wikipedia article(s) directly.
+        if len(substantive) < 3:
+            wiki_pages = await wikipedia_lookup(query, client=client, max_pages=2)
+            if wiki_pages:
+                good = dedup_pages(good + wiki_pages)
+                substantive = [p for p in good if len(p.text) > 200]
         chosen = (substantive if len(substantive) >= 3 else good)[:max_sources]
 
         # Upgrade Wikipedia sources to clean full-text via the API — HTML scraping

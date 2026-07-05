@@ -296,6 +296,43 @@ async def fetch_wikipedia_extract(
     return None
 
 
+async def wikipedia_lookup(
+    query: str, client: Optional[httpx.AsyncClient] = None, max_pages: int = 2,
+) -> List["WebPage"]:
+    """Find the best-matching Wikipedia article(s) for a query via the opensearch
+    API and return their full-text extracts as WebPages. A robust encyclopedic
+    fallback when general web search is thin or rate-limited — opensearch matches
+    titles even from a partial/entity query."""
+    from .scraper import WebPage
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
+    try:
+        resp = await client.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={"action": "opensearch", "search": query, "limit": max_pages,
+                    "namespace": "0", "format": "json"},
+            headers=_HEADERS, timeout=12.0,
+        )
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        titles = data[1] if len(data) > 1 else []
+        urls = data[3] if len(data) > 3 else []
+        extracts = await asyncio.gather(
+            *[fetch_wikipedia_extract(u, client) for u in urls], return_exceptions=True)
+        pages = []
+        for title, url, ex in zip(titles, urls, extracts):
+            if isinstance(ex, str) and ex:
+                pages.append(WebPage(url=url, title=f"[Wikipedia] {title}", text=ex))
+        return pages
+    except Exception:
+        return []
+    finally:
+        if own_client:
+            await client.aclose()
+
+
 # ── Semantic Scholar (academic papers) ────────────────────────────
 
 async def search_semantic_scholar(
