@@ -254,6 +254,44 @@ class Researcher:
         if cross:
             progress(f"Sentiment: {cross.overall_sentiment} | Consensus: {len(cross.consensus_points)} | Disagreements: {len(cross.disagreement_points)}")
 
+        # Step 8b: Reflection loop (opt-in) — audit the draft, search for gaps,
+        # and re-synthesize. Bounded; stops early when the draft is sufficient.
+        rounds = min(self.config.reflect_rounds, 2)
+        if depth >= 2 and rounds > 0 and not self.config.fast and good_pages and report.summary:
+            for rnd in range(rounds):
+                progress(f"Reflecting on gaps (round {rnd + 1})...")
+                follow_ups, sufficient = await self._reflect(query, report)
+                if sufficient or not follow_ups:
+                    break
+                progress(f"Filling gaps: {follow_ups}")
+                gap_lists = await asyncio.gather(*[
+                    search_web(fq, self.config.search_engine, max_results=3, client=self._http)
+                    for fq in follow_ups
+                ], return_exceptions=True)
+                new_urls = []
+                for results in gap_lists:
+                    if isinstance(results, list):
+                        for r in results:
+                            if r.url not in seen_urls:
+                                seen_urls.add(r.url)
+                                new_urls.append(r.url)
+                new_urls = new_urls[:6]
+                if not new_urls:
+                    break
+                new_pages = await scrape_urls(new_urls, max_chars=6000, client=self._http,
+                                              extractor=self.config.extractor, jina_fallback=self.config.jina_fallback,
+                                              js_render=self.config.js_render, js_render_threshold=self.config.js_render_threshold)
+                added = [p for p in new_pages if p.text and len(p.text) > 200 and not p.error]
+                if not added:
+                    break
+                good_pages = good_pages + added
+                if self.config.dedup:
+                    from .dedup import dedup_pages
+                    good_pages = dedup_pages(good_pages)
+                substantive = [p for p in good_pages if len(p.text) > 200]
+                cited_pages = (substantive if len(substantive) >= 3 else good_pages)[:self.config.max_synth_sources]
+                report = await self._synthesize(query, unique_results, cited_pages, depth, sub_analyses, lang, tier=tier)
+
         # Step 9: Review and refine (depth 2+; skipped in fast mode).
         # An A/B showed review meaningfully improves the report, so it's on by
         # default — fast mode trades that polish for ~20% lower latency.
@@ -505,6 +543,31 @@ Return ONLY the queries, one per line."""
 
         text = await self._llm_call(provider, prompt, max_tokens=300)
         return [q.strip().lstrip("0123456789.-) ") for q in text.strip().splitlines() if q.strip() and len(q.strip()) > 10][:3]
+
+    async def _reflect(self, query: str, report) -> tuple:
+        """Reflect on the draft: is it sufficient, or what gaps remain? Returns
+        (follow_up_queries, sufficient). Garbage → ([], True) so the loop stops safely."""
+        provider = self.config.get_provider("general")
+        findings = "\n".join(f"- {f}" for f in report.key_findings[:15])
+        prompt = f"""You are a research auditor reviewing a draft on: {query}
+
+DRAFT SUMMARY:
+{report.summary[:1500]}
+
+KEY FINDINGS:
+{findings}
+
+Identify important gaps — missing data, unaddressed angles, or weakly-supported claims.
+Return json: {{"sufficient": <bool>, "gaps": ["..."], "queries": ["1-3 standalone web search queries that would fill the gaps"]}}. If the draft is already comprehensive, set sufficient=true and queries=[]."""
+        text = await self._llm_call(provider, prompt, max_tokens=400, json_mode=True)
+        try:
+            data = json.loads((text or "").strip())
+            if not isinstance(data, dict):
+                return [], True
+            queries = [str(q).strip() for q in (data.get("queries") or []) if str(q).strip()][:3]
+            return queries, bool(data.get("sufficient", not queries))
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            return [], True
 
     async def _compact_sources(self, query: str, pages: List[WebPage]) -> List[WebPage]:
         """Summarize each source to 3-6 query-relevant bullets (parallel, cheap) so
