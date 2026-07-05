@@ -12,7 +12,7 @@ from unittest import mock
 
 from sibyl.search import (
     search_duckduckgo, search_reddit, search_wikipedia, search_google_news,
-    search_mojeek, _search_general_web, SearchResult,
+    search_mojeek, _search_general_web, fetch_wikipedia_extract, SearchResult,
 )
 
 
@@ -47,6 +47,31 @@ class TestDuckDuckGo(unittest.IsolatedAsyncioTestCase):
     async def test_non_200_returns_empty(self):
         res = await search_duckduckgo("q", client=_client_returning(status=503))
         self.assertEqual(res, [])
+
+
+class TestWikipediaExtract(unittest.IsolatedAsyncioTestCase):
+    async def test_non_wiki_url_returns_none_without_network(self):
+        client = mock.Mock()
+        client.get = mock.AsyncMock(side_effect=AssertionError("should not hit network"))
+        self.assertIsNone(await fetch_wikipedia_extract("https://example.com/x", client=client))
+
+    async def test_returns_full_extract(self):
+        payload = {"query": {"pages": {"123": {"extract": "Full clean article text. " * 30}}}}
+        out = await fetch_wikipedia_extract(
+            "https://en.wikipedia.org/wiki/Some_Article", client=_client_returning(payload=payload))
+        self.assertIn("Full clean article text.", out)
+
+    async def test_parses_lang_and_title_from_url(self):
+        client = _client_returning(payload={"query": {"pages": {"1": {"extract": "x" * 300}}}})
+        await fetch_wikipedia_extract("https://de.wikipedia.org/wiki/J%C3%BCrgen_Aschoff", client=client)
+        called_url = client.get.call_args[0][0]
+        self.assertIn("de.wikipedia.org", called_url)
+        self.assertEqual(client.get.call_args[1]["params"]["titles"], "Jürgen Aschoff")
+
+    async def test_short_extract_rejected(self):
+        payload = {"query": {"pages": {"1": {"extract": "too short"}}}}
+        self.assertIsNone(await fetch_wikipedia_extract(
+            "https://en.wikipedia.org/wiki/X", client=_client_returning(payload=payload)))
 
 
 class TestReddit(unittest.IsolatedAsyncioTestCase):

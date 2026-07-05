@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass
 from typing import List, Optional
 from urllib.parse import unquote, urlparse, parse_qs, quote_plus
@@ -253,6 +254,46 @@ async def search_wikipedia(
         if own_client:
             await client.aclose()
     return results
+
+
+_WIKI_URL_RE = re.compile(r"https?://([a-z]{2,3})\.(?:m\.)?wikipedia\.org/wiki/(.+)", re.I)
+
+
+async def fetch_wikipedia_extract(
+    url: str, client: Optional[httpx.AsyncClient] = None,
+) -> Optional[str]:
+    """Full clean plain-text of a Wikipedia article via the API — bypasses HTML
+    scraping, which truncates long articles before infoboxes / tail sections. The
+    API returns the complete article text (all sections). Returns None for a
+    non-Wikipedia URL or on any error, so the caller keeps its scraped version."""
+    m = _WIKI_URL_RE.match(url or "")
+    if not m:
+        return None
+    lang, title = m.group(1).lower(), unquote(m.group(2).split("#")[0]).replace("_", " ")
+    own_client = client is None
+    if own_client:
+        client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
+    try:
+        resp = await client.get(
+            f"https://{lang}.wikipedia.org/w/api.php",
+            params={
+                "action": "query", "prop": "extracts", "explaintext": "1",
+                "redirects": "1", "titles": title, "format": "json",
+            },
+            headers=_HEADERS, timeout=12.0,
+        )
+        if resp.status_code != 200:
+            return None
+        for page in resp.json().get("query", {}).get("pages", {}).values():
+            extract = page.get("extract")
+            if extract and len(extract) > 200:
+                return extract
+    except Exception:
+        return None
+    finally:
+        if own_client:
+            await client.aclose()
+    return None
 
 
 # ── Semantic Scholar (academic papers) ────────────────────────────

@@ -120,7 +120,7 @@ async def gather_sources(query: str, max_sources: int = 10, chars_per_source: in
         chars_per_source: Max characters of text per source (default 3000)
     """
     import httpx
-    from .search import search_web
+    from .search import search_web, fetch_wikipedia_extract
     from .scraper import scrape_urls, WebPage
     from .dedup import dedup_pages
     from .context import relevant_window
@@ -149,6 +149,18 @@ async def gather_sources(query: str, max_sources: int = 10, chars_per_source: in
         good = dedup_pages(good)
         substantive = [p for p in good if len(p.text) > 200]
         chosen = (substantive if len(substantive) >= 3 else good)[:max_sources]
+
+        # Upgrade Wikipedia sources to clean full-text via the API — HTML scraping
+        # truncates long articles before the infobox / tail sections that hold the fact.
+        wiki_idx = [i for i, p in enumerate(chosen) if "wikipedia.org/wiki/" in p.url]
+        if wiki_idx:
+            extracts = await asyncio.gather(
+                *[fetch_wikipedia_extract(chosen[i].url, client) for i in wiki_idx],
+                return_exceptions=True,
+            )
+            for i, ex in zip(wiki_idx, extracts):
+                if isinstance(ex, str) and len(ex) > len(chosen[i].text):
+                    chosen[i] = WebPage(url=chosen[i].url, title=chosen[i].title, text=ex)
 
     if not chosen:
         return f"No sources found for query: {query!r}. Try a different phrasing."
