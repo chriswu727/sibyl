@@ -28,11 +28,12 @@ class EffortTier:
     latency_target_s: int
 
 
-# standard reproduces today's behavior exactly (caps == current values).
+# quick is lean; standard/deep caps are non-restrictive ceilings (>= today's
+# ~13 queries / 30 URLs) so they never reduce current behavior — only quick bites.
 TIERS = {
-    "quick":    EffortTier("quick",    1, 3,  8,  1200, 30),
-    "standard": EffortTier("standard", 2, 6,  20, 1600, 90),
-    "deep":     EffortTier("deep",     3, 10, 30, 2000, 240),
+    "quick":    EffortTier("quick",    1, 4,  10, 1200, 30),
+    "standard": EffortTier("standard", 2, 15, 30, 1600, 90),
+    "deep":     EffortTier("deep",     3, 20, 40, 2000, 240),
 }
 _DEPTH_TO_TIER = {1: "quick", 2: "standard", 3: "deep"}
 

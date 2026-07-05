@@ -27,7 +27,8 @@ console = Console()
 @click.option("--fast", is_flag=True, help="Skip the review/refine pass (~20% faster, slightly less polished)")
 @click.option("--extractor", type=click.Choice(["bs4", "trafilatura"]), default="bs4", help="HTML content extractor")
 @click.option("--jina-fallback", is_flag=True, help="On a blocked scrape, retry via r.jina.ai (set JINA_API_KEY)")
-def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor, jina_fallback):
+@click.option("--js-render/--no-js-render", default=True, help="Render thin/JS pages via r.jina.ai (keyless)")
+def main(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor, jina_fallback, js_render):
     """Sibyl -- AI-powered deep research agent.
 
     Research any topic with web search + LLM analysis + market data.
@@ -48,6 +49,7 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
     cfg.fast = fast
     cfg.extractor = extractor
     cfg.jina_fallback = jina_fallback
+    cfg.js_render = js_render
 
     console.print(f"\n[bold blue]Sibyl[/] researching: [cyan]{query}[/]")
     console.print(f"[dim]Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}[/]")

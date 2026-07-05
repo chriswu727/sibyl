@@ -37,7 +37,8 @@ def _canned_llm(prompts_seen):
         if "missing" in p or "knowledge gaps" in p:
             return "gap query one here\ngap query two here"
         if "relevance" in p:
-            return "1,2,3,4,5"
+            import json as _json
+            return _json.dumps({"scores": [{"id": i, "score": 21 - i} for i in range(1, 21)]})
         if "key findings" in p:
             # findings now run in json_mode — return the JSON object shape
             import json as _json

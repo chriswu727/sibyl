@@ -1,0 +1,24 @@
+{"id": "h01", "type": "obscure", "question": "What is the name of the asteroid moonlet that NASA's DART mission deliberately impacted in September 2022?", "gold": "Dimorphos", "aliases": []}
+{"id": "h02", "type": "obscure", "question": "In what year was the code-hosting platform GitHub first launched to the public?", "gold": "2008", "aliases": []}
+{"id": "h03", "type": "obscure", "question": "What is the SI base unit of luminous intensity?", "gold": "candela", "aliases": ["cd"]}
+{"id": "h04", "type": "obscure", "question": "The chemical element with atomic number 118 is named after which Russian nuclear physicist?", "gold": "Yuri Oganessian", "aliases": ["Oganessian"]}
+{"id": "h05", "type": "obscure", "question": "What is the capital city of the Canadian territory of Nunavut?", "gold": "Iqaluit", "aliases": []}
+{"id": "h06", "type": "obscure", "question": "In which year was the Nginx web server software first publicly released?", "gold": "2004", "aliases": []}
+{"id": "h07", "type": "obscure", "question": "What is the name of the deepest point in the Earth's oceans, located in the Mariana Trench?", "gold": "Challenger Deep", "aliases": []}
+{"id": "h08", "type": "obscure", "question": "Which mathematician won a Fields Medal in 2022 for work on the Ising model and phase transitions in statistical physics?", "gold": "Hugo Duminil-Copin", "aliases": ["Duminil-Copin"]}
+{"id": "h09", "type": "obscure", "question": "What year was the video game 'Stardew Valley' first released?", "gold": "2016", "aliases": []}
+{"id": "h10", "type": "obscure", "question": "What was the maximum length in feet of the RMS Titanic?", "gold": "882", "aliases": ["882.5", "882.5 feet", "882 feet", "269 meters", "269 metres"]}
+{"id": "h11", "type": "obscure", "question": "Which company originally created and incubated the Rust programming language before the Rust Foundation was formed?", "gold": "Mozilla", "aliases": []}
+{"id": "h12", "type": "obscure", "question": "What is the name of the largest moon of the planet Neptune?", "gold": "Triton", "aliases": []}
+{"id": "h13", "type": "frames", "question": "On which river is the capital of the country that won the 2018 FIFA World Cup situated?", "gold": "Seine", "aliases": ["the Seine", "River Seine"]}
+{"id": "h14", "type": "frames", "question": "What is the atomic number of the chemical element named after the scientists who discovered radium and polonium?", "gold": "96", "aliases": ["ninety-six"]}
+{"id": "h15", "type": "frames", "question": "In which London abbey is the author of 'On the Origin of Species' buried?", "gold": "Westminster Abbey", "aliases": ["Westminster"]}
+{"id": "h16", "type": "frames", "question": "In what year was the company that created the CUDA parallel computing platform founded?", "gold": "1993", "aliases": []}
+{"id": "h17", "type": "frames", "question": "The director of the 2010 film 'Inception' also directed a 2008 Batman film. What is the title of that Batman film?", "gold": "The Dark Knight", "aliases": []}
+{"id": "h18", "type": "frames", "question": "Who was the President of the United States when the Apollo 11 mission first landed humans on the Moon?", "gold": "Richard Nixon", "aliases": ["Nixon"]}
+{"id": "h19", "type": "frames", "question": "What is the official currency of the country whose flag carrier airline is named Qantas?", "gold": "Australian dollar", "aliases": ["AUD", "Australian Dollar"]}
+{"id": "h20", "type": "frames", "question": "The scientist who first formulated the uncertainty principle received the Nobel Prize in Physics in which year?", "gold": "1932", "aliases": []}
+{"id": "h21", "type": "obscure", "question": "What is the name of the toolkit and set of GUI widgets used to build the GNOME desktop environment?", "gold": "GTK", "aliases": ["GTK+", "the GIMP Toolkit"]}
+{"id": "h22", "type": "obscure", "question": "Which spacecraft became the first to make a soft landing on the far side of the Moon, in January 2019?", "gold": "Chang'e 4", "aliases": ["Chang'e-4", "Change 4"]}
+{"id": "h23", "type": "frames", "question": "What is the name of the largest lake by surface area on the continent where the country of Kenya is located?", "gold": "Lake Victoria", "aliases": ["Victoria"]}
+{"id": "h24", "type": "obscure", "question": "In distributed systems, what consensus algorithm was introduced by Diego Ongaro and John Ousterhout as a more understandable alternative to Paxos?", "gold": "Raft", "aliases": []}

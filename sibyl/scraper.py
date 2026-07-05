@@ -103,12 +103,40 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
     return WebPage(url=url, title=title, text=text)
 
 
+class _JinaGate:
+    """Bounds JS-render (r.jina.ai) calls so a thin-content sweep can't stall the
+    batch or trip the keyless rate limit: ≤2 concurrent, and a min-interval
+    between calls (keyless only; 0 when JINA_API_KEY is set). Created per
+    scrape_urls batch, so the semaphore binds to the running loop."""
+    def __init__(self):
+        self.sem = asyncio.Semaphore(2)
+        self.last = 0.0
+        self.min_interval = 0.0 if os.environ.get("JINA_API_KEY") else 3.0
+
+    async def render(self, url, max_chars, client):
+        import time
+        async with self.sem:
+            wait = self.min_interval - (time.monotonic() - self.last)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self.last = time.monotonic()
+            return await _try_jina(url, max_chars, client)
+
+
+def _is_html_ish(resp) -> bool:
+    ct = (resp.headers.get("content-type", "") or "").lower()
+    return (not ct) or ("html" in ct) or ("text" in ct)
+
+
 async def scrape_url(
     url: str,
     max_chars: int = 6000,
     client: Optional[httpx.AsyncClient] = None,
     extractor: str = "bs4",
     jina_fallback: bool = False,
+    js_render: bool = False,
+    js_render_threshold: int = 500,
+    jina_gate: Optional["_JinaGate"] = None,
 ) -> WebPage:
     """Fetch a URL with retry and anti-block techniques.
 
@@ -123,6 +151,17 @@ async def scrape_url(
     if own_client:
         client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
 
+    async def _render_if_thin(page: WebPage, resp) -> WebPage:
+        # A 200 that extracts thin is usually a JS shell — render it via Jina and
+        # keep the longer text (keyless; never returns less than we already have).
+        if not (js_render and len(page.text) < js_render_threshold and _is_html_ish(resp)):
+            return page
+        rendered = (await jina_gate.render(url, max_chars, client)) if jina_gate \
+            else await _try_jina(url, max_chars, client)
+        if rendered and len(rendered.text) > len(page.text):
+            return rendered
+        return page
+
     try:
         for attempt in range(2):
             try:
@@ -130,7 +169,8 @@ async def scrape_url(
                 resp = await client.get(url, headers=_get_headers(), timeout=8.0)
 
                 if resp.status_code == 200:
-                    return await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
+                    page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
+                    return await _render_if_thin(page, resp)
 
                 # Retry 403/429 once with a different User-Agent (may clear).
                 if resp.status_code in (403, 429) and attempt == 0:
@@ -205,9 +245,12 @@ async def scrape_urls(
     client: Optional[httpx.AsyncClient] = None,
     extractor: str = "bs4",
     jina_fallback: bool = False,
+    js_render: bool = False,
+    js_render_threshold: int = 500,
 ) -> List[WebPage]:
     """Scrape multiple URLs concurrently over a single pooled client."""
     semaphore = asyncio.Semaphore(concurrency)
+    jina_gate = _JinaGate() if js_render else None
 
     own_client = client is None
     if own_client:
@@ -221,7 +264,8 @@ async def scrape_urls(
     async def _limited_scrape(url: str) -> WebPage:
         async with semaphore:
             return await scrape_url(url, max_chars, client=client, extractor=extractor,
-                                    jina_fallback=jina_fallback)
+                                    jina_fallback=jina_fallback, js_render=js_render,
+                                    js_render_threshold=js_render_threshold, jina_gate=jina_gate)
 
     try:
         return await asyncio.gather(*[_limited_scrape(url) for url in urls])

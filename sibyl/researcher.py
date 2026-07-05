@@ -78,6 +78,7 @@ class Researcher:
         on_progress: Optional[callable] = None,
     ) -> ResearchReport:
         depth = depth or self.config.max_depth
+        tier = self.config.resolve_tier(depth)
 
         def progress(msg: str):
             if on_progress:
@@ -106,6 +107,7 @@ class Researcher:
             if q.lower() not in seen_q:
                 seen_q.add(q.lower())
                 search_queries.append(q)
+        search_queries = search_queries[:tier.max_queries]  # tier ceiling (non-restrictive at standard/deep)
         progress(f"Total search queries: {len(search_queries)}")
 
         # Step 3: Search the web — all queries concurrently (bounded)
@@ -135,10 +137,12 @@ class Researcher:
         progress(f"Found {len(unique_results)} unique sources")
 
         # Step 4: Scrape top sources — try more URLs to compensate for failures
-        scrape_count = min(len(unique_results), self.config.max_sources * 2)  # Try 2x to get enough
+        scrape_count = min(len(unique_results), self.config.max_sources * 2, tier.max_urls)
         urls_to_scrape = [r.url for r in unique_results[:scrape_count]]
         progress(f"Reading {len(urls_to_scrape)} sources...")
-        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http, extractor=self.config.extractor, jina_fallback=self.config.jina_fallback)
+        pages = await scrape_urls(urls_to_scrape, max_chars=6000, client=self._http,
+                                  extractor=self.config.extractor, jina_fallback=self.config.jina_fallback,
+                                  js_render=self.config.js_render, js_render_threshold=self.config.js_render_threshold)
         good_pages = [p for p in pages if p.text and len(p.text) > 100 and not p.error]
 
         # Supplement with search snippets for failed pages
@@ -148,6 +152,14 @@ class Researcher:
                 good_pages.append(WebPage(url=r.url, title=r.title, text=r.snippet))
                 if len(good_pages) >= self.config.max_sources + 5:
                     break
+
+        # Canonical-URL dedup before ranking/synthesis (pure-python, removal-only).
+        if self.config.dedup:
+            from .dedup import dedup_pages
+            before = len(good_pages)
+            good_pages = dedup_pages(good_pages)
+            if len(good_pages) < before:
+                progress(f"Deduped {before - len(good_pages)} near-duplicate sources")
 
         progress(f"Total usable sources: {len(good_pages)} ({sum(1 for p in good_pages if len(p.text) > 200)} full, rest snippets)")
 
@@ -195,7 +207,9 @@ class Researcher:
                 new_urls = [r.url for r in unique_results if r.url not in scraped_page_urls][:5]
                 if new_urls:
                     progress(f"Reading {len(new_urls)} additional sources...")
-                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http, extractor=self.config.extractor, jina_fallback=self.config.jina_fallback)
+                    new_pages = await scrape_urls(new_urls, max_chars=4000, client=self._http,
+                                                  extractor=self.config.extractor, jina_fallback=self.config.jina_fallback,
+                                                  js_render=self.config.js_render, js_render_threshold=self.config.js_render_threshold)
                     good_pages.extend([p for p in new_pages if p.text and not p.error])
                     progress(f"Total sources: {len(good_pages)}")
                 search_queries.extend(gaps[:3])
@@ -270,30 +284,72 @@ Return ONLY the queries, one per line."""
         return queries[:num_queries + 1]
 
     async def _filter_sources(self, query: str, pages: List[WebPage]) -> List[WebPage]:
-        """Have LLM rank sources by relevance, keep top ones."""
-        provider = self.config.get_provider("general")
+        """Score each source's relevance (0-10) and keep the top-N — a ranked
+        rerank rather than a keep/drop, so the strongest sources lead."""
+        top_n = self.config.rerank_top_n
+        reranker = self.config.reranker
 
+        if reranker == "flashrank":
+            try:
+                ranked = await asyncio.to_thread(self._flashrank_rerank, query, pages, top_n)
+                if ranked:
+                    return ranked
+            except Exception:
+                pass  # fall through to the LLM reranker
+        elif reranker == "none":
+            return pages[:top_n]
+
+        provider = self.config.get_provider("compaction")
         source_list = "\n".join(
-            f"{i}. [{page.title}] — {page.text[:150]}"
+            f"{i}. [{page.title}] — {page.text[:200]}"
             for i, page in enumerate(pages, 1)
         )
+        prompt = f"""Score the relevance of each source (0-10) for answering this research question.
 
-        prompt = f"""Rate the relevance of each source for researching: {query}
+RESEARCH QUESTION: {query}
 
-Sources:
+SOURCES:
 {source_list}
 
-Return ONLY the numbers of the RELEVANT sources (score 7+/10), comma-separated.
-Example: 1,3,4,7"""
+10 = directly answers; 5 = partial; 0 = off-topic/spam/error. Judge topical relevance only.
+Return json: {{"scores": [{{"id": <n>, "score": <0-10>}}, ...]}}, every source scored exactly once.
+Example: {{"scores": [{{"id": 1, "score": 9}}, {{"id": 2, "score": 3}}]}}"""
 
-        text = await self._llm_call(provider, prompt, max_tokens=200)
+        text = await self._llm_call(provider, prompt, max_tokens=600, json_mode=True)
+        scores = self._parse_scores(text, len(pages))
+        if not scores:
+            return pages[:top_n]
+        ranked = sorted(range(len(pages)), key=lambda i: scores.get(i + 1, 0), reverse=True)
+        kept = [pages[i] for i in ranked[:top_n]]
+        return kept if kept else pages[:top_n]
 
+    @staticmethod
+    def _parse_scores(text: str, n: int) -> Dict[int, float]:
+        """Parse {"scores":[{"id":i,"score":s}]} → {id: score}, tolerant of a
+        bare list or a truncated tail."""
+        out: Dict[int, float] = {}
         try:
-            indices = [int(x.strip()) - 1 for x in text.split(",") if x.strip().isdigit()]
-            filtered = [pages[i] for i in indices if 0 <= i < len(pages)]
-            return filtered if len(filtered) >= 3 else pages[:12]
-        except Exception:
-            return pages[:12]
+            data = json.loads((text or "").strip())
+            items = data.get("scores") if isinstance(data, dict) else data
+            if isinstance(items, list):
+                for it in items:
+                    if isinstance(it, dict) and "id" in it:
+                        try:
+                            out[int(it["id"])] = float(it.get("score", 0))
+                        except (ValueError, TypeError):
+                            pass
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            pass
+        return out
+
+    def _flashrank_rerank(self, query: str, pages: List[WebPage], top_n: int) -> List[WebPage]:
+        """Optional local cross-encoder rerank (extra: pip install sibyl-research[rerank])."""
+        from flashrank import Ranker, RerankRequest
+        ranker = Ranker()
+        passages = [{"id": i, "text": (p.title + ". " + p.text[:800])} for i, p in enumerate(pages)]
+        ranked = ranker.rerank(RerankRequest(query=query, passages=passages))
+        idx = [r["id"] for r in ranked[:top_n]]
+        return [pages[i] for i in idx]
 
     async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
         """Review the draft and refine summary + findings — two independent

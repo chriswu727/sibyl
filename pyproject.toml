@@ -35,6 +35,9 @@ dependencies = [
     "pytrends>=4.9.0",
 ]
 
+[project.optional-dependencies]
+rerank = ["flashrank"]
+
 [project.scripts]
 sibyl = "sibyl.cli:main"
 sibyl-mcp = "sibyl.mcp_server:main"
