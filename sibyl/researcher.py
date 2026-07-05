@@ -23,6 +23,7 @@ class Source:
     title: str
     snippet: str
     relevance: str = ""
+    supporting_snippet: str = ""   # exact evidence sentence for this citation
 
 
 @dataclass
@@ -41,6 +42,7 @@ class ResearchReport:
     charts: List[str] = field(default_factory=list)
     market_data_summary: str = ""
     sub_questions: List[str] = field(default_factory=list)
+    finding_verifications: List = field(default_factory=list)  # verifier.FindingVerification per finding
 
 
 class Researcher:

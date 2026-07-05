@@ -13,8 +13,39 @@ class Provider:
     model: str          # LiteLLM model string, e.g. "deepseek/deepseek-v4-flash"
     api_key: str = ""
     api_base: str = ""
-    role: str = "general"   # general, analysis, search, chinese, fast
+    role: str = "general"   # general, analysis, fast, synthesis, verify, compaction
     weight: float = 1.0     # routing weight
+
+
+@dataclass(frozen=True)
+class EffortTier:
+    """A named effort level with hard resource caps and a latency target."""
+    name: str
+    depth: int
+    max_queries: int
+    max_urls: int
+    synthesis_max_tokens: int
+    latency_target_s: int
+
+
+# standard reproduces today's behavior exactly (caps == current values).
+TIERS = {
+    "quick":    EffortTier("quick",    1, 3,  8,  1200, 30),
+    "standard": EffortTier("standard", 2, 6,  20, 1600, 90),
+    "deep":     EffortTier("deep",     3, 10, 30, 2000, 240),
+}
+_DEPTH_TO_TIER = {1: "quick", 2: "standard", 3: "deep"}
+
+# Role → ordered fallback chain. A missing role degrades to a keyless-identical
+# provider, so per-role model routing is purely additive.
+_ROLE_FALLBACKS = {
+    "verify":     ["verify", "synthesis", "analysis", "general"],
+    "synthesis":  ["synthesis", "analysis", "general"],
+    "analysis":   ["analysis", "general"],
+    "compaction": ["compaction", "fast", "general"],
+    "fast":       ["fast", "general"],
+    "general":    ["general"],
+}
 
 
 @dataclass
@@ -27,14 +58,34 @@ class Config:
     fast: bool = False      # skip the review/refine pass for ~20% faster runs
     extractor: str = "bs4"  # HTML content extractor: "bs4" (default) or "trafilatura"
     jina_fallback: bool = False  # on scrape block/403, retry via r.jina.ai (needs JINA_API_KEY)
+    # ── research-quality capabilities (borrowed from competitors) ──
+    verify_claims: bool = True       # re-check each finding against its cited source text
+    verify_drop_unsupported: bool = False  # destructive: drop unsupported findings (opt-in)
+    js_render: bool = True           # on thin extraction, render via r.jina.ai (keyless)
+    js_render_threshold: int = 500   # chars below which a 200 page is treated as JS-shell
+    dedup: bool = True               # canonical-URL near-duplicate removal
+    reranker: str = "llm"            # "llm" | "flashrank" | "none"
+    rerank_top_n: int = 12           # sources kept after ranked relevance scoring
+    perspectives: bool = True        # perspective-guided query generation
+    compact_sources: bool = False    # summarize each source before synthesis (weigh more)
+    max_synth_sources: int = 12      # sources fed to synthesis
+    rich_citations: bool = True      # carry supporting snippet per source
+    tier: str = "standard"           # quick | standard | deep (used when depth unset)
+    reflect_rounds: int = 0          # extra reflect→search→re-synthesize cycles (opt-in)
 
     def get_provider(self, role: str = "general") -> Provider:
-        """Get the best provider for a given role."""
-        for p in self.providers:
-            if p.role == role:
-                return p
-        # Fallback to first provider
+        """Get the best provider for a role, degrading down its fallback chain."""
+        for r in _ROLE_FALLBACKS.get(role, [role]):
+            for p in self.providers:
+                if p.role == r:
+                    return p
         return self.providers[0] if self.providers else Provider(model="deepseek/deepseek-v4-flash")
+
+    def resolve_tier(self, depth: int = 0) -> EffortTier:
+        """Resolve the effort tier from an explicit depth, else the configured tier."""
+        if depth:
+            return TIERS.get(_DEPTH_TO_TIER.get(depth, self.tier), TIERS["standard"])
+        return TIERS.get(self.tier, TIERS["standard"])
 
     @classmethod
     def from_yaml(cls, path: str) -> Config:
@@ -52,6 +103,19 @@ class Config:
             fast=data.get("fast", False),
             extractor=data.get("extractor", "bs4"),
             jina_fallback=data.get("jina_fallback", False),
+            verify_claims=data.get("verify_claims", True),
+            verify_drop_unsupported=data.get("verify_drop_unsupported", False),
+            js_render=data.get("js_render", True),
+            js_render_threshold=data.get("js_render_threshold", 500),
+            dedup=data.get("dedup", True),
+            reranker=data.get("reranker", "llm"),
+            rerank_top_n=data.get("rerank_top_n", 12),
+            perspectives=data.get("perspectives", True),
+            compact_sources=data.get("compact_sources", False),
+            max_synth_sources=data.get("max_synth_sources", 12),
+            rich_citations=data.get("rich_citations", True),
+            tier=data.get("tier", "standard"),
+            reflect_rounds=data.get("reflect_rounds", 0),
         )
 
     @classmethod

@@ -1,0 +1,20 @@
+{"id": "sq01", "type": "simpleqa", "question": "In what year did the Wright brothers make their first successful powered airplane flight?", "gold": "1903", "aliases": []}
+{"id": "sq02", "type": "simpleqa", "question": "Who was the first woman to be awarded a Nobel Prize?", "gold": "Marie Curie", "aliases": ["Maria Sklodowska-Curie", "Marie Sklodowska Curie", "Maria Skłodowska-Curie"]}
+{"id": "sq03", "type": "simpleqa", "question": "What is the chemical element with the symbol W?", "gold": "Tungsten", "aliases": ["Wolfram"]}
+{"id": "sq04", "type": "simpleqa", "question": "In which Swiss city is the headquarters of the World Health Organization located?", "gold": "Geneva", "aliases": ["Genève", "Geneva, Switzerland"]}
+{"id": "sq05", "type": "simpleqa", "question": "What programming language was created by Guido van Rossum and first released in 1991?", "gold": "Python", "aliases": []}
+{"id": "sq06", "type": "simpleqa", "question": "What is the largest moon of the planet Saturn?", "gold": "Titan", "aliases": []}
+{"id": "sq07", "type": "simpleqa", "question": "Which scientist proposed the three laws of motion published in the Principia Mathematica in 1687?", "gold": "Isaac Newton", "aliases": ["Sir Isaac Newton"]}
+{"id": "sq08", "type": "simpleqa", "question": "What is the longest river in the world by length, generally cited as the Nile or the Amazon; give the traditionally accepted answer?", "gold": "Nile", "aliases": ["The Nile", "Nile River"]}
+{"id": "sq09", "type": "simpleqa", "question": "In what year did the Berlin Wall fall?", "gold": "1989", "aliases": []}
+{"id": "sq10", "type": "simpleqa", "question": "Who painted the ceiling of the Sistine Chapel?", "gold": "Michelangelo", "aliases": ["Michelangelo Buonarroti"]}
+{"id": "fr01", "type": "frames", "question": "What is the capital city of the country that hosted the 2016 Summer Olympic Games?", "gold": "Brasilia", "aliases": ["Brasília"]}
+{"id": "fr02", "type": "frames", "question": "Who directed the film that won the Academy Award for Best Picture for the year 1997 and was set aboard the RMS Titanic?", "gold": "James Cameron", "aliases": []}
+{"id": "fr03", "type": "frames", "question": "What currency is used in the country where the Eiffel Tower is located?", "gold": "Euro", "aliases": ["EUR", "the euro"]}
+{"id": "fr04", "type": "frames", "question": "The theory of general relativity was published by a physicist in 1915. In which country was that physicist born?", "gold": "Germany", "aliases": ["German Empire"]}
+{"id": "fr05", "type": "frames", "question": "What is the tallest mountain on the continent where Mount Kilimanjaro is located?", "gold": "Mount Kilimanjaro", "aliases": ["Kilimanjaro"]}
+{"id": "fr06", "type": "frames", "question": "Which company manufactures the iPhone, and in which U.S. state is that company headquartered?", "gold": "California", "aliases": ["Apple, California", "Apple in California"]}
+{"id": "fr07", "type": "frames", "question": "The author of the novel 'Nineteen Eighty-Four' also wrote 'Animal Farm'. What was that author's pen name?", "gold": "George Orwell", "aliases": ["Orwell"]}
+{"id": "fr08", "type": "frames", "question": "What is the boiling point of water in degrees Fahrenheit at standard atmospheric pressure?", "gold": "212", "aliases": ["212 degrees Fahrenheit", "212 F"]}
+{"id": "fr09", "type": "frames", "question": "In which year did the country that gifted the Statue of Liberty to the United States storm the Bastille?", "gold": "1789", "aliases": []}
+{"id": "fr10", "type": "frames", "question": "The programming language named after a British comedy troupe was created by Guido van Rossum. What is the name of that comedy troupe?", "gold": "Monty Python", "aliases": ["Monty Python's Flying Circus"]}

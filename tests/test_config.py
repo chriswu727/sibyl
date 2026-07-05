@@ -6,6 +6,50 @@ import os
 import unittest
 from unittest import mock
 
+from sibyl.config import Config, Provider, TIERS
+
+
+class TestTiersAndRoles(unittest.TestCase):
+    def test_new_flag_defaults(self):
+        c = Config()
+        self.assertTrue(c.verify_claims)
+        self.assertFalse(c.verify_drop_unsupported)
+        self.assertTrue(c.js_render)
+        self.assertTrue(c.dedup)
+        self.assertEqual(c.reranker, "llm")
+        self.assertTrue(c.perspectives)
+        self.assertFalse(c.compact_sources)
+        self.assertTrue(c.rich_citations)
+        self.assertEqual(c.tier, "standard")
+        self.assertEqual(c.reflect_rounds, 0)
+
+    def test_standard_tier_is_todays_behavior(self):
+        # standard must reproduce the current 1600-token synthesis budget
+        self.assertEqual(TIERS["standard"].synthesis_max_tokens, 1600)
+        self.assertEqual(TIERS["standard"].depth, 2)
+
+    def test_resolve_tier(self):
+        c = Config()
+        self.assertEqual(c.resolve_tier(1).name, "quick")
+        self.assertEqual(c.resolve_tier(2).name, "standard")
+        self.assertEqual(c.resolve_tier(3).name, "deep")
+        self.assertEqual(c.resolve_tier(0).name, "standard")  # falls to configured tier
+
+    def test_role_fallback_chain(self):
+        # verify/synthesis/compaction all degrade to an existing provider
+        c = Config(providers=[Provider(model="m-analysis", role="analysis"),
+                              Provider(model="m-general", role="general")])
+        self.assertEqual(c.get_provider("verify").model, "m-analysis")     # verify->synthesis->analysis
+        self.assertEqual(c.get_provider("synthesis").model, "m-analysis")  # synthesis->analysis
+        self.assertEqual(c.get_provider("compaction").model, "m-general")  # compaction->fast->general
+
+    def test_synthesis_uses_strong_provider_when_present(self):
+        c = Config(providers=[Provider(model="strong", role="synthesis"),
+                              Provider(model="cheap", role="general")])
+        self.assertEqual(c.get_provider("synthesis").model, "strong")
+        self.assertEqual(c.get_provider("compaction").model, "cheap")
+
+
 from sibyl.config import Config, Provider
 
 

@@ -16,3 +16,6 @@ reports/
 !README.md
 !AGENTS.md
 !docs/*.md
+
+# eval cache
+evals/cache/
