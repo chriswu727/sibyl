@@ -1,183 +1,143 @@
+<div align="center">
+
 # Sibyl
 
-**AI-powered deep research agent.** Ask any question — Sibyl searches the web across multiple sources, reads dozens of pages, cross-references findings, and generates an executive-quality research report with analysis, predictions, and citations.
+**Keyless deep-research for your AI agent.**
 
-Not just another search summarizer. Sibyl is a **research analysis platform** — it does structured comparisons, SWOT analysis, Google Trends tracking, event timelines, and financial data visualization. All from a single question.
+Sibyl retrieves the web — searching across engines, scraping and cleaning pages, cross-referencing sources — and hands the evidence to *your* model to reason over. Or it runs the whole research cycle itself and returns a cited report.
 
-Every finding is **verified against its cited source** (unsupported claims are flagged), and the pipeline ships a reproducible eval. The honest scorecard:
+[![tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+![web search: keyless](https://img.shields.io/badge/web_search-keyless-brightgreen)
+![license](https://img.shields.io/badge/license-MIT-green)
 
-| Set | Result | What it measures |
+</div>
+
+---
+
+## Two ways to use it
+
+Sibyl runs as an **MCP server** and a **CLI / Python library**. The key choice is *who does the reasoning*.
+
+### 1. Retrieval provider — your model is the brain (recommended, keyless)
+
+`gather_sources(query)` searches, scrapes, dedupes, and returns the top **full-text sources** — without writing an answer. Your agent (Claude, or any MCP host) reads the evidence, cross-references it, and answers itself, citing sources and abstaining when they don't contain the answer. **No API key required.**
+
+This is the highest-quality path, because a frontier model applied to real retrieved evidence beats a mid-tier model doing the synthesis — and it doesn't fabricate when the answer isn't found.
+
+### 2. One-shot pipeline — Sibyl is the brain (needs a provider key)
+
+`research(query, depth)` runs the full cycle — decompose → search → scrape → rank → synthesize → **verify each finding against its source** → report — using Sibyl's own configured LLM (DeepSeek by default). Use it when you want a finished report in a single call.
+
+## Benchmarks
+
+Measured on 30 questions from the official **SimpleQA** test set (human-verified gold, deliberately obscure long-tail facts), graded on the CORRECT / INCORRECT / NOT_ATTEMPTED rubric.
+
+| Setup | Hard SimpleQA | Fabrication |
 |---|---|---|
-| **Real SimpleQA (30, official gold)** | **17% correct** | long-tail obscure facts — the honest ceiling |
-| Mainstream facts (20 curated) | 100% correct | findable/well-known facts |
-| Adversarial (12 false-premise) | 92% correct | abstaining instead of fabricating |
-| Citation grounding | 66–81% of findings verified-supported | does a finding cite what its source says |
+| **Host model over `gather_sources`** (keyless) | **~93%** | **~0** — abstains instead of guessing |
+| Sibyl one-shot pipeline (DeepSeek-flash) | 17% | high |
 
-The two numbers that matter most are the first and last, and they're humbling:
-on **real long-tail SimpleQA sibyl scores ~17%** — when it can't retrieve an
-obscure fact it tends to fabricate a plausible famous answer (e.g. "Novak
-Djokovic" for an obscure Serbian player). Keyless search is the bottleneck on the
-long tail. And **grounding is not correctness**: a finding can be "supported" by
-its cited source yet still be about the wrong entity. sibyl is strong on
-mainstream/findable facts, weak on obscure long-tail ones.
+The gap isolates one variable: **the model consuming the sources is the ceiling, not the sources.** The same keyless retrieval that yields 17% with a mid-tier synthesizer yields ~93% when a frontier host model reasons over it. Full method, per-question results, and honest caveats: [`docs/EVAL_HOST_CLAUDE.md`](docs/EVAL_HOST_CLAUDE.md).
 
-Reproduce: `python scripts/eval.py --depth 2 --dataset evals/gold/simpleqa_real_30.jsonl`
-(temp-0 LLM judge, SimpleQA CORRECT/INCORRECT/NOT_ATTEMPTED rubric). All keyless
-for search — no API keys needed to search the web.
+> Reproduce the keyless path: `python scripts/gather.py "<query>"` and reason over the output yourself. Reproduce the one-shot path: `python scripts/eval.py --depth 2 --dataset evals/gold/simpleqa_real_30.jsonl`.
 
-## What Makes Sibyl Different
+## Quick start
 
-| | Traditional Search | ChatGPT/Perplexity | GPT Researcher | **Sibyl** |
-|---|---|---|---|---|
-| Web search + summary | Yes | Yes | Yes | Yes |
-| Multi-source (news, Reddit, Wikipedia) | No | Partial | Partial | **Yes (4 engines)** |
-| Sub-question decomposition | No | No | Yes | **Yes** |
-| Iterative gap-filling (search → analyze → identify gaps → search again) | No | No | Partial | **Yes** |
-| Cross-source analysis (sentiment, consensus, disagreements) | No | No | No | **Yes** |
-| Structured comparison tables | No | No | No | **Yes** |
-| SWOT analysis | No | No | No | **Yes** |
-| Google Trends data | No | No | No | **Yes** |
-| Event timelines | No | No | No | **Yes** |
-| Financial data + charts | No | No | No | **Yes** |
-| MCP server (Claude Code, Cursor) | No | No | No | **Yes** |
-| Multi-LLM (DeepSeek, Gemini, GLM, OpenAI) | No | No | Limited | **Yes (auto-detect)** |
-| PDF reports with embedded charts | No | No | Basic | **Yes** |
-
-## Quick Start
-
-### MCP Server (for Claude Code / Cursor)
+### MCP server (Claude Code, Cursor, …)
 
 ```bash
 pip install sibyl-research
+
+# Keyless — retrieval-provider mode, your host model reasons:
+claude mcp add sibyl -- sibyl-mcp
+
+# Or with a key, to also enable the one-shot research() tool:
 claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
 ```
 
-Then in Claude Code:
+Then, in your agent:
 
-> "Research the impact of AI on software engineering jobs over the next 5 years"
+> "Research the Serbian quarterfinalist at the 2018 Madrid Open" — *uses `gather_sources`, you synthesize*
 
-> "Compare NVIDIA vs AMD vs Intel for AI workloads"
-
-> "SWOT analysis of Tesla in 2026"
+> "Compare NVIDIA vs AMD vs Intel for AI workloads" — *one-shot `research()` + `compare()`*
 
 ### CLI
 
 ```bash
 pip install sibyl-research
-export DEEPSEEK_API_KEY=sk-...   # or OPENAI_API_KEY, GEMINI_API_KEY, etc.
+export DEEPSEEK_API_KEY=sk-...   # or OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY, …
 
-# Standard research
-sibyl "Canadian housing market outlook 2026"
-
-# Deep research with predictions + market data + PDF
-sibyl "Will NVIDIA maintain AI chip dominance?" -d 3 --symbols NVDA,AMD,INTC --pdf
-
-# Chinese output
-sibyl "加拿大移民政策变化" -l zh --pdf -o reports/
+sibyl "Canadian housing market outlook 2026"                       # standard
+sibyl "Will NVIDIA keep AI-chip dominance?" -d 3 --symbols NVDA,AMD --pdf   # deep + charts
+sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    # Chinese output
 ```
 
-## How It Works
+## Tools (12 MCP tools)
+
+| Group | Tool | What it does |
+|---|---|---|
+| **Retrieval** | `gather_sources(query)` | Keyless search + scrape + dedup; returns full-text sources for *you* to reason over |
+| | `quick_search(query)` | Raw search hits (title / url / snippet), no scraping |
+| | `read_url(url)` | Clean full text of one page |
+| **Research** | `research(query, depth)` | Full one-shot cycle with source-verified findings (depth 1–3) |
+| | `analyze(text, question)` | Reason over text you provide |
+| **Analysis** | `compare(items)` | Side-by-side comparison table with metrics + recommendation |
+| | `swot(subject)` | Strengths / Weaknesses / Opportunities / Threats, evidence-backed |
+| | `trends(keywords)` | Real Google Trends: interest, direction, rising queries |
+| | `timeline(topic)` | Chronological event table with impact |
+| **Finance** | `fetch_market_data(symbols)` | Real prices, moving averages, 52-week range |
+| | `chart(symbols)` | Price trend charts (PNG) |
+| **Output** | `save_report(format)` | PDF (with embedded charts) and/or Markdown |
+
+## How the one-shot pipeline works
 
 ```
 You ask a question
-  │
-  ├─ Step 1: Decompose into 3-5 focused sub-questions
-  ├─ Step 2: Generate 15-20 diverse search queries
-  ├─ Step 3: Search across 4 engines (DuckDuckGo, Google News, Reddit, Wikipedia; Mojeek fails over if DuckDuckGo is blocked)
-  ├─ Step 4: Scrape 15-20 sources (realistic browser headers, retry, Google Cache fallback)
-  ├─ Step 5: Filter sources by relevance (LLM-scored)
-  ├─ Step 6: Analyze each sub-question independently
-  ├─ Step 7: Identify knowledge gaps → auto-search for missing info
-  ├─ Step 8: Cross-reference sources (sentiment, consensus, disagreements)
-  ├─ Step 9: Section-by-section synthesis (Summary, Findings, Analysis, Predictions)
-  ├─ Step 10: Review and refine draft
-  └─ Output: PDF/Markdown report with Table of Contents, citations, charts
+  ├─ 1. Decompose into 3–5 focused sub-questions
+  ├─ 2. Generate diverse, perspective-guided search queries
+  ├─ 3. Search 4 keyless engines (DuckDuckGo, Google News, Reddit, Wikipedia; Mojeek fails over)
+  ├─ 4. Scrape sources (browser headers, retry, JS-render fallback for thin pages)
+  ├─ 5. Dedupe + rank by relevance
+  ├─ 6. Analyze each sub-question; identify knowledge gaps → search again
+  ├─ 7. Cross-reference (sentiment, consensus, disagreements)
+  ├─ 8. Section-by-section synthesis (Summary, Findings, Analysis, Predictions)
+  ├─ 9. Verify every finding against its cited source — flag the unsupported
+  └─ Output: PDF / Markdown report with ToC, citations, charts
 ```
 
-## Research Tools (11 MCP tools)
+Depth controls cost: **1 (quick)** ~20–30s · **2 (standard)** ~60–90s · **3 (deep)** adds gap-filling + bull/bear/base predictions.
 
-### Core Research
-| Tool | What it does |
-|------|-------------|
-| `research(query, depth, language)` | Full research cycle: search → scrape → analyze → report. Depth 1-3. |
-| `quick_search(query)` | Fast web search, returns raw results |
-| `read_url(url)` | Extract clean text from any URL |
-| `analyze(text, question)` | Analyze provided text with LLM |
+## Multi-provider
 
-### Analysis Tools (unique to Sibyl)
-| Tool | What it does |
-|------|-------------|
-| `compare(items)` | Structured side-by-side comparison table with metrics and recommendation |
-| `swot(subject)` | Strengths / Weaknesses / Opportunities / Threats with evidence |
-| `trends(keywords)` | Real Google Trends data: interest level, direction, rising searches |
-| `timeline(topic)` | Chronological event table with dates and impact assessment |
+Sibyl auto-detects a provider from the environment; `gather_sources` needs none.
 
-### Financial Data
-| Tool | What it does |
-|------|-------------|
-| `fetch_market_data(symbols)` | Real stock/ETF prices, trends, moving averages, 52-week range |
-| `chart(symbols)` | Generate price trend charts (PNG) |
-
-### Output
-| Tool | What it does |
-|------|-------------|
-| `save_report(format)` | Save as PDF (with embedded charts) and/or Markdown |
-
-## Research Depth
-
-| Depth | What happens | LLM calls | Time |
-|-------|-------------|-----------|------|
-| 1 (quick) | 2-3 search queries, basic synthesis | ~3 | 20-30s |
-| 2 (standard) | Sub-question decomposition, per-question analysis, cross-referencing, review | ~10 | 60-90s |
-| 3 (deep) | + Knowledge gap filling, predictions with bull/bear/base case, confidence rating | ~13 | 90-120s |
-
-## Multi-Provider Support
-
-Sibyl works with any LLM. Auto-detects from environment variables:
-
-| Provider | Env var | Model |
-|----------|---------|-------|
+| Provider | Env var | Default model |
+|---|---|---|
 | DeepSeek | `DEEPSEEK_API_KEY` | `deepseek/deepseek-v4-flash` |
 | OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
 | Anthropic | `ANTHROPIC_API_KEY` | `claude-sonnet-4-20250514` |
 | Gemini | `GEMINI_API_KEY` | `gemini/gemini-2.5-flash` |
 | GLM (ZhipuAI) | `ZHIPUAI_API_KEY` | `glm-4-flash` |
 
-DeepSeek uses the V4 flash tier by default. If DeepSeek renames it, set
-`DEEPSEEK_MODEL=deepseek-<new-name>` to switch without a code change.
-
-Or configure multiple providers with roles:
+Configure several providers with per-role routing in `sibyl.yaml` — e.g. cheap model for search/ranking, a stronger one for `synthesis` and `verify`:
 
 ```yaml
-# sibyl.yaml
 providers:
-  - model: deepseek/deepseek-chat
+  - model: deepseek/deepseek-v4-flash
     api_key: sk-xxx
-    role: analysis
-
-  - model: gemini/gemini-2.5-flash
-    api_key: xxx
-    role: fast
-
-  - model: openai/glm-4-flash
-    api_key: xxx
-    api_base: https://open.bigmodel.cn/api/paas/v4
-    role: chinese
+    role: search
+  - model: anthropic/claude-sonnet-4-20250514
+    api_key: sk-ant-xxx
+    role: synthesis
 ```
-
-## Example Reports
-
-Reports generated by Sibyl on real topics:
-
-- **Federal Reserve interest rate outlook 2026-2027** — 5 pages, 12 findings, 6 sources, analysis of "higher-for-longer" vs "steady easing" debate
-- **Impact of Trump tariffs on trade 2026** — 5 pages, 10 findings, 4 sources, historical comparison to Smoot-Hawley, second-order effects on AI labor displacement
-- **AI industry landscape 2026** — Market size ($538B), investment trends ($2.9T infrastructure), regulatory outlook, with NVDA/GOOGL/META stock charts
 
 ## Requirements
 
 - Python 3.10+
-- At least one LLM API key
-- No other API keys needed (all search engines are free)
+- **`gather_sources` and all web search are keyless** — no API keys to search the web
+- One LLM key only for the one-shot `research()` / CLI paths
 
 ## License
 
