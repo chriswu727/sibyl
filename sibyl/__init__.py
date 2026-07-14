@@ -4,6 +4,7 @@ from .evidence import (
     BundleDiagnostics,
     BundleStatus,
     EvidencePassage,
+    EvidenceSufficiency,
     EvidenceSource,
     SourceBundle,
 )
@@ -12,8 +13,9 @@ __all__ = [
     "BundleDiagnostics",
     "BundleStatus",
     "EvidencePassage",
+    "EvidenceSufficiency",
     "EvidenceSource",
     "SourceBundle",
 ]
 
-__version__ = "0.2.2"
+__version__ = "0.3.0"

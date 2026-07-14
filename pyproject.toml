@@ -1,6 +1,6 @@
 [project]
 name = "sibyl-research"
-version = "0.2.2"
+dynamic = ["version"]
 description = "AI-powered deep research agent — market analysis, trend prediction, topic research with multi-LLM support"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -44,6 +44,9 @@ sibyl-mcp = "sibyl.mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["sibyl"]
+
+[tool.hatch.version]
+path = "sibyl/__init__.py"
 
 [build-system]
 requires = ["hatchling"]
