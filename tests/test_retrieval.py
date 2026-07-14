@@ -29,7 +29,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
         self.assertEqual(first.status, "ok")
-        self.assertEqual(first.schema_version, "1.3")
+        self.assertEqual(first.schema_version, "1.4")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
         self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
@@ -54,6 +54,8 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first.diagnostics.effective_max_sources, 2)
         self.assertEqual(first.diagnostics.effective_chars_per_source, 7000)
         self.assertEqual(first.diagnostics.ranking_method, "lexical_v1")
+        self.assertEqual(first.diagnostics.requested_ranking_method, "lexical")
+        self.assertEqual(first.diagnostics.ranking_warning, "")
         self.assertEqual(first.diagnostics.candidates_ranked, 3)
         self.assertEqual(first.diagnostics.passages_returned, 2)
         self.assertEqual(first.diagnostics.coverage_method, "lexical_query_terms_v1")
@@ -89,6 +91,94 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.sources[0].url, "https://example.com/tennis")
         self.assertGreater(bundle.sources[0].relevance_score, 0.5)
         self.assertEqual(bundle.diagnostics.candidates_ranked, 3)
+
+    async def test_flashrank_backend_records_actual_method(self):
+        results = [
+            SearchResult("Noise", "https://example.com/noise", "", "web"),
+            SearchResult("Target", "https://example.com/target", "", "web"),
+            SearchResult("Other", "https://example.com/other", "", "web"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"{result.title} body " * 30)
+            for result in results
+        ]
+
+        def fake_scores(query, documents):
+            return [0.95 if title == "Target" else 0.05 for title, _ in documents]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])), \
+             mock.patch("sibyl.retrieval.flashrank_relevance_scores", side_effect=fake_scores):
+            bundle = await gather_source_bundle(
+                "target", max_sources=1, client=object(), ranker="flashrank"
+            )
+
+        self.assertEqual(bundle.sources[0].url, "https://example.com/target")
+        self.assertEqual(bundle.diagnostics.requested_ranking_method, "flashrank")
+        self.assertEqual(bundle.diagnostics.ranking_method, "flashrank")
+        self.assertEqual(bundle.diagnostics.ranking_warning, "")
+
+    async def test_flashrank_failure_falls_back_with_diagnostic(self):
+        results = [
+            SearchResult("Noise", "https://example.com/noise", "", "web"),
+            SearchResult("Alpha beta", "https://example.com/match", "", "web"),
+            SearchResult("Other", "https://example.com/other", "", "web"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"{result.title} body " * 30)
+            for result in results
+        ]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])), \
+             mock.patch(
+                 "sibyl.retrieval.flashrank_relevance_scores",
+                 side_effect=ImportError("optional dependency missing"),
+             ):
+            bundle = await gather_source_bundle(
+                "alpha beta", max_sources=1, client=object(), ranker="flashrank"
+            )
+
+        self.assertEqual(bundle.sources[0].url, "https://example.com/match")
+        self.assertEqual(bundle.diagnostics.ranking_method, "lexical_v1")
+        self.assertIn("ImportError", bundle.diagnostics.ranking_warning)
+        self.assertIn("fell back", bundle.diagnostics.ranking_warning)
+
+    async def test_none_ranker_preserves_order_and_null_scores(self):
+        results = [
+            SearchResult("First", "https://example.com/first", "", "web"),
+            SearchResult("Target", "https://example.com/target", "", "web"),
+            SearchResult("Third", "https://example.com/third", "", "web"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"{result.title} body " * 30)
+            for result in results
+        ]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+            bundle = await gather_source_bundle(
+                "target", max_sources=2, client=object(), ranker="none"
+            )
+
+        self.assertEqual(
+            [source.url for source in bundle.sources],
+            ["https://example.com/first", "https://example.com/target"],
+        )
+        self.assertTrue(all(source.relevance_score is None for source in bundle.sources))
+        self.assertTrue(
+            all(
+                passage.score is None
+                for source in bundle.sources
+                for passage in source.evidence
+            )
+        )
+        self.assertEqual(bundle.diagnostics.ranking_method, "none")
+        self.assertEqual(bundle.diagnostics.candidates_ranked, 0)
+        self.assertEqual(bundle.diagnostics.chunks_ranked, 0)
 
     async def test_returns_ranked_passages_with_offsets_within_source_budget(self):
         results = [
@@ -154,6 +244,18 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(bundle.status, "invalid_request")
         self.assertIn("must not be empty", bundle.error)
+        search.assert_not_awaited()
+
+    async def test_invalid_ranker_is_rejected_before_search(self):
+        search = mock.AsyncMock()
+        with mock.patch("sibyl.retrieval.search_web", new=search):
+            bundle = await gather_source_bundle(
+                "query", client=object(), ranker="remote"
+            )
+
+        self.assertEqual(bundle.status, "invalid_request")
+        self.assertIn("lexical, flashrank, none", bundle.error)
+        self.assertEqual(bundle.diagnostics.requested_ranking_method, "remote")
         search.assert_not_awaited()
 
     async def test_no_sources_is_explicit_insufficient_evidence(self):

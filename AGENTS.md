@@ -6,6 +6,8 @@ This file helps AI agents (Claude Code, Cursor, etc.) use Sibyl effectively via 
 
 ```bash
 pip install sibyl-research
+# Optional local cross-encoder ranking:
+pip install 'sibyl-research[rerank]'
 # Retrieval-provider mode (recommended) needs NO key — you do the reasoning:
 claude mcp add sibyl -- sibyl-mcp
 # For the one-shot research() tool, add a provider key so sibyl's own model runs it:
@@ -23,7 +25,8 @@ whereas you can cross-reference sources and abstain when they don't answer.
 # structured retrieval for an agent pipeline (Loop/Argus-style):
 gather_bundle("Serbian quarterfinalist 2018 Madrid Open men's singles")
 → consume ranked sources[].evidence[] passages; cite each by citation_id.
-→ inspect status and diagnostics before synthesis; relevance uses lexical_v1.
+→ inspect status and diagnostics before synthesis; relevance defaults to lexical_v1.
+→ optional: ranker="flashrank"; inspect ranking_method and ranking_warning for fallback.
 → query_term_coverage is a recall hint, not proof of factual sufficiency.
 → quality_score=null means source quality has not been computed.
 

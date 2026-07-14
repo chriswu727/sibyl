@@ -48,7 +48,9 @@ class BundleDiagnostics:
     requested_chars_per_source: int
     effective_chars_per_source: int
     latency_ms: int
+    requested_ranking_method: str = "lexical"
     ranking_method: str = "not_run"
+    ranking_warning: str = ""
     candidates_ranked: int = 0
     chunks_ranked: int = 0
     passages_returned: int = 0
@@ -63,7 +65,7 @@ class BundleDiagnostics:
 
 @dataclass(frozen=True)
 class SourceBundle:
-    schema_version: Literal["1.3"]
+    schema_version: Literal["1.4"]
     bundle_id: str
     query: str
     status: BundleStatus

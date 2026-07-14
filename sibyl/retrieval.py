@@ -6,7 +6,7 @@ import hashlib
 import json
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -21,7 +21,12 @@ from .evidence import (
     SourceBundle,
 )
 from .passages import TextPassage, split_passages
-from .ranking import lexical_query_coverage, lexical_relevance_scores
+from .ranking import (
+    RankingBackend,
+    flashrank_relevance_scores,
+    lexical_query_coverage,
+    lexical_relevance_scores,
+)
 from .scraper import WebPage, scrape_urls
 from .search import fetch_wikipedia_extract, search_web, wikipedia_lookup
 
@@ -62,7 +67,9 @@ def _diagnostics(
     requested_chars_per_source: int,
     effective_chars_per_source: int,
     started_at: float,
+    requested_ranking_method: str = "lexical",
     ranking_method: str = "not_run",
+    ranking_warning: str = "",
     candidates_ranked: int = 0,
     chunks_ranked: int = 0,
     passages_returned: int = 0,
@@ -88,7 +95,9 @@ def _diagnostics(
         requested_chars_per_source=requested_chars_per_source,
         effective_chars_per_source=effective_chars_per_source,
         latency_ms=round((time.monotonic() - started_at) * 1000),
+        requested_ranking_method=requested_ranking_method,
         ranking_method=ranking_method,
+        ranking_warning=ranking_warning,
         candidates_ranked=candidates_ranked,
         chunks_ranked=chunks_ranked,
         passages_returned=passages_returned,
@@ -102,13 +111,37 @@ def _diagnostics(
     )
 
 
+async def _score_documents(
+    query: str,
+    documents: List[Tuple[str, str]],
+    ranker: RankingBackend,
+) -> Tuple[List[Optional[float]], str, str]:
+    if ranker == "none":
+        return [None] * len(documents), "none", ""
+    if ranker == "lexical":
+        return lexical_relevance_scores(query, documents), "lexical_v1", ""
+
+    try:
+        scores = await asyncio.to_thread(
+            flashrank_relevance_scores, query, documents
+        )
+        return scores, "flashrank", ""
+    except Exception as exc:
+        detail = str(exc).strip().replace("\n", " ")[:160]
+        reason = f"{type(exc).__name__}: {detail}" if detail else type(exc).__name__
+        warning = f"FlashRank failed ({reason}); fell back to lexical_v1."
+        return lexical_relevance_scores(query, documents), "lexical_v1", warning
+
+
 async def gather_source_bundle(
     query: str,
     max_sources: int = 10,
     chars_per_source: int = 7000,
     client: Optional[httpx.AsyncClient] = None,
+    ranker: RankingBackend = "lexical",
 ) -> SourceBundle:
     started_at = time.monotonic()
+    requested_ranker = str(ranker or "").strip().lower()
     try:
         requested_max_sources = int(max_sources)
         requested_chars_per_source = int(chars_per_source)
@@ -121,9 +154,10 @@ async def gather_source_bundle(
             requested_chars_per_source=requested_chars_per_source,
             effective_chars_per_source=7000,
             started_at=started_at,
+            requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.3",
+            schema_version="1.4",
             bundle_id=_bundle_id(str(query or ""), "invalid_request", []),
             query=str(query or ""),
             status="invalid_request",
@@ -135,6 +169,25 @@ async def gather_source_bundle(
     effective_max_sources = max(1, min(20, requested_max_sources))
     effective_chars_per_source = max(500, min(10000, requested_chars_per_source))
     clean_query = str(query or "").strip()
+    if requested_ranker not in {"lexical", "flashrank", "none"}:
+        diagnostics = _diagnostics(
+            requested_max_sources=requested_max_sources,
+            effective_max_sources=effective_max_sources,
+            requested_chars_per_source=requested_chars_per_source,
+            effective_chars_per_source=effective_chars_per_source,
+            started_at=started_at,
+            requested_ranking_method=requested_ranker,
+        )
+        return SourceBundle(
+            schema_version="1.4",
+            bundle_id=_bundle_id(clean_query, "invalid_request", []),
+            query=clean_query,
+            status="invalid_request",
+            sources=[],
+            diagnostics=diagnostics,
+            error="ranker must be one of: lexical, flashrank, none.",
+        )
+    selected_ranker = cast(RankingBackend, requested_ranker)
     if not clean_query:
         diagnostics = _diagnostics(
             requested_max_sources=requested_max_sources,
@@ -142,9 +195,10 @@ async def gather_source_bundle(
             requested_chars_per_source=requested_chars_per_source,
             effective_chars_per_source=effective_chars_per_source,
             started_at=started_at,
+            requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.3",
+            schema_version="1.4",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -234,9 +288,10 @@ async def gather_source_bundle(
             requested_chars_per_source=requested_chars_per_source,
             effective_chars_per_source=effective_chars_per_source,
             started_at=started_at,
+            requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.3",
+            schema_version="1.4",
             bundle_id=_bundle_id(clean_query, "failed", []),
             query=clean_query,
             status="failed",
@@ -270,10 +325,12 @@ async def gather_source_bundle(
         )
         ranking_documents.append((title, representative))
 
-    relevance_scores = lexical_relevance_scores(clean_query, ranking_documents)
+    relevance_scores, source_ranking_method, source_ranking_warning = (
+        await _score_documents(clean_query, ranking_documents, selected_ranker)
+    )
     ranked_indices = sorted(
         range(len(source_candidates)),
-        key=lambda index: (-relevance_scores[index], index),
+        key=lambda index: (-(relevance_scores[index] or 0.0), index),
     )
     selected_sources = [
         (*source_candidates[index], relevance_scores[index])
@@ -284,8 +341,8 @@ async def gather_source_bundle(
     max_passages_per_source = min(
         3, max(1, effective_chars_per_source // passage_size)
     )
-    prepared = []
-    chunks_ranked = 0
+    chunk_groups = []
+    chunk_documents = []
     for (
         page, title, source_hash, representative_start, representative, relevance_score
     ) in selected_sources:
@@ -301,12 +358,57 @@ async def gather_source_bundle(
                     len(representative),
                 )
             ]
-        chunk_scores = lexical_relevance_scores(
-            clean_query, [(title, chunk.text) for chunk in chunks]
+        score_start = len(chunk_documents)
+        chunk_documents.extend((title, chunk.text) for chunk in chunks)
+        chunk_groups.append(
+            (
+                page,
+                title,
+                source_hash,
+                representative_start,
+                relevance_score,
+                chunks,
+                score_start,
+            )
         )
-        chunks_ranked += len(chunks)
+
+    passage_ranker: RankingBackend = (
+        "flashrank" if source_ranking_method == "flashrank" else selected_ranker
+    )
+    if source_ranking_method == "lexical_v1":
+        passage_ranker = "lexical"
+    passage_scores, passage_ranking_method, passage_ranking_warning = (
+        await _score_documents(clean_query, chunk_documents, passage_ranker)
+    )
+    if source_ranking_method == passage_ranking_method:
+        ranking_method = source_ranking_method
+    else:
+        ranking_method = (
+            f"{source_ranking_method}_sources+{passage_ranking_method}_passages"
+        )
+    warnings = list(
+        dict.fromkeys(
+            warning
+            for warning in [source_ranking_warning, passage_ranking_warning]
+            if warning
+        )
+    )
+    ranking_warning = " ".join(warnings)
+
+    prepared = []
+    for (
+        page,
+        title,
+        source_hash,
+        representative_start,
+        relevance_score,
+        chunks,
+        score_start,
+    ) in chunk_groups:
+        chunk_scores = passage_scores[score_start:score_start + len(chunks)]
         chunk_indices = sorted(
-            range(len(chunks)), key=lambda index: (-chunk_scores[index], index)
+            range(len(chunks)),
+            key=lambda index: (-(chunk_scores[index] or 0.0), index),
         )
         selected_passages = []
         seen_hashes = set()
@@ -404,9 +506,13 @@ async def gather_source_bundle(
         requested_chars_per_source=requested_chars_per_source,
         effective_chars_per_source=effective_chars_per_source,
         started_at=started_at,
-        ranking_method="lexical_v1" if source_candidates else "not_run",
-        candidates_ranked=len(source_candidates),
-        chunks_ranked=chunks_ranked,
+        requested_ranking_method=requested_ranker,
+        ranking_method=ranking_method if source_candidates else "not_run",
+        ranking_warning=ranking_warning,
+        candidates_ranked=(
+            len(source_candidates) if selected_ranker != "none" else 0
+        ),
+        chunks_ranked=len(chunk_documents) if selected_ranker != "none" else 0,
         passages_returned=sum(len(source.evidence) for source in sources),
         passage_size=passage_size if source_candidates else 0,
         max_passages_per_source=max_passages_per_source if source_candidates else 0,
@@ -417,7 +523,7 @@ async def gather_source_bundle(
         unique_domains=len(domains),
     )
     return SourceBundle(
-        schema_version="1.3",
+        schema_version="1.4",
         bundle_id=bundle_id,
         query=clean_query,
         status=bundle_status,

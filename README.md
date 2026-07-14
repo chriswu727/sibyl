@@ -22,7 +22,7 @@ Sibyl runs as an **MCP server** and a **CLI / Python library**. The key choice i
 
 ### 1. Retrieval provider — your model is the brain (recommended, keyless)
 
-`gather_bundle(query)` searches, scrapes, dedupes, and returns structured evidence — without writing an answer. Each bundle includes versioned source/passage IDs, content hashes, retrieval timestamps, and diagnostics. `gather_sources(query)` runs the same retrieval and renders it as readable `[Source N]` blocks for conversational use. Your agent reads the evidence, cross-references it, and answers itself, citing sources and abstaining when they don't contain the answer. **No API key required.**
+`gather_bundle(query)` searches, scrapes, dedupes, and returns structured evidence — without writing an answer. Each bundle includes versioned source/passage IDs, content hashes, retrieval timestamps, and diagnostics. `gather_sources(query)` runs the same retrieval and renders it as readable `[Source N]` blocks for conversational use. Both accept `ranker="lexical"` (default), `ranker="flashrank"` (optional local cross-encoder), or `ranker="none"` (preserve retrieval order). Your agent reads the evidence, cross-references it, and answers itself, citing sources and abstaining when they don't contain the answer. **No API key required.**
 
 This is the highest-quality path, because a frontier model applied to real retrieved evidence beats a mid-tier model doing the synthesis and can abstain when the retrieved evidence does not contain the answer.
 
@@ -94,7 +94,7 @@ sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    #
 | | `chart(symbols)` | Price trend charts (PNG) |
 | **Output** | `save_report(format)` | PDF (with embedded charts) and/or Markdown |
 
-`gather_bundle` currently returns SourceBundle schema `1.3`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes. Each source contains up to three ranked passages with source-text offsets and bundle-scoped `citation_id` values such as `sb_…/S1/P1`; the combined passage text stays within `chars_per_source`. `content_hash` values are SHA-256. `relevance_score` and passage `score` are deterministic `lexical_v1` retrieval scores from 0–1, not probabilities or correctness judgments. Diagnostics include lexical query-term coverage and unique-domain count; these are retrieval-recall signals, not proof that the evidence is sufficient or true. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` (`ok`, `insufficient_evidence`, `invalid_request`, or `failed`) before synthesis.
+`gather_bundle` currently returns SourceBundle schema `1.4`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes. Each source contains up to three passages with source-text offsets and bundle-scoped `citation_id` values such as `sb_…/S1/P1`; the combined passage text stays within `chars_per_source`. `content_hash` values are SHA-256. `relevance_score` and passage `score` are 0–1 retrieval scores from the actual ranking backend, not probabilities or correctness judgments; they are `null` when ranking is disabled. Diagnostics distinguish `requested_ranking_method` from the actual `ranking_method` and expose `ranking_warning` when FlashRank falls back to `lexical_v1`. They also include lexical query-term coverage and unique-domain count; these are retrieval-recall signals, not proof that the evidence is sufficient or true. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` (`ok`, `insufficient_evidence`, `invalid_request`, or `failed`) before synthesis.
 
 ## How the one-shot pipeline works
 
@@ -114,7 +114,7 @@ You ask a question
 
 Depth controls cost: **1 (quick)** ~20–30s · **2 (standard)** ~60–90s · **3 (deep)** adds gap-filling + bull/bear/base predictions.
 
-Source reranking defaults to the dependency-free local `lexical` backend, so ranking does not consume an extra LLM call. Set `reranker: llm` explicitly to use the configured model, `reranker: flashrank` after installing the `rerank` extra for a local cross-encoder, or `reranker: none` to preserve retrieval order. If FlashRank is unavailable, Sibyl falls back to lexical ranking.
+Source reranking defaults to the dependency-free local `lexical` backend, so ranking does not consume an extra LLM call. Install the optional cross-encoder with `pip install 'sibyl-research[rerank]'`, then pass `ranker="flashrank"` to `gather_bundle` / `gather_sources` or set `reranker: flashrank` for the one-shot pipeline. The model is loaded lazily and cached in-process. If FlashRank is unavailable or fails, Sibyl falls back to lexical ranking; SourceBundle diagnostics disclose that fallback. Use `ranker="none"` or `reranker: none` to preserve retrieval order. The one-shot pipeline also supports `reranker: llm` explicitly.
 
 ## Multi-provider
 

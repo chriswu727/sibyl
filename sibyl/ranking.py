@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import math
 import re
+import threading
 import unicodedata
 from dataclasses import dataclass
-from typing import List, Sequence, Set, Tuple
+from typing import List, Literal, Sequence, Set, Tuple
 
 
 _WORD_RE = re.compile(r"[^\W_]+", re.UNICODE)
@@ -16,6 +17,10 @@ _STOP_WORDS = {
     "to", "was", "were", "what", "when", "where", "which", "who", "why",
     "will", "with",
 }
+_FLASHRANK_LOAD_LOCK = threading.Lock()
+_flashrank_ranker = None
+
+RankingBackend = Literal["lexical", "flashrank", "none"]
 
 
 @dataclass(frozen=True)
@@ -100,6 +105,51 @@ def lexical_relevance_scores(
         score = 0.9 * coverage + (0.1 if phrase_match else 0.0)
         scores.append(round(min(1.0, max(0.0, score)), 6))
     return scores
+
+
+def _get_flashrank_ranker():
+    global _flashrank_ranker
+    if _flashrank_ranker is None:
+        with _FLASHRANK_LOAD_LOCK:
+            if _flashrank_ranker is None:
+                from flashrank import Ranker
+
+                _flashrank_ranker = Ranker(max_length=128)
+    return _flashrank_ranker
+
+
+def flashrank_relevance_scores(
+    query: str,
+    documents: Sequence[Tuple[str, str]],
+) -> List[float]:
+    """Score documents with the optional FlashRank cross-encoder."""
+    if not documents:
+        return []
+
+    from flashrank import RerankRequest
+
+    passages = [
+        {"id": index, "text": f"{title}. {text}".strip()}
+        for index, (title, text) in enumerate(documents)
+    ]
+    ranked = _get_flashrank_ranker().rerank(
+        RerankRequest(query=query, passages=passages)
+    )
+    scores: List[float | None] = [None] * len(documents)
+    for result in ranked:
+        document_id = result.get("id")
+        if not isinstance(document_id, int) or isinstance(document_id, bool):
+            raise ValueError("FlashRank returned a non-integer document id.")
+        if document_id < 0 or document_id >= len(documents):
+            raise ValueError("FlashRank returned an out-of-range document id.")
+        score = float(result["score"])
+        if not math.isfinite(score):
+            raise ValueError("FlashRank returned a non-finite score.")
+        scores[document_id] = round(min(1.0, max(0.0, score)), 6)
+
+    if any(score is None for score in scores):
+        raise ValueError("FlashRank did not score every document.")
+    return [float(score) for score in scores]
 
 
 def lexical_query_coverage(query: str, evidence_texts: Sequence[str]) -> LexicalCoverage:

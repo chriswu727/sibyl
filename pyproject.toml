@@ -36,7 +36,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-rerank = ["flashrank"]
+rerank = ["flashrank>=0.2.10,<0.3"]
 
 [project.scripts]
 sibyl = "sibyl.cli:main"

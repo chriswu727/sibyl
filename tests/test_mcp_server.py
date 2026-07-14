@@ -77,7 +77,7 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
 class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.bundle = SourceBundle(
-            "1.3",
+            "1.4",
             "sb_test",
             "question",
             "insufficient_evidence",
@@ -87,14 +87,16 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_structured_tool_returns_source_bundle(self):
+        gather = mock.AsyncMock(return_value=self.bundle)
         with mock.patch(
             "sibyl.mcp_server.gather_source_bundle",
-            new=mock.AsyncMock(return_value=self.bundle),
+            new=gather,
         ):
-            result = await gather_bundle("question")
+            result = await gather_bundle("question", ranker="none")
 
         self.assertIs(result, self.bundle)
         self.assertEqual(result.to_dict()["bundle_id"], "sb_test")
+        gather.assert_awaited_once_with("question", 10, 7000, ranker="none")
 
     async def test_fastmcp_serializes_structured_content(self):
         with mock.patch(
@@ -128,6 +130,10 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             set(structured_tool.outputSchema["properties"]["status"]["enum"]),
             {"ok", "insufficient_evidence", "invalid_request", "failed"},
+        )
+        self.assertEqual(
+            set(structured_tool.inputSchema["properties"]["ranker"]["enum"]),
+            {"lexical", "flashrank", "none"},
         )
 
 

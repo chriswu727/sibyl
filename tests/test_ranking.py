@@ -1,7 +1,15 @@
 """Dependency-free lexical relevance tests."""
+import sys
+import types
 import unittest
+from unittest import mock
 
-from sibyl.ranking import lexical_query_coverage, lexical_relevance_scores
+import sibyl.ranking as ranking
+from sibyl.ranking import (
+    flashrank_relevance_scores,
+    lexical_query_coverage,
+    lexical_relevance_scores,
+)
 
 
 class TestLexicalRelevance(unittest.TestCase):
@@ -93,6 +101,53 @@ class TestLexicalCoverage(unittest.TestCase):
             lexical_query_coverage("the and of", ["the evidence"]),
             lexical_query_coverage("", []),
         )
+
+
+class TestFlashRankRelevance(unittest.TestCase):
+    def test_scores_are_aligned_to_input_order_and_ranker_is_cached(self):
+        created = []
+
+        class FakeRequest:
+            def __init__(self, query, passages):
+                self.query = query
+                self.passages = passages
+
+        class FakeRanker:
+            def __init__(self, max_length):
+                created.append(max_length)
+
+            def rerank(self, request):
+                if request.query != "target" or len(request.passages) != 2:
+                    raise AssertionError("unexpected FlashRank request")
+                return [
+                    {"id": 1, "score": 0.9},
+                    {"id": 0, "score": 0.2},
+                ]
+
+        fake_module = types.ModuleType("flashrank")
+        fake_module.Ranker = FakeRanker
+        fake_module.RerankRequest = FakeRequest
+        documents = [("First", "noise"), ("Second", "target")]
+
+        with mock.patch.dict(sys.modules, {"flashrank": fake_module}), \
+             mock.patch.object(ranking, "_flashrank_ranker", None):
+            first = flashrank_relevance_scores("target", documents)
+            second = flashrank_relevance_scores("target", documents)
+
+        self.assertEqual(first, [0.2, 0.9])
+        self.assertEqual(second, first)
+        self.assertEqual(created, [128])
+
+    def test_incomplete_scores_are_rejected(self):
+        fake_module = types.ModuleType("flashrank")
+        fake_module.RerankRequest = lambda query, passages: object()
+        ranker = mock.Mock()
+        ranker.rerank.return_value = [{"id": 0, "score": 0.5}]
+
+        with mock.patch.dict(sys.modules, {"flashrank": fake_module}), \
+             mock.patch("sibyl.ranking._get_flashrank_ranker", return_value=ranker):
+            with self.assertRaisesRegex(ValueError, "every document"):
+                flashrank_relevance_scores("query", [("A", "a"), ("B", "b")])
 
 
 if __name__ == "__main__":

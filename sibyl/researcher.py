@@ -498,12 +498,12 @@ Example: {{"scores": [{{"id": 1, "score": 9}}, {{"id": 2, "score": 3}}]}}"""
 
     def _flashrank_rerank(self, query: str, pages: List[WebPage], top_n: int) -> List[WebPage]:
         """Optional local cross-encoder rerank (extra: pip install sibyl-research[rerank])."""
-        from flashrank import Ranker, RerankRequest
-        ranker = Ranker()
-        passages = [{"id": i, "text": (p.title + ". " + p.text[:800])} for i, p in enumerate(pages)]
-        ranked = ranker.rerank(RerankRequest(query=query, passages=passages))
-        idx = [r["id"] for r in ranked[:top_n]]
-        return [pages[i] for i in idx]
+        from .ranking import flashrank_relevance_scores
+
+        documents = [(page.title, page.text[:800]) for page in pages]
+        scores = flashrank_relevance_scores(query, documents)
+        ranked = sorted(range(len(pages)), key=lambda index: (-scores[index], index))
+        return [pages[index] for index in ranked[:top_n]]
 
     async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
         """Review the draft and refine summary + findings — two independent

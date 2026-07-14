@@ -9,6 +9,7 @@ from mcp.server.fastmcp import FastMCP
 
 from .config import Config, Provider
 from .evidence import SourceBundle
+from .ranking import RankingBackend
 from .researcher import Researcher, ResearchReport
 from .retrieval import gather_source_bundle, render_source_bundle
 
@@ -23,6 +24,8 @@ RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU re
     for conversational use. Call either tool several times with focused sub-queries,
     cross-reference the evidence, and synthesize the answer YOURSELF — citing sources
     and saying "not found" rather than guessing when the sources don't contain it.
+    Both default to local lexical ranking; optional ranker="flashrank" falls back
+    explicitly in diagnostics, while ranker="none" preserves retrieval order.
   • quick_search(query) — raw search hits (title/url/snippet), no scraping.
   • read_url(url) — clean full text of one page.
 
@@ -125,7 +128,12 @@ def _format_report(report: ResearchReport) -> str:
 
 
 @mcp.tool()
-async def gather_sources(query: str, max_sources: int = 10, chars_per_source: int = 7000) -> str:
+async def gather_sources(
+    query: str,
+    max_sources: int = 10,
+    chars_per_source: int = 7000,
+    ranker: RankingBackend = "lexical",
+) -> str:
     """Keyless web retrieval: search + scrape + dedup, returning the top FULL-TEXT
     sources for a query WITHOUT writing an answer — so YOU (the calling model)
     read the evidence and reason over it yourself.
@@ -140,28 +148,38 @@ async def gather_sources(query: str, max_sources: int = 10, chars_per_source: in
         query: One focused search query (issue several calls for a multi-part question)
         max_sources: How many sources to return (default 10; bounded to 1-20)
         chars_per_source: Max characters of text per source (default 7000; bounded to 500-10000)
+        ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
     """
-    bundle = await gather_source_bundle(query, max_sources, chars_per_source)
+    bundle = await gather_source_bundle(
+        query, max_sources, chars_per_source, ranker=ranker
+    )
     return render_source_bundle(bundle)
 
 
 @mcp.tool(structured_output=True)
 async def gather_bundle(
-    query: str, max_sources: int = 10, chars_per_source: int = 7000
+    query: str,
+    max_sources: int = 10,
+    chars_per_source: int = 7000,
+    ranker: RankingBackend = "lexical",
 ) -> SourceBundle:
     """Return a structured, keyless SourceBundle without synthesizing an answer.
 
     This is the programmatic form of gather_sources, intended for agents and
     pipelines that need stable evidence identifiers and retrieval provenance.
-    Passage/source relevance uses the dependency-free lexical_v1 ranker. Source
-    quality remains null until a separate quality evaluator computes it.
+    Passage/source relevance defaults to the dependency-free lexical_v1 ranker.
+    FlashRank is optional and falls back to lexical_v1 with an explicit diagnostic.
+    Source quality remains null until a separate quality evaluator computes it.
 
     Args:
         query: One focused search query
         max_sources: How many sources to return (default 10; bounded to 1-20)
         chars_per_source: Max characters per evidence passage (default 7000; bounded to 500-10000)
+        ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
     """
-    return await gather_source_bundle(query, max_sources, chars_per_source)
+    return await gather_source_bundle(
+        query, max_sources, chars_per_source, ranker=ranker
+    )
 
 
 @mcp.tool()
