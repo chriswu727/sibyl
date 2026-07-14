@@ -84,8 +84,8 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
 
     # Try to use a Unicode font, fall back to Helvetica
     try:
-        pdf.add_font("NotoSans", "", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", uni=True)
-        pdf.add_font("NotoSans", "B", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", uni=True)
+        pdf.add_font("NotoSans", "", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")
+        pdf.add_font("NotoSans", "B", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")
         font_name = "NotoSans"
     except Exception:
         font_name = "Helvetica"
