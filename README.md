@@ -98,6 +98,8 @@ sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    #
 
 Schema 1.6 also reports `substantive_sources`, `evidence_chars`, `evidence_sufficiency`, and machine-readable `sufficiency_reasons`. The deterministic sufficiency check marks evidence as insufficient when there is no substantive full text, less than 200 selected evidence characters, or under 25% lexical query-term coverage. Evidence with fewer than two substantive sources, fewer than two independent domains, or no usable lexical query terms is marked `limited`; limited evidence still returns bundle status `ok`, while insufficient evidence returns `insufficient_evidence` even when lead sources are included. These are retrieval-recall signals, not proof that the evidence is true. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` before synthesis.
 
+Consumers can use the [SourceBundle 1.6 contract guide](docs/source-bundle-1.6.md) and checked-in JSON fixture for cross-project compatibility tests.
+
 Within one MCP server process, matching `gather_bundle` and `gather_sources` calls share in-flight work and reuse successful evidence for 30 seconds. Failed retrievals are never cached; cached bundles retain their original `retrieved_at` provenance timestamps.
 
 ### Offline retrieval regressions
