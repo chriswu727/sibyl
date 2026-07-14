@@ -94,7 +94,7 @@ sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    #
 | | `chart(symbols)` | Price trend charts (PNG) |
 | **Output** | `save_report(format)` | PDF (with embedded charts) and/or Markdown |
 
-`gather_bundle` currently returns SourceBundle schema `1.1`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes; each evidence passage has a bundle-scoped `citation_id` such as `sb_…/S1/P1`. `content_hash` values are SHA-256. `relevance_score` and passage `score` are deterministic `lexical_v1` retrieval scores from 0–1, not probabilities or correctness judgments. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` (`ok`, `insufficient_evidence`, `invalid_request`, or `failed`) before synthesis.
+`gather_bundle` currently returns SourceBundle schema `1.2`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes. Each source contains up to three ranked passages with source-text offsets and bundle-scoped `citation_id` values such as `sb_…/S1/P1`; the combined passage text stays within `chars_per_source`. `content_hash` values are SHA-256. `relevance_score` and passage `score` are deterministic `lexical_v1` retrieval scores from 0–1, not probabilities or correctness judgments. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` (`ok`, `insufficient_evidence`, `invalid_request`, or `failed`) before synthesis.
 
 ## How the one-shot pipeline works
 

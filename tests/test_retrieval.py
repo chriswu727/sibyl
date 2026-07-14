@@ -29,7 +29,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
         self.assertEqual(first.status, "ok")
-        self.assertEqual(first.schema_version, "1.1")
+        self.assertEqual(first.schema_version, "1.2")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
         self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
@@ -46,10 +46,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(len(first.sources[0].content_hash), 64)
         self.assertIsNotNone(first.sources[0].relevance_score)
-        self.assertEqual(
-            first.sources[0].relevance_score,
-            first.sources[0].evidence[0].score,
-        )
+        self.assertIsNotNone(first.sources[0].evidence[0].score)
         self.assertIsNone(first.sources[0].quality_score)
         self.assertEqual(first.diagnostics.search_results, 3)
         self.assertEqual(first.diagnostics.urls_attempted, 3)
@@ -58,6 +55,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first.diagnostics.effective_chars_per_source, 7000)
         self.assertEqual(first.diagnostics.ranking_method, "lexical_v1")
         self.assertEqual(first.diagnostics.candidates_ranked, 3)
+        self.assertEqual(first.diagnostics.passages_returned, 2)
         wiki.assert_not_awaited()
 
     async def test_reranks_candidates_before_applying_source_limit(self):
@@ -88,6 +86,50 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.sources[0].url, "https://example.com/tennis")
         self.assertGreater(bundle.sources[0].relevance_score, 0.5)
         self.assertEqual(bundle.diagnostics.candidates_ranked, 3)
+
+    async def test_returns_ranked_passages_with_offsets_within_source_budget(self):
+        results = [
+            SearchResult("Alpha", "https://example.com/alpha", "", "web"),
+            SearchResult("Beta", "https://example.com/beta", "", "web"),
+            SearchResult("Gamma", "https://example.com/gamma", "", "web"),
+        ]
+        target_text = (
+            "background material " * 80
+            + "critical alpha evidence first section. " * 20
+            + "unrelated bridge " * 80
+            + "alpha evidence second section with details. " * 20
+        )
+        pages = [
+            WebPage(results[0].url, results[0].title, target_text),
+            WebPage(results[1].url, results[1].title, "beta material " * 200),
+            WebPage(results[2].url, results[2].title, "gamma material " * 200),
+        ]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=1, chars_per_source=3000, client=object()
+            )
+
+        source = bundle.sources[0]
+        self.assertGreaterEqual(len(source.evidence), 2)
+        self.assertLessEqual(sum(len(p.text) for p in source.evidence), 3000)
+        self.assertEqual(
+            [passage.passage_id for passage in source.evidence],
+            [f"P{index}" for index in range(1, len(source.evidence) + 1)],
+        )
+        self.assertEqual(
+            [passage.score for passage in source.evidence],
+            sorted((passage.score for passage in source.evidence), reverse=True),
+        )
+        for passage in source.evidence:
+            self.assertEqual(
+                target_text[passage.start_char:passage.end_char], passage.text
+            )
+            self.assertIn(f"/{source.source_id}/{passage.passage_id}", passage.citation_id)
+        self.assertEqual(bundle.diagnostics.passages_returned, len(source.evidence))
+        self.assertEqual(bundle.diagnostics.chunks_ranked, len(source.evidence))
 
     async def test_bounds_request_parameters(self):
         with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])), \

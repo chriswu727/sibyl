@@ -4,7 +4,12 @@ Run: python -m unittest discover tests
 """
 import unittest
 
-from sibyl.context import build_source_context, best_snippet, relevant_window
+from sibyl.context import (
+    best_snippet,
+    build_source_context,
+    relevant_window,
+    relevant_window_span,
+)
 from sibyl.scraper import WebPage
 
 
@@ -23,6 +28,10 @@ class TestRelevantWindow(unittest.TestCase):
 
         self.assertIn("boundaryneedle", win)
         self.assertEqual(len(win), 500)
+
+        start, end = relevant_window_span("boundaryneedle", text, width=500)
+        self.assertEqual(end, len(text))
+        self.assertEqual(end - start, 500)
 
     def test_short_text_unchanged(self):
         self.assertEqual(relevant_window("q", "short text", width=2000), "short text")

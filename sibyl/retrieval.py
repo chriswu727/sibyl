@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 
 import httpx
 
-from .context import relevant_window
+from .context import relevant_window_span
 from .dedup import canonical_url, dedup_pages
 from .evidence import (
     BundleDiagnostics,
@@ -19,6 +19,7 @@ from .evidence import (
     EvidenceSource,
     SourceBundle,
 )
+from .passages import TextPassage, split_passages
 from .ranking import lexical_relevance_scores
 from .scraper import WebPage, scrape_urls
 from .search import fetch_wikipedia_extract, search_web, wikipedia_lookup
@@ -62,6 +63,10 @@ def _diagnostics(
     started_at: float,
     ranking_method: str = "not_run",
     candidates_ranked: int = 0,
+    chunks_ranked: int = 0,
+    passages_returned: int = 0,
+    passage_size: int = 0,
+    max_passages_per_source: int = 0,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -79,6 +84,10 @@ def _diagnostics(
         latency_ms=round((time.monotonic() - started_at) * 1000),
         ranking_method=ranking_method,
         candidates_ranked=candidates_ranked,
+        chunks_ranked=chunks_ranked,
+        passages_returned=passages_returned,
+        passage_size=passage_size,
+        max_passages_per_source=max_passages_per_source,
     )
 
 
@@ -103,7 +112,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.1",
+            schema_version="1.2",
             bundle_id=_bundle_id(str(query or ""), "invalid_request", []),
             query=str(query or ""),
             status="invalid_request",
@@ -124,7 +133,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.1",
+            schema_version="1.2",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -216,7 +225,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.1",
+            schema_version="1.2",
             bundle_id=_bundle_id(clean_query, "failed", []),
             query=clean_query,
             status="failed",
@@ -235,48 +244,113 @@ async def gather_source_bundle(
         result_types.setdefault(key, result.source)
         result_titles.setdefault(key, result.title)
 
-    ranked_candidates = []
+    source_candidates = []
     ranking_documents = []
     for page in candidates:
-        passage = relevant_window(
+        representative_start, representative_end = relevant_window_span(
             clean_query, page.text, width=effective_chars_per_source
-        )[:effective_chars_per_source]
+        )
+        representative = page.text[representative_start:representative_end]
         page_key = canonical_url(page.url)
         title = page.title or result_titles.get(page_key, page.url)
         source_hash = _sha256(page.text)
-        passage_hash = _sha256(passage)
-        ranked_candidates.append((page, title, passage, source_hash, passage_hash))
-        ranking_documents.append((title, passage))
+        source_candidates.append(
+            (page, title, source_hash, representative_start, representative)
+        )
+        ranking_documents.append((title, representative))
 
     relevance_scores = lexical_relevance_scores(clean_query, ranking_documents)
     ranked_indices = sorted(
-        range(len(ranked_candidates)),
+        range(len(source_candidates)),
         key=lambda index: (-relevance_scores[index], index),
     )
-    prepared = [
-        (*ranked_candidates[index], relevance_scores[index])
+    selected_sources = [
+        (*source_candidates[index], relevance_scores[index])
         for index in ranked_indices[:effective_max_sources]
     ]
+
+    passage_size = min(2500, max(500, effective_chars_per_source // 3))
+    max_passages_per_source = min(
+        3, max(1, effective_chars_per_source // passage_size)
+    )
+    prepared = []
+    chunks_ranked = 0
+    for (
+        page, title, source_hash, representative_start, representative, relevance_score
+    ) in selected_sources:
+        chunks = split_passages(
+            representative, max_chars=passage_size, overlap_chars=0
+        )
+        if len(chunks) > max_passages_per_source:
+            tail_start = chunks[max_passages_per_source - 1].start_char
+            chunks = chunks[:max_passages_per_source - 1] + [
+                TextPassage(
+                    representative[tail_start:],
+                    tail_start,
+                    len(representative),
+                )
+            ]
+        chunk_scores = lexical_relevance_scores(
+            clean_query, [(title, chunk.text) for chunk in chunks]
+        )
+        chunks_ranked += len(chunks)
+        chunk_indices = sorted(
+            range(len(chunks)), key=lambda index: (-chunk_scores[index], index)
+        )
+        selected_passages = []
+        seen_hashes = set()
+        for chunk_index in chunk_indices:
+            chunk = chunks[chunk_index]
+            content_hash = _sha256(chunk.text)
+            if content_hash in seen_hashes:
+                continue
+            selected_passages.append(
+                (
+                    TextPassage(
+                        chunk.text,
+                        representative_start + chunk.start_char,
+                        representative_start + chunk.end_char,
+                    ),
+                    content_hash,
+                    chunk_scores[chunk_index],
+                )
+            )
+            seen_hashes.add(content_hash)
+        prepared.append(
+            (page, title, source_hash, relevance_score, selected_passages)
+        )
+
     fingerprints = []
-    for page, _, _, source_hash, passage_hash, _ in prepared:
-        fingerprints.append((canonical_url(page.url), source_hash, passage_hash))
+    for page, _, source_hash, _, selected_passages in prepared:
+        passage_fingerprint = _sha256(
+            "|".join(content_hash for _, content_hash, _ in selected_passages)
+        )
+        fingerprints.append((canonical_url(page.url), source_hash, passage_fingerprint))
 
     bundle_status: BundleStatus = "ok" if prepared else "insufficient_evidence"
     bundle_id = _bundle_id(clean_query, bundle_status, fingerprints)
     retrieved_at = datetime.now(timezone.utc).isoformat()
     sources = []
     for index, (
-        page, title, passage, source_hash, passage_hash, relevance_score
+        page, title, source_hash, relevance_score, selected_passages
     ) in enumerate(prepared, 1):
         source_id = f"S{index}"
-        passage_id = "P1"
-        evidence = EvidencePassage(
-            passage_id=passage_id,
-            citation_id=f"{bundle_id}/{source_id}/{passage_id}",
-            text=passage,
-            content_hash=passage_hash,
-            score=relevance_score,
-        )
+        evidence = []
+        for passage_index, (chunk, content_hash, passage_score) in enumerate(
+            selected_passages, 1
+        ):
+            passage_id = f"P{passage_index}"
+            evidence.append(
+                EvidencePassage(
+                    passage_id=passage_id,
+                    citation_id=f"{bundle_id}/{source_id}/{passage_id}",
+                    text=chunk.text,
+                    content_hash=content_hash,
+                    start_char=chunk.start_char,
+                    end_char=chunk.end_char,
+                    score=passage_score,
+                )
+            )
         sources.append(
             EvidenceSource(
                 source_id=source_id,
@@ -286,7 +360,7 @@ async def gather_source_bundle(
                 content_hash=source_hash,
                 source_type=_source_type(page.url, result_types),
                 char_count=len(page.text),
-                evidence=[evidence],
+                evidence=evidence,
                 relevance_score=relevance_score,
             )
         )
@@ -306,11 +380,15 @@ async def gather_source_bundle(
         requested_chars_per_source=requested_chars_per_source,
         effective_chars_per_source=effective_chars_per_source,
         started_at=started_at,
-        ranking_method="lexical_v1" if ranked_candidates else "not_run",
-        candidates_ranked=len(ranked_candidates),
+        ranking_method="lexical_v1" if source_candidates else "not_run",
+        candidates_ranked=len(source_candidates),
+        chunks_ranked=chunks_ranked,
+        passages_returned=sum(len(source.evidence) for source in sources),
+        passage_size=passage_size if source_candidates else 0,
+        max_passages_per_source=max_passages_per_source if source_candidates else 0,
     )
     return SourceBundle(
-        schema_version="1.1",
+        schema_version="1.2",
         bundle_id=bundle_id,
         query=clean_query,
         status=bundle_status,
@@ -337,7 +415,7 @@ def render_source_bundle(bundle: SourceBundle) -> str:
 
     parts = []
     for index, source in enumerate(bundle.sources, 1):
-        text = source.evidence[0].text if source.evidence else ""
+        text = "\n\n".join(passage.text for passage in source.evidence)
         parts.append(f"[Source {index}: {source.title}]\nURL: {source.url}\n{text}\n")
     return (
         f"Retrieved {len(bundle.sources)} sources for query {bundle.query!r}. "

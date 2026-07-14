@@ -22,7 +22,7 @@ whereas you can cross-reference sources and abstain when they don't answer.
 ```
 # structured retrieval for an agent pipeline (Loop/Argus-style):
 gather_bundle("Serbian quarterfinalist 2018 Madrid Open men's singles")
-→ consume sources[].evidence[]; cite each passage by citation_id.
+→ consume ranked sources[].evidence[] passages; cite each by citation_id.
 → inspect status and diagnostics before synthesis; relevance uses lexical_v1.
 → quality_score=null means source quality has not been computed.
 

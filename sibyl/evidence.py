@@ -14,6 +14,8 @@ class EvidencePassage:
     citation_id: str
     text: str
     content_hash: str
+    start_char: int = 0
+    end_char: int = 0
     score: Optional[float] = None
 
 
@@ -48,11 +50,15 @@ class BundleDiagnostics:
     latency_ms: int
     ranking_method: str = "not_run"
     candidates_ranked: int = 0
+    chunks_ranked: int = 0
+    passages_returned: int = 0
+    passage_size: int = 0
+    max_passages_per_source: int = 0
 
 
 @dataclass(frozen=True)
 class SourceBundle:
-    schema_version: Literal["1.1"]
+    schema_version: Literal["1.2"]
     bundle_id: str
     query: str
     status: BundleStatus
