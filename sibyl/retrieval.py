@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from .content_clusters import cluster_content
 from .context import relevant_window_span
 from .dedup import canonical_url, dedup_pages
 from .evidence import (
@@ -61,6 +62,7 @@ def _assess_evidence_sufficiency(
     query_terms: int,
     query_term_coverage: float,
     unique_domains: int,
+    independent_content_clusters: int,
 ) -> Tuple[EvidenceSufficiency, List[str]]:
     if source_count == 0:
         return "insufficient", ["no_sources"]
@@ -78,6 +80,8 @@ def _assess_evidence_sufficiency(
     limitations = []
     if substantive_sources < 2:
         limitations.append("fewer_than_two_substantive_sources")
+    elif independent_content_clusters < 2:
+        limitations.append("fewer_than_two_independent_contents")
     if unique_domains < 2:
         limitations.append("single_domain")
     if query_terms == 0:
@@ -142,6 +146,11 @@ def _diagnostics(
     unique_domains: int = 0,
     substantive_sources: int = 0,
     evidence_chars: int = 0,
+    candidate_content_clusters: int = 0,
+    duplicate_candidates: int = 0,
+    independent_content_clusters: int = 0,
+    duplicate_sources: int = 0,
+    content_cluster_method: str = "not_run",
     evidence_sufficiency: EvidenceSufficiency = "not_assessed",
     sufficiency_reasons: Optional[List[str]] = None,
 ) -> BundleDiagnostics:
@@ -174,6 +183,11 @@ def _diagnostics(
         unique_domains=unique_domains,
         substantive_sources=substantive_sources,
         evidence_chars=evidence_chars,
+        candidate_content_clusters=candidate_content_clusters,
+        duplicate_candidates=duplicate_candidates,
+        independent_content_clusters=independent_content_clusters,
+        duplicate_sources=duplicate_sources,
+        content_cluster_method=content_cluster_method,
         evidence_sufficiency=evidence_sufficiency,
         sufficiency_reasons=sufficiency_reasons or [],
     )
@@ -388,9 +402,12 @@ async def gather_source_bundle(
         result_types.setdefault(key, result.source)
         result_titles.setdefault(key, result.title)
 
+    content_clusters = cluster_content([page.text for page in candidates])
+    cluster_id_by_source_hash = {}
+
     source_candidates = []
     ranking_documents = []
-    for page in candidates:
+    for page, cluster_id in zip(candidates, content_clusters.cluster_ids):
         representative_start, representative_end = relevant_window_span(
             clean_query, page.text, width=effective_chars_per_source
         )
@@ -398,6 +415,7 @@ async def gather_source_bundle(
         page_key = canonical_url(page.url)
         title = page.title or result_titles.get(page_key, page.url)
         source_hash = _sha256(page.text)
+        cluster_id_by_source_hash[source_hash] = cluster_id
         source_candidates.append(
             (page, title, source_hash, representative_start, representative)
         )
@@ -410,9 +428,25 @@ async def gather_source_bundle(
         range(len(source_candidates)),
         key=lambda index: (-(relevance_scores[index] or 0.0), index),
     )
+    if selected_ranker == "none":
+        selected_indices = ranked_indices[:effective_max_sources]
+    else:
+        diverse_indices = []
+        duplicate_indices = []
+        seen_clusters = set()
+        for index in ranked_indices:
+            cluster_id = content_clusters.cluster_ids[index]
+            if cluster_id in seen_clusters:
+                duplicate_indices.append(index)
+            else:
+                diverse_indices.append(index)
+                seen_clusters.add(cluster_id)
+        selected_indices = (diverse_indices + duplicate_indices)[
+            :effective_max_sources
+        ]
     selected_sources = [
         (*source_candidates[index], relevance_scores[index])
-        for index in ranked_indices[:effective_max_sources]
+        for index in selected_indices
     ]
 
     passage_size = min(2500, max(500, effective_chars_per_source // 3))
@@ -531,9 +565,22 @@ async def gather_source_bundle(
         for page, _, _, _, _ in prepared
         if urlsplit(page.url).netloc
     }
-    substantive_sources = sum(
-        1 for page, _, _, _, _ in prepared if len(page.text) > 200
-    )
+    substantive_prepared = [
+        (page, source_hash)
+        for page, _, source_hash, _, _ in prepared
+        if len(page.text) > 200 and page.content_origin != "search_snippet"
+    ]
+    substantive_sources = len(substantive_prepared)
+    selected_cluster_ids = {
+        cluster_id_by_source_hash[source_hash]
+        for _, _, source_hash, _, _ in prepared
+    }
+    independent_content_cluster_ids = {
+        cluster_id_by_source_hash[source_hash]
+        for _, source_hash in substantive_prepared
+    }
+    independent_content_clusters = len(independent_content_cluster_ids)
+    duplicate_sources = len(prepared) - len(selected_cluster_ids)
     evidence_chars = sum(
         len(chunk.text)
         for _, _, _, _, selected_passages in prepared
@@ -546,6 +593,7 @@ async def gather_source_bundle(
         query_terms=coverage.query_terms,
         query_term_coverage=coverage.score,
         unique_domains=len(domains),
+        independent_content_clusters=independent_content_clusters,
     )
     bundle_status: BundleStatus = (
         "insufficient_evidence"
@@ -588,6 +636,7 @@ async def gather_source_bundle(
                 content_origin=page.content_origin,
                 published_at=page.published_at,
                 published_at_method=page.published_at_method,
+                content_cluster_id=cluster_id_by_source_hash[source_hash],
                 relevance_score=relevance_score,
             )
         )
@@ -624,6 +673,11 @@ async def gather_source_bundle(
         unique_domains=len(domains),
         substantive_sources=substantive_sources,
         evidence_chars=evidence_chars,
+        candidate_content_clusters=content_clusters.cluster_count,
+        duplicate_candidates=content_clusters.duplicate_count,
+        independent_content_clusters=independent_content_clusters,
+        duplicate_sources=duplicate_sources,
+        content_cluster_method=(content_clusters.method if candidates else "not_run"),
         evidence_sufficiency=evidence_sufficiency,
         sufficiency_reasons=sufficiency_reasons,
     )

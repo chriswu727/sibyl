@@ -50,6 +50,7 @@ class EvidenceSource:
     content_origin: ContentOrigin = "direct_fetch"
     published_at: Optional[str] = None
     published_at_method: PublishedAtMethod = ""
+    content_cluster_id: str = ""
     relevance_score: Optional[float] = None
     quality_score: Optional[float] = None
 
@@ -84,6 +85,11 @@ class BundleDiagnostics:
     unique_domains: int = 0
     substantive_sources: int = 0
     evidence_chars: int = 0
+    candidate_content_clusters: int = 0
+    duplicate_candidates: int = 0
+    independent_content_clusters: int = 0
+    duplicate_sources: int = 0
+    content_cluster_method: str = "not_run"
     evidence_sufficiency: EvidenceSufficiency = "not_assessed"
     sufficiency_reasons: List[str] = field(default_factory=list)
 

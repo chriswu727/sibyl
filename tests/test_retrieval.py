@@ -51,6 +51,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(first.sources[0].evidence[0].score)
         self.assertIsNone(first.sources[0].quality_score)
         self.assertEqual(first.sources[0].content_origin, "direct_fetch")
+        self.assertRegex(first.sources[0].content_cluster_id, r"^cc_[0-9a-f]{16}$")
         self.assertEqual(first.sources[0].published_at, pages[0].published_at)
         self.assertEqual(
             first.sources[0].published_at_method,
@@ -70,6 +71,14 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(first.diagnostics.query_term_coverage, 0)
         self.assertEqual(first.diagnostics.unique_domains, 1)
         self.assertEqual(first.diagnostics.substantive_sources, 2)
+        self.assertEqual(first.diagnostics.candidate_content_clusters, 3)
+        self.assertEqual(first.diagnostics.duplicate_candidates, 0)
+        self.assertEqual(first.diagnostics.independent_content_clusters, 2)
+        self.assertEqual(first.diagnostics.duplicate_sources, 0)
+        self.assertEqual(
+            first.diagnostics.content_cluster_method,
+            "token_5gram_containment_v1",
+        )
         self.assertGreater(first.diagnostics.evidence_chars, 0)
         self.assertEqual(first.diagnostics.evidence_sufficiency, "limited")
         self.assertEqual(first.diagnostics.sufficiency_reasons, ["single_domain"])
@@ -81,8 +90,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             SearchResult("Alpha findings", "https://b.example/study", "", "academic"),
         ]
         pages = [
-            WebPage(result.url, result.title, "alpha evidence findings " * 30)
-            for result in results
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "alpha evidence findings cohort methodology measured outcome " * 30,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "alpha evidence findings independent replication dataset result " * 30,
+            ),
         ]
 
         with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
@@ -97,6 +114,98 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.sufficiency_reasons, [])
         self.assertEqual(bundle.diagnostics.unique_domains, 2)
         self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+
+    async def test_prefers_independent_content_over_syndicated_copy(self):
+        results = [
+            SearchResult("Alpha investigation", "https://a.example/report", "", "news"),
+            SearchResult("Alpha investigation copy", "https://b.example/copy", "", "news"),
+            SearchResult("Independent alpha review", "https://c.example/review", "", "web"),
+        ]
+        shared = " ".join(
+            f"alpha investigation evidence interview {index} measured result {index * 7}"
+            for index in range(35)
+        )
+        pages = [
+            WebPage(results[0].url, results[0].title, f"original header {shared} footer"),
+            WebPage(results[1].url, results[1].title, f"partner header {shared} legal"),
+            WebPage(
+                results[2].url,
+                results[2].title,
+                " ".join(
+                    f"alpha independent review dataset {index} separate finding {index * 11}"
+                    for index in range(35)
+                ),
+            ),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=results),
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=mock.AsyncMock(return_value=pages),
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha investigation evidence",
+                max_sources=2,
+                client=object(),
+            )
+
+        self.assertEqual(
+            [source.url for source in bundle.sources],
+            ["https://a.example/report", "https://c.example/review"],
+        )
+        self.assertEqual(bundle.diagnostics.candidate_content_clusters, 2)
+        self.assertEqual(bundle.diagnostics.duplicate_candidates, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+
+    async def test_syndicated_domains_are_not_independent_evidence(self):
+        results = [
+            SearchResult("Alpha report", "https://a.example/report", "", "news"),
+            SearchResult("Alpha copy", "https://b.example/copy", "", "news"),
+        ]
+        shared = " ".join(
+            f"alpha evidence report interview {index} measured result {index * 7}"
+            for index in range(35)
+        )
+        pages = [
+            WebPage(results[0].url, results[0].title, f"original {shared} copyright"),
+            WebPage(results[1].url, results[1].title, f"republished {shared} legal"),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=results),
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=mock.AsyncMock(return_value=pages),
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence report",
+                max_sources=2,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 1)
+        self.assertEqual(bundle.diagnostics.duplicate_sources, 1)
+        self.assertEqual(
+            bundle.diagnostics.sufficiency_reasons,
+            ["fewer_than_two_independent_contents"],
+        )
+        self.assertEqual(
+            bundle.sources[0].content_cluster_id,
+            bundle.sources[1].content_cluster_id,
+        )
 
     async def test_marks_irrelevant_full_text_as_insufficient(self):
         results = [

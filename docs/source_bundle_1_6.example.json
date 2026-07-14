@@ -26,6 +26,7 @@
       "content_origin": "direct_fetch",
       "published_at": "2026-07-13T18:30:00+00:00",
       "published_at_method": "meta_article_published_time",
+      "content_cluster_id": "cc_1111111111111111",
       "relevance_score": 0.88,
       "quality_score": null
     },
@@ -51,6 +52,7 @@
       "content_origin": "search_snippet",
       "published_at": null,
       "published_at_method": "",
+      "content_cluster_id": "cc_2222222222222222",
       "relevance_score": 0.61,
       "quality_score": null
     }
@@ -84,6 +86,11 @@
     "unique_domains": 2,
     "substantive_sources": 1,
     "evidence_chars": 272,
+    "candidate_content_clusters": 3,
+    "duplicate_candidates": 0,
+    "independent_content_clusters": 1,
+    "duplicate_sources": 0,
+    "content_cluster_method": "token_5gram_containment_v1",
     "evidence_sufficiency": "limited",
     "sufficiency_reasons": [
       "fewer_than_two_substantive_sources"

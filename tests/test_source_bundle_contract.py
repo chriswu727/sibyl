@@ -35,6 +35,13 @@ class TestSourceBundleContract(unittest.TestCase):
                     len(passage.text),
                 )
         self.assertEqual(bundle.diagnostics.evidence_chars, evidence_chars)
+        self.assertEqual(
+            bundle.diagnostics.content_cluster_method,
+            "token_5gram_containment_v1",
+        )
+        self.assertTrue(
+            all(source.content_cluster_id.startswith("cc_") for source in bundle.sources)
+        )
 
     def test_contract_schema_exposes_consumer_enums(self):
         schema = TypeAdapter(SourceBundle).json_schema()

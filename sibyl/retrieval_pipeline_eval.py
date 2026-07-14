@@ -75,6 +75,8 @@ def _bundle_structure_is_valid(bundle, page_text_by_url: Dict[str, str]) -> bool
             return False
         if source.source_id != f"S{source_index}":
             return False
+        if not re.fullmatch(r"cc_[0-9a-f]{16}", source.content_cluster_id):
+            return False
         if source.content_hash != hashlib.sha256(page_text.encode("utf-8")).hexdigest():
             return False
         if not source.evidence:
