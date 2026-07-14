@@ -23,3 +23,5 @@ jobs:
         run: python -m unittest discover tests -v
       - name: Check lexical retrieval regression floor
         run: python scripts/eval_retrieval.py --ranker lexical
+      - name: Check end-to-end retrieval pipeline regression floor
+        run: python scripts/eval_retrieval_pipeline.py --ranker lexical

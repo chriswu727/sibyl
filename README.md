@@ -100,17 +100,19 @@ Schema 1.5 also reports `substantive_sources`, `evidence_chars`, `evidence_suffi
 
 Within one MCP server process, matching `gather_bundle` and `gather_sources` calls share in-flight work and reuse successful evidence for 30 seconds. Failed retrievals are never cached; cached bundles retain their original `retrieved_at` provenance timestamps.
 
-### Offline ranker regression
+### Offline retrieval regressions
 
 Run the fixed, network-free ranker checks before changing retrieval scoring:
 
 ```bash
 python scripts/eval_retrieval.py --ranker lexical
+python scripts/eval_retrieval_pipeline.py --ranker lexical
 pip install 'sibyl-research[rerank]'
 python scripts/eval_retrieval.py --ranker flashrank
+python scripts/eval_retrieval_pipeline.py --ranker flashrank
 ```
 
-The command reports per-case first-relevant rank plus aggregate Hit@1 and MRR, and exits non-zero below the checked-in regression floors. The small synthetic set covers multilingual text, identifiers, version numbers, and high-overlap distractors; it is a deterministic regression guard, not a claim about production search accuracy.
+The ranker command reports per-case first-relevant rank plus aggregate Hit@1 and MRR. The pipeline command sends the same fixed cases through search/scrape fixtures, deduplication, source and passage ranking, SourceBundle construction, and evidence-sufficiency classification; it verifies top-source accuracy, usable status, hashes, citation IDs, and source-text offsets. Both exit non-zero below their checked-in regression floors. Network I/O is replaced by deterministic fixtures, so this is a stable pipeline regression guard, not a claim about live search accuracy.
 
 ## How the one-shot pipeline works
 
