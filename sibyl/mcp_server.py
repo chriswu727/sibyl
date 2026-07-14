@@ -7,6 +7,7 @@ from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
+from .async_cache import AsyncSingleFlightTTL
 from .config import Config, Provider
 from .evidence import SourceBundle
 from .ranking import RankingBackend
@@ -43,6 +44,35 @@ depth=1/2/3 = quick/standard/deep.
 
 _config: Optional[Config] = None
 _last_report: Optional[ResearchReport] = None
+_bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
+    ttl_seconds=30.0,
+    max_entries=64,
+)
+
+
+async def _cached_source_bundle(
+    query: str,
+    max_sources: int,
+    chars_per_source: int,
+    ranker: RankingBackend,
+) -> SourceBundle:
+    key = (
+        str(query or "").strip(),
+        str(max_sources),
+        str(chars_per_source),
+        str(ranker or "").strip().lower(),
+    )
+
+    async def retrieve() -> SourceBundle:
+        return await gather_source_bundle(
+            query, max_sources, chars_per_source, ranker=ranker
+        )
+
+    return await _bundle_cache.get_or_create(
+        key,
+        retrieve,
+        should_cache=lambda bundle: bundle.status in {"ok", "insufficient_evidence"},
+    )
 
 
 def _get_config() -> Config:
@@ -150,7 +180,7 @@ async def gather_sources(
         chars_per_source: Max characters of text per source (default 7000; bounded to 500-10000)
         ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
     """
-    bundle = await gather_source_bundle(
+    bundle = await _cached_source_bundle(
         query, max_sources, chars_per_source, ranker=ranker
     )
     return render_source_bundle(bundle)
@@ -177,7 +207,7 @@ async def gather_bundle(
         chars_per_source: Max characters per evidence passage (default 7000; bounded to 500-10000)
         ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
     """
-    return await gather_source_bundle(
+    return await _cached_source_bundle(
         query, max_sources, chars_per_source, ranker=ranker
     )
 

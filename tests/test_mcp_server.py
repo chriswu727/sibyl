@@ -1,4 +1,5 @@
 """MCP report safety and request-isolation tests. No network."""
+import asyncio
 import os
 import unittest
 from unittest import mock
@@ -118,6 +119,63 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             result = await gather_sources("question")
 
         self.assertEqual(result, self.bundle.error)
+
+    async def test_matching_tools_share_inflight_retrieval(self):
+        started = asyncio.Event()
+        release = asyncio.Event()
+        calls = 0
+
+        async def retrieve(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            started.set()
+            await release.wait()
+            return self.bundle
+
+        with mock.patch("sibyl.mcp_server.gather_source_bundle", new=retrieve):
+            legacy = asyncio.create_task(gather_sources(" question "))
+            await started.wait()
+            structured = asyncio.create_task(gather_bundle("question"))
+            await asyncio.sleep(0)
+            release.set()
+            legacy_result, structured_result = await asyncio.gather(
+                legacy, structured
+            )
+
+        self.assertEqual(legacy_result, self.bundle.error)
+        self.assertIs(structured_result, self.bundle)
+        self.assertEqual(calls, 1)
+
+    async def test_failed_retrieval_is_not_cached(self):
+        failed = SourceBundle(
+            "1.4",
+            "sb_failed",
+            "failure-case",
+            "failed",
+            [],
+            self.bundle.diagnostics,
+            "temporary failure",
+        )
+        recovered = SourceBundle(
+            "1.4",
+            "sb_recovered",
+            "failure-case",
+            "ok",
+            [],
+            self.bundle.diagnostics,
+        )
+        retrieve = mock.AsyncMock(side_effect=[failed, recovered])
+
+        with mock.patch(
+            "sibyl.mcp_server.gather_source_bundle",
+            new=retrieve,
+        ):
+            first = await gather_bundle("failure-case")
+            second = await gather_bundle("failure-case")
+
+        self.assertIs(first, failed)
+        self.assertIs(second, recovered)
+        self.assertEqual(retrieve.await_count, 2)
 
     async def test_mcp_registers_thirteen_tools(self):
         tools = await mcp_server.mcp.list_tools()
