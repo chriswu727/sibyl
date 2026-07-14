@@ -5,7 +5,7 @@ import asyncio
 import os
 import random
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Mapping, Optional
 from urllib.parse import urljoin
 
 import httpx
@@ -20,6 +20,20 @@ class WebPage:
     title: str
     text: str
     error: Optional[str] = None
+
+
+@dataclass(frozen=True)
+class _ResponseSnapshot:
+    status_code: int
+    headers: Mapping[str, str]
+    text: str
+
+
+class ResponseTooLargeError(Exception):
+    pass
+
+
+_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 
 
 # Realistic browser User-Agents (rotated)
@@ -42,6 +56,46 @@ def _get_headers() -> dict:
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
     }
+
+
+async def _bounded_get(
+    client,
+    url: str,
+    *,
+    headers: dict,
+    timeout: float,
+    max_response_bytes: int = _MAX_RESPONSE_BYTES,
+) -> _ResponseSnapshot:
+    async with client.stream(
+        "GET",
+        url,
+        headers=headers,
+        timeout=timeout,
+        follow_redirects=False,
+    ) as response:
+        content_length = response.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > max_response_bytes:
+                    raise ResponseTooLargeError(
+                        f"Response exceeds {max_response_bytes} bytes"
+                    )
+            except ValueError:
+                pass
+
+        content = bytearray()
+        async for chunk in response.aiter_bytes():
+            content.extend(chunk)
+            if len(content) > max_response_bytes:
+                raise ResponseTooLargeError(
+                    f"Response exceeds {max_response_bytes} bytes"
+                )
+        encoding = response.encoding or "utf-8"
+        return _ResponseSnapshot(
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            text=bytes(content).decode(encoding, errors="replace"),
+        )
 
 
 def _clean_lines(text: str, max_chars: int) -> str:
@@ -168,11 +222,11 @@ async def scrape_url(
     async def _get_with_safe_redirects(headers):
         current_url = url
         for redirect_count in range(6):
-            response = await client.get(
+            response = await _bounded_get(
+                client,
                 current_url,
                 headers=headers,
                 timeout=8.0,
-                follow_redirects=False,
             )
             if response.status_code not in {301, 302, 303, 307, 308}:
                 return response, current_url, ""
@@ -226,6 +280,8 @@ async def scrape_url(
                 # A slow site won't get faster on a second try with the same
                 # timeout — fail fast so it doesn't stall the whole scrape batch.
                 return WebPage(url=url, title="", text="", error="timeout")
+            except ResponseTooLargeError as exc:
+                return WebPage(url=url, title="", text="", error=str(exc))
             except Exception as e:
                 if attempt == 0:
                     continue
@@ -255,7 +311,12 @@ async def _try_jina(
         key = os.environ.get("JINA_API_KEY")
         if key:
             headers["Authorization"] = f"Bearer {key}"
-        resp = await client.get(f"https://r.jina.ai/{url}", headers=headers, timeout=7.0)
+        resp = await _bounded_get(
+            client,
+            f"https://r.jina.ai/{url}",
+            headers=headers,
+            timeout=7.0,
+        )
         if resp.status_code == 200:
             # Jina already returns clean markdown — no HTML parsing needed.
             text = "\n".join(l.strip() for l in resp.text.splitlines() if len(l.strip()) > 5)[:max_chars]

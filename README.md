@@ -156,7 +156,7 @@ providers:
 
 - Python 3.10+
 - **`gather_bundle`, `gather_sources`, and all web search are keyless** — no API keys to search the web
-- URL fetching is restricted to public HTTP(S) destinations on ports 80/443; local, private, credential-bearing, and unsafe redirect targets are rejected
+- URL fetching is restricted to public HTTP(S) destinations on ports 80/443; local, private, credential-bearing, and unsafe redirect targets are rejected, and decompressed response bodies are capped at 2 MiB
 - One LLM key only for the one-shot `research()` / CLI paths
 
 ## License

@@ -18,16 +18,19 @@ def _resp(status, text=""):
 
 class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
-        patcher = mock.patch(
+        resolver_patcher = mock.patch(
             "sibyl.url_safety._resolve_hostname", return_value=["93.184.216.34"]
         )
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        resolver_patcher.start()
+        self.addCleanup(resolver_patcher.stop)
+        fetch_patcher = mock.patch("sibyl.scraper._bounded_get", new=mock.AsyncMock())
+        self.fetch = fetch_patcher.start()
+        self.addCleanup(fetch_patcher.stop)
 
     async def test_not_triggered_by_default(self):
         # 403 twice, jina_fallback off (default) → error, Jina never called.
         client = mock.Mock()
-        client.get = mock.AsyncMock(return_value=_resp(403))
+        self.fetch.return_value = _resp(403)
         with mock.patch("sibyl.scraper._try_jina") as jina:
             page = await scrape_url("https://blocked.com/x", client=client)
         jina.assert_not_called()
@@ -36,7 +39,7 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
     async def test_triggered_on_451_first_attempt(self):
         # 451 doesn't retry (no UA-swap continue) — the fallback must still fire.
         client = mock.Mock()
-        client.get = mock.AsyncMock(return_value=_resp(451))
+        self.fetch.return_value = _resp(451)
         from sibyl.scraper import WebPage
 
         async def fake_jina(url, max_chars, c=None):
@@ -48,7 +51,7 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
 
     async def test_triggered_on_block_when_enabled(self):
         client = mock.Mock()
-        client.get = mock.AsyncMock(return_value=_resp(403))
+        self.fetch.return_value = _resp(403)
         from sibyl.scraper import WebPage
 
         async def fake_jina(url, max_chars, c=None):
@@ -62,14 +65,14 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
     async def test_jina_parses_markdown_and_uses_key(self):
         captured = {}
 
-        async def fake_get(url, headers=None, timeout=None):
+        async def fake_get(client, url, headers=None, timeout=None):
             captured["url"] = url
             captured["headers"] = headers
             body = "Title: My Page\n\n" + ("This is the clean body content returned by Jina reader for the page. " * 4)
             return _resp(200, body)
 
         client = mock.Mock()
-        client.get = fake_get
+        self.fetch.side_effect = fake_get
         with mock.patch.dict(os.environ, {"JINA_API_KEY": "jina-key"}, clear=False):
             page = await _try_jina("https://ex.com/a", 6000, client)
         self.assertIsNotNone(page)
