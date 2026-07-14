@@ -61,8 +61,9 @@ def _slug(value: str) -> str:
 
 def _substantive_text(document: RetrievalDocument) -> str:
     base = ". ".join(part.strip() for part in [document.title, document.text] if part.strip())
-    repetitions = max(1, math.ceil(320 / len(base)))
-    return " ".join([base] * repetitions)
+    padding = "Full source context preserved for offline pipeline evaluation."
+    repetitions = max(0, math.ceil((320 - len(base)) / len(padding)))
+    return " ".join([base, *([padding] * repetitions)])
 
 
 def _bundle_structure_is_valid(bundle, page_text_by_url: Dict[str, str]) -> bool:
