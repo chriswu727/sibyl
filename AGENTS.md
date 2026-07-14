@@ -116,3 +116,4 @@ timeline("OpenAI company history")
 - `compare()` and `swot()` automatically do a quick research before generating analysis
 - `save_report("both")` generates PDF + Markdown; charts are embedded in PDF
 - Multiple symbols in `chart()` generates both a line chart and a comparison bar chart
+- After changing retrieval ranking, run `python scripts/eval_retrieval.py --ranker lexical`; with the optional extra installed, also run it with `--ranker flashrank`

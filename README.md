@@ -96,6 +96,18 @@ sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    #
 
 `gather_bundle` currently returns SourceBundle schema `1.4`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes. Each source contains up to three passages with source-text offsets and bundle-scoped `citation_id` values such as `sb_…/S1/P1`; the combined passage text stays within `chars_per_source`. `content_hash` values are SHA-256. `relevance_score` and passage `score` are 0–1 retrieval scores from the actual ranking backend, not probabilities or correctness judgments; they are `null` when ranking is disabled. Diagnostics distinguish `requested_ranking_method` from the actual `ranking_method` and expose `ranking_warning` when FlashRank falls back to `lexical_v1`. They also include lexical query-term coverage and unique-domain count; these are retrieval-recall signals, not proof that the evidence is sufficient or true. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` (`ok`, `insufficient_evidence`, `invalid_request`, or `failed`) before synthesis.
 
+### Offline ranker regression
+
+Run the fixed, network-free ranker checks before changing retrieval scoring:
+
+```bash
+python scripts/eval_retrieval.py --ranker lexical
+pip install 'sibyl-research[rerank]'
+python scripts/eval_retrieval.py --ranker flashrank
+```
+
+The command reports per-case first-relevant rank plus aggregate Hit@1 and MRR, and exits non-zero below the checked-in regression floors. The small synthetic set covers multilingual text, identifiers, version numbers, and high-overlap distractors; it is a deterministic regression guard, not a claim about production search accuracy.
+
 ## How the one-shot pipeline works
 
 ```
