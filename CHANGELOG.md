@@ -8,6 +8,7 @@
 - Dependency-free lexical source and passage ranking, with optional local FlashRank reranking and explicit fallback diagnostics.
 - Query coverage, domain diversity, evidence volume, and deterministic evidence-sufficiency diagnostics.
 - Fixed offline ranker and end-to-end retrieval pipeline regression suites.
+- Offline contextual source-quality labels and an abstention-aware evaluator.
 - MCP single-flight retrieval reuse with a 30-second TTL for matching successful requests.
 
 ### Changed

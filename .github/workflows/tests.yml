@@ -25,5 +25,7 @@ jobs:
         run: python scripts/eval_retrieval.py --ranker lexical
       - name: Check end-to-end retrieval pipeline regression floor
         run: python scripts/eval_retrieval_pipeline.py --ranker lexical
+      - name: Check source-quality evaluation baseline
+        run: python scripts/eval_source_quality.py
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist

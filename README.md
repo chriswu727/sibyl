@@ -107,12 +107,15 @@ Run the fixed, network-free ranker checks before changing retrieval scoring:
 ```bash
 python scripts/eval_retrieval.py --ranker lexical
 python scripts/eval_retrieval_pipeline.py --ranker lexical
+python scripts/eval_source_quality.py
 pip install 'sibyl-research[rerank]'
 python scripts/eval_retrieval.py --ranker flashrank
 python scripts/eval_retrieval_pipeline.py --ranker flashrank
 ```
 
 The ranker command reports per-case first-relevant rank plus aggregate Hit@1 and MRR. The pipeline command sends the same fixed cases through search/scrape fixtures, deduplication, source and passage ranking, SourceBundle construction, and evidence-sufficiency classification; it verifies top-source accuracy, usable status, hashes, citation IDs, and source-text offsets. Both exit non-zero below their checked-in regression floors. Network I/O is replaced by deterministic fixtures, so this is a stable pipeline regression guard, not a claim about live search accuracy.
+
+The source-quality command evaluates a deliberately limited source-type prior against contextual preference labels. It reports coverage separately from accuracy, treats tied top scores as abstentions, and includes cases where community evidence is preferable and where broad source types cannot distinguish primary from secondary reporting. This baseline is an evaluation control, not a production credibility model, so it does not populate `quality_score`.
 
 ## How the one-shot pipeline works
 
