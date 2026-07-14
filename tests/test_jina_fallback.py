@@ -17,6 +17,13 @@ def _resp(status, text=""):
 
 
 class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        patcher = mock.patch(
+            "sibyl.url_safety._resolve_hostname", return_value=["93.184.216.34"]
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     async def test_not_triggered_by_default(self):
         # 403 twice, jina_fallback off (default) → error, Jina never called.
         client = mock.Mock()

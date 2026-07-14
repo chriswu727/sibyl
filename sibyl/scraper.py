@@ -6,9 +6,12 @@ import os
 import random
 from dataclasses import dataclass
 from typing import List, Optional
+from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
+
+from .url_safety import validate_public_url
 
 
 @dataclass
@@ -143,9 +146,9 @@ async def scrape_url(
     Reuses a shared ``client`` when provided so connections/TLS are pooled
     across a batch; otherwise creates a short-lived one.
     """
-    # Skip non-HTTP URLs
-    if not url.startswith("http"):
-        return WebPage(url=url, title="", text="", error="Invalid URL")
+    unsafe_reason = await validate_public_url(url)
+    if unsafe_reason:
+        return WebPage(url=url, title="", text="", error=f"Unsafe URL: {unsafe_reason}")
 
     own_client = client is None
     if own_client:
@@ -162,14 +165,47 @@ async def scrape_url(
             return rendered
         return page
 
+    async def _get_with_safe_redirects(headers):
+        current_url = url
+        for redirect_count in range(6):
+            response = await client.get(
+                current_url,
+                headers=headers,
+                timeout=8.0,
+                follow_redirects=False,
+            )
+            if response.status_code not in {301, 302, 303, 307, 308}:
+                return response, current_url, ""
+            if redirect_count == 5:
+                return response, current_url, "Too many redirects"
+            location = response.headers.get("location", "")
+            if not location:
+                return response, current_url, "Redirect response is missing a Location header"
+            redirect_url = urljoin(current_url, location)
+            unsafe_redirect = await validate_public_url(redirect_url)
+            if unsafe_redirect:
+                return response, current_url, f"Unsafe redirect URL: {unsafe_redirect}"
+            current_url = redirect_url
+        raise AssertionError("redirect loop exceeded its bound")
+
     try:
         for attempt in range(2):
             try:
                 # Rotate User-Agent per request (shared client → set on request)
-                resp = await client.get(url, headers=_get_headers(), timeout=8.0)
+                resp, final_url, redirect_error = await _get_with_safe_redirects(
+                    _get_headers()
+                )
+                if redirect_error:
+                    return WebPage(url=url, title="", text="", error=redirect_error)
 
                 if resp.status_code == 200:
-                    page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
+                    page = await asyncio.to_thread(
+                        _extract_content,
+                        resp.text,
+                        final_url,
+                        max_chars,
+                        extractor,
+                    )
                     return await _render_if_thin(page, resp)
 
                 # Retry 403/429 once with a different User-Agent (may clear).

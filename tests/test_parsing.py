@@ -55,7 +55,7 @@ class TestExtractorChoice(unittest.TestCase):
 class TestScrapeUrlGuards(unittest.IsolatedAsyncioTestCase):
     async def test_non_http_url_returns_error_without_network(self):
         page = await scrape_url("ftp://example.com/file")
-        self.assertEqual(page.error, "Invalid URL")
+        self.assertIn("Only http and https", page.error)
         self.assertEqual(page.text, "")
 
 

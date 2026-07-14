@@ -17,6 +17,13 @@ def _resp(status=200, text="", ct="text/html"):
 
 
 class TestJsRenderTrigger(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        patcher = mock.patch(
+            "sibyl.url_safety._resolve_hostname", return_value=["93.184.216.34"]
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     async def test_thin_page_triggers_render_and_keeps_longer(self):
         # a 200 that extracts to a thin shell → render via Jina, keep the longer text
         client = mock.Mock()
