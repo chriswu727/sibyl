@@ -32,11 +32,11 @@ class TestSourceBundle(unittest.TestCase):
             effective_chars_per_source=7000,
             latency_ms=5,
         )
-        bundle = SourceBundle("1.4", "sb_1", "query", "ok", [source], diagnostics)
+        bundle = SourceBundle("1.5", "sb_1", "query", "ok", [source], diagnostics)
 
         data = bundle.to_dict()
 
-        self.assertEqual(data["schema_version"], "1.4")
+        self.assertEqual(data["schema_version"], "1.5")
         self.assertEqual(data["sources"][0]["evidence"][0]["citation_id"], "sb_1/S1/P1")
         self.assertIsNone(data["sources"][0]["relevance_score"])
         self.assertIsNone(data["sources"][0]["quality_score"])
@@ -48,6 +48,8 @@ class TestSourceBundle(unittest.TestCase):
         self.assertEqual(data["diagnostics"]["ranking_warning"], "")
         self.assertEqual(data["diagnostics"]["candidates_ranked"], 0)
         self.assertIsNone(data["diagnostics"]["query_term_coverage"])
+        self.assertEqual(data["diagnostics"]["evidence_sufficiency"], "not_assessed")
+        self.assertEqual(data["diagnostics"]["sufficiency_reasons"], [])
 
 
 if __name__ == "__main__":

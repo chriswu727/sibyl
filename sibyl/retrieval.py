@@ -16,6 +16,7 @@ from .dedup import canonical_url, dedup_pages
 from .evidence import (
     BundleDiagnostics,
     BundleStatus,
+    EvidenceSufficiency,
     EvidencePassage,
     EvidenceSource,
     SourceBundle,
@@ -52,6 +53,65 @@ def _source_type(url: str, result_types: Dict[str, str]) -> str:
     return result_types.get(canonical_url(url), "web")
 
 
+def _assess_evidence_sufficiency(
+    *,
+    source_count: int,
+    substantive_sources: int,
+    evidence_chars: int,
+    query_terms: int,
+    query_term_coverage: float,
+    unique_domains: int,
+) -> Tuple[EvidenceSufficiency, List[str]]:
+    if source_count == 0:
+        return "insufficient", ["no_sources"]
+
+    blockers = []
+    if substantive_sources == 0:
+        blockers.append("no_substantive_sources")
+    if evidence_chars < 200:
+        blockers.append("too_little_evidence_text")
+    if query_terms > 0 and query_term_coverage < 0.25:
+        blockers.append("low_query_term_coverage")
+    if blockers:
+        return "insufficient", blockers
+
+    limitations = []
+    if substantive_sources < 2:
+        limitations.append("fewer_than_two_substantive_sources")
+    if unique_domains < 2:
+        limitations.append("single_domain")
+    if query_terms == 0:
+        limitations.append("query_has_no_lexical_terms")
+    if limitations:
+        return "limited", limitations
+    return "sufficient", []
+
+
+_SUFFICIENCY_REASON_LABELS = {
+    "no_sources": "no sources",
+    "no_substantive_sources": "no substantive full-text sources",
+    "too_little_evidence_text": "too little evidence text",
+    "low_query_term_coverage": "low query-term coverage",
+}
+
+
+def _insufficient_evidence_error(
+    query: str,
+    source_count: int,
+    reasons: List[str],
+) -> str:
+    if source_count == 0:
+        return f"No sources found for query: {query!r}. Try a different phrasing."
+    details = ", ".join(
+        _SUFFICIENCY_REASON_LABELS.get(reason, reason.replace("_", " "))
+        for reason in reasons
+    )
+    return (
+        f"Found {source_count} source(s), but the evidence is insufficient for "
+        f"synthesis ({details}). Treat these as leads and gather more evidence."
+    )
+
+
 def _diagnostics(
     *,
     search_results: int = 0,
@@ -80,6 +140,10 @@ def _diagnostics(
     matched_query_terms: int = 0,
     query_term_coverage: Optional[float] = None,
     unique_domains: int = 0,
+    substantive_sources: int = 0,
+    evidence_chars: int = 0,
+    evidence_sufficiency: EvidenceSufficiency = "not_assessed",
+    sufficiency_reasons: Optional[List[str]] = None,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -108,6 +172,10 @@ def _diagnostics(
         matched_query_terms=matched_query_terms,
         query_term_coverage=query_term_coverage,
         unique_domains=unique_domains,
+        substantive_sources=substantive_sources,
+        evidence_chars=evidence_chars,
+        evidence_sufficiency=evidence_sufficiency,
+        sufficiency_reasons=sufficiency_reasons or [],
     )
 
 
@@ -157,7 +225,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.4",
+            schema_version="1.5",
             bundle_id=_bundle_id(str(query or ""), "invalid_request", []),
             query=str(query or ""),
             status="invalid_request",
@@ -179,7 +247,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.4",
+            schema_version="1.5",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -198,7 +266,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.4",
+            schema_version="1.5",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -291,7 +359,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.4",
+            schema_version="1.5",
             bundle_id=_bundle_id(clean_query, "failed", []),
             query=clean_query,
             status="failed",
@@ -440,7 +508,40 @@ async def gather_source_bundle(
         )
         fingerprints.append((canonical_url(page.url), source_hash, passage_fingerprint))
 
-    bundle_status: BundleStatus = "ok" if prepared else "insufficient_evidence"
+    coverage = lexical_query_coverage(
+        clean_query,
+        [
+            text
+            for _, title, _, _, selected_passages in prepared
+            for text in [title, *(chunk.text for chunk, _, _ in selected_passages)]
+        ],
+    )
+    domains = {
+        urlsplit(page.url).netloc.lower().removeprefix("www.")
+        for page, _, _, _, _ in prepared
+        if urlsplit(page.url).netloc
+    }
+    substantive_sources = sum(
+        1 for page, _, _, _, _ in prepared if len(page.text) > 200
+    )
+    evidence_chars = sum(
+        len(chunk.text)
+        for _, _, _, _, selected_passages in prepared
+        for chunk, _, _ in selected_passages
+    )
+    evidence_sufficiency, sufficiency_reasons = _assess_evidence_sufficiency(
+        source_count=len(prepared),
+        substantive_sources=substantive_sources,
+        evidence_chars=evidence_chars,
+        query_terms=coverage.query_terms,
+        query_term_coverage=coverage.score,
+        unique_domains=len(domains),
+    )
+    bundle_status: BundleStatus = (
+        "insufficient_evidence"
+        if evidence_sufficiency == "insufficient"
+        else "ok"
+    )
     bundle_id = _bundle_id(clean_query, bundle_status, fingerprints)
     retrieved_at = datetime.now(timezone.utc).isoformat()
     sources = []
@@ -479,19 +580,6 @@ async def gather_source_bundle(
         )
 
     attempted_count = min(len(urls), max(effective_max_sources * 2, 12))
-    coverage = lexical_query_coverage(
-        clean_query,
-        [
-            text
-            for source in sources
-            for text in [source.title, *(passage.text for passage in source.evidence)]
-        ],
-    )
-    domains = {
-        urlsplit(source.url).netloc.lower().removeprefix("www.")
-        for source in sources
-        if urlsplit(source.url).netloc
-    }
     diagnostics = _diagnostics(
         search_results=len(results),
         unique_urls=len(urls),
@@ -521,18 +609,26 @@ async def gather_source_bundle(
         matched_query_terms=coverage.matched_terms,
         query_term_coverage=coverage.score if sources else None,
         unique_domains=len(domains),
+        substantive_sources=substantive_sources,
+        evidence_chars=evidence_chars,
+        evidence_sufficiency=evidence_sufficiency,
+        sufficiency_reasons=sufficiency_reasons,
     )
     return SourceBundle(
-        schema_version="1.4",
+        schema_version="1.5",
         bundle_id=bundle_id,
         query=clean_query,
         status=bundle_status,
         sources=sources,
         diagnostics=diagnostics,
         error=(
-            ""
-            if sources
-            else f"No sources found for query: {clean_query!r}. Try a different phrasing."
+            _insufficient_evidence_error(
+                clean_query,
+                len(sources),
+                sufficiency_reasons,
+            )
+            if bundle_status == "insufficient_evidence"
+            else ""
         ),
     )
 
@@ -552,9 +648,12 @@ def render_source_bundle(bundle: SourceBundle) -> str:
     for index, source in enumerate(bundle.sources, 1):
         text = "\n\n".join(passage.text for passage in source.evidence)
         parts.append(f"[Source {index}: {source.title}]\nURL: {source.url}\n{text}\n")
-    return (
+    rendered = (
         f"Retrieved {len(bundle.sources)} sources for query {bundle.query!r}. "
         "Reason over these and "
         f"cite [Source N]; if the answer isn't here, gather more or say you don't know.\n\n"
         + "\n---\n".join(parts)
     )
+    if bundle.status == "insufficient_evidence":
+        return f"Evidence warning: {bundle.error}\n\n{rendered}"
+    return rendered

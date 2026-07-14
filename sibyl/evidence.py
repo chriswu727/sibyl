@@ -1,11 +1,12 @@
 """Structured evidence protocol shared by Sibyl retrieval consumers."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional
 
 
 BundleStatus = Literal["ok", "insufficient_evidence", "invalid_request", "failed"]
+EvidenceSufficiency = Literal["not_assessed", "sufficient", "limited", "insufficient"]
 
 
 @dataclass(frozen=True)
@@ -61,11 +62,15 @@ class BundleDiagnostics:
     matched_query_terms: int = 0
     query_term_coverage: Optional[float] = None
     unique_domains: int = 0
+    substantive_sources: int = 0
+    evidence_chars: int = 0
+    evidence_sufficiency: EvidenceSufficiency = "not_assessed"
+    sufficiency_reasons: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
 class SourceBundle:
-    schema_version: Literal["1.4"]
+    schema_version: Literal["1.5"]
     bundle_id: str
     query: str
     status: BundleStatus

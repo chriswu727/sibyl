@@ -29,7 +29,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
         self.assertEqual(first.status, "ok")
-        self.assertEqual(first.schema_version, "1.4")
+        self.assertEqual(first.schema_version, "1.5")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
         self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
@@ -61,7 +61,81 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first.diagnostics.coverage_method, "lexical_query_terms_v1")
         self.assertGreater(first.diagnostics.query_term_coverage, 0)
         self.assertEqual(first.diagnostics.unique_domains, 1)
+        self.assertEqual(first.diagnostics.substantive_sources, 2)
+        self.assertGreater(first.diagnostics.evidence_chars, 0)
+        self.assertEqual(first.diagnostics.evidence_sufficiency, "limited")
+        self.assertEqual(first.diagnostics.sufficiency_reasons, ["single_domain"])
         wiki.assert_not_awaited()
+
+    async def test_marks_diverse_relevant_evidence_sufficient(self):
+        results = [
+            SearchResult("Alpha evidence", "https://a.example/report", "", "web"),
+            SearchResult("Alpha findings", "https://b.example/study", "", "academic"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, "alpha evidence findings " * 30)
+            for result in results
+        ]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=2, client=object()
+            )
+
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "sufficient")
+        self.assertEqual(bundle.diagnostics.sufficiency_reasons, [])
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+
+    async def test_marks_irrelevant_full_text_as_insufficient(self):
+        results = [
+            SearchResult("Cooking", "https://a.example/recipe", "", "web"),
+            SearchResult("Travel", "https://b.example/hotels", "", "web"),
+        ]
+        pages = [
+            WebPage(results[0].url, results[0].title, "bread recipe kitchen " * 30),
+            WebPage(results[1].url, results[1].title, "hotel travel guide " * 30),
+        ]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+            bundle = await gather_source_bundle(
+                "quantum battery breakthrough", max_sources=2, client=object()
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "insufficient")
+        self.assertEqual(
+            bundle.diagnostics.sufficiency_reasons,
+            ["low_query_term_coverage"],
+        )
+        self.assertEqual(len(bundle.sources), 2)
+        self.assertIn("low query-term coverage", bundle.error)
+        self.assertIn("Evidence warning", render_source_bundle(bundle))
+
+    async def test_marks_thin_only_sources_as_insufficient(self):
+        result = SearchResult("Alpha evidence", "https://a.example/short", "", "web")
+        page = WebPage(
+            result.url,
+            result.title,
+            ("alpha evidence " * 20)[:180],
+        )
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[result])), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[page])), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+            bundle = await gather_source_bundle("alpha evidence", client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.substantive_sources, 0)
+        self.assertIn(
+            "no_substantive_sources",
+            bundle.diagnostics.sufficiency_reasons,
+        )
 
     async def test_reranks_candidates_before_applying_source_limit(self):
         results = [
@@ -269,6 +343,8 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.sources_returned, 0)
         self.assertEqual(bundle.diagnostics.ranking_method, "not_run")
         self.assertIsNone(bundle.diagnostics.query_term_coverage)
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "insufficient")
+        self.assertEqual(bundle.diagnostics.sufficiency_reasons, ["no_sources"])
         self.assertEqual(
             render_source_bundle(bundle),
             "No sources found for query: 'missing'. Try a different phrasing.",

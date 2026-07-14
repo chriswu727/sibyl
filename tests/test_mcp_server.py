@@ -78,7 +78,7 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
 class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.bundle = SourceBundle(
-            "1.4",
+            "1.5",
             "sb_test",
             "question",
             "insufficient_evidence",
@@ -148,7 +148,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
 
     async def test_failed_retrieval_is_not_cached(self):
         failed = SourceBundle(
-            "1.4",
+            "1.5",
             "sb_failed",
             "failure-case",
             "failed",
@@ -157,7 +157,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             "temporary failure",
         )
         recovered = SourceBundle(
-            "1.4",
+            "1.5",
             "sb_recovered",
             "failure-case",
             "ok",
