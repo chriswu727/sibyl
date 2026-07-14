@@ -4,11 +4,18 @@ from __future__ import annotations
 import asyncio
 import os
 import random
+import threading
+import time
+import weakref
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Mapping, Optional
+from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
+
+from .safe_http import PinnedDNSAsyncClient
+from .url_safety import resolve_public_url
 
 
 @dataclass
@@ -17,6 +24,21 @@ class WebPage:
     title: str
     text: str
     error: Optional[str] = None
+    content_origin: str = "direct_fetch"
+
+
+@dataclass(frozen=True)
+class _ResponseSnapshot:
+    status_code: int
+    headers: Mapping[str, str]
+    text: str
+
+
+class ResponseTooLargeError(Exception):
+    pass
+
+
+_MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 
 
 # Realistic browser User-Agents (rotated)
@@ -39,6 +61,46 @@ def _get_headers() -> dict:
         "Connection": "keep-alive",
         "Upgrade-Insecure-Requests": "1",
     }
+
+
+async def _bounded_get(
+    client,
+    url: str,
+    *,
+    headers: dict,
+    timeout: float,
+    max_response_bytes: int = _MAX_RESPONSE_BYTES,
+) -> _ResponseSnapshot:
+    async with client.stream(
+        "GET",
+        url,
+        headers=headers,
+        timeout=timeout,
+        follow_redirects=False,
+    ) as response:
+        content_length = response.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > max_response_bytes:
+                    raise ResponseTooLargeError(
+                        f"Response exceeds {max_response_bytes} bytes"
+                    )
+            except ValueError:
+                pass
+
+        content = bytearray()
+        async for chunk in response.aiter_bytes():
+            content.extend(chunk)
+            if len(content) > max_response_bytes:
+                raise ResponseTooLargeError(
+                    f"Response exceeds {max_response_bytes} bytes"
+                )
+        encoding = response.encoding or "utf-8"
+        return _ResponseSnapshot(
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            text=bytes(content).decode(encoding, errors="replace"),
+        )
 
 
 def _clean_lines(text: str, max_chars: int) -> str:
@@ -104,23 +166,39 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
 
 
 class _JinaGate:
-    """Bounds JS-render (r.jina.ai) calls so a thin-content sweep can't stall the
-    batch or trip the keyless rate limit: ≤2 concurrent, and a min-interval
-    between calls (keyless only; 0 when JINA_API_KEY is set). Created per
-    scrape_urls batch, so the semaphore binds to the running loop."""
+    """Bound concurrent Jina calls and serialize their start times."""
+
     def __init__(self):
         self.sem = asyncio.Semaphore(2)
-        self.last = 0.0
-        self.min_interval = 0.0 if os.environ.get("JINA_API_KEY") else 3.0
+        self.interval_lock = asyncio.Lock()
+        self.last_started: Optional[float] = None
 
     async def render(self, url, max_chars, client):
-        import time
         async with self.sem:
-            wait = self.min_interval - (time.monotonic() - self.last)
-            if wait > 0:
-                await asyncio.sleep(wait)
-            self.last = time.monotonic()
+            min_interval = 0.0 if os.environ.get("JINA_API_KEY") else 3.0
+            async with self.interval_lock:
+                now = time.monotonic()
+                if self.last_started is not None:
+                    wait = min_interval - (now - self.last_started)
+                    if wait > 0:
+                        await asyncio.sleep(wait)
+                        now = time.monotonic()
+                self.last_started = now
             return await _try_jina(url, max_chars, client)
+
+
+_JINA_GATES = weakref.WeakKeyDictionary()
+_JINA_GATES_LOCK = threading.Lock()
+
+
+def _get_jina_gate() -> _JinaGate:
+    loop = asyncio.get_running_loop()
+    with _JINA_GATES_LOCK:
+        gate = _JINA_GATES.get(loop)
+        if gate is None:
+            gate = _JinaGate()
+            _JINA_GATES[loop] = gate
+        return gate
 
 
 def _is_html_ish(resp) -> bool:
@@ -140,36 +218,78 @@ async def scrape_url(
 ) -> WebPage:
     """Fetch a URL with retry and anti-block techniques.
 
-    Reuses a shared ``client`` when provided so connections/TLS are pooled
-    across a batch; otherwise creates a short-lived one.
+    Reuses a provided pinned client; ordinary HTTPX clients are replaced with
+    a short-lived pinned client so DNS validation cannot be bypassed.
     """
-    # Skip non-HTTP URLs
-    if not url.startswith("http"):
-        return WebPage(url=url, title="", text="", error="Invalid URL")
+    unsafe_reason, resolved_addresses = await resolve_public_url(url)
+    if unsafe_reason:
+        return WebPage(url=url, title="", text="", error=f"Unsafe URL: {unsafe_reason}")
 
-    own_client = client is None
+    own_client = client is None or (
+        isinstance(client, httpx.AsyncClient)
+        and not isinstance(client, PinnedDNSAsyncClient)
+    )
     if own_client:
-        client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
+        client = PinnedDNSAsyncClient(timeout=12.0)
+    if isinstance(client, PinnedDNSAsyncClient):
+        client.pin_url(url, resolved_addresses)
 
     async def _render_if_thin(page: WebPage, resp) -> WebPage:
         # A 200 that extracts thin is usually a JS shell — render it via Jina and
         # keep the longer text (keyless; never returns less than we already have).
         if not (js_render and len(page.text) < js_render_threshold and _is_html_ish(resp)):
             return page
-        rendered = (await jina_gate.render(url, max_chars, client)) if jina_gate \
-            else await _try_jina(url, max_chars, client)
+        gate = jina_gate or _get_jina_gate()
+        rendered = await gate.render(url, max_chars, client)
         if rendered and len(rendered.text) > len(page.text):
             return rendered
         return page
+
+    async def _get_with_safe_redirects(headers):
+        current_url = url
+        for redirect_count in range(6):
+            response = await _bounded_get(
+                client,
+                current_url,
+                headers=headers,
+                timeout=8.0,
+            )
+            if response.status_code not in {301, 302, 303, 307, 308}:
+                return response, current_url, ""
+            if redirect_count == 5:
+                return response, current_url, "Too many redirects"
+            location = response.headers.get("location", "")
+            if not location:
+                return response, current_url, "Redirect response is missing a Location header"
+            redirect_url = urljoin(current_url, location)
+            unsafe_redirect, redirect_addresses = await resolve_public_url(
+                redirect_url
+            )
+            if unsafe_redirect:
+                return response, current_url, f"Unsafe redirect URL: {unsafe_redirect}"
+            if isinstance(client, PinnedDNSAsyncClient):
+                client.pin_url(redirect_url, redirect_addresses)
+            current_url = redirect_url
+        raise AssertionError("redirect loop exceeded its bound")
 
     try:
         for attempt in range(2):
             try:
                 # Rotate User-Agent per request (shared client → set on request)
-                resp = await client.get(url, headers=_get_headers(), timeout=8.0)
+                resp, final_url, redirect_error = await _get_with_safe_redirects(
+                    _get_headers()
+                )
+                if redirect_error:
+                    return WebPage(url=url, title="", text="", error=redirect_error)
 
                 if resp.status_code == 200:
-                    page = await asyncio.to_thread(_extract_content, resp.text, url, max_chars, extractor)
+                    page = await asyncio.to_thread(
+                        _extract_content,
+                        resp.text,
+                        final_url,
+                        max_chars,
+                        extractor,
+                    )
                     return await _render_if_thin(page, resp)
 
                 # Retry 403/429 once with a different User-Agent (may clear).
@@ -180,7 +300,8 @@ async def scrape_url(
                 # benefit from a UA swap, 403/429 have already been retried —
                 # optionally recover via Jina Reader (opt-in).
                 if resp.status_code in (401, 403, 429, 451) and jina_fallback:
-                    jina_page = await _try_jina(url, max_chars, client)
+                    gate = jina_gate or _get_jina_gate()
+                    jina_page = await gate.render(url, max_chars, client)
                     if jina_page and jina_page.text:
                         return jina_page
 
@@ -190,6 +311,8 @@ async def scrape_url(
                 # A slow site won't get faster on a second try with the same
                 # timeout — fail fast so it doesn't stall the whole scrape batch.
                 return WebPage(url=url, title="", text="", error="timeout")
+            except ResponseTooLargeError as exc:
+                return WebPage(url=url, title="", text="", error=str(exc))
             except Exception as e:
                 if attempt == 0:
                     continue
@@ -213,13 +336,24 @@ async def _try_jina(
     scrape timeout so this branch can't become the slowest path in the batch."""
     own_client = client is None
     if own_client:
-        client = httpx.AsyncClient(follow_redirects=True, timeout=7.0)
+        client = PinnedDNSAsyncClient(concurrency=2, timeout=7.0)
     try:
         headers = {"X-Return-Format": "markdown", "Accept": "text/plain"}
         key = os.environ.get("JINA_API_KEY")
         if key:
             headers["Authorization"] = f"Bearer {key}"
-        resp = await client.get(f"https://r.jina.ai/{url}", headers=headers, timeout=7.0)
+        jina_url = f"https://r.jina.ai/{url}"
+        if isinstance(client, PinnedDNSAsyncClient):
+            unsafe_reason, resolved_addresses = await resolve_public_url(jina_url)
+            if unsafe_reason:
+                return None
+            client.pin_url(jina_url, resolved_addresses)
+        resp = await _bounded_get(
+            client,
+            jina_url,
+            headers=headers,
+            timeout=7.0,
+        )
         if resp.status_code == 200:
             # Jina already returns clean markdown — no HTML parsing needed.
             text = "\n".join(l.strip() for l in resp.text.splitlines() if len(l.strip()) > 5)[:max_chars]
@@ -229,7 +363,12 @@ async def _try_jina(
                     if line.startswith("Title:"):
                         title = line[6:].strip()
                         break
-                return WebPage(url=url, title=title, text=text)
+                return WebPage(
+                    url=url,
+                    title=title,
+                    text=text,
+                    content_origin="jina_reader",
+                )
     except Exception:
         pass
     finally:
@@ -248,17 +387,18 @@ async def scrape_urls(
     js_render: bool = False,
     js_render_threshold: int = 500,
 ) -> List[WebPage]:
-    """Scrape multiple URLs concurrently over a single pooled client."""
+    """Scrape multiple URLs concurrently over one pooled, DNS-pinned client."""
     semaphore = asyncio.Semaphore(concurrency)
-    jina_gate = _JinaGate() if js_render else None
+    jina_gate = _get_jina_gate() if (js_render or jina_fallback) else None
 
-    own_client = client is None
+    own_client = client is None or (
+        isinstance(client, httpx.AsyncClient)
+        and not isinstance(client, PinnedDNSAsyncClient)
+    )
     if own_client:
-        client = httpx.AsyncClient(
-            follow_redirects=True,
+        client = PinnedDNSAsyncClient(
+            concurrency=concurrency,
             timeout=12.0,
-            limits=httpx.Limits(max_connections=concurrency * 2,
-                                max_keepalive_connections=concurrency),
         )
 
     async def _limited_scrape(url: str) -> WebPage:

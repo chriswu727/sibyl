@@ -1,3 +1,21 @@
 """Sibyl — AI-powered deep research agent."""
 
-__version__ = "0.2.1"
+from .evidence import (
+    BundleDiagnostics,
+    BundleStatus,
+    EvidencePassage,
+    EvidenceSufficiency,
+    EvidenceSource,
+    SourceBundle,
+)
+
+__all__ = [
+    "BundleDiagnostics",
+    "BundleStatus",
+    "EvidencePassage",
+    "EvidenceSufficiency",
+    "EvidenceSource",
+    "SourceBundle",
+]
+
+__version__ = "0.3.0"

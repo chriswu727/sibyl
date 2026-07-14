@@ -17,6 +17,10 @@ from .scraper import WebPage, scrape_urls
 litellm.suppress_debug_info = True
 
 
+class LLMCallError(RuntimeError):
+    """The configured one-shot LLM backend could not produce a response."""
+
+
 @dataclass
 class Source:
     url: str
@@ -43,6 +47,8 @@ class ResearchReport:
     market_data_summary: str = ""
     sub_questions: List[str] = field(default_factory=list)
     finding_verifications: List = field(default_factory=list)  # verifier.FindingVerification per finding
+    status: str = "ok"  # ok | insufficient_evidence | failed
+    error: str = ""
 
 
 class Researcher:
@@ -51,6 +57,11 @@ class Researcher:
     def __init__(self, config: Config):
         self.config = config
 
+    @staticmethod
+    def _has_sufficient_evidence(pages: List[WebPage]) -> bool:
+        return any(len(page.text) > 200 for page in pages) \
+            and sum(len(page.text) for page in pages) >= 500
+
     async def research(
         self,
         query: str,
@@ -58,6 +69,16 @@ class Researcher:
         language: str = "",
         on_progress: Optional[callable] = None,
     ) -> ResearchReport:
+        if not self.config.has_llm_credentials():
+            return ResearchReport(
+                query=query,
+                summary="",
+                key_findings=[],
+                sources=[],
+                status="failed",
+                error=("One-shot research requires an LLM provider key or a configured "
+                       "local/API-base backend. Keyless gather_sources remains available."),
+            )
         # One pooled client for the whole run — reuses TCP/TLS connections
         # across the many search + scrape calls to the same hosts.
         self._http = httpx.AsyncClient(
@@ -66,7 +87,18 @@ class Researcher:
             limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
         )
         try:
-            return await self._do_research(query, depth, language, on_progress)
+            try:
+                return await self._do_research(query, depth, language, on_progress)
+            except LLMCallError as exc:
+                return ResearchReport(
+                    query=query,
+                    summary="",
+                    key_findings=[],
+                    sources=[],
+                    model_used=self.config.get_provider("synthesis").model,
+                    status="failed",
+                    error=str(exc),
+                )
         finally:
             await self._http.aclose()
 
@@ -100,6 +132,8 @@ class Researcher:
         for lst in gen_results:
             if isinstance(lst, list):
                 all_queries.extend(lst)
+        if not all_queries and any(isinstance(result, LLMCallError) for result in gen_results):
+            raise LLMCallError("Search-query generation failed; no research report was produced.")
         # Deduplicate
         seen_q = set()
         search_queries = []
@@ -149,7 +183,14 @@ class Researcher:
         scraped_urls = {p.url for p in good_pages}
         for r in unique_results:
             if r.url not in scraped_urls and r.snippet and len(r.snippet) > 50:
-                good_pages.append(WebPage(url=r.url, title=r.title, text=r.snippet))
+                good_pages.append(
+                    WebPage(
+                        url=r.url,
+                        title=r.title,
+                        text=r.snippet,
+                        content_origin="search_snippet",
+                    )
+                )
                 if len(good_pages) >= self.config.max_sources + 5:
                     break
 
@@ -233,6 +274,20 @@ class Researcher:
             base = substantive if len(substantive) >= 3 else good_pages
             cited_pages = base[:self.config.max_synth_sources]
 
+        if not self._has_sufficient_evidence(cited_pages):
+            progress("Insufficient substantive evidence was retrieved; abstaining.")
+            return ResearchReport(
+                query=query,
+                summary="",
+                key_findings=[],
+                sources=[],
+                search_queries=search_queries,
+                sub_questions=sub_questions,
+                status="insufficient_evidence",
+                error=("Insufficient substantive source evidence was retrieved. Try a narrower query or use "
+                       "gather_sources with focused sub-queries."),
+            )
+
         # Steps 7 & 8: Cross-source analysis runs concurrently with synthesis —
         # the cross-analysis output is only attached to the report at the end,
         # so it has no dependency on the synthesized sections. (Cross-analysis
@@ -297,7 +352,7 @@ class Researcher:
         # default — fast mode trades that polish for ~20% lower latency.
         if depth >= 2 and report.summary and not self.config.fast:
             progress("Reviewing and refining report...")
-            report = await self._review_and_refine(report, good_pages, lang)
+            report = await self._review_and_refine(report, cited_pages, lang)
 
         # Step 9b: Verify each finding against its cited source text (C5: verify
         # against cited_pages — the exact [Source N] order — never report.sources).
@@ -383,9 +438,14 @@ Return ONLY the queries, one per line."""
                 if ranked:
                     return ranked
             except Exception:
-                pass  # fall through to the LLM reranker
+                pass
+            return self._lexical_rerank(query, pages, top_n)
+        elif reranker == "lexical":
+            return self._lexical_rerank(query, pages, top_n)
         elif reranker == "none":
             return pages[:top_n]
+        elif reranker != "llm":
+            return self._lexical_rerank(query, pages, top_n)
 
         provider = self.config.get_provider("compaction")
         source_list = "\n".join(
@@ -412,6 +472,19 @@ Example: {{"scores": [{{"id": 1, "score": 9}}, {{"id": 2, "score": 3}}]}}"""
         return kept if kept else pages[:top_n]
 
     @staticmethod
+    def _lexical_rerank(query: str, pages: List[WebPage], top_n: int) -> List[WebPage]:
+        from .context import relevant_window
+        from .ranking import lexical_relevance_scores
+
+        documents = [
+            (page.title, relevant_window(query, page.text, width=2000))
+            for page in pages
+        ]
+        scores = lexical_relevance_scores(query, documents)
+        ranked = sorted(range(len(pages)), key=lambda index: (-scores[index], index))
+        return [pages[index] for index in ranked[:top_n]]
+
+    @staticmethod
     def _parse_scores(text: str, n: int) -> Dict[int, float]:
         """Parse {"scores":[{"id":i,"score":s}]} → {id: score}, tolerant of a
         bare list or a truncated tail."""
@@ -432,17 +505,20 @@ Example: {{"scores": [{{"id": 1, "score": 9}}, {{"id": 2, "score": 3}}]}}"""
 
     def _flashrank_rerank(self, query: str, pages: List[WebPage], top_n: int) -> List[WebPage]:
         """Optional local cross-encoder rerank (extra: pip install sibyl-research[rerank])."""
-        from flashrank import Ranker, RerankRequest
-        ranker = Ranker()
-        passages = [{"id": i, "text": (p.title + ". " + p.text[:800])} for i, p in enumerate(pages)]
-        ranked = ranker.rerank(RerankRequest(query=query, passages=passages))
-        idx = [r["id"] for r in ranked[:top_n]]
-        return [pages[i] for i in idx]
+        from .ranking import flashrank_relevance_scores
+
+        documents = [(page.title, page.text[:800]) for page in pages]
+        scores = flashrank_relevance_scores(query, documents)
+        ranked = sorted(range(len(pages)), key=lambda index: (-scores[index], index))
+        return [pages[index] for index in ranked[:top_n]]
 
     async def _review_and_refine(self, report, pages: List[WebPage], language: str = "auto"):
         """Review the draft and refine summary + findings — two independent
         refinements run in parallel."""
         provider = self.config.get_provider("synthesis")
+        from .context import build_source_context
+
+        evidence = build_source_context(pages, limit=len(pages), per_char=4000)
 
         draft = f"""Summary: {report.summary}
 
@@ -462,12 +538,18 @@ RESEARCH QUESTION: {report.query}
 DRAFT:
 {draft}
 
+SOURCE EVIDENCE:
+{evidence}
+
 Rewrite the summary to be stronger:
-1. More specific data points and numbers (add if missing)
+1. Keep only claims, numbers, dates, and entities supported by SOURCE EVIDENCE
 2. Stronger source citations
 3. Explain WHY, not just what
 4. Clearer structure and flow
 5. A definitive conclusion that directly answers the research question
+
+Never add a fact that is absent from SOURCE EVIDENCE. Remove or qualify unsupported
+draft claims. Every [Source N] citation must refer to the matching numbered source above.
 
 {lang_instruction}
 
@@ -480,8 +562,13 @@ RESEARCH QUESTION: {report.query}
 DRAFT:
 {draft}
 
+SOURCE EVIDENCE:
+{evidence}
+
 Rewrite the key findings to be stronger: each must lead with a specific claim
 backed by a number/percentage/date, cite [Source N] inline, and explain why it matters.
+Keep only claims directly supported by SOURCE EVIDENCE. Never invent a number, date,
+entity, or citation to satisfy the requested format; omit a finding instead.
 
 {lang_instruction}
 
@@ -588,7 +675,12 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
                 out = await self._llm_call(provider, prompt, max_tokens=400)
             if not out or out.strip().upper().startswith("IRRELEVANT"):
                 return None
-            return WebPage(url=p.url, title=p.title, text=out.strip()[:1200])
+            return WebPage(
+                url=p.url,
+                title=p.title,
+                text=out.strip()[:1200],
+                content_origin=p.content_origin,
+            )
 
         results = await asyncio.gather(*[_one(p) for p in pages], return_exceptions=True)
         return [r for r in results if isinstance(r, WebPage)]
@@ -609,6 +701,17 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
         tier = tier or TIERS["standard"]
         provider = self.config.get_provider("synthesis")
 
+        if not self._has_sufficient_evidence(pages):
+            return ResearchReport(
+                query=query,
+                summary="",
+                key_findings=[],
+                sources=[],
+                model_used=provider.model,
+                status="insufficient_evidence",
+                error="Insufficient source evidence was available for synthesis.",
+            )
+
         # `pages` IS cited_pages — already substantive-filtered, ordered, and
         # capped upstream. It defines the [Source N] numbering that synthesis,
         # the verifier, and the reference list all key off (C5 invariant).
@@ -617,11 +720,7 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
         if synth_pages:
             context = build_source_context(synth_pages, limit=limit, per_char=4000)
         else:
-            context = "\n---\n".join(
-                f"[Source {i}: {sr.title}]\nURL: {sr.url}\n{sr.snippet}\n"
-                for i, sr in enumerate(search_results[:10], 1))
-        if not context:
-            context = "(No sources retrieved. Use your knowledge.)"
+            context = ""
 
         sub_context = ""
         if sub_analyses:
@@ -819,6 +918,7 @@ Return json: an object with key "findings" whose value is a JSON array of exactl
         if json_mode:
             kwargs["response_format"] = {"type": "json_object"}
 
+        last_error = None
         for attempt in range(3):
             try:
                 response = await litellm.acompletion(**kwargs)
@@ -829,11 +929,19 @@ Return json: an object with key "findings" whose value is a JSON array of exactl
                 if not content and attempt < 2:
                     await asyncio.sleep(1)
                     continue
-                return content
+                if content:
+                    return content
+                last_error = RuntimeError("empty response")
             except Exception as e:
-                if attempt == 2:
-                    return f"(LLM call failed after 3 attempts: {str(e)[:100]})"
-                await asyncio.sleep(1 * (attempt + 1))
+                last_error = e
+                if attempt < 2:
+                    await asyncio.sleep(1 * (attempt + 1))
+
+        reason = type(last_error).__name__ if last_error is not None else "empty response"
+        raise LLMCallError(
+            f"LLM backend {provider.model!r} failed after 3 attempts ({reason}); "
+            "no research report was produced."
+        )
 
     @staticmethod
     def _parse_findings(text: str) -> List[str]:

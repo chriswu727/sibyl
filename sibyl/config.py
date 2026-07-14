@@ -65,7 +65,7 @@ class Config:
     js_render: bool = True           # on thin extraction, render via r.jina.ai (keyless)
     js_render_threshold: int = 500   # chars below which a 200 page is treated as JS-shell
     dedup: bool = True               # canonical-URL near-duplicate removal
-    reranker: str = "llm"            # "llm" | "flashrank" | "none"
+    reranker: str = "lexical"        # "lexical" | "llm" | "flashrank" | "none"
     rerank_top_n: int = 12           # sources kept after ranked relevance scoring
     perspectives: bool = True        # perspective-guided query generation
     compact_sources: bool = False    # summarize each source before synthesis (weigh more)
@@ -88,6 +88,25 @@ class Config:
             return TIERS.get(_DEPTH_TO_TIER.get(depth, self.tier), TIERS["standard"])
         return TIERS.get(self.tier, TIERS["standard"])
 
+    def has_llm_credentials(self) -> bool:
+        """Whether the configured one-shot LLM backend can be called."""
+        import os
+
+        if not self.providers:
+            return False
+        if any(p.api_key or p.api_base for p in self.providers):
+            return True
+        if any(p.model.startswith(("ollama/", "lm_studio/", "hosted_vllm/"))
+               for p in self.providers):
+            return True
+        credential_vars = (
+            "SIBYL_API_KEY", "DEEPSEEK_API_KEY", "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "ZHIPUAI_API_KEY",
+            "AZURE_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY",
+            "MISTRAL_API_KEY", "COHERE_API_KEY",
+        )
+        return any(os.environ.get(name) for name in credential_vars)
+
     @classmethod
     def from_yaml(cls, path: str) -> Config:
         with open(path) as f:
@@ -109,7 +128,7 @@ class Config:
             js_render=data.get("js_render", True),
             js_render_threshold=data.get("js_render_threshold", 500),
             dedup=data.get("dedup", True),
-            reranker=data.get("reranker", "llm"),
+            reranker=data.get("reranker", "lexical"),
             rerank_top_n=data.get("rerank_top_n", 12),
             perspectives=data.get("perspectives", True),
             compact_sources=data.get("compact_sources", False),

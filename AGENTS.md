@@ -6,6 +6,8 @@ This file helps AI agents (Claude Code, Cursor, etc.) use Sibyl effectively via 
 
 ```bash
 pip install sibyl-research
+# Optional local cross-encoder ranking:
+pip install 'sibyl-research[rerank]'
 # Retrieval-provider mode (recommended) needs NO key — you do the reasoning:
 claude mcp add sibyl -- sibyl-mcp
 # For the one-shot research() tool, add a provider key so sibyl's own model runs it:
@@ -20,7 +22,16 @@ evidence — a mid-tier model doing the synthesis fabricates on hard questions,
 whereas you can cross-reference sources and abstain when they don't answer.
 
 ```
-# research a question yourself:
+# structured retrieval for an agent pipeline (Loop/Argus-style):
+gather_bundle("Serbian quarterfinalist 2018 Madrid Open men's singles")
+→ consume ranked sources[].evidence[] passages; cite each by citation_id.
+→ inspect content_origin; treat search_snippet evidence as a lead, not full text.
+→ inspect status and diagnostics before synthesis; relevance defaults to lexical_v1.
+→ optional: ranker="flashrank"; inspect ranking_method and ranking_warning for fallback.
+→ query_term_coverage is a recall hint, not proof of factual sufficiency.
+→ quality_score=null means source quality has not been computed.
+
+# readable retrieval for a conversational host:
 gather_sources("Serbian quarterfinalist 2018 Madrid Open men's singles")
 gather_sources("2018 Madrid Open men's singles draw results")   # call again with sub-queries
 → read the returned [Source N] blocks, cross-reference, answer WITH citations.
@@ -31,8 +42,9 @@ gather_sources("2018 Madrid Open men's singles draw results")   # call again wit
 ```
 research(query, depth=2)   # search→scrape→rank→synthesize→verify→report, by sibyl's LLM
 ```
-Prefer `gather_sources` + your own synthesis for factual/hard questions; use
-`research()` when you want a finished report in one call.
+Prefer `gather_bundle` for programmatic agents and `gather_sources` for readable
+conversation context. In both cases, do your own synthesis for factual/hard
+questions; use `research()` when you want a finished report in one call.
 
 ## Recommended Workflows
 
@@ -81,7 +93,8 @@ timeline("OpenAI company history")
 | Event timeline | `timeline(topic)` |
 | Stock/ETF data | `fetch_market_data(symbols)` |
 | Price chart | `chart(symbols, period)` |
-| **Research a question yourself (keyless)** | **`gather_sources(query)` — retrieves full-text sources; you synthesize** |
+| **Programmatic evidence retrieval (keyless)** | **`gather_bundle(query)` — structured sources, passages, provenance, and diagnostics** |
+| **Readable evidence retrieval (keyless)** | **`gather_sources(query)` — renders full-text source blocks; you synthesize** |
 | Quick web search | `quick_search(query)` |
 | Read a specific page | `read_url(url)` |
 | Analyze text | `analyze(text, question)` |
@@ -104,3 +117,4 @@ timeline("OpenAI company history")
 - `compare()` and `swot()` automatically do a quick research before generating analysis
 - `save_report("both")` generates PDF + Markdown; charts are embedded in PDF
 - Multiple symbols in `chart()` generates both a line chart and a comparison bar chart
+- After changing retrieval ranking, run `python scripts/eval_retrieval.py --ranker lexical`; with the optional extra installed, also run it with `--ranker flashrank`

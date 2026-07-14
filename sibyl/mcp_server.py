@@ -1,26 +1,32 @@
 """Sibyl MCP Server — deep research tools for Claude Code and other MCP clients."""
 from __future__ import annotations
 
-import asyncio
 import os
+from dataclasses import replace
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 
+from .async_cache import AsyncSingleFlightTTL
 from .config import Config, Provider
+from .evidence import SourceBundle
+from .ranking import RankingBackend
 from .researcher import Researcher, ResearchReport
+from .retrieval import gather_source_bundle, render_source_bundle
 
 mcp = FastMCP(
     "sibyl",
     instructions="""Sibyl gives you keyless web research. Two modes — pick based on who should do the reasoning:
 
 RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU reason:
-  • gather_sources(query) — keyless search + scrape + dedup; returns the top FULL-TEXT
-    sources for a query WITHOUT writing an answer. Call it several times with different
-    sub-queries, read the returned sources, cross-reference them, and synthesize the
-    answer YOURSELF — citing sources and saying "not found" rather than guessing when
-    the sources don't contain it. This uses no API key and gives the best quality,
-    because YOUR reasoning is applied to real retrieved evidence.
+  • gather_bundle(query) — structured keyless retrieval for agents and pipelines. Returns
+    versioned sources/passages with stable IDs, hashes, timestamps, and diagnostics.
+  • gather_sources(query) — the same retrieval rendered as readable [Source N] blocks
+    for conversational use. Call either tool several times with focused sub-queries,
+    cross-reference the evidence, and synthesize the answer YOURSELF — citing sources
+    and saying "not found" rather than guessing when the sources don't contain it.
+    Both default to local lexical ranking; optional ranker="flashrank" falls back
+    explicitly in diagnostics, while ranker="none" preserves retrieval order.
   • quick_search(query) — raw search hits (title/url/snippet), no scraping.
   • read_url(url) — clean full text of one page.
 
@@ -30,13 +36,43 @@ ONE-SHOT — sibyl does the whole thing with its own model (needs sibyl's provid
     Use when you want a finished report in one call and accept sibyl's model/key does it.
 
 Also: fetch_market_data(symbols), chart(symbols), compare/swot/timeline/trends, save_report().
-For factual questions, prefer gather_sources + your own synthesis — it beats the one-shot
-pipeline on hard questions and never fabricates. depth=1/2/3 = quick/standard/deep.
+For factual questions, prefer gather_bundle/gather_sources + your own synthesis — it beats
+the one-shot pipeline on hard questions and makes evidence-based abstention possible.
+depth=1/2/3 = quick/standard/deep.
 """,
 )
 
 _config: Optional[Config] = None
 _last_report: Optional[ResearchReport] = None
+_bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
+    ttl_seconds=30.0,
+    max_entries=64,
+)
+
+
+async def _cached_source_bundle(
+    query: str,
+    max_sources: int,
+    chars_per_source: int,
+    ranker: RankingBackend,
+) -> SourceBundle:
+    key = (
+        str(query or "").strip(),
+        str(max_sources),
+        str(chars_per_source),
+        str(ranker or "").strip().lower(),
+    )
+
+    async def retrieve() -> SourceBundle:
+        return await gather_source_bundle(
+            query, max_sources, chars_per_source, ranker=ranker
+        )
+
+    return await _bundle_cache.get_or_create(
+        key,
+        retrieve,
+        should_cache=lambda bundle: bundle.status in {"ok", "insufficient_evidence"},
+    )
 
 
 def _get_config() -> Config:
@@ -56,6 +92,17 @@ def _get_config() -> Config:
 
 def _format_report(report: ResearchReport) -> str:
     """Format a research report as readable text."""
+    if report.status != "ok":
+        heading = "Insufficient evidence" if report.status == "insufficient_evidence" else "Research failed"
+        lines = [
+            f"# {heading}: {report.query}",
+            "",
+            report.error or "No report was produced.",
+        ]
+        if report.search_queries:
+            lines.extend(["", f"*Search queries attempted: {', '.join(report.search_queries)}*"])
+        return "\n".join(lines)
+
     lines = [
         f"# Research Report: {report.query}",
         f"*Generated at {report.timestamp.strftime('%Y-%m-%d %H:%M')} using {report.model_used}*",
@@ -65,8 +112,15 @@ def _format_report(report: ResearchReport) -> str:
         "",
         "## Key Findings",
     ]
+    fv = report.finding_verifications or []
+    if report.key_findings and not fv:
+        lines.append("> Claim verification was not performed for this report.")
     for i, finding in enumerate(report.key_findings, 1):
-        lines.append(f"{i}. {finding}")
+        verdict = fv[i - 1] if i - 1 < len(fv) else None
+        tag = ""
+        if verdict is not None:
+            tag = f"  [verified: {verdict.confidence}]" if verdict.supported else "  (unverified)"
+        lines.append(f"{i}. {finding}{tag}")
 
     if report.analysis:
         lines.append("")
@@ -90,8 +144,9 @@ def _format_report(report: ResearchReport) -> str:
     lines.append(f"## Sources ({len(report.sources)})")
     for i, src in enumerate(report.sources, 1):
         lines.append(f"{i}. [{src.title}]({src.url})")
-        if src.snippet:
-            lines.append(f"   {src.snippet[:100]}")
+        evidence = src.supporting_snippet or src.snippet
+        if evidence:
+            lines.append(f"   {evidence}")
 
     if report.market_data_summary:
         lines.append("")
@@ -103,7 +158,12 @@ def _format_report(report: ResearchReport) -> str:
 
 
 @mcp.tool()
-async def gather_sources(query: str, max_sources: int = 10, chars_per_source: int = 7000) -> str:
+async def gather_sources(
+    query: str,
+    max_sources: int = 10,
+    chars_per_source: int = 7000,
+    ranker: RankingBackend = "lexical",
+) -> str:
     """Keyless web retrieval: search + scrape + dedup, returning the top FULL-TEXT
     sources for a query WITHOUT writing an answer — so YOU (the calling model)
     read the evidence and reason over it yourself.
@@ -116,68 +176,40 @@ async def gather_sources(query: str, max_sources: int = 10, chars_per_source: in
 
     Args:
         query: One focused search query (issue several calls for a multi-part question)
-        max_sources: How many sources to return (default 8)
-        chars_per_source: Max characters of text per source (default 3000)
+        max_sources: How many sources to return (default 10; bounded to 1-20)
+        chars_per_source: Max characters of text per source (default 7000; bounded to 500-10000)
+        ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
     """
-    import httpx
-    from .search import search_web, fetch_wikipedia_extract, wikipedia_lookup
-    from .scraper import scrape_urls, WebPage
-    from .dedup import dedup_pages
-    from .context import relevant_window
+    bundle = await _cached_source_bundle(
+        query, max_sources, chars_per_source, ranker=ranker
+    )
+    return render_source_bundle(bundle)
 
-    async with httpx.AsyncClient(
-        follow_redirects=True, timeout=12.0,
-        limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
-    ) as client:
-        results = await search_web(query, "all", max_results=6, client=client, include_academic=True)
-        seen, urls = set(), []
-        for r in results:
-            if r.url.startswith("http") and r.url not in seen:
-                seen.add(r.url)
-                urls.append(r.url)
-        # Scrape DEEP (full page), then window each source to its answer region —
-        # many facts live in a tail History table / infobox / deep paragraph that a
-        # top-of-page slice never reaches.
-        pages = await scrape_urls(urls[:max(max_sources * 2, 12)], max_chars=30000,
-                                  client=client, js_render=True)
-        good = [p for p in pages if p.text and len(p.text) > 150 and not p.error]
-        scraped = {p.url for p in good}
-        for r in results:  # supplement failed scrapes with their snippet — but only
-            # substantive ones (title-only Google-News RSS stubs are noise, not evidence)
-            if r.url not in scraped and r.snippet and len(r.snippet) > 120:
-                good.append(WebPage(url=r.url, title=r.title, text=r.snippet))
-        good = dedup_pages(good)
-        substantive = [p for p in good if len(p.text) > 200]
-        # Encyclopedic fallback: when general web search came up thin (obscure entity,
-        # or engines rate-limited), pull the matching Wikipedia article(s) directly.
-        if len(substantive) < 3:
-            wiki_pages = await wikipedia_lookup(query, client=client, max_pages=2)
-            if wiki_pages:
-                good = dedup_pages(good + wiki_pages)
-                substantive = [p for p in good if len(p.text) > 200]
-        chosen = (substantive if len(substantive) >= 3 else good)[:max_sources]
 
-        # Upgrade Wikipedia sources to clean full-text via the API — HTML scraping
-        # truncates long articles before the infobox / tail sections that hold the fact.
-        wiki_idx = [i for i, p in enumerate(chosen) if "wikipedia.org/wiki/" in p.url]
-        if wiki_idx:
-            extracts = await asyncio.gather(
-                *[fetch_wikipedia_extract(chosen[i].url, client) for i in wiki_idx],
-                return_exceptions=True,
-            )
-            for i, ex in zip(wiki_idx, extracts):
-                if isinstance(ex, str) and len(ex) > len(chosen[i].text):
-                    chosen[i] = WebPage(url=chosen[i].url, title=chosen[i].title, text=ex)
+@mcp.tool(structured_output=True)
+async def gather_bundle(
+    query: str,
+    max_sources: int = 10,
+    chars_per_source: int = 7000,
+    ranker: RankingBackend = "lexical",
+) -> SourceBundle:
+    """Return a structured, keyless SourceBundle without synthesizing an answer.
 
-    if not chosen:
-        return f"No sources found for query: {query!r}. Try a different phrasing."
-    parts = []
-    for i, p in enumerate(chosen, 1):
-        window = relevant_window(query, p.text, width=chars_per_source)
-        parts.append(f"[Source {i}: {p.title}]\nURL: {p.url}\n{window}\n")
-    return (f"Retrieved {len(chosen)} sources for query {query!r}. Reason over these and "
-            f"cite [Source N]; if the answer isn't here, gather more or say you don't know.\n\n"
-            + "\n---\n".join(parts))
+    This is the programmatic form of gather_sources, intended for agents and
+    pipelines that need stable evidence identifiers and retrieval provenance.
+    Passage/source relevance defaults to the dependency-free lexical_v1 ranker.
+    FlashRank is optional and falls back to lexical_v1 with an explicit diagnostic.
+    Source quality remains null until a separate quality evaluator computes it.
+
+    Args:
+        query: One focused search query
+        max_sources: How many sources to return (default 10; bounded to 1-20)
+        chars_per_source: Max characters per evidence passage (default 7000; bounded to 500-10000)
+        ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
+    """
+    return await _cached_source_bundle(
+        query, max_sources, chars_per_source, ranker=ranker
+    )
 
 
 @mcp.tool()
@@ -193,11 +225,11 @@ async def research(query: str, depth: int = 2, language: str = "auto", fast: boo
         depth: Research depth. 1=quick (2 queries), 2=standard (4 queries), 3=deep with predictions (6 queries)
         language: Output language. "auto" (match query language), "en", "zh" (Chinese), or any language name
         fast: Skip the review/refine pass for ~20% faster results with slightly less polish
-        verify: Verify each finding against its cited source and flag unsupported claims
+        verify: At depth 2+, verify each finding and flag unsupported claims (skipped in fast mode)
     """
-    config = _get_config()
-    config.fast = fast
-    config.verify_claims = verify
+    base_config = _get_config()
+    config = replace(base_config, providers=list(base_config.providers),
+                     fast=fast, verify_claims=verify)
     researcher = Researcher(config)
 
     progress_lines = []
@@ -205,9 +237,11 @@ async def research(query: str, depth: int = 2, language: str = "auto", fast: boo
         progress_lines.append(msg)
 
     global _last_report
+    _last_report = None
     try:
         report = await researcher.research(query, depth=depth, language=language, on_progress=on_progress)
-        _last_report = report
+        if report.status == "ok":
+            _last_report = report
         return _format_report(report)
     except Exception as e:
         return f"Research failed: {str(e)[:200]}\n\nProgress so far:\n" + "\n".join(progress_lines)
@@ -283,6 +317,8 @@ async def analyze(text: str, question: str) -> str:
         question: The specific question to answer about the text (e.g. "What are the main risks mentioned?" or "Summarize the key arguments for and against")
     """
     config = _get_config()
+    if not config.has_llm_credentials():
+        return "Analysis requires an LLM provider key or a configured local/API-base backend."
     provider = config.get_provider("analysis")
 
     import litellm
@@ -317,6 +353,8 @@ async def compare(items: str, query: str = "") -> str:
         query: Context for the comparison (e.g. "for AI/ML workloads" or "for a startup in 2026")
     """
     config = _get_config()
+    if not config.has_llm_credentials():
+        return "Comparison requires an LLM provider key or a configured local/API-base backend."
     provider = config.get_provider("analysis")
 
     item_list = [i.strip() for i in items.split(",") if i.strip()]
@@ -327,6 +365,8 @@ async def compare(items: str, query: str = "") -> str:
     # Quick research for context
     researcher = Researcher(config)
     report = await researcher.research(full_query, depth=1)
+    if report.status != "ok":
+        return _format_report(report)
 
     context = report.summary + "\n" + "\n".join(report.key_findings)
     from .tools import generate_comparison
@@ -343,10 +383,14 @@ async def swot(subject: str) -> str:
         subject: What to analyze (e.g. "Tesla", "Canadian housing market", "remote work trend")
     """
     config = _get_config()
+    if not config.has_llm_credentials():
+        return "SWOT analysis requires an LLM provider key or a configured local/API-base backend."
     provider = config.get_provider("analysis")
 
     researcher = Researcher(config)
     report = await researcher.research(f"SWOT analysis {subject}", depth=1)
+    if report.status != "ok":
+        return _format_report(report)
 
     context = report.summary + "\n" + "\n".join(report.key_findings)
     from .tools import generate_swot
@@ -380,10 +424,14 @@ async def timeline(topic: str) -> str:
         topic: The topic to build a timeline for (e.g. "OpenAI history", "Canada immigration policy changes 2024-2026")
     """
     config = _get_config()
+    if not config.has_llm_credentials():
+        return "Timeline generation requires an LLM provider key or a configured local/API-base backend."
     provider = config.get_provider("analysis")
 
     researcher = Researcher(config)
     report = await researcher.research(f"timeline of key events {topic}", depth=1)
+    if report.status != "ok":
+        return _format_report(report)
 
     context = report.summary + "\n" + "\n".join(report.key_findings)
     for src in report.sources:

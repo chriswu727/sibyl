@@ -16,7 +16,7 @@ class TestTiersAndRoles(unittest.TestCase):
         self.assertFalse(c.verify_drop_unsupported)
         self.assertTrue(c.js_render)
         self.assertTrue(c.dedup)
-        self.assertEqual(c.reranker, "llm")
+        self.assertEqual(c.reranker, "lexical")
         self.assertTrue(c.perspectives)
         self.assertFalse(c.compact_sources)
         self.assertTrue(c.rich_citations)
@@ -100,6 +100,22 @@ class TestGetProvider(unittest.TestCase):
         self.assertEqual(cfg.get_provider("analysis").model, "m-analysis")
         # Unknown role falls back to the first provider
         self.assertEqual(cfg.get_provider("nonexistent").model, "m-general")
+
+
+class TestLlmCredentials(unittest.TestCase):
+    def test_missing_credentials(self):
+        cfg = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(cfg.has_llm_credentials())
+
+    def test_explicit_key_or_api_base(self):
+        self.assertTrue(Config(providers=[Provider(model="x", api_key="k")]).has_llm_credentials())
+        self.assertTrue(Config(providers=[Provider(model="x", api_base="http://localhost:8000")]).has_llm_credentials())
+
+    def test_provider_environment_key(self):
+        cfg = Config(providers=[Provider(model="gpt-4o-mini")])
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "k"}, clear=True):
+            self.assertTrue(cfg.has_llm_credentials())
 
 
 class TestExtractor(unittest.TestCase):

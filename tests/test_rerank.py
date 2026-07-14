@@ -27,7 +27,7 @@ class TestParseScores(unittest.TestCase):
 
 class TestFilterRerank(unittest.IsolatedAsyncioTestCase):
     async def test_keeps_top_n_by_score(self):
-        cfg = _cfg(rerank_top_n=2)
+        cfg = _cfg(rerank_top_n=2, reranker="llm")
         r = Researcher(cfg)
         pages = [WebPage(url=f"u{i}", title=str(i), text="body " * 30) for i in range(5)]
 
@@ -42,7 +42,7 @@ class TestFilterRerank(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({p.title for p in kept}, {"2", "4"})  # ids 3 and 5 → indices 2 and 4
 
     async def test_empty_scores_falls_back(self):
-        cfg = _cfg(rerank_top_n=3)
+        cfg = _cfg(rerank_top_n=3, reranker="llm")
         r = Researcher(cfg)
         pages = [WebPage(url=f"u{i}", title=str(i), text="body " * 30) for i in range(5)]
 
@@ -63,6 +63,43 @@ class TestFilterRerank(unittest.IsolatedAsyncioTestCase):
         kept = await r._filter_sources("q", pages)
         self.assertEqual(len(kept), 2)
         self.assertEqual(called, [])  # no LLM call when reranker=none
+
+    async def test_default_lexical_reranker_skips_llm_and_reorders(self):
+        cfg = _cfg(rerank_top_n=1)
+        researcher = Researcher(cfg)
+        pages = [
+            WebPage(url="cooking", title="Cooking", text="bread recipe " * 30),
+            WebPage(
+                url="tennis",
+                title="2018 Madrid Open men's singles",
+                text="A Serbian quarterfinalist reached this stage. " * 20,
+            ),
+        ]
+
+        async def fail_llm(*args, **kwargs):
+            raise AssertionError("lexical reranking must not call the LLM")
+
+        researcher._llm_call = fail_llm
+        kept = await researcher._filter_sources(
+            "Serbian quarterfinalist 2018 Madrid Open men's singles", pages
+        )
+
+        self.assertEqual([page.url for page in kept], ["tennis"])
+
+    async def test_flashrank_failure_falls_back_to_local_reranker(self):
+        cfg = _cfg(rerank_top_n=1, reranker="flashrank")
+        researcher = Researcher(cfg)
+        pages = [
+            WebPage(url="noise", title="Noise", text="unrelated text " * 30),
+            WebPage(url="match", title="Alpha beta", text="alpha beta " * 30),
+        ]
+
+        with mock.patch.object(
+            researcher, "_flashrank_rerank", side_effect=ImportError("not installed")
+        ):
+            kept = await researcher._filter_sources("alpha beta", pages)
+
+        self.assertEqual([page.url for page in kept], ["match"])
 
 
 if __name__ == "__main__":

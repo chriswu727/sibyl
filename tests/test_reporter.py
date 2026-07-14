@@ -5,6 +5,8 @@ Run: python -m unittest discover tests
 import os
 import tempfile
 import unittest
+from pathlib import Path
+from unittest import mock
 
 from sibyl.researcher import ResearchReport, Source
 from sibyl.reporter import generate_pdf, _report_to_markdown
@@ -28,6 +30,13 @@ class TestMarkdownReport(unittest.TestCase):
         self.assertIn("**bold claim**", md)   # markdown text keeps the syntax
         self.assertIn("## Summary", md)
         self.assertIn("Example", md)
+
+    def test_failed_report_is_not_rendered_as_completed_research(self):
+        rep = ResearchReport("q", "", [], [], status="failed", error="provider unavailable")
+        md = _report_to_markdown(rep)
+        self.assertIn("Research failed", md)
+        self.assertIn("provider unavailable", md)
+        self.assertNotIn("## Summary", md)
 
 
 class TestVerificationRendering(unittest.TestCase):
@@ -58,12 +67,25 @@ class TestVerificationRendering(unittest.TestCase):
 
 
 class TestPdfGeneration(unittest.TestCase):
+    def assert_valid_pdf(self, path):
+        data = Path(path).read_bytes()
+        self.assertGreater(len(data), 1000)
+        self.assertTrue(data.startswith(b"%PDF-"))
+        self.assertTrue(data.rstrip().endswith(b"%%EOF"))
+        self.assertIn(b"/Type /Page", data)
+
     def test_pdf_generates_without_crashing(self):
         with tempfile.TemporaryDirectory() as d:
             path = generate_pdf(_report(), d)
             self.assertTrue(os.path.exists(path))
-            # A real multi-section report renders to a non-trivial file.
-            self.assertGreater(os.path.getsize(path), 5000)
+            self.assert_valid_pdf(path)
+
+    def test_pdf_falls_back_when_system_font_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch(
+            "fpdf.FPDF.add_font", side_effect=OSError("font unavailable")
+        ):
+            path = generate_pdf(_report(), d)
+            self.assert_valid_pdf(path)
 
     def test_pdf_handles_empty_optional_sections(self):
         rep = _report()

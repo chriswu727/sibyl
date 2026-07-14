@@ -4,7 +4,12 @@ Run: python -m unittest discover tests
 """
 import unittest
 
-from sibyl.context import build_source_context, best_snippet, relevant_window
+from sibyl.context import (
+    best_snippet,
+    build_source_context,
+    relevant_window,
+    relevant_window_span,
+)
 from sibyl.scraper import WebPage
 
 
@@ -17,6 +22,17 @@ class TestRelevantWindow(unittest.TestCase):
         win = relevant_window("titanium ore 1.4.1 patch history", text, width=2000)
         self.assertIn("1.4.1", win)
 
+    def test_checks_the_final_window_and_respects_width(self):
+        text = "filler " * 200 + "boundaryneedle"
+        win = relevant_window("boundaryneedle", text, width=500)
+
+        self.assertIn("boundaryneedle", win)
+        self.assertEqual(len(win), 500)
+
+        start, end = relevant_window_span("boundaryneedle", text, width=500)
+        self.assertEqual(end, len(text))
+        self.assertEqual(end - start, 500)
+
     def test_short_text_unchanged(self):
         self.assertEqual(relevant_window("q", "short text", width=2000), "short text")
 
@@ -24,6 +40,9 @@ class TestRelevantWindow(unittest.TestCase):
         text = "a" * 5000
         self.assertTrue(relevant_window("", text, width=1000).startswith("a"))
         self.assertEqual(len(relevant_window("", text, width=1000)), 1000)
+
+    def test_non_positive_width_returns_empty(self):
+        self.assertEqual(relevant_window("query", "text", width=0), "")
 
 
 class TestBuildSourceContext(unittest.TestCase):

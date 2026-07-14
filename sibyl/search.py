@@ -324,7 +324,14 @@ async def wikipedia_lookup(
         pages = []
         for title, url, ex in zip(titles, urls, extracts):
             if isinstance(ex, str) and ex:
-                pages.append(WebPage(url=url, title=f"[Wikipedia] {title}", text=ex))
+                pages.append(
+                    WebPage(
+                        url=url,
+                        title=f"[Wikipedia] {title}",
+                        text=ex,
+                        content_origin="wikipedia_api",
+                    )
+                )
         return pages
     except Exception:
         return []
