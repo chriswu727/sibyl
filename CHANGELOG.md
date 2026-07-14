@@ -18,7 +18,7 @@
 
 ### Security
 
-- URL fetching rejects non-public destinations, unsafe ports, credential-bearing URLs, unsafe redirects, and DNS results that resolve to non-public addresses.
+- URL fetching rejects non-public destinations, unsafe ports, credential-bearing URLs, and unsafe redirects; validated DNS results are pinned so the TCP connection cannot re-resolve to a different address.
 - Direct and Jina response bodies are streamed with a 2 MiB decompressed-size limit.
 
 ### Fixed

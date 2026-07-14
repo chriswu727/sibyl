@@ -14,7 +14,8 @@ from urllib.parse import urljoin
 import httpx
 from bs4 import BeautifulSoup
 
-from .url_safety import validate_public_url
+from .safe_http import PinnedDNSAsyncClient
+from .url_safety import resolve_public_url
 
 
 @dataclass
@@ -216,16 +217,21 @@ async def scrape_url(
 ) -> WebPage:
     """Fetch a URL with retry and anti-block techniques.
 
-    Reuses a shared ``client`` when provided so connections/TLS are pooled
-    across a batch; otherwise creates a short-lived one.
+    Reuses a provided pinned client; ordinary HTTPX clients are replaced with
+    a short-lived pinned client so DNS validation cannot be bypassed.
     """
-    unsafe_reason = await validate_public_url(url)
+    unsafe_reason, resolved_addresses = await resolve_public_url(url)
     if unsafe_reason:
         return WebPage(url=url, title="", text="", error=f"Unsafe URL: {unsafe_reason}")
 
-    own_client = client is None
+    own_client = client is None or (
+        isinstance(client, httpx.AsyncClient)
+        and not isinstance(client, PinnedDNSAsyncClient)
+    )
     if own_client:
-        client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
+        client = PinnedDNSAsyncClient(timeout=12.0)
+    if isinstance(client, PinnedDNSAsyncClient):
+        client.pin_url(url, resolved_addresses)
 
     async def _render_if_thin(page: WebPage, resp) -> WebPage:
         # A 200 that extracts thin is usually a JS shell — render it via Jina and
@@ -255,9 +261,13 @@ async def scrape_url(
             if not location:
                 return response, current_url, "Redirect response is missing a Location header"
             redirect_url = urljoin(current_url, location)
-            unsafe_redirect = await validate_public_url(redirect_url)
+            unsafe_redirect, redirect_addresses = await resolve_public_url(
+                redirect_url
+            )
             if unsafe_redirect:
                 return response, current_url, f"Unsafe redirect URL: {unsafe_redirect}"
+            if isinstance(client, PinnedDNSAsyncClient):
+                client.pin_url(redirect_url, redirect_addresses)
             current_url = redirect_url
         raise AssertionError("redirect loop exceeded its bound")
 
@@ -325,15 +335,21 @@ async def _try_jina(
     scrape timeout so this branch can't become the slowest path in the batch."""
     own_client = client is None
     if own_client:
-        client = httpx.AsyncClient(follow_redirects=True, timeout=7.0)
+        client = PinnedDNSAsyncClient(concurrency=2, timeout=7.0)
     try:
         headers = {"X-Return-Format": "markdown", "Accept": "text/plain"}
         key = os.environ.get("JINA_API_KEY")
         if key:
             headers["Authorization"] = f"Bearer {key}"
+        jina_url = f"https://r.jina.ai/{url}"
+        if isinstance(client, PinnedDNSAsyncClient):
+            unsafe_reason, resolved_addresses = await resolve_public_url(jina_url)
+            if unsafe_reason:
+                return None
+            client.pin_url(jina_url, resolved_addresses)
         resp = await _bounded_get(
             client,
-            f"https://r.jina.ai/{url}",
+            jina_url,
             headers=headers,
             timeout=7.0,
         )
@@ -365,17 +381,18 @@ async def scrape_urls(
     js_render: bool = False,
     js_render_threshold: int = 500,
 ) -> List[WebPage]:
-    """Scrape multiple URLs concurrently over a single pooled client."""
+    """Scrape multiple URLs concurrently over one pooled, DNS-pinned client."""
     semaphore = asyncio.Semaphore(concurrency)
     jina_gate = _get_jina_gate() if (js_render or jina_fallback) else None
 
-    own_client = client is None
+    own_client = client is None or (
+        isinstance(client, httpx.AsyncClient)
+        and not isinstance(client, PinnedDNSAsyncClient)
+    )
     if own_client:
-        client = httpx.AsyncClient(
-            follow_redirects=True,
+        client = PinnedDNSAsyncClient(
+            concurrency=concurrency,
             timeout=12.0,
-            limits=httpx.Limits(max_connections=concurrency * 2,
-                                max_keepalive_connections=concurrency),
         )
 
     async def _limited_scrape(url: str) -> WebPage:

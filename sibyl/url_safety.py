@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import socket
+from typing import List, Tuple
 from urllib.parse import urlsplit
 
 
@@ -68,28 +69,34 @@ def unsafe_url_reason(url: str) -> str:
     return ""
 
 
-async def validate_public_url(url: str) -> str:
+async def resolve_public_url(url: str) -> Tuple[str, List[str]]:
     reason = unsafe_url_reason(url)
     if reason:
-        return reason
+        return reason, []
 
     parsed = urlsplit(url)
     hostname = parsed.hostname.rstrip(".").casefold()
-    if _parsed_ip(hostname) is not None:
-        return ""
+    parsed_address = _parsed_ip(hostname)
+    if parsed_address is not None:
+        return "", [str(parsed_address)]
     port = parsed.port or (443 if parsed.scheme.lower() == "https" else 80)
     try:
         addresses = await asyncio.to_thread(_resolve_hostname, hostname, port)
     except (OSError, socket.gaierror):
-        return "Hostname could not be resolved."
+        return "Hostname could not be resolved.", []
     if not addresses:
-        return "Hostname did not resolve to an address."
+        return "Hostname did not resolve to an address.", []
     for value in addresses:
         try:
             address = ipaddress.ip_address(value)
         except ValueError:
-            return "Hostname resolved to an invalid IP address."
+            return "Hostname resolved to an invalid IP address.", []
         reason = _unsafe_address_reason(address)
         if reason:
-            return reason
-    return ""
+            return reason, []
+    return "", addresses
+
+
+async def validate_public_url(url: str) -> str:
+    reason, _ = await resolve_public_url(url)
+    return reason
