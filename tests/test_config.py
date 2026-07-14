@@ -16,7 +16,7 @@ class TestTiersAndRoles(unittest.TestCase):
         self.assertFalse(c.verify_drop_unsupported)
         self.assertTrue(c.js_render)
         self.assertTrue(c.dedup)
-        self.assertEqual(c.reranker, "llm")
+        self.assertEqual(c.reranker, "lexical")
         self.assertTrue(c.perspectives)
         self.assertFalse(c.compact_sources)
         self.assertTrue(c.rich_citations)

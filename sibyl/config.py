@@ -65,7 +65,7 @@ class Config:
     js_render: bool = True           # on thin extraction, render via r.jina.ai (keyless)
     js_render_threshold: int = 500   # chars below which a 200 page is treated as JS-shell
     dedup: bool = True               # canonical-URL near-duplicate removal
-    reranker: str = "llm"            # "llm" | "flashrank" | "none"
+    reranker: str = "lexical"        # "lexical" | "llm" | "flashrank" | "none"
     rerank_top_n: int = 12           # sources kept after ranked relevance scoring
     perspectives: bool = True        # perspective-guided query generation
     compact_sources: bool = False    # summarize each source before synthesis (weigh more)
@@ -128,7 +128,7 @@ class Config:
             js_render=data.get("js_render", True),
             js_render_threshold=data.get("js_render_threshold", 500),
             dedup=data.get("dedup", True),
-            reranker=data.get("reranker", "llm"),
+            reranker=data.get("reranker", "lexical"),
             rerank_top_n=data.get("rerank_top_n", 12),
             perspectives=data.get("perspectives", True),
             compact_sources=data.get("compact_sources", False),

@@ -114,6 +114,8 @@ You ask a question
 
 Depth controls cost: **1 (quick)** ~20–30s · **2 (standard)** ~60–90s · **3 (deep)** adds gap-filling + bull/bear/base predictions.
 
+Source reranking defaults to the dependency-free local `lexical` backend, so ranking does not consume an extra LLM call. Set `reranker: llm` explicitly to use the configured model, `reranker: flashrank` after installing the `rerank` extra for a local cross-encoder, or `reranker: none` to preserve retrieval order. If FlashRank is unavailable, Sibyl falls back to lexical ranking.
+
 ## Multi-provider
 
 Sibyl auto-detects a provider from the environment; `gather_bundle` and `gather_sources` need none.

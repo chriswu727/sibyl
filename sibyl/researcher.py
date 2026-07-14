@@ -431,9 +431,14 @@ Return ONLY the queries, one per line."""
                 if ranked:
                     return ranked
             except Exception:
-                pass  # fall through to the LLM reranker
+                pass
+            return self._lexical_rerank(query, pages, top_n)
+        elif reranker == "lexical":
+            return self._lexical_rerank(query, pages, top_n)
         elif reranker == "none":
             return pages[:top_n]
+        elif reranker != "llm":
+            return self._lexical_rerank(query, pages, top_n)
 
         provider = self.config.get_provider("compaction")
         source_list = "\n".join(
@@ -458,6 +463,19 @@ Example: {{"scores": [{{"id": 1, "score": 9}}, {{"id": 2, "score": 3}}]}}"""
         ranked = sorted(range(len(pages)), key=lambda i: scores.get(i + 1, 0), reverse=True)
         kept = [pages[i] for i in ranked[:top_n]]
         return kept if kept else pages[:top_n]
+
+    @staticmethod
+    def _lexical_rerank(query: str, pages: List[WebPage], top_n: int) -> List[WebPage]:
+        from .context import relevant_window
+        from .ranking import lexical_relevance_scores
+
+        documents = [
+            (page.title, relevant_window(query, page.text, width=2000))
+            for page in pages
+        ]
+        scores = lexical_relevance_scores(query, documents)
+        ranked = sorted(range(len(pages)), key=lambda index: (-scores[index], index))
+        return [pages[index] for index in ranked[:top_n]]
 
     @staticmethod
     def _parse_scores(text: str, n: int) -> Dict[int, float]:
