@@ -29,6 +29,13 @@ class TestMarkdownReport(unittest.TestCase):
         self.assertIn("## Summary", md)
         self.assertIn("Example", md)
 
+    def test_failed_report_is_not_rendered_as_completed_research(self):
+        rep = ResearchReport("q", "", [], [], status="failed", error="provider unavailable")
+        md = _report_to_markdown(rep)
+        self.assertIn("Research failed", md)
+        self.assertIn("provider unavailable", md)
+        self.assertNotIn("## Summary", md)
+
 
 class TestVerificationRendering(unittest.TestCase):
     def test_unverified_marker_in_markdown(self):

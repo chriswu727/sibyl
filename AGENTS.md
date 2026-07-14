@@ -20,7 +20,12 @@ evidence — a mid-tier model doing the synthesis fabricates on hard questions,
 whereas you can cross-reference sources and abstain when they don't answer.
 
 ```
-# research a question yourself:
+# structured retrieval for an agent pipeline (Loop/Argus-style):
+gather_bundle("Serbian quarterfinalist 2018 Madrid Open men's singles")
+→ consume sources[].evidence[]; cite each passage by citation_id.
+→ inspect status and diagnostics before synthesis; null scores mean "not computed".
+
+# readable retrieval for a conversational host:
 gather_sources("Serbian quarterfinalist 2018 Madrid Open men's singles")
 gather_sources("2018 Madrid Open men's singles draw results")   # call again with sub-queries
 → read the returned [Source N] blocks, cross-reference, answer WITH citations.
@@ -31,8 +36,9 @@ gather_sources("2018 Madrid Open men's singles draw results")   # call again wit
 ```
 research(query, depth=2)   # search→scrape→rank→synthesize→verify→report, by sibyl's LLM
 ```
-Prefer `gather_sources` + your own synthesis for factual/hard questions; use
-`research()` when you want a finished report in one call.
+Prefer `gather_bundle` for programmatic agents and `gather_sources` for readable
+conversation context. In both cases, do your own synthesis for factual/hard
+questions; use `research()` when you want a finished report in one call.
 
 ## Recommended Workflows
 
@@ -81,7 +87,8 @@ timeline("OpenAI company history")
 | Event timeline | `timeline(topic)` |
 | Stock/ETF data | `fetch_market_data(symbols)` |
 | Price chart | `chart(symbols, period)` |
-| **Research a question yourself (keyless)** | **`gather_sources(query)` — retrieves full-text sources; you synthesize** |
+| **Programmatic evidence retrieval (keyless)** | **`gather_bundle(query)` — structured sources, passages, provenance, and diagnostics** |
+| **Readable evidence retrieval (keyless)** | **`gather_sources(query)` — renders full-text source blocks; you synthesize** |
 | Quick web search | `quick_search(query)` |
 | Read a specific page | `read_url(url)` |
 | Analyze text | `analyze(text, question)` |

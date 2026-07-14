@@ -88,6 +88,25 @@ class Config:
             return TIERS.get(_DEPTH_TO_TIER.get(depth, self.tier), TIERS["standard"])
         return TIERS.get(self.tier, TIERS["standard"])
 
+    def has_llm_credentials(self) -> bool:
+        """Whether the configured one-shot LLM backend can be called."""
+        import os
+
+        if not self.providers:
+            return False
+        if any(p.api_key or p.api_base for p in self.providers):
+            return True
+        if any(p.model.startswith(("ollama/", "lm_studio/", "hosted_vllm/"))
+               for p in self.providers):
+            return True
+        credential_vars = (
+            "SIBYL_API_KEY", "DEEPSEEK_API_KEY", "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "ZHIPUAI_API_KEY",
+            "AZURE_API_KEY", "GROQ_API_KEY", "OPENROUTER_API_KEY",
+            "MISTRAL_API_KEY", "COHERE_API_KEY",
+        )
+        return any(os.environ.get(name) for name in credential_vars)
+
     @classmethod
     def from_yaml(cls, path: str) -> Config:
         with open(path) as f:

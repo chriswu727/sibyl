@@ -22,13 +22,15 @@ Sibyl runs as an **MCP server** and a **CLI / Python library**. The key choice i
 
 ### 1. Retrieval provider — your model is the brain (recommended, keyless)
 
-`gather_sources(query)` searches, scrapes, dedupes, and returns the top **full-text sources** — without writing an answer. Your agent (Claude, or any MCP host) reads the evidence, cross-references it, and answers itself, citing sources and abstaining when they don't contain the answer. **No API key required.**
+`gather_bundle(query)` searches, scrapes, dedupes, and returns structured evidence — without writing an answer. Each bundle includes versioned source/passage IDs, content hashes, retrieval timestamps, and diagnostics. `gather_sources(query)` runs the same retrieval and renders it as readable `[Source N]` blocks for conversational use. Your agent reads the evidence, cross-references it, and answers itself, citing sources and abstaining when they don't contain the answer. **No API key required.**
 
-This is the highest-quality path, because a frontier model applied to real retrieved evidence beats a mid-tier model doing the synthesis — and it doesn't fabricate when the answer isn't found.
+This is the highest-quality path, because a frontier model applied to real retrieved evidence beats a mid-tier model doing the synthesis and can abstain when the retrieved evidence does not contain the answer.
 
 ### 2. One-shot pipeline — Sibyl is the brain (needs a provider key)
 
 `research(query, depth)` runs the full cycle — decompose → search → scrape → rank → synthesize → **verify each finding against its source** → report — using Sibyl's own configured LLM (DeepSeek by default). Use it when you want a finished report in a single call.
+
+If no usable evidence is retrieved, or the configured LLM backend fails, this path returns an explicit failure/insufficient-evidence result instead of synthesizing from model memory.
 
 ## Benchmarks
 
@@ -59,7 +61,7 @@ claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
 
 Then, in your agent:
 
-> "Research the Serbian quarterfinalist at the 2018 Madrid Open" — *uses `gather_sources`, you synthesize*
+> "Research the Serbian quarterfinalist at the 2018 Madrid Open" — *uses `gather_bundle` or `gather_sources`; you synthesize*
 
 > "Compare NVIDIA vs AMD vs Intel for AI workloads" — *one-shot `research()` + `compare()`*
 
@@ -74,14 +76,15 @@ sibyl "Will NVIDIA keep AI-chip dominance?" -d 3 --symbols NVDA,AMD --pdf   # de
 sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    # Chinese output
 ```
 
-## Tools (12 MCP tools)
+## Tools (13 MCP tools)
 
 | Group | Tool | What it does |
 |---|---|---|
-| **Retrieval** | `gather_sources(query)` | Keyless search + scrape + dedup; returns full-text sources for *you* to reason over |
+| **Retrieval** | `gather_bundle(query)` | Structured keyless evidence with stable bundle/source/passage IDs, hashes, timestamps, and diagnostics |
+| | `gather_sources(query)` | The same retrieval rendered as full-text `[Source N]` blocks for conversational use |
 | | `quick_search(query)` | Raw search hits (title / url / snippet), no scraping |
 | | `read_url(url)` | Clean full text of one page |
-| **Research** | `research(query, depth)` | Full one-shot cycle with source-verified findings (depth 1–3) |
+| **Research** | `research(query, depth)` | Full one-shot cycle; claim verification runs at depth 2+ unless fast/disabled |
 | | `analyze(text, question)` | Reason over text you provide |
 | **Analysis** | `compare(items)` | Side-by-side comparison table with metrics + recommendation |
 | | `swot(subject)` | Strengths / Weaknesses / Opportunities / Threats, evidence-backed |
@@ -90,6 +93,8 @@ sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    #
 | **Finance** | `fetch_market_data(symbols)` | Real prices, moving averages, 52-week range |
 | | `chart(symbols)` | Price trend charts (PNG) |
 | **Output** | `save_report(format)` | PDF (with embedded charts) and/or Markdown |
+
+`gather_bundle` currently returns SourceBundle schema `1.0`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes; each evidence passage has a bundle-scoped `citation_id` such as `sb_…/S1/P1`. `content_hash` values are SHA-256. A score of `null` means no ranker has computed that score—it is not a zero score. Check `status` (`ok`, `insufficient_evidence`, `invalid_request`, or `failed`) before synthesis.
 
 ## How the one-shot pipeline works
 
@@ -111,7 +116,7 @@ Depth controls cost: **1 (quick)** ~20–30s · **2 (standard)** ~60–90s · **
 
 ## Multi-provider
 
-Sibyl auto-detects a provider from the environment; `gather_sources` needs none.
+Sibyl auto-detects a provider from the environment; `gather_bundle` and `gather_sources` need none.
 
 | Provider | Env var | Default model |
 |---|---|---|
@@ -136,7 +141,7 @@ providers:
 ## Requirements
 
 - Python 3.10+
-- **`gather_sources` and all web search are keyless** — no API keys to search the web
+- **`gather_bundle`, `gather_sources`, and all web search are keyless** — no API keys to search the web
 - One LLM key only for the one-shot `research()` / CLI paths
 
 ## License

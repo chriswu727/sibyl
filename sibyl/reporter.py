@@ -9,6 +9,10 @@ from .researcher import ResearchReport
 
 def _report_to_markdown(report: ResearchReport) -> str:
     """Convert a ResearchReport to markdown text."""
+    if report.status != "ok":
+        heading = "Insufficient evidence" if report.status == "insufficient_evidence" else "Research failed"
+        return f"# {heading}: {report.query}\n\n{report.error or 'No report was produced.'}\n"
+
     lines = [
         f"# {report.query}",
         "",
@@ -24,6 +28,8 @@ def _report_to_markdown(report: ResearchReport) -> str:
         "",
     ]
     fv = report.finding_verifications or []
+    if report.key_findings and not fv:
+        lines.append("> Claim verification was not performed for this report.")
     for i, finding in enumerate(report.key_findings, 1):
         v = fv[i - 1] if i - 1 < len(fv) else None
         tag = ""
@@ -68,6 +74,8 @@ def _safe_filename(query: str) -> str:
 
 def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     """Generate a PDF report using fpdf2 (pure Python, no system deps)."""
+    if report.status != "ok":
+        raise ValueError(report.error or "Cannot generate a PDF without a completed report")
     from fpdf import FPDF
 
     pdf = FPDF()
@@ -182,6 +190,8 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     # Key Findings — annotate each with its verification verdict (if present).
     heading("Key Findings", 14)
     fv = report.finding_verifications or []
+    if report.key_findings and not fv:
+        body("Claim verification was not performed for this report.")
     for i, finding in enumerate(report.key_findings, 1):
         v = fv[i - 1] if i - 1 < len(fv) else None
         tag = ""

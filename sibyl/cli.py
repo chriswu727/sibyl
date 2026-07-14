@@ -28,7 +28,7 @@ console = Console()
 @click.option("--extractor", type=click.Choice(["bs4", "trafilatura"]), default="bs4", help="HTML content extractor")
 @click.option("--jina-fallback", is_flag=True, help="On a blocked scrape, retry via r.jina.ai (set JINA_API_KEY)")
 @click.option("--js-render/--no-js-render", default=True, help="Render thin/JS pages via r.jina.ai (keyless)")
-@click.option("--effort", "-e", type=click.Choice(["quick", "standard", "deep"]), default="", help="Effort tier (overrides --depth)")
+@click.option("--effort", "-e", type=click.Choice(["quick", "standard", "deep"]), default=None, help="Effort tier (overrides --depth)")
 @click.option("--compact", is_flag=True, help="Compact each source before synthesis to weigh more sources")
 @click.option("--reflect-rounds", default=0, help="Extra reflect->search->re-synthesize cycles (0=off)")
 @click.option("--perspectives/--no-perspectives", default=True, help="Perspective-guided query generation")
@@ -65,6 +65,12 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
     cfg.perspectives = perspectives
     cfg.verify_claims = verify
 
+    if not cfg.has_llm_credentials():
+        raise click.ClickException(
+            "One-shot research requires an LLM provider key or a configured "
+            "local/API-base backend. The keyless gather_sources tool remains available via MCP."
+        )
+
     console.print(f"\n[bold blue]Sibyl[/] researching: [cyan]{query}[/]")
     console.print(f"[dim]Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}[/]")
     if symbols:
@@ -77,6 +83,8 @@ def main(query, depth, model, api_key, api_base, config_file, max_sources, outpu
     from .mcp_server import _format_report
     report_text = _format_report(result)
     console.print(Markdown(report_text))
+    if result.status != "ok":
+        raise click.exceptions.Exit(1)
 
     # PDF output
     if pdf:
@@ -108,7 +116,7 @@ async def _run(cfg, query, depth, symbols="", language="auto"):
     )
 
     # Fetch market data if symbols provided
-    if symbols:
+    if symbols and result.status == "ok":
         from .data import fetch_multiple, format_data_summary, generate_chart, generate_comparison_chart
         symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
         console.print(f"  [dim]Fetching market data for {', '.join(symbol_list)}...[/]")

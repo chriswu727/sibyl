@@ -11,7 +11,7 @@ import unittest
 from unittest import mock
 
 from sibyl.config import Config, Provider
-from sibyl.researcher import Researcher
+from sibyl.researcher import LLMCallError, ResearchReport, Researcher
 from sibyl.search import SearchResult
 from sibyl.scraper import WebPage
 from sibyl.analyzer import CrossAnalysis
@@ -119,6 +119,13 @@ class TestLlmCallThinking(unittest.IsolatedAsyncioTestCase):
         with mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion):
             await r._llm_call(prov, "hello", thinking=False)
         self.assertNotIn("extra_body", captured)
+
+    async def test_repeated_failure_raises_instead_of_returning_report_text(self):
+        r = Researcher(_cfg())
+        with mock.patch("sibyl.researcher.litellm.acompletion", mock.AsyncMock(side_effect=RuntimeError("down"))), \
+             mock.patch("sibyl.researcher.asyncio.sleep", mock.AsyncMock()):
+            with self.assertRaises(LLMCallError):
+                await r._llm_call(_cfg().providers[0], "hello")
 
 
 class TestParseFindings(unittest.TestCase):
@@ -238,6 +245,73 @@ class TestPipelineStructure(unittest.IsolatedAsyncioTestCase):
         self.assertGreaterEqual(len(report.key_findings), 3)
         self.assertTrue(report.sources)
         self.assertIn("positive", report.cross_analysis.lower())
+
+
+class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
+    async def test_no_sources_abstains_without_synthesis(self):
+        r = Researcher(_cfg())
+        r._llm_call = _canned_llm([])
+        r._synthesize = mock.AsyncMock()
+
+        async def no_results(*args, **kwargs):
+            return []
+
+        with mock.patch("sibyl.researcher.search_web", no_results), \
+             mock.patch("sibyl.researcher.scrape_urls", no_results):
+            report = await r.research("obscure question", depth=1)
+
+        self.assertEqual(report.status, "insufficient_evidence")
+        self.assertFalse(report.summary)
+        self.assertFalse(report.sources)
+        r._synthesize.assert_not_called()
+
+    async def test_thin_snippets_are_not_treated_as_sufficient_evidence(self):
+        r = Researcher(_cfg())
+        r._llm_call = _canned_llm([])
+        r._synthesize = mock.AsyncMock()
+
+        async def thin_results(*args, **kwargs):
+            return [SearchResult("Thin", "https://ex.com/thin", "brief snippet " * 5)]
+
+        async def failed_scrape(*args, **kwargs):
+            return []
+
+        with mock.patch("sibyl.researcher.search_web", thin_results), \
+             mock.patch("sibyl.researcher.scrape_urls", failed_scrape):
+            report = await r.research("question", depth=1)
+
+        self.assertEqual(report.status, "insufficient_evidence")
+        r._synthesize.assert_not_called()
+
+    async def test_llm_failure_becomes_failed_report(self):
+        r = Researcher(_cfg())
+        r._decompose_question = mock.AsyncMock(side_effect=LLMCallError("backend unavailable"))
+        report = await r.research("question", depth=2)
+        self.assertEqual(report.status, "failed")
+        self.assertIn("backend unavailable", report.error)
+        self.assertFalse(report.summary)
+
+    async def test_review_receives_citation_ordered_source_evidence(self):
+        r = Researcher(_cfg())
+        prompts = []
+
+        async def fake(provider, prompt, max_tokens=1500, thinking=False, json_mode=False):
+            prompts.append(prompt)
+            if json_mode:
+                return '{"findings": ["Revenue was $4B [Source 1]"]}'
+            return "Revenue was $4B [Source 1]. " * 20
+
+        r._llm_call = fake
+        report = ResearchReport("q", "draft", ["draft finding"], [])
+        pages = [WebPage("https://ex.com", "Evidence", "Audited revenue was $4B in 2025.")]
+        await r._review_and_refine(report, pages)
+
+        self.assertEqual(len(prompts), 2)
+        for prompt in prompts:
+            self.assertIn("SOURCE EVIDENCE", prompt)
+            self.assertIn("Audited revenue was $4B in 2025", prompt)
+            self.assertIn("Never", prompt)
+            self.assertNotIn("add if missing", prompt)
 
 
 if __name__ == "__main__":
