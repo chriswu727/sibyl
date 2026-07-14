@@ -16,6 +16,7 @@
 - The one-shot research path uses local retrieval ranking instead of an LLM reranking call by default.
 - Missing or weak evidence now produces truthful `insufficient_evidence` or `failed` results instead of a completed-looking answer.
 - Jina rendering shares concurrency and keyless start-rate limits across retrieval batches.
+- GitHub Actions use their Node 24 runtime generations.
 
 ### Security
 
