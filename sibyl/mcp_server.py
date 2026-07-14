@@ -153,7 +153,8 @@ async def gather_bundle(
 
     This is the programmatic form of gather_sources, intended for agents and
     pipelines that need stable evidence identifiers and retrieval provenance.
-    Scores are null until a real ranker computes them; null does not mean zero.
+    Passage/source relevance uses the dependency-free lexical_v1 ranker. Source
+    quality remains null until a separate quality evaluator computes it.
 
     Args:
         query: One focused search query

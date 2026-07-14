@@ -82,7 +82,11 @@ def lexical_relevance_scores(
         title_coverage = sum(
             weight for token, weight in weights.items() if token in title_tokens
         ) / total_weight
-        coverage = 0.65 * body_coverage + 0.35 * max(body_coverage, title_coverage)
+        coverage = (
+            0.5 * body_coverage
+            + 0.4 * title_coverage
+            + 0.1 * max(body_coverage, title_coverage)
+        )
         combined_phrase_text = _phrase_text(f"{title} {text}")
         phrase_match = bool(query_phrase and query_phrase in combined_phrase_text)
         score = 0.9 * coverage + (0.1 if phrase_match else 0.0)

@@ -31,6 +31,23 @@ class TestLexicalRelevance(unittest.TestCase):
 
         self.assertGreater(scores[0], scores[1])
 
+    def test_specific_title_beats_person_page_with_scattered_terms(self):
+        correct, person = lexical_relevance_scores(
+            "Serbian quarterfinalist 2018 Madrid Open men's singles",
+            [
+                (
+                    "2018 Madrid Open men's singles",
+                    "The tournament draw included a Serbian quarterfinalist.",
+                ),
+                (
+                    "Borna Gojo",
+                    "A men's player entered an Open in Madrid. His 2018 season included a quarterfinalist.",
+                ),
+            ],
+        )
+
+        self.assertGreater(correct, person)
+
     def test_exact_phrase_adds_a_bounded_signal(self):
         exact, separated = lexical_relevance_scores(
             "alpha beta",

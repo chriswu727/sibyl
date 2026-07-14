@@ -29,6 +29,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
         self.assertEqual(first.status, "ok")
+        self.assertEqual(first.schema_version, "1.1")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
         self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
@@ -44,15 +45,49 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             hashlib.sha256(pages[0].text.encode("utf-8")).hexdigest(),
         )
         self.assertEqual(len(first.sources[0].content_hash), 64)
-        self.assertIsNone(first.sources[0].relevance_score)
+        self.assertIsNotNone(first.sources[0].relevance_score)
+        self.assertEqual(
+            first.sources[0].relevance_score,
+            first.sources[0].evidence[0].score,
+        )
         self.assertIsNone(first.sources[0].quality_score)
-        self.assertIsNone(first.sources[0].evidence[0].score)
         self.assertEqual(first.diagnostics.search_results, 3)
         self.assertEqual(first.diagnostics.urls_attempted, 3)
         self.assertEqual(first.diagnostics.sources_returned, 2)
         self.assertEqual(first.diagnostics.effective_max_sources, 2)
         self.assertEqual(first.diagnostics.effective_chars_per_source, 7000)
+        self.assertEqual(first.diagnostics.ranking_method, "lexical_v1")
+        self.assertEqual(first.diagnostics.candidates_ranked, 3)
         wiki.assert_not_awaited()
+
+    async def test_reranks_candidates_before_applying_source_limit(self):
+        results = [
+            SearchResult("Cooking", "https://example.com/cooking", "", "web"),
+            SearchResult("Travel", "https://example.com/travel", "", "web"),
+            SearchResult("Madrid Open", "https://example.com/tennis", "", "web"),
+        ]
+        pages = [
+            WebPage(results[0].url, results[0].title, "bread recipe " * 30),
+            WebPage(results[1].url, results[1].title, "hotel guide " * 30),
+            WebPage(
+                results[2].url,
+                results[2].title,
+                "Dušan Lajović was the Serbian quarterfinalist at the 2018 Madrid Open. " * 8,
+            ),
+        ]
+
+        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+            bundle = await gather_source_bundle(
+                "Serbian quarterfinalist 2018 Madrid Open",
+                max_sources=1,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.sources[0].url, "https://example.com/tennis")
+        self.assertGreater(bundle.sources[0].relevance_score, 0.5)
+        self.assertEqual(bundle.diagnostics.candidates_ranked, 3)
 
     async def test_bounds_request_parameters(self):
         with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])), \
@@ -85,6 +120,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.status, "insufficient_evidence")
         self.assertEqual(bundle.sources, [])
         self.assertEqual(bundle.diagnostics.sources_returned, 0)
+        self.assertEqual(bundle.diagnostics.ranking_method, "not_run")
         self.assertEqual(
             render_source_bundle(bundle),
             "No sources found for query: 'missing'. Try a different phrasing.",

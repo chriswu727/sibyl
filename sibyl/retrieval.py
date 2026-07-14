@@ -19,6 +19,7 @@ from .evidence import (
     EvidenceSource,
     SourceBundle,
 )
+from .ranking import lexical_relevance_scores
 from .scraper import WebPage, scrape_urls
 from .search import fetch_wikipedia_extract, search_web, wikipedia_lookup
 
@@ -59,6 +60,8 @@ def _diagnostics(
     requested_chars_per_source: int,
     effective_chars_per_source: int,
     started_at: float,
+    ranking_method: str = "not_run",
+    candidates_ranked: int = 0,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -74,6 +77,8 @@ def _diagnostics(
         requested_chars_per_source=requested_chars_per_source,
         effective_chars_per_source=effective_chars_per_source,
         latency_ms=round((time.monotonic() - started_at) * 1000),
+        ranking_method=ranking_method,
+        candidates_ranked=candidates_ranked,
     )
 
 
@@ -98,7 +103,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.0",
+            schema_version="1.1",
             bundle_id=_bundle_id(str(query or ""), "invalid_request", []),
             query=str(query or ""),
             status="invalid_request",
@@ -119,7 +124,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.0",
+            schema_version="1.1",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -141,7 +146,7 @@ async def gather_source_bundle(
     pages: List[WebPage] = []
     snippet_fallbacks = 0
     wikipedia_fallbacks = 0
-    chosen: List[WebPage] = []
+    candidates: List[WebPage] = []
     try:
         results = await search_web(
             clean_query, "all", max_results=6, client=client, include_academic=True
@@ -174,21 +179,25 @@ async def gather_source_bundle(
             if wiki_pages:
                 good = dedup_pages(good + wiki_pages)
                 substantive = [page for page in good if len(page.text) > 200]
-        chosen = (substantive if len(substantive) >= 3 else good)[:effective_max_sources]
+        candidates = substantive if len(substantive) >= 3 else good
 
         wiki_indices = [
-            index for index, page in enumerate(chosen) if "wikipedia.org/wiki/" in page.url
+            index for index, page in enumerate(candidates)
+            if "wikipedia.org/wiki/" in page.url
         ]
         if wiki_indices:
             extracts = await asyncio.gather(
-                *[fetch_wikipedia_extract(chosen[index].url, client) for index in wiki_indices],
+                *[
+                    fetch_wikipedia_extract(candidates[index].url, client)
+                    for index in wiki_indices
+                ],
                 return_exceptions=True,
             )
             for index, extract in zip(wiki_indices, extracts):
-                if isinstance(extract, str) and len(extract) > len(chosen[index].text):
-                    chosen[index] = WebPage(
-                        url=chosen[index].url,
-                        title=chosen[index].title,
+                if isinstance(extract, str) and len(extract) > len(candidates[index].text):
+                    candidates[index] = WebPage(
+                        url=candidates[index].url,
+                        title=candidates[index].title,
                         text=extract,
                     )
     except Exception as exc:
@@ -207,7 +216,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.0",
+            schema_version="1.1",
             bundle_id=_bundle_id(clean_query, "failed", []),
             query=clean_query,
             status="failed",
@@ -219,47 +228,66 @@ async def gather_source_bundle(
         if own_client and client is not None:
             await client.aclose()
 
-    retrieved_at = datetime.now(timezone.utc).isoformat()
-    prepared = []
-    fingerprints = []
-    for page in chosen:
-        passage = relevant_window(
-            clean_query, page.text, width=effective_chars_per_source
-        )[:effective_chars_per_source]
-        source_hash = _sha256(page.text)
-        passage_hash = _sha256(passage)
-        prepared.append((page, passage, source_hash, passage_hash))
-        fingerprints.append((canonical_url(page.url), source_hash, passage_hash))
-
-    bundle_status: BundleStatus = "ok" if prepared else "insufficient_evidence"
-    bundle_id = _bundle_id(clean_query, bundle_status, fingerprints)
     result_types = {}
     result_titles = {}
     for result in results:
         key = canonical_url(result.url)
         result_types.setdefault(key, result.source)
         result_titles.setdefault(key, result.title)
+
+    ranked_candidates = []
+    ranking_documents = []
+    for page in candidates:
+        passage = relevant_window(
+            clean_query, page.text, width=effective_chars_per_source
+        )[:effective_chars_per_source]
+        page_key = canonical_url(page.url)
+        title = page.title or result_titles.get(page_key, page.url)
+        source_hash = _sha256(page.text)
+        passage_hash = _sha256(passage)
+        ranked_candidates.append((page, title, passage, source_hash, passage_hash))
+        ranking_documents.append((title, passage))
+
+    relevance_scores = lexical_relevance_scores(clean_query, ranking_documents)
+    ranked_indices = sorted(
+        range(len(ranked_candidates)),
+        key=lambda index: (-relevance_scores[index], index),
+    )
+    prepared = [
+        (*ranked_candidates[index], relevance_scores[index])
+        for index in ranked_indices[:effective_max_sources]
+    ]
+    fingerprints = []
+    for page, _, _, source_hash, passage_hash, _ in prepared:
+        fingerprints.append((canonical_url(page.url), source_hash, passage_hash))
+
+    bundle_status: BundleStatus = "ok" if prepared else "insufficient_evidence"
+    bundle_id = _bundle_id(clean_query, bundle_status, fingerprints)
+    retrieved_at = datetime.now(timezone.utc).isoformat()
     sources = []
-    for index, (page, passage, source_hash, passage_hash) in enumerate(prepared, 1):
+    for index, (
+        page, title, passage, source_hash, passage_hash, relevance_score
+    ) in enumerate(prepared, 1):
         source_id = f"S{index}"
         passage_id = "P1"
-        page_key = canonical_url(page.url)
         evidence = EvidencePassage(
             passage_id=passage_id,
             citation_id=f"{bundle_id}/{source_id}/{passage_id}",
             text=passage,
             content_hash=passage_hash,
+            score=relevance_score,
         )
         sources.append(
             EvidenceSource(
                 source_id=source_id,
                 url=page.url,
-                title=page.title or result_titles.get(page_key, page.url),
+                title=title,
                 retrieved_at=retrieved_at,
                 content_hash=source_hash,
                 source_type=_source_type(page.url, result_types),
                 char_count=len(page.text),
                 evidence=[evidence],
+                relevance_score=relevance_score,
             )
         )
 
@@ -278,9 +306,11 @@ async def gather_source_bundle(
         requested_chars_per_source=requested_chars_per_source,
         effective_chars_per_source=effective_chars_per_source,
         started_at=started_at,
+        ranking_method="lexical_v1" if ranked_candidates else "not_run",
+        candidates_ranked=len(ranked_candidates),
     )
     return SourceBundle(
-        schema_version="1.0",
+        schema_version="1.1",
         bundle_id=bundle_id,
         query=clean_query,
         status=bundle_status,
