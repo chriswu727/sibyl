@@ -42,12 +42,21 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         self.fetch.return_value = _resp(451)
         from sibyl.scraper import WebPage
 
-        async def fake_jina(url, max_chars, c=None):
-            return WebPage(url=url, title="Recovered", text="clean content " * 20)
+        gate = mock.Mock()
+        gate.render = mock.AsyncMock(
+            return_value=WebPage(
+                url="https://legal-block.com/x",
+                title="Recovered",
+                text="clean content " * 20,
+            )
+        )
 
-        with mock.patch("sibyl.scraper._try_jina", fake_jina):
+        with mock.patch("sibyl.scraper._get_jina_gate", return_value=gate):
             page = await scrape_url("https://legal-block.com/x", client=client, jina_fallback=True)
         self.assertEqual(page.title, "Recovered")
+        gate.render.assert_awaited_once_with(
+            "https://legal-block.com/x", 6000, client
+        )
 
     async def test_triggered_on_block_when_enabled(self):
         client = mock.Mock()

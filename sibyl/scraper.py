@@ -4,6 +4,9 @@ from __future__ import annotations
 import asyncio
 import os
 import random
+import threading
+import time
+import weakref
 from dataclasses import dataclass
 from typing import List, Mapping, Optional
 from urllib.parse import urljoin
@@ -161,23 +164,39 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
 
 
 class _JinaGate:
-    """Bounds JS-render (r.jina.ai) calls so a thin-content sweep can't stall the
-    batch or trip the keyless rate limit: ≤2 concurrent, and a min-interval
-    between calls (keyless only; 0 when JINA_API_KEY is set). Created per
-    scrape_urls batch, so the semaphore binds to the running loop."""
+    """Bound concurrent Jina calls and serialize their start times."""
+
     def __init__(self):
         self.sem = asyncio.Semaphore(2)
-        self.last = 0.0
-        self.min_interval = 0.0 if os.environ.get("JINA_API_KEY") else 3.0
+        self.interval_lock = asyncio.Lock()
+        self.last_started: Optional[float] = None
 
     async def render(self, url, max_chars, client):
-        import time
         async with self.sem:
-            wait = self.min_interval - (time.monotonic() - self.last)
-            if wait > 0:
-                await asyncio.sleep(wait)
-            self.last = time.monotonic()
+            min_interval = 0.0 if os.environ.get("JINA_API_KEY") else 3.0
+            async with self.interval_lock:
+                now = time.monotonic()
+                if self.last_started is not None:
+                    wait = min_interval - (now - self.last_started)
+                    if wait > 0:
+                        await asyncio.sleep(wait)
+                        now = time.monotonic()
+                self.last_started = now
             return await _try_jina(url, max_chars, client)
+
+
+_JINA_GATES = weakref.WeakKeyDictionary()
+_JINA_GATES_LOCK = threading.Lock()
+
+
+def _get_jina_gate() -> _JinaGate:
+    loop = asyncio.get_running_loop()
+    with _JINA_GATES_LOCK:
+        gate = _JINA_GATES.get(loop)
+        if gate is None:
+            gate = _JinaGate()
+            _JINA_GATES[loop] = gate
+        return gate
 
 
 def _is_html_ish(resp) -> bool:
@@ -213,8 +232,8 @@ async def scrape_url(
         # keep the longer text (keyless; never returns less than we already have).
         if not (js_render and len(page.text) < js_render_threshold and _is_html_ish(resp)):
             return page
-        rendered = (await jina_gate.render(url, max_chars, client)) if jina_gate \
-            else await _try_jina(url, max_chars, client)
+        gate = jina_gate or _get_jina_gate()
+        rendered = await gate.render(url, max_chars, client)
         if rendered and len(rendered.text) > len(page.text):
             return rendered
         return page
@@ -270,7 +289,8 @@ async def scrape_url(
                 # benefit from a UA swap, 403/429 have already been retried —
                 # optionally recover via Jina Reader (opt-in).
                 if resp.status_code in (401, 403, 429, 451) and jina_fallback:
-                    jina_page = await _try_jina(url, max_chars, client)
+                    gate = jina_gate or _get_jina_gate()
+                    jina_page = await gate.render(url, max_chars, client)
                     if jina_page and jina_page.text:
                         return jina_page
 
@@ -347,7 +367,7 @@ async def scrape_urls(
 ) -> List[WebPage]:
     """Scrape multiple URLs concurrently over a single pooled client."""
     semaphore = asyncio.Semaphore(concurrency)
-    jina_gate = _JinaGate() if js_render else None
+    jina_gate = _get_jina_gate() if (js_render or jina_fallback) else None
 
     own_client = client is None
     if own_client:
