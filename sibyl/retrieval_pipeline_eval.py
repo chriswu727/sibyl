@@ -67,7 +67,7 @@ def _substantive_text(document: RetrievalDocument) -> str:
 
 
 def _bundle_structure_is_valid(bundle, page_text_by_url: Dict[str, str]) -> bool:
-    if bundle.schema_version != "1.5" or not bundle.sources:
+    if bundle.schema_version != "1.6" or not bundle.sources:
         return False
     for source_index, source in enumerate(bundle.sources, 1):
         page_text = page_text_by_url.get(source.url)

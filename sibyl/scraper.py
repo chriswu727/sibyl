@@ -24,6 +24,7 @@ class WebPage:
     title: str
     text: str
     error: Optional[str] = None
+    content_origin: str = "direct_fetch"
 
 
 @dataclass(frozen=True)
@@ -362,7 +363,12 @@ async def _try_jina(
                     if line.startswith("Title:"):
                         title = line[6:].strip()
                         break
-                return WebPage(url=url, title=title, text=text)
+                return WebPage(
+                    url=url,
+                    title=title,
+                    text=text,
+                    content_origin="jina_reader",
+                )
     except Exception:
         pass
     finally:

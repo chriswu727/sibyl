@@ -87,6 +87,7 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(page)
         self.assertEqual(page.title, "My Page")
         self.assertIn("clean body content", page.text)
+        self.assertEqual(page.content_origin, "jina_reader")
         self.assertTrue(captured["url"].startswith("https://r.jina.ai/https://ex.com/a"))
         self.assertEqual(captured["headers"]["X-Return-Format"], "markdown")
         self.assertEqual(captured["headers"]["Authorization"], "Bearer jina-key")

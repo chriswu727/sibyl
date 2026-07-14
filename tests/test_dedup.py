@@ -28,12 +28,18 @@ class TestDedupPages(unittest.TestCase):
         pages = [
             WebPage(url="https://www.ex.com/a/", title="A", text="short"),
             WebPage(url="https://ex.com/b", title="B", text="other page"),
-            WebPage(url="http://ex.com/a", title="A2", text="a much longer body of text here"),
+            WebPage(
+                url="http://ex.com/a",
+                title="A2",
+                text="a much longer body of text here",
+                content_origin="jina_reader",
+            ),
         ]
         out = dedup_pages(pages)
         self.assertEqual(len(out), 2)                      # a-variants collapsed
         self.assertEqual(out[0].url, "https://www.ex.com/a/")  # first position preserved
         self.assertEqual(out[0].text, "a much longer body of text here")  # longer text won
+        self.assertEqual(out[0].content_origin, "jina_reader")
 
     def test_no_duplicates_unchanged(self):
         pages = [WebPage(url=f"https://ex.com/{i}", title=str(i), text="t") for i in range(4)]

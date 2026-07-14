@@ -106,6 +106,7 @@ class TestPinnedScrape(unittest.IsolatedAsyncioTestCase):
                 page = await scrape_url("https://example.com/article", client=client)
 
         self.assertEqual(page.title, "Pinned")
+        self.assertEqual(page.content_origin, "direct_fetch")
         self.assertEqual(backend.connected_hosts, ["93.184.216.34"])
         self.assertEqual(backend.sni_hostnames, ["example.com"])
         self.assertIn(b"Host: example.com", b"".join(backend.writes))

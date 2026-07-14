@@ -95,6 +95,7 @@ class TestWikipediaLookup(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(pages), 1)
         self.assertIn("Kinoko Teikoku", pages[0].title)
         self.assertIn("2012", pages[0].text)
+        self.assertEqual(pages[0].content_origin, "wikipedia_api")
 
 
 class TestReddit(unittest.IsolatedAsyncioTestCase):

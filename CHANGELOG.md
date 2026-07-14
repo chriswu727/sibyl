@@ -4,7 +4,7 @@
 
 ### Added
 
-- SourceBundle 1.5 with stable source and passage IDs, content hashes, source offsets, retrieval timestamps, and explicit failure states.
+- SourceBundle 1.6 with stable source and passage IDs, content hashes, source offsets, retrieval timestamps, explicit failure states, and per-source content origin.
 - Dependency-free lexical source and passage ranking, with optional local FlashRank reranking and explicit fallback diagnostics.
 - Query coverage, domain diversity, evidence volume, and deterministic evidence-sufficiency diagnostics.
 - Fixed offline ranker and end-to-end retrieval pipeline regression suites.

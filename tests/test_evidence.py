@@ -32,11 +32,12 @@ class TestSourceBundle(unittest.TestCase):
             effective_chars_per_source=7000,
             latency_ms=5,
         )
-        bundle = SourceBundle("1.5", "sb_1", "query", "ok", [source], diagnostics)
+        bundle = SourceBundle("1.6", "sb_1", "query", "ok", [source], diagnostics)
 
         data = bundle.to_dict()
 
-        self.assertEqual(data["schema_version"], "1.5")
+        self.assertEqual(data["schema_version"], "1.6")
+        self.assertEqual(data["sources"][0]["content_origin"], "direct_fetch")
         self.assertEqual(data["sources"][0]["evidence"][0]["citation_id"], "sb_1/S1/P1")
         self.assertIsNone(data["sources"][0]["relevance_score"])
         self.assertIsNone(data["sources"][0]["quality_score"])

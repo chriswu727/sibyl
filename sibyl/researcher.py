@@ -183,7 +183,14 @@ class Researcher:
         scraped_urls = {p.url for p in good_pages}
         for r in unique_results:
             if r.url not in scraped_urls and r.snippet and len(r.snippet) > 50:
-                good_pages.append(WebPage(url=r.url, title=r.title, text=r.snippet))
+                good_pages.append(
+                    WebPage(
+                        url=r.url,
+                        title=r.title,
+                        text=r.snippet,
+                        content_origin="search_snippet",
+                    )
+                )
                 if len(good_pages) >= self.config.max_sources + 5:
                     break
 
@@ -668,7 +675,12 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
                 out = await self._llm_call(provider, prompt, max_tokens=400)
             if not out or out.strip().upper().startswith("IRRELEVANT"):
                 return None
-            return WebPage(url=p.url, title=p.title, text=out.strip()[:1200])
+            return WebPage(
+                url=p.url,
+                title=p.title,
+                text=out.strip()[:1200],
+                content_origin=p.content_origin,
+            )
 
         results = await asyncio.gather(*[_one(p) for p in pages], return_exceptions=True)
         return [r for r in results if isinstance(r, WebPage)]

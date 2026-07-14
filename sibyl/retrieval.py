@@ -225,7 +225,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.5",
+            schema_version="1.6",
             bundle_id=_bundle_id(str(query or ""), "invalid_request", []),
             query=str(query or ""),
             status="invalid_request",
@@ -247,7 +247,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.5",
+            schema_version="1.6",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -266,7 +266,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.5",
+            schema_version="1.6",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -310,7 +310,14 @@ async def gather_source_bundle(
         scraped = {page.url for page in good}
         for result in results:
             if result.url not in scraped and result.snippet and len(result.snippet) > 120:
-                good.append(WebPage(url=result.url, title=result.title, text=result.snippet))
+                good.append(
+                    WebPage(
+                        url=result.url,
+                        title=result.title,
+                        text=result.snippet,
+                        content_origin="search_snippet",
+                    )
+                )
                 snippet_fallbacks += 1
 
         good = dedup_pages(good)
@@ -341,6 +348,7 @@ async def gather_source_bundle(
                         url=candidates[index].url,
                         title=candidates[index].title,
                         text=extract,
+                        content_origin="wikipedia_api",
                     )
     except Exception as exc:
         diagnostics = _diagnostics(
@@ -359,7 +367,7 @@ async def gather_source_bundle(
             requested_ranking_method=requested_ranker,
         )
         return SourceBundle(
-            schema_version="1.5",
+            schema_version="1.6",
             bundle_id=_bundle_id(clean_query, "failed", []),
             query=clean_query,
             status="failed",
@@ -575,6 +583,7 @@ async def gather_source_bundle(
                 source_type=_source_type(page.url, result_types),
                 char_count=len(page.text),
                 evidence=evidence,
+                content_origin=page.content_origin,
                 relevance_score=relevance_score,
             )
         )
@@ -615,7 +624,7 @@ async def gather_source_bundle(
         sufficiency_reasons=sufficiency_reasons,
     )
     return SourceBundle(
-        schema_version="1.5",
+        schema_version="1.6",
         bundle_id=bundle_id,
         query=clean_query,
         status=bundle_status,

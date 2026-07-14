@@ -49,5 +49,11 @@ def dedup_pages(pages: List[WebPage]) -> List[WebPage]:
         elif len(p.text or "") > len(by_key[key].text or ""):
             # keep the first occurrence's URL/title/position, take the fuller text
             kept = by_key[key]
-            by_key[key] = WebPage(url=kept.url, title=kept.title, text=p.text, error=kept.error)
+            by_key[key] = WebPage(
+                url=kept.url,
+                title=kept.title,
+                text=p.text,
+                error=kept.error,
+                content_origin=p.content_origin,
+            )
     return [by_key[k] for k in order]

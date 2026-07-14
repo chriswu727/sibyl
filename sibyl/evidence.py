@@ -7,6 +7,12 @@ from typing import Any, Dict, List, Literal, Optional
 
 BundleStatus = Literal["ok", "insufficient_evidence", "invalid_request", "failed"]
 EvidenceSufficiency = Literal["not_assessed", "sufficient", "limited", "insufficient"]
+ContentOrigin = Literal[
+    "direct_fetch",
+    "jina_reader",
+    "wikipedia_api",
+    "search_snippet",
+]
 
 
 @dataclass(frozen=True)
@@ -30,6 +36,7 @@ class EvidenceSource:
     source_type: str
     char_count: int
     evidence: List[EvidencePassage]
+    content_origin: ContentOrigin = "direct_fetch"
     relevance_score: Optional[float] = None
     quality_score: Optional[float] = None
 
@@ -70,7 +77,7 @@ class BundleDiagnostics:
 
 @dataclass(frozen=True)
 class SourceBundle:
-    schema_version: Literal["1.5"]
+    schema_version: Literal["1.6"]
     bundle_id: str
     query: str
     status: BundleStatus

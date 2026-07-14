@@ -29,7 +29,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
         self.assertEqual(first.status, "ok")
-        self.assertEqual(first.schema_version, "1.5")
+        self.assertEqual(first.schema_version, "1.6")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
         self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
@@ -48,6 +48,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(first.sources[0].relevance_score)
         self.assertIsNotNone(first.sources[0].evidence[0].score)
         self.assertIsNone(first.sources[0].quality_score)
+        self.assertEqual(first.sources[0].content_origin, "direct_fetch")
         self.assertEqual(first.diagnostics.search_results, 3)
         self.assertEqual(first.diagnostics.urls_attempted, 3)
         self.assertEqual(first.diagnostics.sources_returned, 2)
@@ -136,6 +137,35 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             "no_substantive_sources",
             bundle.diagnostics.sufficiency_reasons,
         )
+
+    async def test_marks_search_snippet_content_origin(self):
+        result = SearchResult(
+            "Alpha evidence",
+            "https://a.example/snippet",
+            "alpha evidence from the search result " * 12,
+            "web",
+        )
+        failed_page = WebPage(
+            result.url,
+            result.title,
+            "",
+            error="HTTP 403",
+        )
+
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=[result]),
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=mock.AsyncMock(return_value=[failed_page]),
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ):
+            bundle = await gather_source_bundle("alpha evidence", client=object())
+
+        self.assertEqual(bundle.sources[0].content_origin, "search_snippet")
+        self.assertEqual(bundle.diagnostics.snippet_fallbacks, 1)
 
     async def test_reranks_candidates_before_applying_source_limit(self):
         results = [
