@@ -680,6 +680,8 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
                 title=p.title,
                 text=out.strip()[:1200],
                 content_origin=p.content_origin,
+                published_at=p.published_at,
+                published_at_method=p.published_at_method,
             )
 
         results = await asyncio.gather(*[_one(p) for p in pages], return_exceptions=True)

@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.6",
+  "bundle_id": "sb_contractexample",
+  "query": "example evidence query",
+  "status": "ok",
+  "sources": [
+    {
+      "source_id": "S1",
+      "url": "https://docs.example.org/report",
+      "title": "Primary report",
+      "retrieved_at": "2026-07-14T00:00:00+00:00",
+      "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_type": "web",
+      "char_count": 1200,
+      "evidence": [
+        {
+          "passage_id": "P1",
+          "citation_id": "sb_contractexample/S1/P1",
+          "text": "The primary report contains the evidence used by this example, including the measured result, methodology, and stated limitations.",
+          "content_hash": "d16701372e16a1faa6f54bac7d06aaf63e804c1f9f90b2b422fde240616e503a",
+          "start_char": 100,
+          "end_char": 230,
+          "score": 0.91
+        }
+      ],
+      "content_origin": "direct_fetch",
+      "published_at": "2026-07-13T18:30:00+00:00",
+      "published_at_method": "meta_article_published_time",
+      "content_cluster_id": "cc_1111111111111111",
+      "relevance_score": 0.88,
+      "quality_score": null
+    },
+    {
+      "source_id": "S2",
+      "url": "https://news.example.org/summary",
+      "title": "Search result summary",
+      "retrieved_at": "2026-07-14T00:00:00+00:00",
+      "content_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "source_type": "news",
+      "char_count": 240,
+      "evidence": [
+        {
+          "passage_id": "P1",
+          "citation_id": "sb_contractexample/S2/P1",
+          "text": "This partial evidence came from a search snippet and should be treated only as a lead until the destination page can be retrieved and checked.",
+          "content_hash": "0ae853ba599cbfcf54cc39329560cfdacecef49744ef987b814caf88a6e04754",
+          "start_char": 0,
+          "end_char": 142,
+          "score": 0.64
+        }
+      ],
+      "content_origin": "search_snippet",
+      "published_at": null,
+      "published_at_method": "",
+      "content_cluster_id": "cc_2222222222222222",
+      "relevance_score": 0.61,
+      "quality_score": null
+    }
+  ],
+  "diagnostics": {
+    "search_results": 4,
+    "unique_urls": 4,
+    "urls_attempted": 4,
+    "pages_scraped": 4,
+    "scrape_failures": 1,
+    "snippet_fallbacks": 1,
+    "wikipedia_fallbacks": 0,
+    "sources_returned": 2,
+    "requested_max_sources": 10,
+    "effective_max_sources": 10,
+    "requested_chars_per_source": 7000,
+    "effective_chars_per_source": 7000,
+    "latency_ms": 125,
+    "requested_ranking_method": "lexical",
+    "ranking_method": "lexical_v1",
+    "ranking_warning": "",
+    "candidates_ranked": 3,
+    "chunks_ranked": 3,
+    "passages_returned": 2,
+    "passage_size": 2333,
+    "max_passages_per_source": 3,
+    "coverage_method": "lexical_query_terms_v1",
+    "query_terms": 3,
+    "matched_query_terms": 3,
+    "query_term_coverage": 1.0,
+    "unique_domains": 2,
+    "substantive_sources": 1,
+    "evidence_chars": 272,
+    "candidate_content_clusters": 3,
+    "duplicate_candidates": 0,
+    "independent_content_clusters": 1,
+    "duplicate_sources": 0,
+    "content_cluster_method": "token_5gram_containment_v1",
+    "evidence_sufficiency": "limited",
+    "sufficiency_reasons": [
+      "fewer_than_two_substantive_sources"
+    ]
+  },
+  "error": ""
+}

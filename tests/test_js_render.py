@@ -32,7 +32,10 @@ class TestJsRenderTrigger(unittest.IsolatedAsyncioTestCase):
         # a 200 that extracts to a thin shell → render via Jina, keep the longer text
         client = mock.Mock()
         self.fetch.return_value = _resp(
-            200, "<html><body><div>hi</div></body></html>"
+            200,
+            """<html><head>
+            <meta property="article:published_time" content="2026-07-10">
+            </head><body><div>hi</div></body></html>""",
         )
 
         async def fake_jina(url, max_chars, c=None):
@@ -42,6 +45,8 @@ class TestJsRenderTrigger(unittest.IsolatedAsyncioTestCase):
             page = await scrape_url("https://spa.com/x", client=client, js_render=True, js_render_threshold=500)
         self.assertEqual(page.title, "Rendered")
         self.assertIn("rendered article", page.text)
+        self.assertEqual(page.published_at, "2026-07-10")
+        self.assertEqual(page.published_at_method, "meta_article_published_time")
 
     async def test_thick_page_does_not_render(self):
         big = "<html><body><article>" + ("real content sentence here. " * 100) + "</article></body></html>"

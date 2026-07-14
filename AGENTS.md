@@ -26,6 +26,7 @@ whereas you can cross-reference sources and abstain when they don't answer.
 gather_bundle("Serbian quarterfinalist 2018 Madrid Open men's singles")
 → consume ranked sources[].evidence[] passages; cite each by citation_id.
 → inspect content_origin; treat search_snippet evidence as a lead, not full text.
+→ compare content_cluster_id; matching clusters are not independent corroboration.
 → inspect status and diagnostics before synthesis; relevance defaults to lexical_v1.
 → optional: ranker="flashrank"; inspect ranking_method and ranking_warning for fallback.
 → query_term_coverage is a recall hint, not proof of factual sufficiency.
