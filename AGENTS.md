@@ -24,6 +24,7 @@ whereas you can cross-reference sources and abstain when they don't answer.
 gather_bundle("Serbian quarterfinalist 2018 Madrid Open men's singles")
 → consume ranked sources[].evidence[] passages; cite each by citation_id.
 → inspect status and diagnostics before synthesis; relevance uses lexical_v1.
+→ query_term_coverage is a recall hint, not proof of factual sufficiency.
 → quality_score=null means source quality has not been computed.
 
 # readable retrieval for a conversational host:

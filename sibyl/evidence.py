@@ -54,11 +54,16 @@ class BundleDiagnostics:
     passages_returned: int = 0
     passage_size: int = 0
     max_passages_per_source: int = 0
+    coverage_method: str = "not_run"
+    query_terms: int = 0
+    matched_query_terms: int = 0
+    query_term_coverage: Optional[float] = None
+    unique_domains: int = 0
 
 
 @dataclass(frozen=True)
 class SourceBundle:
-    schema_version: Literal["1.2"]
+    schema_version: Literal["1.3"]
     bundle_id: str
     query: str
     status: BundleStatus

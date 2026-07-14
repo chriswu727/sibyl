@@ -29,7 +29,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
         self.assertEqual(first.status, "ok")
-        self.assertEqual(first.schema_version, "1.2")
+        self.assertEqual(first.schema_version, "1.3")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
         self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
@@ -56,6 +56,9 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first.diagnostics.ranking_method, "lexical_v1")
         self.assertEqual(first.diagnostics.candidates_ranked, 3)
         self.assertEqual(first.diagnostics.passages_returned, 2)
+        self.assertEqual(first.diagnostics.coverage_method, "lexical_query_terms_v1")
+        self.assertGreater(first.diagnostics.query_term_coverage, 0)
+        self.assertEqual(first.diagnostics.unique_domains, 1)
         wiki.assert_not_awaited()
 
     async def test_reranks_candidates_before_applying_source_limit(self):
@@ -163,6 +166,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.sources, [])
         self.assertEqual(bundle.diagnostics.sources_returned, 0)
         self.assertEqual(bundle.diagnostics.ranking_method, "not_run")
+        self.assertIsNone(bundle.diagnostics.query_term_coverage)
         self.assertEqual(
             render_source_bundle(bundle),
             "No sources found for query: 'missing'. Try a different phrasing.",

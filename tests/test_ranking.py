@@ -1,7 +1,7 @@
 """Dependency-free lexical relevance tests."""
 import unittest
 
-from sibyl.ranking import lexical_relevance_scores
+from sibyl.ranking import lexical_query_coverage, lexical_relevance_scores
 
 
 class TestLexicalRelevance(unittest.TestCase):
@@ -75,6 +75,23 @@ class TestLexicalRelevance(unittest.TestCase):
         self.assertEqual(
             lexical_relevance_scores("alpha beta", documents),
             lexical_relevance_scores("alpha beta", documents),
+        )
+
+
+class TestLexicalCoverage(unittest.TestCase):
+    def test_reports_union_coverage_across_evidence(self):
+        coverage = lexical_query_coverage(
+            "alpha beta gamma", ["alpha appears here", "gamma appears there"]
+        )
+
+        self.assertEqual(coverage.query_terms, 3)
+        self.assertEqual(coverage.matched_terms, 2)
+        self.assertEqual(coverage.score, 0.666667)
+
+    def test_stopword_only_query_has_zero_coverage(self):
+        self.assertEqual(
+            lexical_query_coverage("the and of", ["the evidence"]),
+            lexical_query_coverage("", []),
         )
 
 

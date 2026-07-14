@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import re
 import unicodedata
+from dataclasses import dataclass
 from typing import List, Sequence, Set, Tuple
 
 
@@ -15,6 +16,13 @@ _STOP_WORDS = {
     "to", "was", "were", "what", "when", "where", "which", "who", "why",
     "will", "with",
 }
+
+
+@dataclass(frozen=True)
+class LexicalCoverage:
+    query_terms: int
+    matched_terms: int
+    score: float
 
 
 def _normalize(value: str) -> str:
@@ -92,3 +100,19 @@ def lexical_relevance_scores(
         score = 0.9 * coverage + (0.1 if phrase_match else 0.0)
         scores.append(round(min(1.0, max(0.0, score)), 6))
     return scores
+
+
+def lexical_query_coverage(query: str, evidence_texts: Sequence[str]) -> LexicalCoverage:
+    query_tokens = _tokens(query)
+    if not query_tokens:
+        return LexicalCoverage(0, 0, 0.0)
+
+    evidence_tokens = set()
+    for text in evidence_texts:
+        evidence_tokens.update(_tokens(text))
+    matched_terms = len(query_tokens & evidence_tokens)
+    return LexicalCoverage(
+        query_terms=len(query_tokens),
+        matched_terms=matched_terms,
+        score=round(matched_terms / len(query_tokens), 6),
+    )

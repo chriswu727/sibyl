@@ -7,6 +7,7 @@ import json
 import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -20,7 +21,7 @@ from .evidence import (
     SourceBundle,
 )
 from .passages import TextPassage, split_passages
-from .ranking import lexical_relevance_scores
+from .ranking import lexical_query_coverage, lexical_relevance_scores
 from .scraper import WebPage, scrape_urls
 from .search import fetch_wikipedia_extract, search_web, wikipedia_lookup
 
@@ -67,6 +68,11 @@ def _diagnostics(
     passages_returned: int = 0,
     passage_size: int = 0,
     max_passages_per_source: int = 0,
+    coverage_method: str = "not_run",
+    query_terms: int = 0,
+    matched_query_terms: int = 0,
+    query_term_coverage: Optional[float] = None,
+    unique_domains: int = 0,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -88,6 +94,11 @@ def _diagnostics(
         passages_returned=passages_returned,
         passage_size=passage_size,
         max_passages_per_source=max_passages_per_source,
+        coverage_method=coverage_method,
+        query_terms=query_terms,
+        matched_query_terms=matched_query_terms,
+        query_term_coverage=query_term_coverage,
+        unique_domains=unique_domains,
     )
 
 
@@ -112,7 +123,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.2",
+            schema_version="1.3",
             bundle_id=_bundle_id(str(query or ""), "invalid_request", []),
             query=str(query or ""),
             status="invalid_request",
@@ -133,7 +144,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.2",
+            schema_version="1.3",
             bundle_id=_bundle_id(clean_query, "invalid_request", []),
             query=clean_query,
             status="invalid_request",
@@ -225,7 +236,7 @@ async def gather_source_bundle(
             started_at=started_at,
         )
         return SourceBundle(
-            schema_version="1.2",
+            schema_version="1.3",
             bundle_id=_bundle_id(clean_query, "failed", []),
             query=clean_query,
             status="failed",
@@ -366,6 +377,19 @@ async def gather_source_bundle(
         )
 
     attempted_count = min(len(urls), max(effective_max_sources * 2, 12))
+    coverage = lexical_query_coverage(
+        clean_query,
+        [
+            text
+            for source in sources
+            for text in [source.title, *(passage.text for passage in source.evidence)]
+        ],
+    )
+    domains = {
+        urlsplit(source.url).netloc.lower().removeprefix("www.")
+        for source in sources
+        if urlsplit(source.url).netloc
+    }
     diagnostics = _diagnostics(
         search_results=len(results),
         unique_urls=len(urls),
@@ -386,9 +410,14 @@ async def gather_source_bundle(
         passages_returned=sum(len(source.evidence) for source in sources),
         passage_size=passage_size if source_candidates else 0,
         max_passages_per_source=max_passages_per_source if source_candidates else 0,
+        coverage_method="lexical_query_terms_v1" if sources else "not_run",
+        query_terms=coverage.query_terms,
+        matched_query_terms=coverage.matched_terms,
+        query_term_coverage=coverage.score if sources else None,
+        unique_domains=len(domains),
     )
     return SourceBundle(
-        schema_version="1.2",
+        schema_version="1.3",
         bundle_id=bundle_id,
         query=clean_query,
         status=bundle_status,

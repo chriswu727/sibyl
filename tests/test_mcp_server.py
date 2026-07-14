@@ -77,7 +77,7 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
 class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.bundle = SourceBundle(
-            "1.2",
+            "1.3",
             "sb_test",
             "question",
             "insufficient_evidence",
