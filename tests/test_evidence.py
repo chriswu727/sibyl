@@ -38,6 +38,8 @@ class TestSourceBundle(unittest.TestCase):
 
         self.assertEqual(data["schema_version"], "1.6")
         self.assertEqual(data["sources"][0]["content_origin"], "direct_fetch")
+        self.assertIsNone(data["sources"][0]["published_at"])
+        self.assertEqual(data["sources"][0]["published_at_method"], "")
         self.assertEqual(data["sources"][0]["evidence"][0]["citation_id"], "sb_1/S1/P1")
         self.assertIsNone(data["sources"][0]["relevance_score"])
         self.assertIsNone(data["sources"][0]["quality_score"])

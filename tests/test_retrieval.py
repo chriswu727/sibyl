@@ -19,6 +19,8 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             WebPage(result.url, result.title, f"alpha {result.title} " + "x" * 600)
             for result in results
         ]
+        pages[0].published_at = "2026-07-13T18:30:00+00:00"
+        pages[0].published_at_method = "meta_article_published_time"
         pages[1].title = ""
         client = object()
 
@@ -49,6 +51,11 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(first.sources[0].evidence[0].score)
         self.assertIsNone(first.sources[0].quality_score)
         self.assertEqual(first.sources[0].content_origin, "direct_fetch")
+        self.assertEqual(first.sources[0].published_at, pages[0].published_at)
+        self.assertEqual(
+            first.sources[0].published_at_method,
+            "meta_article_published_time",
+        )
         self.assertEqual(first.diagnostics.search_results, 3)
         self.assertEqual(first.diagnostics.urls_attempted, 3)
         self.assertEqual(first.diagnostics.sources_returned, 2)

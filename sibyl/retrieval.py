@@ -349,6 +349,8 @@ async def gather_source_bundle(
                         title=candidates[index].title,
                         text=extract,
                         content_origin="wikipedia_api",
+                        published_at=candidates[index].published_at,
+                        published_at_method=candidates[index].published_at_method,
                     )
     except Exception as exc:
         diagnostics = _diagnostics(
@@ -584,6 +586,8 @@ async def gather_source_bundle(
                 char_count=len(page.text),
                 evidence=evidence,
                 content_origin=page.content_origin,
+                published_at=page.published_at,
+                published_at_method=page.published_at_method,
                 relevance_score=relevance_score,
             )
         )

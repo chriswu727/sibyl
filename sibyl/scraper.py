@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import random
+import re
 import threading
 import time
 import weakref
+from collections import deque
 from dataclasses import dataclass
+from datetime import date, datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import List, Mapping, Optional
 from urllib.parse import urljoin
 
@@ -25,6 +30,8 @@ class WebPage:
     text: str
     error: Optional[str] = None
     content_origin: str = "direct_fetch"
+    published_at: Optional[str] = None
+    published_at_method: str = ""
 
 
 @dataclass(frozen=True)
@@ -128,6 +135,129 @@ def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
     return _clean_lines(text, max_chars)
 
 
+_DATE_ONLY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_COMPACT_DATE_RE = re.compile(r"^\d{8}$")
+_SLASH_DATE_RE = re.compile(r"^\d{4}/\d{1,2}/\d{1,2}$")
+_META_PUBLISHED_METHODS = (
+    ("article:published_time", "meta_article_published_time"),
+    ("datepublished", "meta_date_published"),
+    ("citation_publication_date", "meta_citation_publication_date"),
+    ("dc.date.issued", "meta_dc_date_issued"),
+    ("dc.date", "meta_dc_date_issued"),
+    ("date", "meta_date"),
+)
+
+
+def _valid_publication_year(year: int) -> bool:
+    return 1000 <= year <= datetime.now(timezone.utc).year + 1
+
+
+def _normalize_published_at(value: object) -> Optional[str]:
+    if not isinstance(value, str):
+        return None
+    raw = " ".join(value.strip().split())
+    if not raw or len(raw) > 128:
+        return None
+
+    try:
+        if _DATE_ONLY_RE.fullmatch(raw):
+            parsed_date = date.fromisoformat(raw)
+            return raw if _valid_publication_year(parsed_date.year) else None
+        if _COMPACT_DATE_RE.fullmatch(raw):
+            parsed_date = datetime.strptime(raw, "%Y%m%d").date()
+            return (
+                parsed_date.isoformat()
+                if _valid_publication_year(parsed_date.year)
+                else None
+            )
+        if _SLASH_DATE_RE.fullmatch(raw):
+            parsed_date = datetime.strptime(raw, "%Y/%m/%d").date()
+            return (
+                parsed_date.isoformat()
+                if _valid_publication_year(parsed_date.year)
+                else None
+            )
+    except ValueError:
+        return None
+
+    iso_value = f"{raw[:-1]}+00:00" if raw.endswith(("Z", "z")) else raw
+    try:
+        parsed_datetime = datetime.fromisoformat(iso_value)
+    except ValueError:
+        try:
+            parsed_datetime = parsedate_to_datetime(raw)
+        except (TypeError, ValueError, OverflowError):
+            return None
+    if not _valid_publication_year(parsed_datetime.year):
+        return None
+    return parsed_datetime.isoformat()
+
+
+def _json_ld_published_value(data: object) -> Optional[object]:
+    pending = deque([data])
+    visited = 0
+    while pending and visited < 2000:
+        value = pending.popleft()
+        visited += 1
+        if isinstance(value, dict):
+            if "datePublished" in value:
+                return value["datePublished"]
+            pending.extend(value.values())
+        elif isinstance(value, list):
+            pending.extend(value)
+    return None
+
+
+def _extract_published_at(soup: BeautifulSoup) -> tuple[Optional[str], str]:
+    meta_values = {}
+    for tag in soup.find_all("meta"):
+        content = tag.get("content")
+        if not content:
+            continue
+        for attribute in ("property", "name", "itemprop"):
+            raw_key = tag.get(attribute)
+            if not isinstance(raw_key, str):
+                continue
+            key = raw_key.strip().casefold()
+            for metadata_key, method in _META_PUBLISHED_METHODS:
+                if key == metadata_key:
+                    meta_values.setdefault(metadata_key, content)
+
+    for metadata_key, method in _META_PUBLISHED_METHODS:
+        normalized = _normalize_published_at(meta_values.get(metadata_key))
+        if normalized:
+            return normalized, method
+
+    for script in soup.find_all("script", limit=50):
+        script_type = str(script.get("type", "")).casefold()
+        if "ld+json" not in script_type:
+            continue
+        try:
+            data = json.loads(script.string or script.get_text() or "")
+        except (json.JSONDecodeError, TypeError):
+            continue
+        normalized = _normalize_published_at(_json_ld_published_value(data))
+        if normalized:
+            return normalized, "json_ld_date_published"
+
+    for tag in soup.find_all("time", attrs={"datetime": True}, limit=50):
+        markers = []
+        for attribute in ("itemprop", "class", "rel"):
+            marker = tag.get(attribute, "")
+            if isinstance(marker, list):
+                markers.extend(str(value) for value in marker)
+            else:
+                markers.append(str(marker))
+        marker_text = " ".join(markers).casefold()
+        if "datepublished" not in marker_text and "publish" not in marker_text:
+            continue
+        normalized = _normalize_published_at(tag.get("datetime"))
+        if normalized:
+            return normalized, "time_date_published"
+
+    return None, ""
+
+
 def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4") -> WebPage:
     """Parse HTML and extract clean text. CPU-bound — run off the event loop.
 
@@ -138,6 +268,7 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
     cheap <title> tag.
     """
     soup = BeautifulSoup(html, "lxml")
+    published_at, published_at_method = _extract_published_at(soup)
     for tag in soup(["script", "style", "nav", "footer", "header", "aside",
                       "noscript", "iframe", "form", "button"]):
         tag.decompose()
@@ -162,7 +293,13 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
         except Exception:
             pass  # any trafilatura failure keeps the bs4 result
 
-    return WebPage(url=url, title=title, text=text)
+    return WebPage(
+        url=url,
+        title=title,
+        text=text,
+        published_at=published_at,
+        published_at_method=published_at_method,
+    )
 
 
 class _JinaGate:
@@ -242,6 +379,9 @@ async def scrape_url(
         gate = jina_gate or _get_jina_gate()
         rendered = await gate.render(url, max_chars, client)
         if rendered and len(rendered.text) > len(page.text):
+            if rendered.published_at is None:
+                rendered.published_at = page.published_at
+                rendered.published_at_method = page.published_at_method
             return rendered
         return page
 
@@ -359,15 +499,21 @@ async def _try_jina(
             text = "\n".join(l.strip() for l in resp.text.splitlines() if len(l.strip()) > 5)[:max_chars]
             if text and len(text) > 100:
                 title = url
+                published_at = None
                 for line in resp.text.splitlines():
                     if line.startswith("Title:"):
                         title = line[6:].strip()
-                        break
+                    elif line.casefold().startswith("published time:"):
+                        published_at = _normalize_published_at(line.split(":", 1)[1])
                 return WebPage(
                     url=url,
                     title=title,
                     text=text,
                     content_origin="jina_reader",
+                    published_at=published_at,
+                    published_at_method=(
+                        "jina_published_time" if published_at else ""
+                    ),
                 )
     except Exception:
         pass

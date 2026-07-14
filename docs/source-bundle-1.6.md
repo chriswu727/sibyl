@@ -22,6 +22,10 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 
 Consumers should use `search_snippet` as a lead for additional retrieval and avoid treating it as equivalent to full-page evidence.
 
+## Publication time
+
+`published_at` is a normalized ISO 8601 date or timestamp when Sibyl finds explicit publication metadata; it is `null` when no supported value is present. `published_at_method` identifies the exact metadata path, such as `meta_article_published_time`, `json_ld_date_published`, or `jina_published_time`. It never claims that the publisher-supplied value is true, and consumers must not substitute `retrieved_at` for a missing publication time.
+
 ## Forward-compatible parsing
 
 Consumers should ignore unknown object fields, preserve unknown diagnostic reason strings, and fail closed only when the schema major version, `status`, or required identity fields are unsupported. New minor versions may add optional source metadata without changing existing meanings.

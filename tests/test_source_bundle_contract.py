@@ -51,6 +51,11 @@ class TestSourceBundleContract(unittest.TestCase):
             set(schema["properties"]["status"]["enum"]),
             {"ok", "insufficient_evidence", "invalid_request", "failed"},
         )
+        self.assertIn(
+            "meta_article_published_time",
+            schema["$defs"]["EvidenceSource"]["properties"]
+            ["published_at_method"]["enum"],
+        )
 
 
 class TestMcpSourceBundleContract(unittest.IsolatedAsyncioTestCase):

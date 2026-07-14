@@ -10,6 +10,7 @@
 - Fixed offline ranker and end-to-end retrieval pipeline regression suites.
 - Offline contextual source-quality labels and an abstention-aware evaluator.
 - A machine-validated SourceBundle 1.6 consumer contract fixture and integration guide.
+- Explicit publication-time extraction with normalized values and per-source extraction methods.
 - MCP single-flight retrieval reuse with a 30-second TTL for matching successful requests.
 
 ### Changed

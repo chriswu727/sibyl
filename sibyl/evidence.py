@@ -13,6 +13,17 @@ ContentOrigin = Literal[
     "wikipedia_api",
     "search_snippet",
 ]
+PublishedAtMethod = Literal[
+    "",
+    "meta_article_published_time",
+    "meta_date_published",
+    "meta_citation_publication_date",
+    "meta_dc_date_issued",
+    "meta_date",
+    "json_ld_date_published",
+    "time_date_published",
+    "jina_published_time",
+]
 
 
 @dataclass(frozen=True)
@@ -37,6 +48,8 @@ class EvidenceSource:
     char_count: int
     evidence: List[EvidencePassage]
     content_origin: ContentOrigin = "direct_fetch"
+    published_at: Optional[str] = None
+    published_at_method: PublishedAtMethod = ""
     relevance_score: Optional[float] = None
     quality_score: Optional[float] = None
 

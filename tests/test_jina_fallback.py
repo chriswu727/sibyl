@@ -77,7 +77,13 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         async def fake_get(client, url, headers=None, timeout=None):
             captured["url"] = url
             captured["headers"] = headers
-            body = "Title: My Page\n\n" + ("This is the clean body content returned by Jina reader for the page. " * 4)
+            body = (
+                "Title: My Page\nPublished Time: 2026-07-12T08:45:00Z\n\n"
+                + (
+                    "This is the clean body content returned by Jina reader "
+                    "for the page. " * 4
+                )
+            )
             return _resp(200, body)
 
         client = mock.Mock()
@@ -88,6 +94,8 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(page.title, "My Page")
         self.assertIn("clean body content", page.text)
         self.assertEqual(page.content_origin, "jina_reader")
+        self.assertEqual(page.published_at, "2026-07-12T08:45:00+00:00")
+        self.assertEqual(page.published_at_method, "jina_published_time")
         self.assertTrue(captured["url"].startswith("https://r.jina.ai/https://ex.com/a"))
         self.assertEqual(captured["headers"]["X-Return-Format"], "markdown")
         self.assertEqual(captured["headers"]["Authorization"], "Bearer jina-key")

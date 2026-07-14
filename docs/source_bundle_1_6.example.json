@@ -24,6 +24,8 @@
         }
       ],
       "content_origin": "direct_fetch",
+      "published_at": "2026-07-13T18:30:00+00:00",
+      "published_at_method": "meta_article_published_time",
       "relevance_score": 0.88,
       "quality_score": null
     },
@@ -47,6 +49,8 @@
         }
       ],
       "content_origin": "search_snippet",
+      "published_at": null,
+      "published_at_method": "",
       "relevance_score": 0.61,
       "quality_score": null
     }
