@@ -1,5 +1,7 @@
 # Research-Quality Build Plan (borrowed capabilities)
 
+> **Status (2026-07-14):** The implementation batches in this document have shipped in the 0.3.0 codebase and the test suite has grown from the 60-test baseline to more than 200 tests. This file is retained as an architectural decision record, not an active checklist. Current release steps live in [`RELEASING.md`](RELEASING.md); remaining product work is cross-project MCP integration, production observability, and broader source-quality evaluation.
+
 Reconciled from an 8-capability spec workflow. Executed batch by batch; eval-measured.
 
 I have the full ground truth now: 60 tests green under `.venv/bin/python`, and I've read every shared function the 8 specs touch. Two things the specs got right that anchor the reconciliation: (1) there is a **real pre-existing citation-alignment bug** in `_synthesize` — `report.sources` is built from `search_results` filtered by URL (search order), while the `[Source N]` numbers in the prompt enumerate `good_pages[:12]` (page order), so the rendered Sources list is misnumbered against the prose citations; (2) two specs (1 and 7) both add a "verification" pass under different names/defaults, and two specs (3 and 7) both overload the name `reflect_rounds` with incompatible meanings. Both must be collapsed to one.
