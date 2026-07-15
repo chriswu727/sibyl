@@ -2,174 +2,328 @@
 
 # Sibyl
 
-**Keyless deep-research for your AI agent.**
+**Web evidence for AI agents.**
 
-Sibyl retrieves the web — searching across engines, scraping and cleaning pages, cross-referencing sources — and hands the evidence to *your* model to reason over. Or it runs the whole research cycle itself and returns a cited report.
+Sibyl searches the web, extracts readable content, ranks passages, detects syndicated copies, and returns evidence with provenance. Your agent does the reasoning.
 
-[![tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
+[![Tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
-![Python](https://img.shields.io/badge/python-3.10+-blue)
-![web search: keyless](https://img.shields.io/badge/web_search-keyless-brightgreen)
-![license](https://img.shields.io/badge/license-MIT-green)
+[![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/chriswu727/sibyl/blob/main/LICENSE)
+
+[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md) · [v0.3.0](https://github.com/chriswu727/sibyl/releases/tag/v0.3.0)
 
 </div>
 
----
+## What Sibyl is
 
-## Two ways to use it
+Sibyl is an MCP server and command-line research tool built around a simple boundary:
 
-Sibyl runs as an **MCP server** and a **CLI / Python library**. The key choice is *who does the reasoning*.
+> Sibyl retrieves evidence. The calling model decides what the evidence supports.
 
-### 1. Retrieval provider — your model is the brain (recommended, keyless)
+The recommended path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states.
 
-`gather_bundle(query)` searches, scrapes, dedupes, and returns structured evidence — without writing an answer. Each bundle includes versioned source/passage IDs, content hashes, retrieval timestamps, and diagnostics. `gather_sources(query)` runs the same retrieval and renders it as readable `[Source N]` blocks for conversational use. Both accept `ranker="lexical"` (default), `ranker="flashrank"` (optional local cross-encoder), or `ranker="none"` (preserve retrieval order). Your agent reads the evidence, cross-references it, and answers itself, citing sources and abstaining when they don't contain the answer. **No API key required.**
+Sibyl also provides an optional one-shot `research()` pipeline. That mode uses your configured LLM to search, synthesize, verify, and format a report. It is convenient, but its answer quality depends on the configured model; for agent systems, keeping retrieval and reasoning separate is usually the stronger design.
 
-This is the highest-quality path, because a frontier model applied to real retrieved evidence beats a mid-tier model doing the synthesis and can abstain when the retrieved evidence does not contain the answer.
-
-### 2. One-shot pipeline — Sibyl is the brain (needs a provider key)
-
-`research(query, depth)` runs the full cycle — decompose → search → scrape → rank → synthesize → **verify each finding against its source** → report — using Sibyl's own configured LLM (DeepSeek by default). Use it when you want a finished report in a single call.
-
-If no usable evidence is retrieved, or the configured LLM backend fails, this path returns an explicit failure/insufficient-evidence result instead of synthesizing from model memory.
-
-## Benchmarks
-
-Measured on 30 questions from the official **SimpleQA** test set (human-verified gold, deliberately obscure long-tail facts), graded on the CORRECT / INCORRECT / NOT_ATTEMPTED rubric.
-
-| Setup | Hard SimpleQA | Fabrication |
-|---|---|---|
-| **Host model over `gather_sources`** (keyless) | **~93%** | **~0** — abstains instead of guessing |
-| Sibyl one-shot pipeline (DeepSeek-flash) | 17% | high |
-
-The gap isolates one variable: **the model consuming the sources is the ceiling, not the sources.** The same keyless retrieval that yields 17% with a mid-tier synthesizer yields ~93% when a frontier host model reasons over it. Full method, per-question results, and honest caveats: [`docs/EVAL_HOST_CLAUDE.md`](docs/EVAL_HOST_CLAUDE.md).
-
-> Reproduce the keyless path: `python scripts/gather.py "<query>"` and reason over the output yourself. Reproduce the one-shot path: `python scripts/eval.py --depth 2 --dataset evals/gold/simpleqa_real_30.jsonl`.
+| Mode | Tool | API key | Who reasons? | Best for |
+|---|---|---:|---|---|
+| Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
+| Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
+| One-shot research | `research()` | Yes | Sibyl's configured LLM | A finished report from one call |
 
 ## Quick start
 
-### MCP server (Claude Code, Cursor, …)
+### 1. Install the current release
 
 ```bash
-pip install sibyl-research
+python -m pip install sibyl-research
+```
 
-# Keyless — retrieval-provider mode, your host model reasons:
+Sibyl requires Python 3.10 or newer. The current stable release is [`0.3.0`](https://pypi.org/project/sibyl-research/0.3.0/).
+
+### 2. Add the keyless MCP server
+
+For Claude Code:
+
+```bash
 claude mcp add sibyl -- sibyl-mcp
+```
 
-# Or with a key, to also enable the one-shot research() tool:
+For clients that accept an MCP server configuration:
+
+```json
+{
+  "mcpServers": {
+    "sibyl": {
+      "command": "sibyl-mcp"
+    }
+  }
+}
+```
+
+No search or model key is required for `gather_bundle`, `gather_sources`, `quick_search`, or `read_url`.
+
+### 3. Give the host a retrieval policy
+
+```text
+Use Sibyl's gather_bundle tool for factual research.
+Check bundle status before answering. Treat search_snippet content as a lead,
+not full evidence. Do not count sources with the same content_cluster_id as
+independent corroboration. Cite passage citation_id values. If the bundle does
+not contain the answer, retrieve again with a focused query or say it was not found.
+```
+
+That policy matters more than a long system prompt: it tells the agent when evidence is usable, what counts as independent support, and when to abstain.
+
+## The 13 MCP tools
+
+| Group | Tool | Result | LLM key |
+|---|---|---|---:|
+| Retrieval | `gather_bundle(query)` | Structured SourceBundle 1.6 | No |
+| Retrieval | `gather_sources(query)` | Readable `[Source N]` evidence blocks | No |
+| Retrieval | `quick_search(query)` | Titles, URLs, and search snippets | No |
+| Retrieval | `read_url(url)` | Clean text from one public URL | No |
+| Research | `research(query, depth)` | Synthesized and cited report | Yes |
+| Research | `analyze(text, question)` | Analysis of supplied text | Yes |
+| Analysis | `compare(items, query)` | Researched comparison | Yes |
+| Analysis | `swot(subject)` | Researched SWOT | Yes |
+| Analysis | `timeline(topic)` | Researched event timeline | Yes |
+| Data | `trends(keywords)` | Google Trends series and related queries | No |
+| Data | `fetch_market_data(symbols)` | Yahoo Finance market summary | No |
+| Data | `chart(symbols)` | Local PNG price chart | No |
+| Output | `save_report(format)` | PDF and/or Markdown from the last report | After `research()` |
+
+## Recommended agent workflow
+
+For a non-trivial question, one broad retrieval call is rarely enough. Use a small evidence loop:
+
+1. Break the question into focused, searchable claims.
+2. Call `gather_bundle()` for the first claim.
+3. Check `status`, `diagnostics.evidence_sufficiency`, and `sufficiency_reasons`.
+4. Inspect `content_origin`; use `search_snippet` only to plan another query.
+5. Compare `content_cluster_id` before treating domains as independent corroboration.
+6. Retrieve again for gaps, conflicts, or missing primary evidence.
+7. Synthesize only from returned passages and retain their `citation_id` values.
+
+This makes missing evidence observable. It also prevents several different websites carrying the same syndicated article from looking like independent confirmation.
+
+## SourceBundle 1.6
+
+`gather_bundle()` returns a typed MCP structured result. This abridged example shows the fields a consumer normally uses:
+
+```json
+{
+  "schema_version": "1.6",
+  "bundle_id": "sb_<bundle-hash>",
+  "query": "example query",
+  "status": "ok",
+  "sources": [
+    {
+      "source_id": "S1",
+      "url": "https://example.com/article",
+      "title": "Example article",
+      "retrieved_at": "2026-07-14T00:00:00+00:00",
+      "published_at": "2026-07-13",
+      "published_at_method": "json_ld_date_published",
+      "content_origin": "direct_fetch",
+      "content_cluster_id": "cc_<content-hash>",
+      "relevance_score": 0.91,
+      "quality_score": null,
+      "evidence": [
+        {
+          "passage_id": "P1",
+          "citation_id": "sb_<bundle-hash>/S1/P1",
+          "text": "The selected evidence passage...",
+          "content_hash": "<sha256>",
+          "start_char": 120,
+          "end_char": 480,
+          "score": 0.93
+        }
+      ]
+    }
+  ],
+  "diagnostics": {
+    "ranking_method": "lexical_v1",
+    "query_term_coverage": 0.75,
+    "substantive_sources": 3,
+    "independent_content_clusters": 2,
+    "evidence_sufficiency": "sufficient",
+    "sufficiency_reasons": []
+  },
+  "error": ""
+}
+```
+
+Consumer rules:
+
+- Require schema major version `1`; allow additive fields in later minor versions.
+- Check `status` before reading evidence. Only `ok` is synthesis-ready.
+- Treat `citation_id` as bundle-scoped. Persist it with `bundle_id`, `source_id`, and `passage_id`.
+- Treat source and passage scores as relevance signals, not truth probabilities.
+- Treat `published_at` as publisher-supplied metadata, not an independently verified date.
+- Treat identical `content_cluster_id` values as the same underlying content even across domains.
+- Treat `quality_score: null` as unassessed, never as zero.
+- Ignore unknown additive fields and preserve unknown diagnostic reason strings.
+
+The complete rules and machine-validated fixture are in the [consumer contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) and [`source_bundle_1_6.example.json`](https://github.com/chriswu727/sibyl/blob/main/docs/source_bundle_1_6.example.json).
+
+## Retrieval behavior
+
+For each focused query, Sibyl:
+
+1. Searches multiple keyless sources.
+2. Fetches public pages and extracts readable content.
+3. Uses Wikipedia to expand thin result coverage and Jina Reader to render thin JavaScript shells.
+4. Canonicalizes URLs, removes duplicates, and clusters syndicated text.
+5. Ranks sources and passages for query relevance.
+6. Prefers independent content clusters before filling remaining source slots.
+7. Returns selected passages, provenance, and retrieval diagnostics.
+
+Ranking is local by default:
+
+| Ranker | Setup | Behavior |
+|---|---|---|
+| `lexical` | Built in | Deterministic, dependency-free relevance ranking |
+| `flashrank` | `pip install 'sibyl-research[rerank]'` | Optional local cross-encoder; falls back explicitly to lexical |
+| `none` | Built in | Preserves retrieval order and returns `null` scores |
+
+Matching `gather_bundle()` and `gather_sources()` calls share in-flight work and reuse successful retrievals for 30 seconds within one MCP process. Failed retrievals are not cached.
+
+## Truthful failure states
+
+SourceBundle never turns a retrieval failure into a completed-looking answer.
+
+| Status | Meaning | Consumer action |
+|---|---|---|
+| `ok` | Evidence is usable, though it may still be limited | Inspect diagnostics and synthesize carefully |
+| `insufficient_evidence` | Retrieval returned leads but not enough substantive support | Refine the query or abstain |
+| `invalid_request` | Query or parameters are invalid | Fix the request |
+| `failed` | Search or retrieval failed | Retry later or use another source path |
+
+`evidence_sufficiency` is a deterministic retrieval signal based on evidence volume, lexical coverage, domain diversity, and independent content clusters. It is not a correctness or credibility score.
+
+## Network safety
+
+Sibyl retrieves untrusted URLs, so the fetch path is deliberately constrained:
+
+- only public HTTP(S) destinations are allowed;
+- URL credentials and non-web ports are rejected;
+- DNS results are validated and pinned before connecting;
+- every redirect destination is validated again;
+- local, private, loopback, link-local, and otherwise non-global addresses are blocked;
+- decompressed response bodies are capped at 2 MiB;
+- Jina rendering has bounded concurrency and request start-rate limits.
+
+When Jina Reader is used, the target URL is sent to that external service. The current `gather_bundle()` and `gather_sources()` path enables thin-page rendering automatically; do not use it for target URLs that must not be disclosed to a third-party renderer. The one-shot pipeline can disable `js_render` in its configuration.
+
+## Optional one-shot research
+
+The `research()` tool and `sibyl` CLI run a full pipeline:
+
+```text
+decompose → search → scrape → deduplicate → rank → synthesize → verify → report
+```
+
+They require an LLM provider key or a configured local/API-compatible backend. Sibyl auto-detects common provider environment variables:
+
+| Provider | Environment variable |
+|---|---|
+| DeepSeek | `DEEPSEEK_API_KEY` |
+| OpenAI | `OPENAI_API_KEY` |
+| Anthropic | `ANTHROPIC_API_KEY` |
+| Gemini | `GEMINI_API_KEY` |
+| ZhipuAI / GLM | `ZHIPUAI_API_KEY` |
+
+Run the MCP server with one-shot tools enabled:
+
+```bash
 claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
 ```
 
-Then, in your agent:
-
-> "Research the Serbian quarterfinalist at the 2018 Madrid Open" — *uses `gather_bundle` or `gather_sources`; you synthesize*
-
-> "Compare NVIDIA vs AMD vs Intel for AI workloads" — *one-shot `research()` + `compare()`*
-
-### CLI
+Or use the CLI:
 
 ```bash
-pip install sibyl-research
-export DEEPSEEK_API_KEY=sk-...   # or OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY, …
+export DEEPSEEK_API_KEY=sk-...
 
-sibyl "Canadian housing market outlook 2026"                       # standard
-sibyl "Will NVIDIA keep AI-chip dominance?" -d 3 --symbols NVDA,AMD --pdf   # deep + charts
-sibyl "加拿大移民政策变化" -l zh --pdf -o reports/                    # Chinese output
+sibyl "Canadian housing market outlook" --depth 2
+sibyl "Compare AI accelerators" --depth 3 --symbols NVDA,AMD --pdf
+sibyl "加拿大移民政策变化" --language zh --md --output reports/
 ```
 
-## Tools (13 MCP tools)
+Depth controls the amount of decomposition and review work:
 
-| Group | Tool | What it does |
-|---|---|---|
-| **Retrieval** | `gather_bundle(query)` | Structured keyless evidence with stable bundle/source/passage IDs, hashes, timestamps, and diagnostics |
-| | `gather_sources(query)` | The same retrieval rendered as full-text `[Source N]` blocks for conversational use |
-| | `quick_search(query)` | Raw search hits (title / url / snippet), no scraping |
-| | `read_url(url)` | Clean full text of one page |
-| **Research** | `research(query, depth)` | Full one-shot cycle; claim verification runs at depth 2+ unless fast/disabled |
-| | `analyze(text, question)` | Reason over text you provide |
-| **Analysis** | `compare(items)` | Side-by-side comparison table with metrics + recommendation |
-| | `swot(subject)` | Strengths / Weaknesses / Opportunities / Threats, evidence-backed |
-| | `trends(keywords)` | Real Google Trends: interest, direction, rising queries |
-| | `timeline(topic)` | Chronological event table with impact |
-| **Finance** | `fetch_market_data(symbols)` | Real prices, moving averages, 52-week range |
-| | `chart(symbols)` | Price trend charts (PNG) |
-| **Output** | `save_report(format)` | PDF (with embedded charts) and/or Markdown |
+| Depth | Intended use |
+|---:|---|
+| `1` | Quick research with tight query and source limits |
+| `2` | Standard research with review and claim verification |
+| `3` | Deeper gap-filling and prediction scenarios |
 
-`gather_bundle` currently returns SourceBundle schema `1.6`. Its `bundle_id` is derived from the trimmed query, bundle status, selected URLs, and evidence hashes. Each source contains up to three passages with source-text offsets and bundle-scoped `citation_id` values such as `sb_…/S1/P1`; the combined passage text stays within `chars_per_source`. `content_hash` values are SHA-256. `content_origin` distinguishes `direct_fetch`, `jina_reader`, `wikipedia_api`, and `search_snippet` evidence so consumers can treat fallback snippets conservatively. When explicit publication metadata is available, `published_at` contains its normalized ISO 8601 value and `published_at_method` identifies the extraction path; this remains publisher-supplied metadata, not an independently verified date. Content-derived `content_cluster_id` values group exact and near-duplicate text so cross-domain syndication does not masquerade as independent evidence. `relevance_score` and passage `score` are 0–1 retrieval scores from the actual ranking backend, not probabilities or correctness judgments; they are `null` when ranking is disabled. Diagnostics distinguish `requested_ranking_method` from the actual `ranking_method` and expose `ranking_warning` when FlashRank falls back to `lexical_v1`.
-
-Schema 1.6 also reports `substantive_sources`, `independent_content_clusters`, `evidence_chars`, `evidence_sufficiency`, and machine-readable `sufficiency_reasons`. The deterministic sufficiency check marks evidence as insufficient when there is no substantive full text, less than 200 selected evidence characters, or under 25% lexical query-term coverage. Search snippets are not substantive sources. Evidence with fewer than two substantive sources, fewer than two independent content clusters, fewer than two independent domains, or no usable lexical query terms is marked `limited`; limited evidence still returns bundle status `ok`, while insufficient evidence returns `insufficient_evidence` even when lead sources are included. These are retrieval-recall and independence signals, not proof that the evidence is true. `quality_score` remains `null` until a separate source-quality evaluator computes it. Check `status` before synthesis.
-
-Consumers can use the [SourceBundle 1.6 contract guide](docs/source-bundle-1.6.md) and checked-in JSON fixture for cross-project compatibility tests.
-
-Within one MCP server process, matching `gather_bundle` and `gather_sources` calls share in-flight work and reuse successful evidence for 30 seconds. Failed retrievals are never cached; cached bundles retain their original `retrieved_at` provenance timestamps.
-
-### Offline retrieval regressions
-
-Run the fixed, network-free ranker checks before changing retrieval scoring:
-
-```bash
-python scripts/eval_retrieval.py --ranker lexical
-python scripts/eval_retrieval_pipeline.py --ranker lexical
-python scripts/eval_source_quality.py
-pip install 'sibyl-research[rerank]'
-python scripts/eval_retrieval.py --ranker flashrank
-python scripts/eval_retrieval_pipeline.py --ranker flashrank
-```
-
-The ranker command reports per-case first-relevant rank plus aggregate Hit@1 and MRR. The pipeline command sends the same fixed cases through search/scrape fixtures, deduplication, source and passage ranking, SourceBundle construction, and evidence-sufficiency classification; it verifies top-source accuracy, usable status, hashes, citation IDs, and source-text offsets. Both exit non-zero below their checked-in regression floors. Network I/O is replaced by deterministic fixtures, so this is a stable pipeline regression guard, not a claim about live search accuracy.
-
-The source-quality command evaluates a deliberately limited source-type prior against contextual preference labels. It reports coverage separately from accuracy, treats tied top scores as abstentions, and includes cases where community evidence is preferable and where broad source types cannot distinguish primary from secondary reporting. This baseline is an evaluation control, not a production credibility model, so it does not populate `quality_score`.
-
-## How the one-shot pipeline works
-
-```
-You ask a question
-  ├─ 1. Decompose into 3–5 focused sub-questions
-  ├─ 2. Generate diverse, perspective-guided search queries
-  ├─ 3. Search 4 keyless engines (DuckDuckGo, Google News, Reddit, Wikipedia; Mojeek fails over)
-  ├─ 4. Scrape sources (browser headers, retry, JS-render fallback for thin pages)
-  ├─ 5. Dedupe + rank by relevance
-  ├─ 6. Analyze each sub-question; identify knowledge gaps → search again
-  ├─ 7. Cross-reference (sentiment, consensus, disagreements)
-  ├─ 8. Section-by-section synthesis (Summary, Findings, Analysis, Predictions)
-  ├─ 9. Verify every finding against its cited source — flag the unsupported
-  └─ Output: PDF / Markdown report with ToC, citations, charts
-```
-
-Depth controls cost: **1 (quick)** ~20–30s · **2 (standard)** ~60–90s · **3 (deep)** adds gap-filling + bull/bear/base predictions.
-
-Source reranking defaults to the dependency-free local `lexical` backend, so ranking does not consume an extra LLM call. Install the optional cross-encoder with `pip install 'sibyl-research[rerank]'`, then pass `ranker="flashrank"` to `gather_bundle` / `gather_sources` or set `reranker: flashrank` for the one-shot pipeline. The model is loaded lazily and cached in-process. If FlashRank is unavailable or fails, Sibyl falls back to lexical ranking; SourceBundle diagnostics disclose that fallback. Use `ranker="none"` or `reranker: none` to preserve retrieval order. The one-shot pipeline also supports `reranker: llm` explicitly.
-
-## Multi-provider
-
-Sibyl auto-detects a provider from the environment; `gather_bundle` and `gather_sources` need none.
-
-| Provider | Env var | Default model |
-|---|---|---|
-| DeepSeek | `DEEPSEEK_API_KEY` | `deepseek/deepseek-v4-flash` |
-| OpenAI | `OPENAI_API_KEY` | `gpt-4o-mini` |
-| Anthropic | `ANTHROPIC_API_KEY` | `claude-sonnet-4-20250514` |
-| Gemini | `GEMINI_API_KEY` | `gemini/gemini-2.5-flash` |
-| GLM (ZhipuAI) | `ZHIPUAI_API_KEY` | `glm-4-flash` |
-
-Configure several providers with per-role routing in `sibyl.yaml` — e.g. cheap model for search/ranking, a stronger one for `synthesis` and `verify`:
+For role-specific model routing, point `SIBYL_CONFIG` at a YAML file:
 
 ```yaml
 providers:
   - model: deepseek/deepseek-v4-flash
-    api_key: sk-xxx
-    role: search
+    api_key: sk-...
+    role: general
   - model: anthropic/claude-sonnet-4-20250514
-    api_key: sk-ant-xxx
+    api_key: sk-ant-...
     role: synthesis
+  - model: anthropic/claude-sonnet-4-20250514
+    api_key: sk-ant-...
+    role: verify
+
+search_engine: all
+max_sources: 15
+max_depth: 2
+reranker: lexical
 ```
 
-## Requirements
+Do not commit real API keys. The keyless retrieval tools remain available when no LLM provider is configured.
 
-- Python 3.10+
-- **`gather_bundle`, `gather_sources`, and all web search are keyless** — no API keys to search the web
-- URL fetching is restricted to public HTTP(S) destinations on ports 80/443; every destination and redirect is resolved, validated, and pinned to its checked public IP before TCP connection, while decompressed response bodies are capped at 2 MiB
-- One LLM key only for the one-shot `research()` / CLI paths
+## Evaluation and reproducibility
+
+The default CI suite is network-free and runs on Python 3.10, 3.11, and 3.12. It includes unit tests, fixed retrieval-ranking cases, full retrieval-pipeline fixtures, SourceBundle contract checks, and a source-quality control baseline.
+
+```bash
+python -m unittest discover tests -v
+python scripts/eval_retrieval.py --ranker lexical
+python scripts/eval_retrieval_pipeline.py --ranker lexical
+python scripts/eval_source_quality.py
+```
+
+These checks guard deterministic behavior and regression floors. They are not claims about general web-answering accuracy.
+
+The repository also contains an exploratory 30-question SimpleQA comparison. In the measured concurrent run, a host model reasoning over `gather_sources()` answered 26/30 correctly, while the configured one-shot model answered 5/30. The experiment is small, agent-graded, and sensitive to keyless search throttling; read the [full method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md) rather than treating it as a broad benchmark.
+
+## Known limitations
+
+- Keyless search engines and public websites can throttle, block, or change behavior.
+- Retrieval relevance does not establish factual truth or source credibility.
+- `quality_score` is intentionally unpopulated while the production credibility model is still under evaluation.
+- Publication dates are extracted from explicit page metadata and may be wrong at the publisher.
+- Near-duplicate clustering is content-based and can miss heavily rewritten syndication.
+- The one-shot pipeline is only as capable and reliable as its configured LLM.
+- Live web results are not deterministic; use the offline fixtures for regression testing.
+
+## Development
+
+```bash
+git clone https://github.com/chriswu727/sibyl.git
+cd sibyl
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
+python -m unittest discover tests -v
+```
+
+Useful project documents:
+
+- [SourceBundle 1.6 consumer contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md)
+- [Performance notes](https://github.com/chriswu727/sibyl/blob/main/docs/PERFORMANCE.md)
+- [MCP architecture notes](https://github.com/chriswu727/sibyl/blob/main/docs/MCP_ARCHITECTURE.md)
+- [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
+- [Release runbook](https://github.com/chriswu727/sibyl/blob/main/docs/RELEASING.md)
 
 ## License
 
-MIT
+[MIT](https://github.com/chriswu727/sibyl/blob/main/LICENSE)
