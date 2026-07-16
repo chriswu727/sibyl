@@ -2,9 +2,9 @@
 
 # Sibyl
 
-**Web evidence for AI agents.**
+**Web research for AI agents — structured evidence or a finished cited report.**
 
-Sibyl searches the web, extracts readable content, ranks passages, detects syndicated copies, and returns evidence with provenance. Your agent does the reasoning.
+Sibyl is an MCP server and CLI that searches the web, extracts and ranks source material, detects syndicated copies, and preserves citation provenance. Use its keyless retrieval tools to give your own agent a typed, versioned `SourceBundle`, or run the optional LLM-backed research pipeline to synthesize, verify, and format a finished report.
 
 [![Tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
@@ -17,7 +17,7 @@ Sibyl searches the web, extracts readable content, ranks passages, detects syndi
 
 ## What Sibyl is
 
-Sibyl is an MCP server and command-line research tool built around a simple boundary:
+Sibyl supports two research workflows built around a simple boundary:
 
 > Sibyl retrieves evidence. The calling model decides what the evidence supports.
 
