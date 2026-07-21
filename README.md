@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.chriswu727/sibyl -->
+
 <div align="center">
 
 # Sibyl
@@ -11,7 +13,7 @@ Sibyl is an MCP server and CLI that searches the web, extracts and ranks source 
 [![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/chriswu727/sibyl/blob/main/LICENSE)
 
-[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md) · [v0.3.0](https://github.com/chriswu727/sibyl/releases/tag/v0.3.0)
+[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md) · [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
 
 </div>
 
@@ -39,14 +41,21 @@ Sibyl also provides an optional one-shot `research()` pipeline. That mode uses y
 python -m pip install sibyl-research
 ```
 
-Sibyl requires Python 3.10 or newer. The current stable release is [`0.3.0`](https://pypi.org/project/sibyl-research/0.3.0/).
+Sibyl requires Python 3.10 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
+
+```bash
+python -m pip install 'sibyl-research[report]'   # LLM report + PDF
+python -m pip install 'sibyl-research[finance]'  # market data, trends, charts
+python -m pip install 'sibyl-research[rerank]'   # local cross-encoder ranking
+python -m pip install 'sibyl-research[all]'      # every optional capability
+```
 
 ### 2. Add the keyless MCP server
 
 For Claude Code:
 
 ```bash
-claude mcp add sibyl -- sibyl-mcp
+claude mcp add sibyl -- uvx --from sibyl-research sibyl-mcp
 ```
 
 For clients that accept an MCP server configuration:
@@ -55,7 +64,8 @@ For clients that accept an MCP server configuration:
 {
   "mcpServers": {
     "sibyl": {
-      "command": "sibyl-mcp"
+      "command": "uvx",
+      "args": ["--from", "sibyl-research", "sibyl-mcp"]
     }
   }
 }
@@ -63,7 +73,31 @@ For clients that accept an MCP server configuration:
 
 No search or model key is required for `gather_bundle`, `gather_sources`, `quick_search`, or `read_url`.
 
-### 3. Give the host a retrieval policy
+Verify the isolated installation:
+
+```bash
+uvx --from sibyl-research sibyl-mcp --version
+uvx --from sibyl-research sibyl-mcp --list-tools
+```
+
+### 3. Use the keyless CLI or Python API
+
+```bash
+sibyl gather "Who was the Serbian quarterfinalist in the 2018 Madrid Open?"
+sibyl gather "Python 3.14 release date" --format json
+```
+
+```python
+import asyncio
+from sibyl import gather_bundle
+
+bundle = asyncio.run(gather_bundle("Python 3.14 release date"))
+if bundle.status == "ok":
+    for source in bundle.sources:
+        print(source.title, source.url)
+```
+
+### 4. Give the host a retrieval policy
 
 ```text
 Use Sibyl's gather_bundle tool for factual research.
@@ -75,7 +109,11 @@ not contain the answer, retrieve again with a focused query or say it was not fo
 
 That policy matters more than a long system prompt: it tells the agent when evidence is usable, what counts as independent support, and when to abstain.
 
-## The 13 MCP tools
+## MCP profiles and tools
+
+Without an LLM credential, the default `auto` profile exposes only the four keyless retrieval tools. A configured `[report]` installation exposes report tools automatically. Finance tools remain explicit so an agent does not pay the context cost for unrelated capabilities.
+
+Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
 
 | Group | Tool | Result | LLM key |
 |---|---|---|---:|
@@ -215,7 +253,7 @@ Sibyl retrieves untrusted URLs, so the fetch path is deliberately constrained:
 - decompressed response bodies are capped at 2 MiB;
 - Jina rendering has bounded concurrency and request start-rate limits.
 
-When Jina Reader is used, the target URL is sent to that external service. `gather_bundle()` and `gather_sources()` do not use it by default; set `render_thin_pages=true` only when this disclosure is acceptable. The one-shot pipeline controls the same behavior with `js_render` in its configuration.
+When Jina Reader is used, the target URL is sent to that external service. It is disabled by default in every workflow. Set `render_thin_pages=true` for retrieval or `js_render: true`/`--js-render` for one-shot research only when this disclosure is acceptable.
 
 ## Optional one-shot research
 
@@ -226,6 +264,12 @@ decompose → search → scrape → deduplicate → rank → synthesize → veri
 ```
 
 They require an LLM provider key or a configured local/API-compatible backend. Sibyl auto-detects common provider environment variables:
+
+Install the report capability first:
+
+```bash
+python -m pip install 'sibyl-research[report]'
+```
 
 | Provider | Environment variable |
 |---|---|
@@ -238,7 +282,8 @@ They require an LLM provider key or a configured local/API-compatible backend. S
 Run the MCP server with one-shot tools enabled:
 
 ```bash
-claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
+claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- \
+  uvx --from 'sibyl-research[report]' sibyl-mcp --profile report
 ```
 
 Or use the CLI:
@@ -246,10 +291,11 @@ Or use the CLI:
 ```bash
 export DEEPSEEK_API_KEY=sk-...
 
-sibyl "Canadian housing market outlook" --depth 2
-sibyl "Compare AI accelerators" --depth 3 --symbols NVDA,AMD --pdf
-sibyl "加拿大移民政策变化" --language zh --md --output reports/
+sibyl research "Canadian housing market outlook" --depth 2
+sibyl research "加拿大移民政策变化" --language zh --md --output reports/
 ```
+
+Market symbols and charts also require `sibyl-research[finance]`. The historical `sibyl "query"` report form remains supported, but the explicit `gather` and `research` subcommands make the model and network boundary clearer.
 
 Depth controls the amount of decomposition and review work:
 
@@ -290,7 +336,8 @@ python -m unittest discover tests -v
 python scripts/eval_retrieval.py --ranker lexical
 python scripts/eval_retrieval_pipeline.py --ranker lexical
 python scripts/eval_source_quality.py
-python scripts/eval_live_retrieval.py --repeats 3
+python scripts/eval_live_retrieval.py --repeats 3 \
+  --output evals/results/live-retrieval-YYYY-MM-DD.json
 ```
 
 The first three checks are deterministic and network-free. `eval_live_retrieval.py` runs 66 natural-language and adversarial questions against the public web without an LLM, measuring lexical answer coverage, safe trap evidence, run-to-run stability, and p50/p95 latency. Live results vary with public search and publisher availability and must be saved with their date when used as launch evidence.
@@ -314,7 +361,7 @@ git clone https://github.com/chriswu727/sibyl.git
 cd sibyl
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e .
+python -m pip install -e '.[all]'
 python -m unittest discover tests -v
 ```
 
@@ -323,6 +370,10 @@ Useful project documents:
 - [SourceBundle 1.6 consumer contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md)
 - [Performance notes](https://github.com/chriswu727/sibyl/blob/main/docs/PERFORMANCE.md)
 - [MCP architecture notes](https://github.com/chriswu727/sibyl/blob/main/docs/MCP_ARCHITECTURE.md)
+- [MCP installation reference](https://github.com/chriswu727/sibyl/blob/main/llms-install.md)
+- [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md)
+- [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md)
+- [Contributing](https://github.com/chriswu727/sibyl/blob/main/CONTRIBUTING.md)
 - [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
 - [Release runbook](https://github.com/chriswu727/sibyl/blob/main/docs/RELEASING.md)
 

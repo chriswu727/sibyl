@@ -26,7 +26,7 @@ from .config import Config
 @click.option("--fast", is_flag=True, help="Skip the review/refine pass (~20% faster, slightly less polished)")
 @click.option("--extractor", type=click.Choice(["bs4", "trafilatura"]), default="bs4", help="HTML content extractor")
 @click.option("--jina-fallback", is_flag=True, help="On a blocked scrape, retry via r.jina.ai (set JINA_API_KEY)")
-@click.option("--js-render/--no-js-render", default=True, help="Render thin/JS pages via r.jina.ai (keyless)")
+@click.option("--js-render/--no-js-render", default=False, help="Send thin/JS page URLs to r.jina.ai for rendering")
 @click.option("--effort", "-e", type=click.Choice(["quick", "standard", "deep"]), default=None, help="Effort tier (overrides --depth)")
 @click.option("--compact", is_flag=True, help="Compact each source before synthesis to weigh more sources")
 @click.option("--reflect-rounds", default=0, help="Extra reflect->search->re-synthesize cycles (0=off)")

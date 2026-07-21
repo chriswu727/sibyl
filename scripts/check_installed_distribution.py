@@ -31,6 +31,7 @@ def main() -> int:
     expected_scripts = {
         "sibyl": "sibyl.cli:main",
         "sibyl-mcp": "sibyl.mcp_server:main",
+        "sibyl-research": "sibyl.mcp_server:main",
     }
     if not expected_scripts.items() <= console_scripts.items():
         print(f"missing console scripts: {expected_scripts!r} not in {console_scripts!r}", file=sys.stderr)

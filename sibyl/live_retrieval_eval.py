@@ -35,6 +35,7 @@ class LiveRetrievalRun:
     safe_trap_outcome: bool
     source_count: int
     latency_ms: int
+    error: str = ""
 
 
 @dataclass(frozen=True)
@@ -134,6 +135,7 @@ async def evaluate_live_retrieval(
     concurrency: int = 2,
     max_sources: int = 10,
     gather: Callable[..., Awaitable[SourceBundle]] = gather_bundle,
+    progress: Callable[[int, int, LiveRetrievalCaseResult], None] | None = None,
 ) -> LiveRetrievalEvalResult:
     if not cases:
         raise ValueError("At least one live retrieval case is required.")
@@ -141,14 +143,17 @@ async def evaluate_live_retrieval(
         raise ValueError("repeats must be at least 1.")
     semaphore = asyncio.Semaphore(max(1, concurrency))
 
+    completed = 0
+
     async def evaluate_case(case: LiveRetrievalCase) -> LiveRetrievalCaseResult:
+        nonlocal completed
         runs = []
         for _ in range(repeats):
             async with semaphore:
                 started = time.monotonic()
                 try:
                     bundle = await gather(case.question, max_sources=max_sources)
-                except Exception:
+                except Exception as exc:
                     runs.append(
                         LiveRetrievalRun(
                             status="failed",
@@ -158,6 +163,7 @@ async def evaluate_live_retrieval(
                             safe_trap_outcome=not case.expects_answer,
                             source_count=0,
                             latency_ms=round((time.monotonic() - started) * 1000),
+                            error=f"{type(exc).__name__}: {exc}",
                         )
                     )
                     continue
@@ -166,13 +172,17 @@ async def evaluate_live_retrieval(
             (run.status, run.answer_in_evidence, run.safe_trap_outcome)
             for run in runs
         }
-        return LiveRetrievalCaseResult(
+        result = LiveRetrievalCaseResult(
             case_id=case.case_id,
             case_type=case.case_type,
             expects_answer=case.expects_answer,
             stable=len(outcomes) == 1,
             runs=runs,
         )
+        completed += 1
+        if progress is not None:
+            progress(completed, len(cases), result)
+        return result
 
     results = await asyncio.gather(*(evaluate_case(case) for case in cases))
     answerable = [result for result in results if result.expects_answer]

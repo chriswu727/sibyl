@@ -1,0 +1,34 @@
+name: Bug report
+description: Report a reproducible Sibyl problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not report security vulnerabilities here; use SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Sibyl version
+      placeholder: 0.4.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: macOS 15, Python 3.12, Claude Code
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the command or MCP call, expected behavior, and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Include SourceBundle status and diagnostics with secrets or private data removed.

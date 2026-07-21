@@ -628,9 +628,31 @@ async def save_report(format: str = "both", output_dir: str = ".") -> str:
 
 def main():
     """Entry point for sibyl-mcp command."""
+    import argparse
     import asyncio
 
-    asyncio.run(_configure_tool_profile())
+    parser = argparse.ArgumentParser(description="Sibyl MCP server")
+    parser.add_argument("--version", action="store_true")
+    parser.add_argument("--list-tools", action="store_true")
+    parser.add_argument(
+        "--profile",
+        choices=["auto", "keyless", "report", "finance", "full"],
+    )
+    args = parser.parse_args()
+    if args.version:
+        from . import __version__
+
+        print(__version__)
+        return
+    if args.profile:
+        os.environ["SIBYL_MCP_PROFILE"] = args.profile
+    profile = asyncio.run(_configure_tool_profile())
+    if args.list_tools:
+        tools = asyncio.run(mcp.list_tools())
+        print(f"profile: {profile}")
+        for tool in tools:
+            print(tool.name)
+        return
     mcp.run()
 
 

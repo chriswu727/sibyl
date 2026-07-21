@@ -47,6 +47,27 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
                 [LiveRetrievalCase("a", "q", "a", [])], repeats=0
             )
 
+    async def test_records_retrieval_errors_and_reports_progress(self):
+        cases = [LiveRetrievalCase("broken", "Who?", "answer", [])]
+        progress = []
+
+        async def gather(query, **kwargs):
+            raise RuntimeError("network unavailable")
+
+        result = await evaluate_live_retrieval(
+            cases,
+            gather=gather,
+            progress=lambda done, total, case: progress.append((done, total, case.case_id)),
+        )
+
+        self.assertEqual(result.ready_bundle_rate, 0.0)
+        self.assertEqual(result.cases[0].runs[0].status, "failed")
+        self.assertEqual(
+            result.cases[0].runs[0].error,
+            "RuntimeError: network unavailable",
+        )
+        self.assertEqual(progress, [(1, 1, "broken")])
+
 
 if __name__ == "__main__":
     unittest.main()

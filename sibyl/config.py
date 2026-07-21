@@ -62,7 +62,7 @@ class Config:
     # ── research-quality capabilities (borrowed from competitors) ──
     verify_claims: bool = True       # re-check each finding against its cited source text
     verify_drop_unsupported: bool = False  # destructive: drop unsupported findings (opt-in)
-    js_render: bool = True           # on thin extraction, render via r.jina.ai (keyless)
+    js_render: bool = False          # on thin extraction, render via r.jina.ai
     js_render_threshold: int = 500   # chars below which a 200 page is treated as JS-shell
     dedup: bool = True               # canonical-URL near-duplicate removal
     reranker: str = "lexical"        # "lexical" | "llm" | "flashrank" | "none"
@@ -125,7 +125,7 @@ class Config:
             jina_fallback=data.get("jina_fallback", False),
             verify_claims=data.get("verify_claims", True),
             verify_drop_unsupported=data.get("verify_drop_unsupported", False),
-            js_render=data.get("js_render", True),
+            js_render=data.get("js_render", False),
             js_render_threshold=data.get("js_render_threshold", 500),
             dedup=data.get("dedup", True),
             reranker=data.get("reranker", "lexical"),

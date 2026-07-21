@@ -8,10 +8,12 @@ This file helps AI agents (Claude Code, Cursor, etc.) use Sibyl effectively via 
 pip install sibyl-research
 # Optional local cross-encoder ranking:
 pip install 'sibyl-research[rerank]'
+# Optional one-shot reports and report export:
+pip install 'sibyl-research[report]'
 # Retrieval-provider mode (recommended) needs NO key — you do the reasoning:
 claude mcp add sibyl -- sibyl-mcp
 # For the one-shot research() tool, add a provider key so sibyl's own model runs it:
-claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
+claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp --profile report
 ```
 
 ## Two modes — who does the reasoning?
@@ -46,6 +48,12 @@ research(query, depth=2)   # search→scrape→rank→synthesize→verify→repo
 Prefer `gather_bundle` for programmatic agents and `gather_sources` for readable
 conversation context. In both cases, do your own synthesis for factual/hard
 questions; use `research()` when you want a finished report in one call.
+
+The default `auto` MCP profile exposes only the four keyless retrieval tools
+unless the report extra and an LLM credential are both available. Use
+`sibyl-mcp --list-tools` to inspect the active surface. Thin-page Jina rendering
+is opt-in through `render_thin_pages=true` because it discloses target URLs to a
+third-party service.
 
 ## Recommended Workflows
 
