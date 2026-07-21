@@ -6,7 +6,7 @@ Last reviewed: 2026-07-20
 
 Sibyl is ready to be shown as a public beta. It is not ready for a broad production launch or a v0.4.0 release.
 
-The package, interfaces, evidence contract, safety controls, and offline regressions are working. The blocking evidence is the dated three-repeat live retrieval run: safety and latency passed, but answer coverage, synthesis-ready bundle rate, and repeat stability missed their thresholds. The optional one-shot report path also lacks a current, bounded model-backed evaluation.
+The package, interfaces, evidence contract, safety controls, and offline regressions are working. The blocking evidence is the latest dated three-repeat keyless retrieval run: safety, latency, and answer coverage passed, but synthesis-ready bundle rate and repeat stability missed their thresholds. The optional one-shot report path also lacks a current, bounded model-backed evaluation.
 
 ## What is genuinely differentiated
 
@@ -40,22 +40,22 @@ Primary references:
 | Report-extra installation | Clean install, dependency check, ten report-profile tools | Pass |
 | Real stdio MCP call | Structured evidence returned from the built product path | Pass |
 | Adversarial live safety | 100% across 12 traps and three repeats | Pass |
-| Live p95 latency | 10.5 seconds; threshold 30 seconds | Pass |
-| Live answer coverage | 75.9%; threshold 80% | **Fail** |
-| Live synthesis-ready bundles | 56.1%; threshold 75% | **Fail** |
-| Live repeat stability | 33.3%; threshold 90% | **Fail** |
+| Live p95 latency | 11.0 seconds; threshold 30 seconds | Pass |
+| Live answer coverage | 85.2%; threshold 80% | Pass |
+| Live synthesis-ready bundles | 64.6%; threshold 75% | **Fail** |
+| Live repeat stability | 62.1%; threshold 90% | **Fail** |
 | One-shot report quality | No current authorized model-backed launch run | **Not tested** |
 
-The complete live artifact is [`evals/results/live-retrieval-2026-07-21.json`](../evals/results/live-retrieval-2026-07-21.json). It records `passed: false` and must not be described as launch evidence.
+The latest complete artifact is [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). It records `passed: false` and must not be described as launch evidence. The [original keyless baseline](../evals/results/live-retrieval-2026-07-21.json) remains available for comparison: answer coverage rose from 75.9% to 85.2%, stability from 33.3% to 62.1%, and ready bundles from 56.1% to 64.6% without weakening the committed thresholds.
 
 ## Why the live gate failed
 
-The live run exposed two different limits:
+The two live runs exposed two different limits:
 
-1. Anonymous public search endpoints vary and throttle under sustained use. The same question often alternated between multiple substantive domains and a Wikipedia-only result. This changed the bundle from `ok` to `insufficient_evidence` even when the answer text remained present.
+1. Anonymous public search endpoints vary and throttle under sustained use. The same question often alternated between multiple substantive domains and a Wikipedia-only result. This changed the bundle from `ok` to `insufficient_evidence` even when the answer text remained present. The new pacing, candidate handling, and academic metadata reduced but did not remove this instability.
 2. Some tasks need specialized retrieval or multiple queries. DOI lookup, exact publication dates, obscure historical facts, and multi-hop questions were the persistent misses. One broad keyless query is not yet a reliable replacement for an academic index or an agent-directed evidence loop.
 
-The launch candidate now includes an explicit Tavily path and Crossref academic metadata, but neither changes this decision yet. The Tavily path has offline contract coverage and still requires a complete budgeted live run. Crossref fixes the retained DOI case while honestly leaving an ambiguous online-publication date case insufficient; record creation timestamps are not treated as publication dates.
+The launch candidate now includes an explicit Tavily path and Crossref academic metadata, but neither changes this decision yet. The Tavily path has offline contract coverage and still requires a complete budgeted live run. Crossref now supplies the retained DOI answer in all three keyless repeats while honestly leaving an ambiguous online-publication date case insufficient; record creation timestamps are not treated as publication dates.
 
 Lowering the thresholds or treating a single domain as independent corroboration would hide these limits rather than fix them.
 
