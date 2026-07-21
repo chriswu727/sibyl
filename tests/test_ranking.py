@@ -102,6 +102,14 @@ class TestLexicalCoverage(unittest.TestCase):
             lexical_query_coverage("", []),
         )
 
+    def test_matching_ignores_diacritics(self):
+        coverage = lexical_query_coverage(
+            "Jurgen Aschoff University of Gdansk",
+            ["Jürgen Aschoff studied medicine. University of Gdańsk."],
+        )
+
+        self.assertEqual(coverage.score, 1.0)
+
 
 class TestFlashRankRelevance(unittest.TestCase):
     def test_scores_are_aligned_to_input_order_and_ranker_is_cached(self):

@@ -8,10 +8,12 @@ This file helps AI agents (Claude Code, Cursor, etc.) use Sibyl effectively via 
 pip install sibyl-research
 # Optional local cross-encoder ranking:
 pip install 'sibyl-research[rerank]'
+# Optional one-shot reports and report export:
+pip install 'sibyl-research[report]'
 # Retrieval-provider mode (recommended) needs NO key — you do the reasoning:
 claude mcp add sibyl -- sibyl-mcp
 # For the one-shot research() tool, add a provider key so sibyl's own model runs it:
-claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp
+claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp --profile report
 ```
 
 ## Two modes — who does the reasoning?
@@ -37,6 +39,12 @@ gather_sources("Serbian quarterfinalist 2018 Madrid Open men's singles")
 gather_sources("2018 Madrid Open men's singles draw results")   # call again with sub-queries
 → read the returned [Source N] blocks, cross-reference, answer WITH citations.
 → if the sources don't contain it, gather more or say you don't know — never guess.
+
+# bounded workflow for a dependent or multi-part question:
+gather_evidence(question="In what year was the company that created CUDA founded?")
+→ if next_action is decompose_query, call again with loop_id and one atomic query.
+→ finish with the synthesis-ready supporting E-step IDs.
+→ synthesize only after the loop status is ready; the host still does all reasoning.
 ```
 
 **One-shot: sibyl does everything with its own model** (needs a provider key):
@@ -46,6 +54,12 @@ research(query, depth=2)   # search→scrape→rank→synthesize→verify→repo
 Prefer `gather_bundle` for programmatic agents and `gather_sources` for readable
 conversation context. In both cases, do your own synthesis for factual/hard
 questions; use `research()` when you want a finished report in one call.
+
+The default `auto` MCP profile exposes only the five keyless retrieval tools
+unless the report extra and an LLM credential are both available. Use
+`sibyl-mcp --list-tools` to inspect the active surface. Thin-page Jina rendering
+is opt-in through `render_thin_pages=true` because it discloses target URLs to a
+third-party service.
 
 ## Recommended Workflows
 
@@ -96,6 +110,7 @@ timeline("OpenAI company history")
 | Price chart | `chart(symbols, period)` |
 | **Programmatic evidence retrieval (keyless)** | **`gather_bundle(query)` — structured sources, passages, provenance, and diagnostics** |
 | **Readable evidence retrieval (keyless)** | **`gather_sources(query)` — renders full-text source blocks; you synthesize** |
+| **Bounded multi-step retrieval (keyless)** | **`gather_evidence(question)` — host-planned atomic steps with a four-call ceiling** |
 | Quick web search | `quick_search(query)` |
 | Read a specific page | `read_url(url)` |
 | Analyze text | `analyze(text, question)` |

@@ -104,6 +104,17 @@ class TestSafeRedirects(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(page.title, "Final")
         self.assertEqual(self.fetch.await_count, 2)
 
+    async def test_json_response_is_not_parsed_as_page_evidence(self):
+        client = mock.Mock()
+        response = _response(200, text='{"created":"2011-09-05"}')
+        response.headers["content-type"] = "application/json"
+        self.fetch.return_value = response
+
+        page = await scrape_url("https://example.com/metadata", client=client)
+
+        self.assertEqual(page.text, "")
+        self.assertEqual(page.error, "Unsupported content type: application/json")
+
     async def test_hostname_resolving_to_private_ip_is_blocked(self):
         client = mock.Mock()
 

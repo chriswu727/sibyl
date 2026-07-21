@@ -7,11 +7,37 @@ from typing import Any, Dict, List, Literal, Optional
 
 BundleStatus = Literal["ok", "insufficient_evidence", "invalid_request", "failed"]
 EvidenceSufficiency = Literal["not_assessed", "sufficient", "limited", "insufficient"]
+QueryComplexity = Literal["not_assessed", "single_step", "multi_step"]
+RecommendedAction = Literal[
+    "not_assessed",
+    "synthesize",
+    "refine_query",
+    "decompose_query",
+    "revise_request",
+    "retry",
+]
+EvidenceLoopStatus = Literal[
+    "active",
+    "ready",
+    "budget_exhausted",
+    "invalid_request",
+    "failed",
+]
+EvidenceLoopAction = Literal[
+    "synthesize",
+    "refine_query",
+    "decompose_query",
+    "revise_request",
+    "retry",
+    "continue_or_finalize",
+    "none",
+]
 ContentOrigin = Literal[
     "direct_fetch",
     "jina_reader",
     "wikipedia_api",
     "search_snippet",
+    "crossref_api",
 ]
 PublishedAtMethod = Literal[
     "",
@@ -92,6 +118,14 @@ class BundleDiagnostics:
     content_cluster_method: str = "not_run"
     evidence_sufficiency: EvidenceSufficiency = "not_assessed"
     sufficiency_reasons: List[str] = field(default_factory=list)
+    search_queries: List[str] = field(default_factory=list)
+    search_providers: List[str] = field(default_factory=list)
+    max_source_query_term_coverage: Optional[float] = None
+    metadata_fallbacks: int = 0
+    query_complexity: QueryComplexity = "not_assessed"
+    recommended_action: RecommendedAction = "not_assessed"
+    refinement_searches: int = 0
+    refinement_failures: int = 0
 
 
 @dataclass(frozen=True)
@@ -102,6 +136,48 @@ class SourceBundle:
     status: BundleStatus
     sources: List[EvidenceSource]
     diagnostics: BundleDiagnostics
+    error: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class EvidenceLoopStep:
+    step_id: str
+    query: str
+    bundle: SourceBundle
+
+
+@dataclass(frozen=True)
+class EvidenceLoopStepSummary:
+    step_id: str
+    query: str
+    bundle_id: str
+    status: BundleStatus
+    evidence_sufficiency: EvidenceSufficiency
+    recommended_action: RecommendedAction
+
+
+@dataclass(frozen=True)
+class EvidenceLoopDiagnostics:
+    max_steps: int
+    retrieval_calls: int
+    remaining_steps: int
+    expires_in_seconds: int
+
+
+@dataclass(frozen=True)
+class EvidenceLoop:
+    schema_version: Literal["1.0"]
+    loop_id: str
+    question: str
+    status: EvidenceLoopStatus
+    steps: List[EvidenceLoopStepSummary]
+    current_step: Optional[EvidenceLoopStep]
+    next_action: EvidenceLoopAction
+    diagnostics: EvidenceLoopDiagnostics
+    supporting_step_ids: List[str] = field(default_factory=list)
     error: str = ""
 
     def to_dict(self) -> Dict[str, Any]:

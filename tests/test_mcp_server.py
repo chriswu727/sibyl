@@ -4,10 +4,18 @@ import os
 import unittest
 from unittest import mock
 
+from mcp.server.fastmcp.exceptions import ToolError
+
 import sibyl.mcp_server as mcp_server
 from sibyl.config import Config, Provider
 from sibyl.evidence import BundleDiagnostics, SourceBundle
-from sibyl.mcp_server import _format_report, gather_bundle, gather_sources, research
+from sibyl.mcp_server import (
+    _format_report,
+    gather_bundle,
+    gather_evidence,
+    gather_sources,
+    research,
+)
 from sibyl.researcher import ResearchReport
 from sibyl.verifier import FindingVerification
 
@@ -45,9 +53,8 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
         mcp_server._last_report = ResearchReport("old", "stale", [], [])
         with mock.patch.dict(os.environ, {}, clear=True), \
              mock.patch("sibyl.mcp_server._get_config", return_value=cfg):
-            text = await research("question")
-        self.assertIn("Research failed", text)
-        self.assertIn("requires an LLM provider key", text)
+            with self.assertRaisesRegex(ToolError, "requires an LLM provider key"):
+                await research("question")
         self.assertIsNone(mcp_server._last_report)
 
     async def test_per_call_flags_do_not_mutate_global_config(self):
@@ -66,7 +73,7 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
                 return ResearchReport(query, "summary", [], [])
 
         with mock.patch("sibyl.mcp_server._get_config", return_value=cfg), \
-             mock.patch("sibyl.mcp_server.Researcher", FakeResearcher):
+             mock.patch("sibyl.researcher.Researcher", FakeResearcher):
             await research("question", fast=True, verify=False)
 
         self.assertFalse(cfg.fast)
@@ -97,7 +104,12 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
 
         self.assertIs(result, self.bundle)
         self.assertEqual(result.to_dict()["bundle_id"], "sb_test")
-        gather.assert_awaited_once_with("question", 10, 7000, ranker="none")
+        gather.assert_awaited_once_with(
+            "question", 10, 7000, ranker="none", render_thin_pages=False
+        )
+
+    async def test_stdio_defaults_to_warning_logs(self):
+        self.assertEqual(mcp_server.mcp.settings.log_level, "WARNING")
 
     async def test_fastmcp_serializes_structured_content(self):
         with mock.patch(
@@ -177,14 +189,21 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertIs(second, recovered)
         self.assertEqual(retrieve.await_count, 2)
 
-    async def test_mcp_registers_thirteen_tools(self):
+    async def test_mcp_registers_fourteen_tools(self):
         tools = await mcp_server.mcp.list_tools()
         names = {tool.name for tool in tools}
         structured_tool = next(tool for tool in tools if tool.name == "gather_bundle")
+        loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
-        self.assertEqual(len(tools), 13)
+        self.assertEqual(len(tools), 14)
+        self.assertIn("gather_evidence", names)
         self.assertIn("gather_bundle", names)
         self.assertIn("gather_sources", names)
+        self.assertEqual(
+            set(loop_tool.outputSchema["properties"]["status"]["enum"]),
+            {"active", "ready", "budget_exhausted", "invalid_request", "failed"},
+        )
+        self.assertIn("current_step", loop_tool.outputSchema["properties"])
         self.assertEqual(
             set(structured_tool.outputSchema["properties"]["status"]["enum"]),
             {"ok", "insufficient_evidence", "invalid_request", "failed"},
@@ -198,8 +217,42 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
                 structured_tool.outputSchema["$defs"]["EvidenceSource"]
                 ["properties"]["content_origin"]["enum"]
             ),
-            {"direct_fetch", "jina_reader", "wikipedia_api", "search_snippet"},
+            {
+                "direct_fetch",
+                "jina_reader",
+                "wikipedia_api",
+                "search_snippet",
+                "crossref_api",
+            },
         )
+
+    async def test_evidence_loop_rejects_continuation_without_loop_id(self):
+        result = await gather_evidence(query="atomic query")
+
+        self.assertEqual(result.status, "invalid_request")
+        self.assertEqual(result.next_action, "revise_request")
+        self.assertIn("loop_id is required", result.error)
+
+    async def test_fastmcp_serializes_evidence_loop(self):
+        _, structured = await mcp_server.mcp.call_tool(
+            "gather_evidence", {"query": "atomic query"}
+        )
+
+        self.assertEqual(structured["schema_version"], "1.0")
+        self.assertEqual(structured["status"], "invalid_request")
+        self.assertIsNone(structured["current_step"])
+
+    async def test_auto_profile_hides_tools_that_need_configuration(self):
+        config = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(mcp_server._mcp_profile(config), "keyless")
+
+    async def test_auto_profile_enables_report_surface_with_credentials(self):
+        config = Config(
+            providers=[Provider(model="deepseek/deepseek-v4-flash", api_key="k")]
+        )
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(mcp_server._mcp_profile(config), "report")
 
 
 if __name__ == "__main__":

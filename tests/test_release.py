@@ -1,4 +1,5 @@
 """Release guard tests. No network."""
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,6 +18,20 @@ class TestReleaseValidation(unittest.TestCase):
         (root / "CHANGELOG.md").write_text(
             f"# Changelog\n\n## {version} — 2026-07-14\n", encoding="utf-8"
         )
+        (root / "server.json").write_text(
+            json.dumps(
+                {
+                    "name": "io.github.chriswu727/sibyl",
+                    "version": version,
+                    "packages": [{"version": version}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        (root / "README.md").write_text(
+            "<!-- mcp-name: io.github.chriswu727/sibyl -->\n",
+            encoding="utf-8",
+        )
         return temporary, root
 
     def test_accepts_matching_tag_version_and_changelog(self):
@@ -34,6 +49,22 @@ class TestReleaseValidation(unittest.TestCase):
         with temporary:
             (root / "CHANGELOG.md").write_text("# Changelog\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "no section"):
+                validate_release("v0.3.0", root)
+
+    def test_rejects_mismatched_registry_version(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            (root / "server.json").write_text(
+                json.dumps(
+                    {
+                        "name": "io.github.chriswu727/sibyl",
+                        "version": "0.2.0",
+                        "packages": [{"version": "0.2.0"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "server.json"):
                 validate_release("v0.3.0", root)
 
 

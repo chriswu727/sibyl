@@ -1,7 +1,7 @@
 [project]
 name = "sibyl-research"
 dynamic = ["version"]
-description = "AI-powered deep research agent — market analysis, trend prediction, topic research with multi-LLM support"
+description = "Web research for AI agents with keyless evidence retrieval and optional cited reports"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -14,35 +14,48 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["research", "ai", "deep-research", "mcp", "llm", "analysis", "prediction"]
+keywords = ["research", "evidence", "retrieval", "mcp", "citations", "agents"]
 dependencies = [
-    # Floor tested to pass response_format json_object through to deepseek/ and
-    # register v4-flash; ceiling pinned so a future release can't silently break
-    # the extra_body={"thinking":...} contract the whole pipeline relies on.
-    "litellm>=1.83.0,<2.0.0",
-    "mcp[cli]>=1.0.0",
+    "mcp>=1.27.0,<2.0.0",
     "httpx>=0.27.0",
     "httpcore>=1.0.0,<2.0.0",
     "certifi>=2024.0.0",
     "beautifulsoup4>=4.12.0",
     "lxml>=6.1.1",
-    "trafilatura>=2.0,<3.0",
     "click>=8.0.0",
-    "rich>=13.0.0",
     "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+report = [
+    # Floor tested to pass response_format json_object through to deepseek/ and
+    # register v4-flash; ceiling protects the provider-specific thinking contract.
+    "litellm>=1.83.0,<2.0.0",
     "fpdf2>=2.7.0",
+]
+finance = [
     "yfinance>=0.2.0",
     "matplotlib>=3.8.0",
     "pandas>=2.0.0",
     "pytrends>=4.9.0",
 ]
-
-[project.optional-dependencies]
+extract = ["trafilatura>=2.0,<3.0"]
 rerank = ["flashrank>=0.2.10,<0.3"]
+all = [
+    "litellm>=1.83.0,<2.0.0",
+    "fpdf2>=2.7.0",
+    "yfinance>=0.2.0",
+    "matplotlib>=3.8.0",
+    "pandas>=2.0.0",
+    "pytrends>=4.9.0",
+    "trafilatura>=2.0,<3.0",
+    "flashrank>=0.2.10,<0.3",
+]
 
 [project.scripts]
 sibyl = "sibyl.cli:main"
 sibyl-mcp = "sibyl.mcp_server:main"
+sibyl-research = "sibyl.mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["sibyl"]

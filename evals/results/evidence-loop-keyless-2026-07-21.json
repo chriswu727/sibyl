@@ -1,0 +1,146 @@
+{
+  "generated_at": "2026-07-21T22:13:40.570725+00:00",
+  "sibyl_version": "0.4.0",
+  "method": "fixed_host_plans_model_free_retrieval_only",
+  "method_limitations": "Does not evaluate host query planning or final synthesis; single repeat.",
+  "configured_search_provider": "keyless",
+  "repeats": 1,
+  "dataset": "evals/gold/evidence_loop_4.jsonl",
+  "total_cases": 4,
+  "decomposed_cases": 4,
+  "completed_plan_cases": 4,
+  "ready_cases": 4,
+  "answer_hits": 4,
+  "passed_cases": 4,
+  "decomposition_rate": 1.0,
+  "plan_execution_rate": 1.0,
+  "ready_rate": 1.0,
+  "answer_coverage": 1.0,
+  "pass_rate": 1.0,
+  "cases": [
+    {
+      "case_id": "loop_h13",
+      "initial_query_decomposed": true,
+      "planned_queries_completed": true,
+      "loop_status": "ready",
+      "answer_in_evidence": true,
+      "passed": true,
+      "error": "",
+      "steps": [
+        {
+          "step_id": "E1",
+          "query": "Which country won the 2018 FIFA World Cup?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 3433
+        },
+        {
+          "step_id": "E2",
+          "query": "What is the capital of France?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 2037
+        },
+        {
+          "step_id": "E3",
+          "query": "Which river runs through Paris?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 4171
+        }
+      ]
+    },
+    {
+      "case_id": "loop_h16",
+      "initial_query_decomposed": true,
+      "planned_queries_completed": true,
+      "loop_status": "ready",
+      "answer_in_evidence": true,
+      "passed": true,
+      "error": "",
+      "steps": [
+        {
+          "step_id": "E1",
+          "query": "Which company created the CUDA parallel computing platform?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 3198
+        },
+        {
+          "step_id": "E2",
+          "query": "In what year was NVIDIA founded?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 4067
+        }
+      ]
+    },
+    {
+      "case_id": "loop_h17",
+      "initial_query_decomposed": true,
+      "planned_queries_completed": true,
+      "loop_status": "ready",
+      "answer_in_evidence": true,
+      "passed": true,
+      "error": "",
+      "steps": [
+        {
+          "step_id": "E1",
+          "query": "Who directed the 2010 film Inception?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 2797
+        },
+        {
+          "step_id": "E2",
+          "query": "Which 2008 Batman film was directed by Christopher Nolan?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 3342
+        }
+      ]
+    },
+    {
+      "case_id": "loop_h19",
+      "initial_query_decomposed": true,
+      "planned_queries_completed": true,
+      "loop_status": "ready",
+      "answer_in_evidence": true,
+      "passed": true,
+      "error": "",
+      "steps": [
+        {
+          "step_id": "E1",
+          "query": "Qantas is the flag carrier airline of which country?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 10149
+        },
+        {
+          "step_id": "E2",
+          "query": "What is the official currency of Australia?",
+          "status": "ok",
+          "recommended_action": "synthesize",
+          "source_count": 10,
+          "latency_ms": 4603
+        }
+      ]
+    }
+  ],
+  "thresholds": {
+    "min_decomposition_rate": 1.0,
+    "min_plan_execution_rate": 1.0,
+    "min_ready_rate": 1.0,
+    "min_answer_coverage": 1.0,
+    "min_pass_rate": 1.0
+  },
+  "passed": true
+}

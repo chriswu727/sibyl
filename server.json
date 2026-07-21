@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.chriswu727/sibyl",
+  "title": "Sibyl — Evidence-First Web Research",
+  "description": "Keyless web evidence retrieval for AI agents with provenance and optional cited reports.",
+  "version": "0.4.0",
+  "repository": {
+    "url": "https://github.com/chriswu727/sibyl",
+    "source": "github"
+  },
+  "websiteUrl": "https://yichenwu.dev/projects/sibyl",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "sibyl-research",
+      "version": "0.4.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

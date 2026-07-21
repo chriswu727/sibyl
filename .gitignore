@@ -16,6 +16,10 @@ reports/
 !README.md
 !CHANGELOG.md
 !AGENTS.md
+!CONTRIBUTING.md
+!PRIVACY.md
+!SECURITY.md
+!llms-install.md
 !docs/*.md
 
 # eval cache

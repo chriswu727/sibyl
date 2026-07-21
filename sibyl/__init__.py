@@ -1,8 +1,16 @@
-"""Sibyl — AI-powered deep research agent."""
+"""Web research for agents: structured evidence and optional cited reports."""
+
+from .api import gather_bundle, gather_sources
 
 from .evidence import (
     BundleDiagnostics,
     BundleStatus,
+    EvidenceLoop,
+    EvidenceLoopAction,
+    EvidenceLoopDiagnostics,
+    EvidenceLoopStatus,
+    EvidenceLoopStep,
+    EvidenceLoopStepSummary,
     EvidencePassage,
     EvidenceSufficiency,
     EvidenceSource,
@@ -12,10 +20,18 @@ from .evidence import (
 __all__ = [
     "BundleDiagnostics",
     "BundleStatus",
+    "EvidenceLoop",
+    "EvidenceLoopAction",
+    "EvidenceLoopDiagnostics",
+    "EvidenceLoopStatus",
+    "EvidenceLoopStep",
+    "EvidenceLoopStepSummary",
     "EvidencePassage",
     "EvidenceSufficiency",
     "EvidenceSource",
     "SourceBundle",
+    "gather_bundle",
+    "gather_sources",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

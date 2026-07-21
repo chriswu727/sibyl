@@ -52,7 +52,13 @@ class TestSourceBundleContract(unittest.TestCase):
                 schema["$defs"]["EvidenceSource"]["properties"]
                 ["content_origin"]["enum"]
             ),
-            {"direct_fetch", "jina_reader", "wikipedia_api", "search_snippet"},
+            {
+                "direct_fetch",
+                "jina_reader",
+                "wikipedia_api",
+                "search_snippet",
+                "crossref_api",
+            },
         )
         self.assertEqual(
             set(schema["properties"]["status"]["enum"]),
@@ -62,6 +68,20 @@ class TestSourceBundleContract(unittest.TestCase):
             "meta_article_published_time",
             schema["$defs"]["EvidenceSource"]["properties"]
             ["published_at_method"]["enum"],
+        )
+        self.assertEqual(
+            set(
+                schema["$defs"]["BundleDiagnostics"]["properties"]
+                ["recommended_action"]["enum"]
+            ),
+            {
+                "not_assessed",
+                "synthesize",
+                "refine_query",
+                "decompose_query",
+                "revise_request",
+                "retry",
+            },
         )
 
 

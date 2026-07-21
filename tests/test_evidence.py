@@ -59,6 +59,15 @@ class TestSourceBundle(unittest.TestCase):
         self.assertEqual(data["diagnostics"]["content_cluster_method"], "not_run")
         self.assertEqual(data["diagnostics"]["evidence_sufficiency"], "not_assessed")
         self.assertEqual(data["diagnostics"]["sufficiency_reasons"], [])
+        self.assertEqual(data["diagnostics"]["search_providers"], [])
+        self.assertIsNone(
+            data["diagnostics"]["max_source_query_term_coverage"]
+        )
+        self.assertEqual(data["diagnostics"]["metadata_fallbacks"], 0)
+        self.assertEqual(data["diagnostics"]["query_complexity"], "not_assessed")
+        self.assertEqual(data["diagnostics"]["recommended_action"], "not_assessed")
+        self.assertEqual(data["diagnostics"]["refinement_searches"], 0)
+        self.assertEqual(data["diagnostics"]["refinement_failures"], 0)
 
 
 if __name__ == "__main__":

@@ -3,24 +3,34 @@ from __future__ import annotations
 
 import os
 from dataclasses import replace
-from typing import Optional
+from importlib.util import find_spec
+from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.exceptions import ToolError
 
 from .async_cache import AsyncSingleFlightTTL
-from .config import Config, Provider
-from .evidence import SourceBundle
+from .config import Config
+from .evidence import EvidenceLoop, SourceBundle
+from .evidence_loop import EvidenceLoopManager
 from .ranking import RankingBackend
-from .researcher import Researcher, ResearchReport
 from .retrieval import gather_source_bundle, render_source_bundle
 
 mcp = FastMCP(
     "sibyl",
+    log_level="WARNING",
     instructions="""Sibyl gives you keyless web research. Two modes — pick based on who should do the reasoning:
 
 RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU reason:
   • gather_bundle(query) — structured keyless retrieval for agents and pipelines. Returns
     versioned sources/passages with stable IDs, hashes, timestamps, and diagnostics.
+    Check diagnostics.recommended_action after every call. Synthesize only for
+    "synthesize"; issue an atomic follow-up for "refine_query"; split dependent
+    fact chains for "decompose_query"; retry or revise only as directed.
+  • gather_evidence(question) — a bounded multi-call workflow for complex questions.
+    Continue with gather_evidence(loop_id=..., query=...) using one atomic query at
+    a time, then finish with the synthesis-ready supporting step IDs. Sibyl enforces
+    a four-step ceiling and preserves every SourceBundle; the host still plans and reasons.
   • gather_sources(query) — the same retrieval rendered as readable [Source N] blocks
     for conversational use. Call either tool several times with focused sub-queries,
     cross-reference the evidence, and synthesize the answer YOURSELF — citing sources
@@ -30,24 +40,36 @@ RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU re
   • quick_search(query) — raw search hits (title/url/snippet), no scraping.
   • read_url(url) — clean full text of one page.
 
-ONE-SHOT — sibyl does the whole thing with its own model (needs sibyl's provider key):
-  • research(query, depth) — full pipeline (search→scrape→rank→synthesize→verify→report)
-    run by sibyl's configured LLM (e.g. DeepSeek). Findings are verified against sources.
-    Use when you want a finished report in one call and accept sibyl's model/key does it.
-
-Also: fetch_market_data(symbols), chart(symbols), compare/swot/timeline/trends, save_report().
-For factual questions, prefer gather_bundle/gather_sources + your own synthesis — it beats
-the one-shot pipeline on hard questions and makes evidence-based abstention possible.
-depth=1/2/3 = quick/standard/deep.
+If optional report tools are enabled, research(query, depth) runs the full
+search→scrape→rank→synthesize→verify→report pipeline with the configured model.
+For factual questions, prefer gather_bundle/gather_sources + your own synthesis.
 """,
 )
 
 _config: Optional[Config] = None
-_last_report: Optional[ResearchReport] = None
+_last_report: Optional[Any] = None
 _bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
     ttl_seconds=30.0,
     max_entries=64,
 )
+_evidence_loops = EvidenceLoopManager(ttl_seconds=600, max_entries=64)
+
+_KEYLESS_TOOLS = {
+    "gather_evidence",
+    "gather_bundle",
+    "gather_sources",
+    "quick_search",
+    "read_url",
+}
+_REPORT_TOOLS = {
+    "analyze",
+    "compare",
+    "research",
+    "save_report",
+    "swot",
+    "timeline",
+}
+_FINANCE_TOOLS = {"chart", "fetch_market_data", "trends"}
 
 
 async def _cached_source_bundle(
@@ -55,17 +77,23 @@ async def _cached_source_bundle(
     max_sources: int,
     chars_per_source: int,
     ranker: RankingBackend,
+    render_thin_pages: bool,
 ) -> SourceBundle:
     key = (
         str(query or "").strip(),
         str(max_sources),
         str(chars_per_source),
         str(ranker or "").strip().lower(),
+        bool(render_thin_pages),
     )
 
     async def retrieve() -> SourceBundle:
         return await gather_source_bundle(
-            query, max_sources, chars_per_source, ranker=ranker
+            query,
+            max_sources,
+            chars_per_source,
+            ranker=ranker,
+            render_thin_pages=render_thin_pages,
         )
 
     return await _bundle_cache.get_or_create(
@@ -90,7 +118,61 @@ def _get_config() -> Config:
     return _config
 
 
-def _format_report(report: ResearchReport) -> str:
+def _mcp_profile(config: Config) -> str:
+    requested = os.environ.get("SIBYL_MCP_PROFILE", "auto").strip().lower()
+    profiles = {"auto", "keyless", "report", "finance", "full"}
+    if requested not in profiles:
+        raise RuntimeError(
+            "SIBYL_MCP_PROFILE must be one of: auto, keyless, report, finance, full"
+        )
+    if requested == "auto":
+        report_installed = all(find_spec(name) for name in ("litellm", "fpdf"))
+        return "report" if config.has_llm_credentials() and report_installed else "keyless"
+    return requested
+
+
+async def _configure_tool_profile() -> str:
+    profile = _mcp_profile(_get_config())
+    enabled = set(_KEYLESS_TOOLS)
+    if profile in {"report", "full"}:
+        missing = [name for name in ("litellm", "fpdf") if find_spec(name) is None]
+        if missing:
+            raise RuntimeError(
+                "Report tools require 'pip install sibyl-research[report]' "
+                f"(missing: {', '.join(missing)})."
+            )
+        _require_llm_config("Report tools")
+        enabled.update(_REPORT_TOOLS)
+    if profile in {"finance", "full"}:
+        missing = [
+            name
+            for name in ("matplotlib", "pandas", "pytrends", "yfinance")
+            if find_spec(name) is None
+        ]
+        if missing:
+            raise RuntimeError(
+                "Finance tools require 'pip install sibyl-research[finance]' "
+                f"(missing: {', '.join(missing)})."
+            )
+        enabled.update(_FINANCE_TOOLS)
+    for tool in await mcp.list_tools():
+        if tool.name not in enabled:
+            mcp.remove_tool(tool.name)
+    return profile
+
+
+def _require_llm_config(capability: str) -> Config:
+    config = _get_config()
+    if not config.has_llm_credentials():
+        raise ToolError(
+            f"{capability} requires an LLM provider key or a configured "
+            "local/API-base backend. Use gather_bundle or gather_sources for "
+            "keyless research."
+        )
+    return config
+
+
+def _format_report(report: Any) -> str:
     """Format a research report as readable text."""
     if report.status != "ok":
         heading = "Insufficient evidence" if report.status == "insufficient_evidence" else "Research failed"
@@ -163,6 +245,7 @@ async def gather_sources(
     max_sources: int = 10,
     chars_per_source: int = 7000,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
 ) -> str:
     """Keyless web retrieval: search + scrape + dedup, returning the top FULL-TEXT
     sources for a query WITHOUT writing an answer — so YOU (the calling model)
@@ -179,9 +262,10 @@ async def gather_sources(
         max_sources: How many sources to return (default 10; bounded to 1-20)
         chars_per_source: Max characters of text per source (default 7000; bounded to 500-10000)
         ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
+        render_thin_pages: Send thin-page URLs to Jina Reader (default false)
     """
     bundle = await _cached_source_bundle(
-        query, max_sources, chars_per_source, ranker=ranker
+        query, max_sources, chars_per_source, ranker, render_thin_pages
     )
     return render_source_bundle(bundle)
 
@@ -192,6 +276,7 @@ async def gather_bundle(
     max_sources: int = 10,
     chars_per_source: int = 7000,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
 ) -> SourceBundle:
     """Return a structured, keyless SourceBundle without synthesizing an answer.
 
@@ -200,15 +285,96 @@ async def gather_bundle(
     Passage/source relevance defaults to the dependency-free lexical_v1 ranker.
     FlashRank is optional and falls back to lexical_v1 with an explicit diagnostic.
     Source quality remains null until a separate quality evaluator computes it.
+    Follow diagnostics.recommended_action; only "synthesize" permits synthesis.
 
     Args:
         query: One focused search query
         max_sources: How many sources to return (default 10; bounded to 1-20)
         chars_per_source: Max characters per evidence passage (default 7000; bounded to 500-10000)
         ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
+        render_thin_pages: Send thin-page URLs to Jina Reader (default false)
     """
     return await _cached_source_bundle(
-        query, max_sources, chars_per_source, ranker=ranker
+        query, max_sources, chars_per_source, ranker, render_thin_pages
+    )
+
+
+@mcp.tool(structured_output=True)
+async def gather_evidence(
+    question: str = "",
+    loop_id: str = "",
+    query: str = "",
+    finish: bool = False,
+    supporting_step_ids: Optional[list[str]] = None,
+    max_steps: int = 3,
+    max_sources: int = 10,
+    chars_per_source: int = 7000,
+    ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
+) -> EvidenceLoop:
+    """Run a bounded evidence loop while leaving planning and synthesis to the host.
+
+    Start with question only. For a complex question, use the returned loop_id and
+    call this tool again with one atomic query. Continue according to next_action.
+    When the returned steps cover the question, call with finish=true and list the
+    synthesis-ready E-step IDs that support the answer. Only status="ready" permits
+    synthesis. Loops expire after ten minutes and allow at most four retrieval calls.
+
+    Args:
+        question: Original research question; use only when starting a loop
+        loop_id: Existing loop identifier for a continuation or finish call
+        query: One new atomic retrieval query for an existing loop
+        finish: Validate selected steps and close the loop for synthesis
+        supporting_step_ids: Synthesis-ready step IDs used to finish the loop
+        max_steps: Retrieval budget for a new loop (default 3; bounded to 1-4)
+        max_sources: Sources per retrieval call (default 10; bounded to 1-20)
+        chars_per_source: Characters per evidence passage (default 7000)
+        ranker: lexical (default), flashrank, or none
+        render_thin_pages: Send thin-page URLs to Jina Reader
+    """
+
+    async def retrieve(
+        step_query: str,
+        step_max_sources: int,
+        step_chars_per_source: int,
+        step_ranker: str,
+        step_render_thin_pages: bool,
+    ) -> SourceBundle:
+        return await _cached_source_bundle(
+            step_query,
+            step_max_sources,
+            step_chars_per_source,
+            step_ranker,
+            step_render_thin_pages,
+        )
+
+    clean_loop_id = str(loop_id or "").strip()
+    if clean_loop_id:
+        if str(question or "").strip():
+            return _evidence_loops.invalid(
+                str(question or "").strip(),
+                "question must be empty when continuing an existing loop.",
+            )
+        return await _evidence_loops.advance(
+            clean_loop_id,
+            query=query,
+            finish=finish,
+            supporting_step_ids=supporting_step_ids,
+            gather=retrieve,
+        )
+    if finish or str(query or "").strip() or supporting_step_ids:
+        return _evidence_loops.invalid(
+            str(question or "").strip(),
+            "loop_id is required for continuation and finish calls.",
+        )
+    return await _evidence_loops.start(
+        question,
+        max_steps=max_steps,
+        max_sources=max_sources,
+        chars_per_source=chars_per_source,
+        ranker=ranker,
+        render_thin_pages=render_thin_pages,
+        gather=retrieve,
     )
 
 
@@ -227,24 +393,31 @@ async def research(query: str, depth: int = 2, language: str = "auto", fast: boo
         fast: Skip the review/refine pass for ~20% faster results with slightly less polish
         verify: At depth 2+, verify each finding and flag unsupported claims (skipped in fast mode)
     """
-    base_config = _get_config()
+    global _last_report
+    _last_report = None
+    base_config = _require_llm_config("One-shot research")
     config = replace(base_config, providers=list(base_config.providers),
                      fast=fast, verify_claims=verify)
+    from .researcher import Researcher
+
     researcher = Researcher(config)
 
     progress_lines = []
     def on_progress(msg: str):
         progress_lines.append(msg)
 
-    global _last_report
-    _last_report = None
     try:
         report = await researcher.research(query, depth=depth, language=language, on_progress=on_progress)
         if report.status == "ok":
             _last_report = report
+        if report.status == "failed":
+            raise ToolError(report.error or "One-shot research failed.")
         return _format_report(report)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Research failed: {str(e)[:200]}\n\nProgress so far:\n" + "\n".join(progress_lines)
+        detail = str(e).strip().replace("\n", " ")[:200]
+        raise ToolError(f"One-shot research failed: {detail}") from e
 
 
 @mcp.tool()
@@ -316,9 +489,7 @@ async def analyze(text: str, question: str) -> str:
         text: The text content to analyze (article, report, data — up to 5000 chars)
         question: The specific question to answer about the text (e.g. "What are the main risks mentioned?" or "Summarize the key arguments for and against")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "Analysis requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("Analysis")
     provider = config.get_provider("analysis")
 
     import litellm
@@ -352,9 +523,7 @@ async def compare(items: str, query: str = "") -> str:
         items: Comma-separated items to compare (e.g. "NVDA,AMD,INTC" or "React,Vue,Angular")
         query: Context for the comparison (e.g. "for AI/ML workloads" or "for a startup in 2026")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "Comparison requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("Comparison")
     provider = config.get_provider("analysis")
 
     item_list = [i.strip() for i in items.split(",") if i.strip()]
@@ -363,6 +532,8 @@ async def compare(items: str, query: str = "") -> str:
         full_query += f" — {query}"
 
     # Quick research for context
+    from .researcher import Researcher
+
     researcher = Researcher(config)
     report = await researcher.research(full_query, depth=1)
     if report.status != "ok":
@@ -382,10 +553,10 @@ async def swot(subject: str) -> str:
     Args:
         subject: What to analyze (e.g. "Tesla", "Canadian housing market", "remote work trend")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "SWOT analysis requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("SWOT analysis")
     provider = config.get_provider("analysis")
+
+    from .researcher import Researcher
 
     researcher = Researcher(config)
     report = await researcher.research(f"SWOT analysis {subject}", depth=1)
@@ -423,10 +594,10 @@ async def timeline(topic: str) -> str:
     Args:
         topic: The topic to build a timeline for (e.g. "OpenAI history", "Canada immigration policy changes 2024-2026")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "Timeline generation requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("Timeline generation")
     provider = config.get_provider("analysis")
+
+    from .researcher import Researcher
 
     researcher = Researcher(config)
     report = await researcher.research(f"timeline of key events {topic}", depth=1)
@@ -519,7 +690,7 @@ async def save_report(format: str = "both", output_dir: str = ".") -> str:
         output_dir: Directory to save files (default: current directory)
     """
     if _last_report is None:
-        return "No research report to save. Run research() first."
+        raise ToolError("No research report to save. Run research() first.")
 
     from .reporter import generate_pdf, _report_to_markdown
     from pathlib import Path
@@ -548,6 +719,31 @@ async def save_report(format: str = "both", output_dir: str = ".") -> str:
 
 def main():
     """Entry point for sibyl-mcp command."""
+    import argparse
+    import asyncio
+
+    parser = argparse.ArgumentParser(description="Sibyl MCP server")
+    parser.add_argument("--version", action="store_true")
+    parser.add_argument("--list-tools", action="store_true")
+    parser.add_argument(
+        "--profile",
+        choices=["auto", "keyless", "report", "finance", "full"],
+    )
+    args = parser.parse_args()
+    if args.version:
+        from . import __version__
+
+        print(__version__)
+        return
+    if args.profile:
+        os.environ["SIBYL_MCP_PROFILE"] = args.profile
+    profile = asyncio.run(_configure_tool_profile())
+    if args.list_tools:
+        tools = asyncio.run(mcp.list_tools())
+        print(f"profile: {profile}")
+        for tool in tools:
+            print(tool.name)
+        return
     mcp.run()
 
 

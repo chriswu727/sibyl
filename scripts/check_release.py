@@ -1,6 +1,7 @@
 """Validate that a release tag matches the package and changelog versions."""
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -24,6 +25,17 @@ def validate_release(tag: str, root: Path) -> str:
     changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
     if re.search(rf"^## {re.escape(version)}(?:\s|$)", changelog, re.MULTILINE) is None:
         raise ValueError(f"CHANGELOG.md has no section for {version}")
+
+    server = json.loads((root / "server.json").read_text(encoding="utf-8"))
+    if server.get("version") != version:
+        raise ValueError("server.json version must match the package version")
+    packages = server.get("packages") or []
+    if len(packages) != 1 or packages[0].get("version") != version:
+        raise ValueError("server.json package version must match the package version")
+    server_name = server.get("name")
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    if not server_name or f"mcp-name: {server_name}" not in readme:
+        raise ValueError("README.md must contain the matching MCP Registry name")
     return version
 
 

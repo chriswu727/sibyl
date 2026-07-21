@@ -29,7 +29,7 @@ class RetrievalPipelineCaseResult:
         return (
             self.top_source_hit
             and self.status == "ok"
-            and self.evidence_sufficiency in {"sufficient", "limited"}
+            and self.evidence_sufficiency == "sufficient"
             and self.structure_valid
         )
 
@@ -171,7 +171,7 @@ async def evaluate_pipeline_cases(
     top_hits = sum(result.top_source_hit for result in results)
     usable = sum(
         result.status == "ok"
-        and result.evidence_sufficiency in {"sufficient", "limited"}
+        and result.evidence_sufficiency == "sufficient"
         for result in results
     )
     valid = sum(result.structure_valid for result in results)

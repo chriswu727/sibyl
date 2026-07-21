@@ -12,15 +12,17 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
-        run: pip install -e .
+        run: pip install -e '.[report,finance,extract]'
       - name: Run tests
         run: python -m unittest discover tests -v
+      - name: Smoke-test the keyless MCP stdio surface
+        run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
       - name: Check lexical retrieval regression floor
         run: python scripts/eval_retrieval.py --ranker lexical
       - name: Check end-to-end retrieval pipeline regression floor

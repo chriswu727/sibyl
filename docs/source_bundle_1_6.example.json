@@ -2,7 +2,7 @@
   "schema_version": "1.6",
   "bundle_id": "sb_contractexample",
   "query": "example evidence query",
-  "status": "ok",
+  "status": "insufficient_evidence",
   "sources": [
     {
       "source_id": "S1",
@@ -94,7 +94,20 @@
     "evidence_sufficiency": "limited",
     "sufficiency_reasons": [
       "fewer_than_two_substantive_sources"
-    ]
+    ],
+    "search_queries": [
+      "example evidence query"
+    ],
+    "search_providers": [
+      "duckduckgo",
+      "google_news"
+    ],
+    "max_source_query_term_coverage": 1.0,
+    "metadata_fallbacks": 0,
+    "query_complexity": "single_step",
+    "recommended_action": "refine_query",
+    "refinement_searches": 0,
+    "refinement_failures": 0
   },
-  "error": ""
+  "error": "Found 2 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
 }

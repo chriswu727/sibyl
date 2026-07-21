@@ -1,0 +1,3902 @@
+{
+  "generated_at": "2026-07-21T05:01:47.112016+00:00",
+  "sibyl_version": "0.4.0",
+  "datasets": [
+    "evals/gold/simpleqa_real_30.jsonl",
+    "evals/gold/hard_24.jsonl",
+    "evals/gold/adversarial_12.jsonl"
+  ],
+  "repeats": 3,
+  "total_cases": 66,
+  "answerable_cases": 54,
+  "trap_cases": 12,
+  "answer_coverage": 0.759259,
+  "trap_safe_rate": 1.0,
+  "stable_case_rate": 0.333333,
+  "ready_bundle_rate": 0.560606,
+  "p50_latency_ms": 4059,
+  "p95_latency_ms": 10543,
+  "cases": [
+    {
+      "case_id": "real01",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 1948,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3407,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 8243,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real02",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 4123,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 1859,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1521,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real03",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 3346,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2727,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5377,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real04",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 8466,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7072,
+          "error": "",
+          "search_results": 24,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3727,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real05",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 2593,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 3121,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 2312,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real06",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 3441,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 11079,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 6426,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real07",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 2785,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3377,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 2703,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real08",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3048,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 2302,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3454,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real09",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3162,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 2897,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 2590,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real10",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 5066,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 3750,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 3867,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real11",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3391,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3184,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 2655,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real12",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 4514,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 11203,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 4834,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real13",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 4278,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2179,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2150,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real14",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2041,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3017,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 2116,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real15",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6219,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5462,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 10442,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real16",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2016,
+          "error": "",
+          "search_results": 5,
+          "urls_attempted": 5,
+          "pages_scraped": 5,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 2750,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2259,
+          "error": "",
+          "search_results": 5,
+          "urls_attempted": 5,
+          "pages_scraped": 5,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real17",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3671,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 5,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 5829,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 6810,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 5,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real18",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3978,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 12009,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 3640,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real19",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 5114,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 4282,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 10543,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real20",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4423,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4336,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2812,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real21",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3420,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3712,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5265,
+          "error": "",
+          "search_results": 25,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real22",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 4463,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6017,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4357,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real23",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 3713,
+          "error": "",
+          "search_results": 5,
+          "urls_attempted": 5,
+          "pages_scraped": 5,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 9340,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4256,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real24",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3164,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3135,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2784,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real25",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 6241,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 2962,
+          "error": "",
+          "search_results": 5,
+          "urls_attempted": 5,
+          "pages_scraped": 5,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 8441,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real26",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 4383,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1914,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1257,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real27",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 2018,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 6038,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 1804,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real28",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 1,
+          "latency_ms": 1762,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 1,
+          "latency_ms": 1822,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 1,
+          "latency_ms": 1100,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "real29",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2136,
+          "error": "",
+          "search_results": 5,
+          "urls_attempted": 5,
+          "pages_scraped": 5,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3156,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3713,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "real30",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2337,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2141,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2534,
+          "error": "",
+          "search_results": 3,
+          "urls_attempted": 3,
+          "pages_scraped": 3,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h01",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4236,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 5503,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4097,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h02",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 2991,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3035,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2441,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h03",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 5007,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3704,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 9297,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h04",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1703,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2436,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 8815,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h05",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 10485,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 8730,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4432,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h06",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2080,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1322,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 1934,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h07",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3598,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4496,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 10056,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h08",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6498,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4148,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4847,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h09",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3824,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3013,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 4137,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h10",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4770,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4158,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 5040,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h11",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 4082,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 3164,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4388,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h12",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 15304,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 5477,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 8233,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h13",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 5013,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 8426,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3687,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h14",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 9998,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 3196,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 2796,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h15",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 5437,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 7061,
+          "error": "",
+          "search_results": 6,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 5335,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h16",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 4822,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1506,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 2469,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h17",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 2920,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 1318,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 2993,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h18",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5429,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8877,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 5766,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h19",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 4059,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 10541,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 10999,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h20",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 2590,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 2845,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 7372,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "h21",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 3279,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 9544,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4105,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h22",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 5241,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5344,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5498,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h23",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 9079,
+          "error": "",
+          "search_results": 20,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 3978,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 12840,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "h24",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1927,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3747,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 1883,
+          "error": "",
+          "search_results": 4,
+          "urls_attempted": 4,
+          "pages_scraped": 4,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "adv01",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 9,
+          "latency_ms": 2346,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 2562,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 9,
+          "latency_ms": 3332,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv02",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 3457,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 4,
+          "latency_ms": 4652,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 4720,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv03",
+      "case_type": "nonexistent",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5675,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 9,
+          "latency_ms": 5657,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 9,
+          "latency_ms": 5191,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "adv04",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5471,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5686,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 5127,
+          "error": "",
+          "search_results": 6,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "adv05",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 10525,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 5215,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 11869,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv06",
+      "case_type": "nonexistent",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 9886,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 3030,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 3248,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv07",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 10530,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 11926,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 10673,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv08",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 7835,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 9,
+          "latency_ms": 3829,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 9,
+          "latency_ms": 6040,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 5,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv09",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 4,
+          "latency_ms": 2551,
+          "error": "",
+          "search_results": 6,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "single_domain"
+          ]
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 3298,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 3250,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv10",
+      "case_type": "nonexistent",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 5,
+          "latency_ms": 4851,
+          "error": "",
+          "search_results": 6,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 1,
+          "sufficiency_reasons": [
+            "missing_query_anchor"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 0,
+          "latency_ms": 8825,
+          "error": "",
+          "search_results": 0,
+          "urls_attempted": 0,
+          "pages_scraped": 0,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 0,
+          "sufficiency_reasons": [
+            "no_sources"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 0,
+          "latency_ms": 8875,
+          "error": "",
+          "search_results": 0,
+          "urls_attempted": 0,
+          "pages_scraped": 0,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 0,
+          "sufficiency_reasons": [
+            "no_sources"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "adv11",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 5039,
+          "error": "",
+          "search_results": 20,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 3003,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 3551,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": []
+        }
+      ]
+    },
+    {
+      "case_id": "adv12",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 3638,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "future_outcome_not_observable"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5397,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "future_outcome_not_observable"
+          ]
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 10102,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "sufficiency_reasons": [
+            "future_outcome_not_observable"
+          ]
+        }
+      ]
+    }
+  ],
+  "thresholds": {
+    "min_answer_coverage": 0.8,
+    "min_trap_safe_rate": 0.8,
+    "min_stable_case_rate": 0.9,
+    "min_ready_bundle_rate": 0.75,
+    "max_p95_latency_ms": 30000
+  },
+  "passed": false
+}

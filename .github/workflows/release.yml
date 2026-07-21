@@ -1,4 +1,4 @@
-name: Publish to PyPI
+name: Release Sibyl
 
 on:
   release:
@@ -12,18 +12,24 @@ jobs:
     name: Build and validate distributions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install release tooling
-        run: python -m pip install build==1.5.1 twine==6.2.0
+        run: python -m pip install build==1.5.1 twine==6.2.0 -e '.[report,finance,extract]'
       - name: Validate tag and package version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: python scripts/check_release.py "$RELEASE_TAG"
+      - name: Run release tests and offline evaluations
+        run: |
+          python -m unittest discover tests -v
+          python scripts/eval_retrieval.py --ranker lexical
+          python scripts/eval_retrieval_pipeline.py --ranker lexical
+          python scripts/eval_source_quality.py
       - name: Build distributions
         run: python -m build
       - name: Validate distribution metadata
@@ -33,15 +39,36 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           python -m venv /tmp/sibyl-release-smoke
-          /tmp/sibyl-release-smoke/bin/python -m pip install --no-deps dist/*.whl
+          /tmp/sibyl-release-smoke/bin/python -m pip install dist/*.whl
+          /tmp/sibyl-release-smoke/bin/python -m pip check
           /tmp/sibyl-release-smoke/bin/python scripts/check_installed_distribution.py "${RELEASE_TAG#v}"
+          /tmp/sibyl-release-smoke/bin/sibyl-mcp --version
+          /tmp/sibyl-release-smoke/bin/sibyl-mcp --list-tools
+          /tmp/sibyl-release-smoke/bin/python scripts/check_mcp_stdio.py /tmp/sibyl-release-smoke/bin/sibyl-mcp
       - name: Store release distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-distributions
           path: dist/
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
+
+  github-assets:
+    name: Attach GitHub release assets
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-distributions
+          path: dist
+      - name: Attach distributions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
 
   publish:
     name: Publish distributions to PyPI
@@ -60,3 +87,38 @@ jobs:
           path: dist/
       - name: Publish distributions
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+
+  mcp-registry:
+    name: Publish to the official MCP Registry
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - name: Wait for PyPI indexing
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          for attempt in {1..20}; do
+            if curl --fail --silent "https://pypi.org/pypi/sibyl-research/$VERSION/json" >/dev/null; then
+              exit 0
+            fi
+            echo "Waiting for PyPI to index $VERSION ($attempt/20)"
+            sleep 15
+          done
+          exit 1
+      - name: Install MCP publisher 1.8.0
+        run: |
+          curl --fail --location --output mcp-publisher.tar.gz \
+            https://github.com/modelcontextprotocol/registry/releases/download/v1.8.0/mcp-publisher_linux_amd64.tar.gz
+          echo "1370446bbe74d562608e8005a6ccce02d146a661fbd78674e11cc70b9618d6cf  mcp-publisher.tar.gz" | sha256sum --check
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+      - name: Publish MCP metadata
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
