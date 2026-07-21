@@ -66,6 +66,7 @@ Do not publish v0.4.0, update the official MCP Registry, or submit broad directo
 3. The release wheel passes the clean default and report-extra installation smoke tests.
 4. GitHub CI passes on Python 3.10, 3.11, and 3.12.
 5. README, PyPI metadata, Registry metadata, and the product page describe the same capabilities, maturity, install command, and limitations.
+6. At least three external beta users install Sibyl without maintainer intervention, complete a representative research task, and report whether the evidence state and citations were understandable.
 
 ## Work required before launch
 
@@ -76,7 +77,8 @@ Priority order:
 3. Add an agent-facing retry/refinement signal for limited bundles so the host can issue a focused follow-up instead of treating the first broad query as final.
 4. Rerun the live gate and compare it with the retained failed baseline.
 5. With explicit quota approval, evaluate the one-shot report path and either improve it or keep it clearly secondary.
-6. Only after every gate is green, date the changelog, merge the launch candidate, tag v0.4.0, and let the release workflow publish GitHub assets, PyPI, and Registry metadata.
+6. Run a small external beta and convert installation, tool-selection, and evidence-interpretation failures into regression cases or documentation fixes.
+7. Only after every gate is green, date the changelog, merge the launch candidate, tag v0.4.0, and let the release workflow publish GitHub assets, PyPI, and Registry metadata.
 
 ## Claims allowed today
 
