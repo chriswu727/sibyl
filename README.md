@@ -368,6 +368,8 @@ The latest formal keyless three-repeat run is retained in [`evals/results/live-r
 
 The repository also contains an exploratory 30-question SimpleQA comparison. In the measured concurrent run, a host model reasoning over `gather_sources()` answered 26/30 correctly, while the configured one-shot model answered 5/30. The experiment is small, agent-graded, and sensitive to keyless search throttling; read the [full method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md) rather than treating it as a broad benchmark.
 
+The bounded evidence loop also has a [four-case keyless retrieval run](evals/results/evidence-loop-keyless-2026-07-21.json) covering the previously missed World Cup river, CUDA founding year, Inception/Batman, and Qantas currency chains. All four fixed host plans reached `ready` and contained the expected answer. This is a single-repeat retrieval test with hand-authored atomic queries; it does not measure whether an arbitrary host can produce the plan or synthesize the final answer.
+
 ## Known limitations
 
 - Keyless search engines and public websites can throttle, block, or change behavior.

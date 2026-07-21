@@ -14,6 +14,7 @@
 - Provider-path and per-source query-coverage diagnostics.
 - Machine-readable query-complexity and recommended-action diagnostics for agent retry and decomposition loops.
 - A bounded `gather_evidence` MCP workflow that lets the host plan atomic follow-ups, preserves a lightweight retrieval trace, and validates synthesis-ready supporting steps without MCP sampling.
+- A fixed-plan, model-free evidence-loop evaluation; the initial four dependent fact chains passed decomposition, readiness, and answer-evidence checks on the keyless path.
 - One bounded exclusion search for atomic queries whose relevant full-text evidence comes from only one domain, with explicit attempt and failure diagnostics.
 - A distinct `crossref_api` provenance label and metadata-fallback diagnostic, avoiding confusion with ordinary search snippets.
 - Live retrieval metric version 2 separates answerable readiness from trap safety, measures ready-state precision, and records configured and actual search providers.

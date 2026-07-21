@@ -32,7 +32,7 @@ Primary references:
 
 | Gate | Result | Status |
 |---|---:|---|
-| Unit suite | 281 tests on the launch-candidate branch | Pass |
+| Unit suite | 283 tests on the launch-candidate branch | Pass |
 | Python support in CI | 3.10, 3.11, 3.12 | Pass |
 | Fixed lexical ranking | 8/8 at rank 1 | Pass |
 | Fixed end-to-end retrieval | 8/8 usable and structurally valid | Pass |
@@ -46,6 +46,7 @@ Primary references:
 | Live answerable ready rate | 66.0%; threshold 75% | **Fail** |
 | Live ready-state precision | 93.9%; threshold 95% | **Fail** |
 | Live repeat stability | 62.1%; threshold 90% | **Fail** |
+| Fixed-plan evidence loops | 4/4 ready with answer evidence; single keyless repeat | Pass (targeted only) |
 | One-shot report quality | No current authorized model-backed launch run | **Not tested** |
 
 The latest complete three-repeat artifact is [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). It records `passed: false` and must not be described as launch evidence. The [original keyless baseline](../evals/results/live-retrieval-2026-07-21.json) remains available for comparison: answer coverage rose from 75.9% to 85.2% and stability from 33.3% to 62.1% without weakening those thresholds.
@@ -77,6 +78,8 @@ The launch candidate now includes an explicit Tavily path and Crossref academic 
 
 Lowering the thresholds or treating a single domain as independent corroboration would hide these limits rather than fix them.
 
+The first fixed-plan `gather_evidence` run is retained in [`evals/results/evidence-loop-keyless-2026-07-21.json`](../evals/results/evidence-loop-keyless-2026-07-21.json). The four previously missed dependent chains all reached `ready` and contained their expected answer after two or three hand-authored atomic queries. This validates the bounded retrieval and trace handoff, not host planning or final synthesis, and it is only one repeat; it does not clear the launch gate.
+
 ## Launch gates
 
 Do not publish v0.4.0, update the official MCP Registry, or submit broad directory promotions until all of the following are true:
@@ -94,7 +97,7 @@ Priority order:
 
 1. Use metric version 2 provider-path diagnostics to address false-ready and conservative-abstention cases from the Tavily pilot, then decide whether a complete 315-request run is justified; the keyless path remains the zero-setup beta fallback.
 2. Extend the new Crossref metadata path where publisher-specific facts are absent or ambiguous; never substitute Crossref record timestamps for publication dates.
-3. Evaluate the new bounded `gather_evidence` workflow on dependent fact chains instead of grading only the first broad query; add any host tool-selection or trace-interpretation failures as regressions.
+3. Run `gather_evidence` through real MCP hosts and evaluate whether they choose atomic follow-ups, preserve the returned citation IDs, and respect the final `ready` state; the fixed-plan retrieval path is 4/4, but host planning and synthesis remain unmeasured.
 4. Rerun the live gate and compare it with the retained failed baseline.
 5. With explicit quota approval, evaluate the one-shot report path and either improve it or keep it clearly secondary.
 6. Run a small external beta and convert installation, tool-selection, and evidence-interpretation failures into regression cases or documentation fixes.
