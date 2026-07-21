@@ -293,6 +293,8 @@ def _diagnostics(
     max_source_query_term_coverage: Optional[float] = None,
     query_complexity: QueryComplexity = "not_assessed",
     recommended_action: RecommendedAction = "not_assessed",
+    refinement_searches: int = 0,
+    refinement_failures: int = 0,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -336,6 +338,8 @@ def _diagnostics(
         metadata_fallbacks=metadata_fallbacks,
         query_complexity=query_complexity,
         recommended_action=recommended_action,
+        refinement_searches=refinement_searches,
+        refinement_failures=refinement_failures,
     )
 
 
@@ -461,6 +465,8 @@ async def gather_source_bundle(
     snippet_fallbacks = 0
     wikipedia_fallbacks = 0
     metadata_fallbacks = 0
+    refinement_searches = 0
+    refinement_failures = 0
     candidates: List[WebPage] = []
     try:
         search_batches = []
@@ -561,6 +567,98 @@ async def gather_source_bundle(
                     snippet_fallbacks += 1
 
         good = dedup_pages(good)
+        query_anchor_terms = _query_anchor_terms(clean_query)
+        relevant_domains = {
+            urlsplit(page.url).netloc.casefold().removeprefix("www.")
+            for page in good
+            if (
+                len(page.text) > 200
+                and page.content_origin != "search_snippet"
+                and (
+                    not query_anchor_terms
+                    or query_anchor_terms <= lexical_query_terms(page.text)
+                )
+            )
+            and urlsplit(page.url).netloc
+        }
+        if len(relevant_domains) == 1 and not multi_step_query:
+            excluded_domain = next(iter(relevant_domains))
+            refinement_query = f"{search_queries[-1]} -site:{excluded_domain}"
+            search_queries.append(refinement_query)
+            refinement_searches += 1
+            try:
+                refinement_results = await search_web(
+                    refinement_query,
+                    "all",
+                    max_results=6,
+                    client=client,
+                    include_academic=include_academic,
+                )
+            except Exception:
+                refinement_results = []
+                refinement_failures += 1
+            new_results = []
+            for result in refinement_results:
+                result_key = canonical_url(result.url)
+                if result_key in seen_results:
+                    continue
+                seen_results.add(result_key)
+                results.append(result)
+                new_results.append(result)
+                if result.url.startswith("http"):
+                    urls.append(result.url)
+            refinement_urls = [
+                result.url for result in new_results if result.url.startswith("http")
+            ][:4]
+            if refinement_urls:
+                try:
+                    refinement_pages = await scrape_urls(
+                        refinement_urls,
+                        max_chars=30000,
+                        concurrency=4,
+                        client=client,
+                        js_render=render_thin_pages,
+                    )
+                except Exception:
+                    refinement_pages = []
+                    refinement_failures += 1
+                attempted_urls.extend(refinement_urls)
+                pages.extend(refinement_pages)
+                retrieved_urls = {
+                    page.url
+                    for page in refinement_pages
+                    if page.text and len(page.text) > 150 and not page.error
+                }
+                good.extend(
+                    page
+                    for page in refinement_pages
+                    if page.url in retrieved_urls
+                )
+                for result in new_results:
+                    if (
+                        result.url in retrieved_urls
+                        or not result.snippet
+                        or len(result.snippet) <= 120
+                    ):
+                        continue
+                    content_origin = (
+                        "crossref_api"
+                        if result.provider == "crossref"
+                        else "search_snippet"
+                    )
+                    good.append(
+                        WebPage(
+                            result.url,
+                            result.title,
+                            result.snippet,
+                            content_origin=content_origin,
+                        )
+                    )
+                    if content_origin == "crossref_api":
+                        metadata_fallbacks += 1
+                    else:
+                        snippet_fallbacks += 1
+                good = dedup_pages(good)
         substantive = [page for page in good if len(page.text) > 200]
         if len(substantive) < 3:
             wiki_pages = await wikipedia_lookup(
@@ -594,6 +692,8 @@ async def gather_source_bundle(
             ),
             query_complexity=query_complexity,
             recommended_action="retry",
+            refinement_searches=refinement_searches,
+            refinement_failures=refinement_failures,
         )
         return SourceBundle(
             schema_version="1.6",
@@ -913,7 +1013,7 @@ async def gather_source_bundle(
             )
         )
 
-    attempted_count = min(len(urls), url_attempt_limit)
+    attempted_count = len(attempted_urls)
     diagnostics = _diagnostics(
         search_results=len(results),
         unique_urls=len(urls),
@@ -962,6 +1062,8 @@ async def gather_source_bundle(
         ),
         query_complexity=query_complexity,
         recommended_action=recommended_action,
+        refinement_searches=refinement_searches,
+        refinement_failures=refinement_failures,
     )
     return SourceBundle(
         schema_version="1.6",

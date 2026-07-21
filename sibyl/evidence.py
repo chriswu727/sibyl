@@ -108,6 +108,8 @@ class BundleDiagnostics:
     metadata_fallbacks: int = 0
     query_complexity: QueryComplexity = "not_assessed"
     recommended_action: RecommendedAction = "not_assessed"
+    refinement_searches: int = 0
+    refinement_failures: int = 0
 
 
 @dataclass(frozen=True)

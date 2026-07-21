@@ -199,6 +199,88 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.unique_domains, 2)
         self.assertEqual(bundle.status, "ok")
 
+    async def test_single_domain_triggers_one_exclusion_refinement(self):
+        initial_results = [
+            SearchResult("Alpha one", "https://a.example/one", "", "web"),
+            SearchResult("Alpha two", "https://a.example/two", "", "web"),
+        ]
+        refinement_result = SearchResult(
+            "Independent alpha", "https://b.example/review", "", "web"
+        )
+        initial_pages = [
+            WebPage(
+                result.url,
+                result.title,
+                f"alpha evidence initial {index} " + "measured result " * 30,
+            )
+            for index, result in enumerate(initial_results)
+        ]
+        refinement_page = WebPage(
+            refinement_result.url,
+            refinement_result.title,
+            "alpha evidence independent review " + "replicated finding " * 30,
+        )
+        search = mock.AsyncMock(
+            side_effect=[initial_results, [refinement_result]]
+        )
+        scrape = mock.AsyncMock(
+            side_effect=[initial_pages, [refinement_page]]
+        )
+
+        with mock.patch("sibyl.retrieval.search_web", new=search), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=scrape
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=2, client=object()
+            )
+
+        self.assertEqual(search.await_count, 2)
+        self.assertEqual(
+            search.await_args_list[1].args[0],
+            "alpha evidence -site:a.example",
+        )
+        self.assertEqual(
+            bundle.diagnostics.search_queries[-1],
+            "alpha evidence -site:a.example",
+        )
+        self.assertEqual(bundle.diagnostics.refinement_searches, 1)
+        self.assertEqual(bundle.diagnostics.refinement_failures, 0)
+        self.assertEqual(bundle.diagnostics.urls_attempted, 3)
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.status, "ok")
+
+    async def test_refinement_failure_retains_initial_evidence(self):
+        results = [
+            SearchResult("Alpha one", "https://a.example/one", "", "web"),
+            SearchResult("Alpha two", "https://a.example/two", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                result.url,
+                result.title,
+                f"alpha evidence {index} " + f"distinct finding {index} " * 30,
+            )
+            for index, result in enumerate(results)
+        ]
+        search = mock.AsyncMock(
+            side_effect=[results, RuntimeError("refinement unavailable")]
+        )
+
+        with mock.patch("sibyl.retrieval.search_web", new=search), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle("alpha evidence", client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.sources_returned, 2)
+        self.assertEqual(bundle.diagnostics.refinement_searches, 1)
+        self.assertEqual(bundle.diagnostics.refinement_failures, 1)
+        self.assertEqual(bundle.diagnostics.sufficiency_reasons, ["single_domain"])
+
     async def test_syndicated_domains_are_not_independent_evidence(self):
         results = [
             SearchResult("Alpha report", "https://a.example/report", "", "news"),

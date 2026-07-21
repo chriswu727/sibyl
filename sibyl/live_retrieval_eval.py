@@ -47,6 +47,8 @@ class LiveRetrievalRun:
     sufficiency_reasons: List[str] = field(default_factory=list)
     query_complexity: str = "not_assessed"
     recommended_action: str = "not_assessed"
+    refinement_searches: int = 0
+    refinement_failures: int = 0
 
 
 @dataclass(frozen=True)
@@ -143,6 +145,8 @@ def evaluate_bundle(
         sufficiency_reasons=bundle.diagnostics.sufficiency_reasons,
         query_complexity=bundle.diagnostics.query_complexity,
         recommended_action=bundle.diagnostics.recommended_action,
+        refinement_searches=bundle.diagnostics.refinement_searches,
+        refinement_failures=bundle.diagnostics.refinement_failures,
     )
 
 

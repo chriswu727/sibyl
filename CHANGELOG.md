@@ -13,6 +13,7 @@
 - Crossref metadata retrieval for academic titles, DOIs, and publication dates.
 - Provider-path and per-source query-coverage diagnostics.
 - Machine-readable query-complexity and recommended-action diagnostics for agent retry and decomposition loops.
+- One bounded exclusion search for atomic queries whose relevant full-text evidence comes from only one domain, with explicit attempt and failure diagnostics.
 - A distinct `crossref_api` provenance label and metadata-fallback diagnostic, avoiding confusion with ordinary search snippets.
 - Live retrieval metric version 2 separates answerable readiness from trap safety, measures ready-state precision, and records configured and actual search providers.
 - Official MCP Registry metadata, machine-readable install guidance, privacy and security policies, contribution guidance, and issue templates.

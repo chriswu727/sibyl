@@ -204,7 +204,9 @@ This makes missing evidence observable. It also prevents several different websi
     "search_providers": ["tavily", "wikipedia"],
     "metadata_fallbacks": 0,
     "query_complexity": "single_step",
-    "recommended_action": "synthesize"
+    "recommended_action": "synthesize",
+    "refinement_searches": 0,
+    "refinement_failures": 0
   },
   "error": ""
 }
