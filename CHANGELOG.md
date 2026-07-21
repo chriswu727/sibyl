@@ -29,6 +29,7 @@
 - Thin-page Jina rendering is opt-in in every workflow, improving default latency and preventing implicit URL disclosure.
 - PyPI metadata and CLI language now lead with evidence-first web research rather than prediction use cases.
 - Release validation installs the real default dependency set and checks the public API.
+- CI and release validation open a real stdio client session, verify the five-tool keyless profile, and exercise the no-network decomposition start path.
 - Keyless search uses paced provider requests, an independent DuckDuckGo/Mojeek/Yahoo fallback chain, bounded search batches, and direct Wikipedia API enrichment.
 - Search snippets remain eligible for relevance ranking when full pages exist, while retaining their weaker provenance and sufficiency treatment.
 - Ranked source selection prefers a new content cluster on a new domain before filling slots with additional same-domain pages.

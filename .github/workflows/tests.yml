@@ -21,6 +21,8 @@ jobs:
         run: pip install -e '.[report,finance,extract]'
       - name: Run tests
         run: python -m unittest discover tests -v
+      - name: Smoke-test the keyless MCP stdio surface
+        run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
       - name: Check lexical retrieval regression floor
         run: python scripts/eval_retrieval.py --ranker lexical
       - name: Check end-to-end retrieval pipeline regression floor
