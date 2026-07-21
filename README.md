@@ -114,8 +114,9 @@ if bundle.status == "ok":
 Use Sibyl's gather_bundle tool for factual research.
 Check bundle status before answering. Treat search_snippet content as a lead,
 not full evidence. Do not count sources with the same content_cluster_id as
-independent corroboration. Cite passage citation_id values. If the bundle does
-not contain the answer, retrieve again with a focused query or say it was not found.
+independent corroboration. Follow diagnostics.recommended_action: synthesize,
+refine_query, decompose_query, retry, or revise_request. Cite passage citation_id
+values. If the bundle does not contain the answer, retrieve again or say it was not found.
 ```
 
 That policy matters more than a long system prompt: it tells the agent when evidence is usable, what counts as independent support, and when to abstain.
@@ -201,7 +202,9 @@ This makes missing evidence observable. It also prevents several different websi
     "sufficiency_reasons": [],
     "search_queries": ["Python 3.14 release date"],
     "search_providers": ["tavily", "wikipedia"],
-    "metadata_fallbacks": 0
+    "metadata_fallbacks": 0,
+    "query_complexity": "single_step",
+    "recommended_action": "synthesize"
   },
   "error": ""
 }
@@ -211,6 +214,7 @@ Consumer rules:
 
 - Require schema major version `1`; allow additive fields in later minor versions.
 - Check `status` before reading evidence. Only `ok` is synthesis-ready.
+- Require `diagnostics.recommended_action == "synthesize"` before synthesis. Decompose dependent fact chains into atomic `gather_bundle()` calls.
 - Treat `citation_id` as bundle-scoped. Persist it with `bundle_id`, `source_id`, and `passage_id`.
 - Treat source and passage scores as relevance signals, not truth probabilities.
 - Treat `published_at` as publisher-supplied metadata, not an independently verified date.

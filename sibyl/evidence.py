@@ -7,6 +7,15 @@ from typing import Any, Dict, List, Literal, Optional
 
 BundleStatus = Literal["ok", "insufficient_evidence", "invalid_request", "failed"]
 EvidenceSufficiency = Literal["not_assessed", "sufficient", "limited", "insufficient"]
+QueryComplexity = Literal["not_assessed", "single_step", "multi_step"]
+RecommendedAction = Literal[
+    "not_assessed",
+    "synthesize",
+    "refine_query",
+    "decompose_query",
+    "revise_request",
+    "retry",
+]
 ContentOrigin = Literal[
     "direct_fetch",
     "jina_reader",
@@ -97,6 +106,8 @@ class BundleDiagnostics:
     search_providers: List[str] = field(default_factory=list)
     max_source_query_term_coverage: Optional[float] = None
     metadata_fallbacks: int = 0
+    query_complexity: QueryComplexity = "not_assessed"
+    recommended_action: RecommendedAction = "not_assessed"
 
 
 @dataclass(frozen=True)

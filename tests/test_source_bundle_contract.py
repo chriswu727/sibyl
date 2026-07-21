@@ -69,6 +69,20 @@ class TestSourceBundleContract(unittest.TestCase):
             schema["$defs"]["EvidenceSource"]["properties"]
             ["published_at_method"]["enum"],
         )
+        self.assertEqual(
+            set(
+                schema["$defs"]["BundleDiagnostics"]["properties"]
+                ["recommended_action"]["enum"]
+            ),
+            {
+                "not_assessed",
+                "synthesize",
+                "refine_query",
+                "decompose_query",
+                "revise_request",
+                "retry",
+            },
+        )
 
 
 class TestMcpSourceBundleContract(unittest.IsolatedAsyncioTestCase):

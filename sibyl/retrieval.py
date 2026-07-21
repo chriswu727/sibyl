@@ -21,10 +21,12 @@ from .evidence import (
     EvidenceSufficiency,
     EvidencePassage,
     EvidenceSource,
+    QueryComplexity,
+    RecommendedAction,
     SourceBundle,
 )
 from .passages import TextPassage, split_passages
-from .queries import search_query_variants
+from .queries import query_requires_decomposition, search_query_variants
 from .ranking import (
     RankingBackend,
     flashrank_relevance_scores,
@@ -133,6 +135,7 @@ def _assess_evidence_sufficiency(
     missing_anchor_terms: List[str],
     future_outcome_unobservable: bool,
     fragmented_query_support: bool,
+    multi_step_query: bool,
 ) -> Tuple[EvidenceSufficiency, List[str]]:
     if source_count == 0:
         return "insufficient", ["no_sources"]
@@ -150,6 +153,8 @@ def _assess_evidence_sufficiency(
         blockers.append("future_outcome_not_observable")
     if fragmented_query_support:
         blockers.append("fragmented_query_support")
+    if multi_step_query:
+        blockers.append("multi_step_query")
     if blockers:
         return "insufficient", blockers
 
@@ -177,6 +182,7 @@ _SUFFICIENCY_REASON_LABELS = {
     "fragmented_query_support": (
         "no single source sufficiently covers the quoted target and requested fact"
     ),
+    "multi_step_query": "the question contains a dependent fact chain",
 }
 
 
@@ -238,6 +244,8 @@ def _diagnostics(
     search_queries: Optional[List[str]] = None,
     search_providers: Optional[List[str]] = None,
     max_source_query_term_coverage: Optional[float] = None,
+    query_complexity: QueryComplexity = "not_assessed",
+    recommended_action: RecommendedAction = "not_assessed",
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -279,6 +287,8 @@ def _diagnostics(
         search_providers=search_providers or [],
         max_source_query_term_coverage=max_source_query_term_coverage,
         metadata_fallbacks=metadata_fallbacks,
+        query_complexity=query_complexity,
+        recommended_action=recommended_action,
     )
 
 
@@ -327,6 +337,7 @@ async def gather_source_bundle(
             effective_chars_per_source=7000,
             started_at=started_at,
             requested_ranking_method=requested_ranker,
+            recommended_action="revise_request",
         )
         return SourceBundle(
             schema_version="1.6",
@@ -343,6 +354,10 @@ async def gather_source_bundle(
     url_attempt_limit = max(effective_max_sources + 2, 12)
     clean_query = str(query or "").strip()
     search_queries = search_query_variants(clean_query)
+    multi_step_query = query_requires_decomposition(clean_query)
+    query_complexity: QueryComplexity = (
+        "multi_step" if multi_step_query else "single_step"
+    )
     if requested_ranker not in {"lexical", "flashrank", "none"}:
         diagnostics = _diagnostics(
             requested_max_sources=requested_max_sources,
@@ -351,6 +366,8 @@ async def gather_source_bundle(
             effective_chars_per_source=effective_chars_per_source,
             started_at=started_at,
             requested_ranking_method=requested_ranker,
+            query_complexity=query_complexity,
+            recommended_action="revise_request",
         )
         return SourceBundle(
             schema_version="1.6",
@@ -370,6 +387,8 @@ async def gather_source_bundle(
             effective_chars_per_source=effective_chars_per_source,
             started_at=started_at,
             requested_ranking_method=requested_ranker,
+            query_complexity="not_assessed",
+            recommended_action="revise_request",
         )
         return SourceBundle(
             schema_version="1.6",
@@ -526,6 +545,8 @@ async def gather_source_bundle(
             search_providers=sorted(
                 {result.provider for result in results if result.provider}
             ),
+            query_complexity=query_complexity,
+            recommended_action="retry",
         )
         return SourceBundle(
             schema_version="1.6",
@@ -774,7 +795,15 @@ async def gather_source_bundle(
             bool(_QUOTED_TEXT_RE.search(clean_query))
             and max_source_query_term_coverage < 0.6
         ),
+        multi_step_query=multi_step_query,
     )
+    recommended_action: RecommendedAction
+    if multi_step_query:
+        recommended_action = "decompose_query"
+    elif evidence_sufficiency == "sufficient":
+        recommended_action = "synthesize"
+    else:
+        recommended_action = "refine_query"
     bundle_status: BundleStatus = (
         "ok" if evidence_sufficiency == "sufficient" else "insufficient_evidence"
     )
@@ -866,6 +895,8 @@ async def gather_source_bundle(
         max_source_query_term_coverage=(
             max_source_query_term_coverage if sources else None
         ),
+        query_complexity=query_complexity,
+        recommended_action=recommended_action,
     )
     return SourceBundle(
         schema_version="1.6",

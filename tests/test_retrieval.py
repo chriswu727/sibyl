@@ -113,6 +113,8 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.status, "ok")
         self.assertEqual(bundle.diagnostics.evidence_sufficiency, "sufficient")
         self.assertEqual(bundle.diagnostics.sufficiency_reasons, [])
+        self.assertEqual(bundle.diagnostics.query_complexity, "single_step")
+        self.assertEqual(bundle.diagnostics.recommended_action, "synthesize")
         self.assertEqual(bundle.diagnostics.unique_domains, 2)
         self.assertEqual(bundle.diagnostics.substantive_sources, 2)
         self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
@@ -323,6 +325,40 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             "no_substantive_sources",
             bundle.diagnostics.sufficiency_reasons,
         )
+        self.assertEqual(bundle.diagnostics.recommended_action, "refine_query")
+
+    async def test_multi_step_query_requires_decomposition(self):
+        query = "In what year was the company that created CUDA founded?"
+        results = [
+            SearchResult("CUDA creator", "https://a.example/cuda", "", "web"),
+            SearchResult("Company history", "https://b.example/history", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "The company created CUDA as a parallel computing platform. " * 20,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "The company was founded in 1993 and later created CUDA. " * 20,
+            ),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.query_complexity, "multi_step")
+        self.assertEqual(bundle.diagnostics.recommended_action, "decompose_query")
+        self.assertIn("multi_step_query", bundle.diagnostics.sufficiency_reasons)
 
     async def test_marks_search_snippet_content_origin(self):
         result = SearchResult(

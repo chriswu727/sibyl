@@ -8,6 +8,12 @@ from typing import List
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
 _QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
+_RELATIVE_CHAIN_RE = re.compile(r"\b(?:that|whose)\b", re.IGNORECASE)
+_CONTEXTUAL_QUESTION_RE = re.compile(
+    r"[.!?]\s+(?:how|what|when|where|which|who|why)\b",
+    re.IGNORECASE,
+)
+_TEMPORAL_CHAIN_RE = re.compile(r"\bwhen\s+the\b", re.IGNORECASE)
 _SEARCH_STOP_WORDS = _QUESTION_WORDS | {
     "a",
     "an",
@@ -69,3 +75,14 @@ def search_query_variants(query: str) -> List[str]:
     if len(focused_terms) < 3 or focused.casefold() == clean.casefold():
         return [clean]
     return [clean, focused]
+
+
+def query_requires_decomposition(query: str) -> bool:
+    clean = " ".join(str(query or "").split())
+    if not clean:
+        return False
+    return bool(
+        _RELATIVE_CHAIN_RE.search(clean)
+        or _CONTEXTUAL_QUESTION_RE.search(clean)
+        or _TEMPORAL_CHAIN_RE.search(clean)
+    )

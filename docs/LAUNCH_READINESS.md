@@ -93,7 +93,7 @@ Priority order:
 
 1. Use metric version 2 provider-path diagnostics to address false-ready and conservative-abstention cases from the Tavily pilot, then decide whether a complete 315-request run is justified; the keyless path remains the zero-setup beta fallback.
 2. Extend the new Crossref metadata path where publisher-specific facts are absent or ambiguous; never substitute Crossref record timestamps for publication dates.
-3. Add an agent-facing retry/refinement signal for limited bundles so the host can issue a focused follow-up instead of treating the first broad query as final.
+3. Build a bounded host-side decomposition loop around the new `query_complexity` and `recommended_action` diagnostics, then evaluate the complete multi-call workflow instead of grading only the first broad query.
 4. Rerun the live gate and compare it with the retained failed baseline.
 5. With explicit quota approval, evaluate the one-shot report path and either improve it or keep it clearly secondary.
 6. Run a small external beta and convert installation, tool-selection, and evidence-interpretation failures into regression cases or documentation fixes.

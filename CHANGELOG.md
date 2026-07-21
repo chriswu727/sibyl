@@ -12,6 +12,7 @@
 - An explicitly configured Tavily general-web provider with transparent keyless fallback.
 - Crossref metadata retrieval for academic titles, DOIs, and publication dates.
 - Provider-path and per-source query-coverage diagnostics.
+- Machine-readable query-complexity and recommended-action diagnostics for agent retry and decomposition loops.
 - A distinct `crossref_api` provenance label and metadata-fallback diagnostic, avoiding confusion with ordinary search snippets.
 - Live retrieval metric version 2 separates answerable readiness from trap safety, measures ready-state precision, and records configured and actual search providers.
 - Official MCP Registry metadata, machine-readable install guidance, privacy and security policies, contribution guidance, and issue templates.
@@ -39,6 +40,7 @@
 - Missing query entities and explicitly requested future outcomes no longer produce synthesis-ready evidence states.
 - Quoted-target questions no longer combine disconnected query fragments across unrelated sources into a synthesis-ready state.
 - Unrelated long pages no longer count as substantive corroboration when they omit the query's key entities or quoted target.
+- High-confidence dependent fact chains fail closed with `decompose_query` instead of appearing synthesis-ready after one broad retrieval.
 
 ## 0.3.0 — 2026-07-14
 

@@ -7,6 +7,8 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 - Require schema major version `1`; accept additive fields within the same major version instead of comparing the entire version string or exact key set.
 - Check `status` before reading evidence. Only `ok` is synthesis-ready; `insufficient_evidence` may contain leads but must retain its warning.
 - `limited` evidence also maps to `insufficient_evidence`; consumers should refine the query instead of treating a thin or single-cluster result as complete.
+- Read `diagnostics.recommended_action` before continuing: `synthesize` permits evidence-based synthesis, `refine_query` asks for a narrower retrieval, `decompose_query` requires separately verifiable subquestions, `retry` means the retrieval path failed, and `revise_request` means the request itself was invalid.
+- `diagnostics.query_complexity` is `multi_step` only for high-confidence dependent fact chains. Sibyl fails those broad calls closed with `multi_step_query`; gather each atomic fact separately instead of assuming one result set proves the chain.
 - Inspect `diagnostics.search_queries` to see the original and any deterministic focused query used during retrieval.
 - Inspect `diagnostics.search_providers` to see which search and metadata providers contributed retained candidates. A configured provider can fail over, so do not infer the actual path from environment configuration alone.
 - Compare aggregate `query_term_coverage` with `max_source_query_term_coverage`. A large gap can mean different sources each mention disconnected pieces of the question rather than one source supporting the requested fact.

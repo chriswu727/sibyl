@@ -64,6 +64,8 @@ class TestSourceBundle(unittest.TestCase):
             data["diagnostics"]["max_source_query_term_coverage"]
         )
         self.assertEqual(data["diagnostics"]["metadata_fallbacks"], 0)
+        self.assertEqual(data["diagnostics"]["query_complexity"], "not_assessed")
+        self.assertEqual(data["diagnostics"]["recommended_action"], "not_assessed")
 
 
 if __name__ == "__main__":

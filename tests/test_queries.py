@@ -1,7 +1,7 @@
 """Search-query variant tests."""
 import unittest
 
-from sibyl.queries import search_query_variants
+from sibyl.queries import query_requires_decomposition, search_query_variants
 
 
 class TestSearchQueryVariants(unittest.TestCase):
@@ -53,6 +53,25 @@ class TestSearchQueryVariants(unittest.TestCase):
 
     def test_empty_query_has_no_variants(self):
         self.assertEqual(search_query_variants("  "), [])
+
+    def test_detects_dependent_relative_clause(self):
+        self.assertTrue(
+            query_requires_decomposition(
+                "In what year was the company that created CUDA founded?"
+            )
+        )
+
+    def test_detects_question_after_leading_claim(self):
+        self.assertTrue(
+            query_requires_decomposition(
+                "A director made one film. What other film did they direct?"
+            )
+        )
+
+    def test_keeps_atomic_question_single_step(self):
+        self.assertFalse(
+            query_requires_decomposition("In what year was NVIDIA founded?")
+        )
 
 
 if __name__ == "__main__":
