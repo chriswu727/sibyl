@@ -235,6 +235,75 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertIn("low query-term coverage", bundle.error)
         self.assertIn("Evidence warning", render_source_bundle(bundle))
 
+    async def test_missing_query_entity_is_not_synthesis_ready(self):
+        results = [
+            SearchResult("France population", "https://a.example/france", "", "web"),
+            SearchResult("Eastern France cities", "https://b.example/cities", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "current population data for every city in France " * 30,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "eastern France city census and current population tables " * 30,
+            ),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(
+                "What is the current population of the city of Zylathia in eastern France?",
+                client=object(),
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn("missing_query_anchor", bundle.diagnostics.sufficiency_reasons)
+
+    async def test_future_outcome_is_not_treated_as_an_observed_fact(self):
+        results = [
+            SearchResult("Nobel Prize", "https://a.example/nobel", "", "web"),
+            SearchResult("Literature Prize", "https://b.example/literature", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "Nobel Prize in Literature winner award history 2999 " * 30,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "Nobel Prize Literature winner announcement archive 2999 " * 30,
+            ),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(
+                "Who will win the 2999 Nobel Prize in Literature?",
+                client=object(),
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn(
+            "future_outcome_not_observable",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
     async def test_marks_thin_only_sources_as_insufficient(self):
         result = SearchResult("Alpha evidence", "https://a.example/short", "", "web")
         page = WebPage(

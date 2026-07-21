@@ -31,7 +31,11 @@ class LexicalCoverage:
 
 
 def _normalize(value: str) -> str:
-    return unicodedata.normalize("NFKC", value or "").casefold()
+    decomposed = unicodedata.normalize("NFKD", value or "")
+    return "".join(
+        character for character in decomposed
+        if not unicodedata.combining(character)
+    ).casefold()
 
 
 def _tokens(value: str) -> Set[str]:
@@ -166,3 +170,7 @@ def lexical_query_coverage(query: str, evidence_texts: Sequence[str]) -> Lexical
         matched_terms=matched_terms,
         score=round(matched_terms / len(query_tokens), 6),
     )
+
+
+def lexical_query_terms(value: str) -> Set[str]:
+    return _tokens(value)

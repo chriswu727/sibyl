@@ -17,9 +17,9 @@ maintainer.
 
 ## Where data can go
 
-- Keyless retrieval sends search terms to DuckDuckGo or Mojeek, Google News,
-  Reddit, Wikipedia, and Semantic Scholar, then requests pages from the selected
-  publishers.
+- Keyless retrieval sends search terms to DuckDuckGo, Mojeek, or Yahoo Search;
+  Google News, Reddit, Wikipedia, and Semantic Scholar; then requests pages from
+  the selected publishers.
 - Jina rendering is disabled by default. When `render_thin_pages`, `js_render`,
   or the `--js-render` CLI flag is explicitly enabled, the destination URL is
   sent to Jina Reader for extraction.

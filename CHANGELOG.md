@@ -19,11 +19,14 @@
 - Thin-page Jina rendering is opt-in in every workflow, improving default latency and preventing implicit URL disclosure.
 - PyPI metadata and CLI language now lead with evidence-first web research rather than prediction use cases.
 - Release validation installs the real default dependency set and checks the public API.
+- Keyless search uses paced provider requests, an independent DuckDuckGo/Mojeek/Yahoo fallback chain, bounded search batches, and direct Wikipedia API enrichment.
 
 ### Fixed
 
 - Model-backed MCP failures now use protocol-level tool errors instead of successful text responses containing failure messages.
 - Natural-language questions retain the original query while adding a deterministic focused search variant.
+- Quoted titles use an exact focused query, and named entities receive a bounded Wikipedia lookup.
+- Missing query entities and explicitly requested future outcomes no longer produce synthesis-ready evidence states.
 
 ## 0.3.0 — 2026-07-14
 

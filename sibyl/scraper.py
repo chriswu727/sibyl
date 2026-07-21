@@ -549,9 +549,22 @@ async def scrape_urls(
 
     async def _limited_scrape(url: str) -> WebPage:
         async with semaphore:
-            return await scrape_url(url, max_chars, client=client, extractor=extractor,
-                                    jina_fallback=jina_fallback, js_render=js_render,
-                                    js_render_threshold=js_render_threshold, jina_gate=jina_gate)
+            try:
+                return await asyncio.wait_for(
+                    scrape_url(
+                        url,
+                        max_chars,
+                        client=client,
+                        extractor=extractor,
+                        jina_fallback=jina_fallback,
+                        js_render=js_render,
+                        js_render_threshold=js_render_threshold,
+                        jina_gate=jina_gate,
+                    ),
+                    timeout=10.0,
+                )
+            except asyncio.TimeoutError:
+                return WebPage(url=url, title="", text="", error="timeout")
 
     try:
         return await asyncio.gather(*[_limited_scrape(url) for url in urls])

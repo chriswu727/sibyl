@@ -210,7 +210,7 @@ The complete rules and machine-validated fixture are in the [consumer contract](
 
 For each focused query, Sibyl:
 
-1. Searches multiple keyless sources.
+1. Searches multiple keyless sources with provider pacing, bounded waits, and independent general-web failover.
 2. Fetches public pages and extracts readable content.
 3. Uses Wikipedia to expand thin result coverage; Jina Reader rendering is available only when `render_thin_pages=true` is explicitly requested.
 4. Canonicalizes URLs, removes duplicates, and clusters syndicated text.
@@ -240,6 +240,8 @@ SourceBundle never turns a retrieval failure into a completed-looking answer.
 | `failed` | Search or retrieval failed | Retry later or use another source path |
 
 `evidence_sufficiency` is a deterministic retrieval signal based on evidence volume, lexical coverage, domain diversity, and independent content clusters. It is not a correctness or credibility score.
+
+The checks also require named query anchors to appear in the selected evidence. A question that asks for a specific outcome in a future year is not marked synthesis-ready merely because forecasts or similarly named events were retrieved.
 
 ## Network safety
 

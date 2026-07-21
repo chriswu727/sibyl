@@ -6,14 +6,15 @@ using an injected mock client (no network).
 
 Run: python -m unittest discover tests
 """
+import asyncio
 import json
 import unittest
 from unittest import mock
 
 from sibyl.search import (
     search_duckduckgo, search_reddit, search_wikipedia, search_google_news,
-    search_mojeek, _search_general_web, fetch_wikipedia_extract, wikipedia_lookup,
-    SearchResult,
+    search_mojeek, search_yahoo, _search_general_web, fetch_wikipedia_extract,
+    wikipedia_lookup, search_web, SearchResult,
 )
 
 
@@ -48,6 +49,17 @@ class TestDuckDuckGo(unittest.IsolatedAsyncioTestCase):
     async def test_non_200_returns_empty(self):
         res = await search_duckduckgo("q", client=_client_returning(status=503))
         self.assertEqual(res, [])
+
+    async def test_parses_html_endpoint_results(self):
+        html = """
+        <div class="result">
+          <a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fa.com">Result A</a>
+          <a class="result__snippet">A useful answer snippet.</a>
+        </div>
+        """
+        res = await search_duckduckgo("q", client=_client_returning(text=html))
+        self.assertEqual([(item.title, item.url) for item in res], [("Result A", "https://a.com")])
+        self.assertEqual(res[0].snippet, "A useful answer snippet.")
 
 
 class TestWikipediaExtract(unittest.IsolatedAsyncioTestCase):
@@ -147,6 +159,25 @@ class TestMojeek(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res, [])
 
 
+class TestYahoo(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_results_and_unwraps_redirect(self):
+        html = """
+        <div class="algo">
+          <div class="compTitle">
+            <a href="https://r.search.yahoo.com/x/RU=https%3A%2F%2Fa.com%2Fanswer/RK=2/RS=x">
+              <h3>Title A</h3>
+            </a>
+          </div>
+          <div class="compText"><p>Snippet A here</p></div>
+        </div>
+        """
+        res = await search_yahoo("q", client=_client_returning(text=html))
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].title, "Title A")
+        self.assertEqual(res[0].url, "https://a.com/answer")
+        self.assertEqual(res[0].snippet, "Snippet A here")
+
+
 class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
     async def test_ddg_results_skip_mojeek(self):
         ddg = mock.AsyncMock(return_value=[SearchResult("T", "https://x.com", "s", "web")])
@@ -173,6 +204,41 @@ class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
             res = await _search_general_web("q", 5)
         moj.assert_called_once()
         self.assertEqual(res[0].url, "https://m.com")
+
+    async def test_empty_ddg_and_mojeek_fall_over_to_yahoo(self):
+        ddg = mock.AsyncMock(return_value=[])
+        moj = mock.AsyncMock(return_value=[])
+        yahoo = mock.AsyncMock(
+            return_value=[SearchResult("Y", "https://y.com", "s", "web")]
+        )
+        with mock.patch("sibyl.search.search_duckduckgo", ddg), mock.patch(
+            "sibyl.search.search_mojeek", moj
+        ), mock.patch("sibyl.search.search_yahoo", yahoo):
+            res = await _search_general_web("q", 5)
+        yahoo.assert_called_once()
+        self.assertEqual(res[0].url, "https://y.com")
+
+
+class TestSearchBatchBudget(unittest.IsolatedAsyncioTestCase):
+    async def test_returns_completed_sources_without_waiting_for_slow_helper(self):
+        async def hanging(*args, **kwargs):
+            await asyncio.Event().wait()
+
+        wiki_result = SearchResult(
+            "[Wikipedia] Answer", "https://en.wikipedia.org/wiki/Answer", "answer", "wikipedia"
+        )
+        with mock.patch("sibyl.search._SEARCH_BATCH_TIMEOUT_SECONDS", 0.01), mock.patch(
+            "sibyl.search._search_general_web", hanging
+        ), mock.patch(
+            "sibyl.search.search_google_news", mock.AsyncMock(return_value=[])
+        ), mock.patch(
+            "sibyl.search.search_reddit", mock.AsyncMock(return_value=[])
+        ), mock.patch(
+            "sibyl.search.search_wikipedia", mock.AsyncMock(return_value=[wiki_result])
+        ):
+            result = await search_web("q")
+
+        self.assertEqual(result, [wiki_result])
 
 
 class TestGoogleNews(unittest.IsolatedAsyncioTestCase):

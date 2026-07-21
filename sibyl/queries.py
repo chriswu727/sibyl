@@ -6,6 +6,7 @@ from typing import List
 
 
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
+_QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
 _SEARCH_STOP_WORDS = {
     "a",
@@ -50,6 +51,12 @@ def search_query_variants(query: str) -> List[str]:
     terms = _TERM_RE.findall(clean)
     if not terms or terms[0].casefold() not in _QUESTION_WORDS:
         return [clean]
+
+    quoted_match = _QUOTED_RE.search(clean)
+    if quoted_match:
+        quoted = " ".join((quoted_match.group(1) or quoted_match.group(2)).split())
+        if len(_TERM_RE.findall(quoted)) >= 3:
+            return [clean, quoted]
 
     focused_terms = [
         term

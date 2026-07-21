@@ -64,9 +64,12 @@ def main() -> int:
             return
         statuses = ",".join(run.status for run in case_result.runs)
         latencies = ",".join(str(run.latency_ms) for run in case_result.runs)
+        sources = ",".join(str(run.source_count) for run in case_result.runs)
+        search_results = ",".join(str(run.search_results) for run in case_result.runs)
         print(
             f"[{done}/{total}] {case_result.case_id}: "
-            f"status={statuses} latency_ms={latencies}",
+            f"status={statuses} search_results={search_results} "
+            f"sources={sources} latency_ms={latencies}",
             file=sys.stderr,
             flush=True,
         )

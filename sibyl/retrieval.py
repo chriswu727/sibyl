@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import re
 import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, cast
@@ -28,10 +29,75 @@ from .ranking import (
     RankingBackend,
     flashrank_relevance_scores,
     lexical_query_coverage,
+    lexical_query_terms,
     lexical_relevance_scores,
 )
 from .scraper import WebPage, scrape_urls
-from .search import fetch_wikipedia_extract, search_web, wikipedia_lookup
+from .search import (
+    fetch_wikipedia_extract,
+    search_web,
+    search_wikipedia,
+    wikipedia_lookup,
+)
+
+
+_ACADEMIC_QUERY_RE = re.compile(
+    r"\b(?:abstract|citation|doi|journal|paper|preprint|publication|study)\b",
+    re.IGNORECASE,
+)
+_QUERY_WORD_RE = re.compile(r"[^\W_]+", re.UNICODE)
+_QUOTED_TEXT_RE = re.compile(
+    r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)'''
+)
+_QUESTION_OPENERS = {
+    "after", "at", "how", "in", "on", "the", "what", "when", "where", "which", "who",
+}
+_FUTURE_YEAR_RE = re.compile(r"\b[2-9]\d{3}\b")
+
+
+def _query_anchor_terms(query: str) -> set[str]:
+    anchors = set()
+    words = _QUERY_WORD_RE.findall(query)
+    for index, word in enumerate(words):
+        if len(word) < 4 or not word[0].isupper():
+            continue
+        if index == 0 and word.casefold() in _QUESTION_OPENERS:
+            continue
+        anchors.update(lexical_query_terms(word))
+    for match in _QUOTED_TEXT_RE.finditer(query):
+        anchors.update(lexical_query_terms(match.group(1) or match.group(2)))
+    return anchors
+
+
+def _entity_lookup_queries(query: str) -> List[str]:
+    quoted = []
+    for match in _QUOTED_TEXT_RE.finditer(query):
+        value = " ".join((match.group(1) or match.group(2)).split())
+        if value:
+            quoted.append(value)
+    if quoted:
+        return quoted[:2]
+
+    sequences = []
+    current = []
+    for index, word in enumerate(_QUERY_WORD_RE.findall(query)):
+        capitalized = len(word) >= 2 and word[0].isupper()
+        is_opener = index == 0 and word.casefold() in _QUESTION_OPENERS
+        if capitalized and not is_opener:
+            current.append(word)
+        elif current:
+            sequences.append(" ".join(current))
+            current = []
+    if current:
+        sequences.append(" ".join(current))
+    return sequences[:2]
+
+
+def _future_outcome_is_unobservable(query: str) -> bool:
+    if " will " not in f" {query.casefold()} ":
+        return False
+    current_year = datetime.now(timezone.utc).year
+    return any(int(year) > current_year for year in _FUTURE_YEAR_RE.findall(query))
 
 
 def _sha256(value: str) -> str:
@@ -64,6 +130,8 @@ def _assess_evidence_sufficiency(
     query_term_coverage: float,
     unique_domains: int,
     independent_content_clusters: int,
+    missing_anchor_terms: List[str],
+    future_outcome_unobservable: bool,
 ) -> Tuple[EvidenceSufficiency, List[str]]:
     if source_count == 0:
         return "insufficient", ["no_sources"]
@@ -75,6 +143,10 @@ def _assess_evidence_sufficiency(
         blockers.append("too_little_evidence_text")
     if query_terms > 0 and query_term_coverage < 0.25:
         blockers.append("low_query_term_coverage")
+    if missing_anchor_terms:
+        blockers.append("missing_query_anchor")
+    if future_outcome_unobservable:
+        blockers.append("future_outcome_not_observable")
     if blockers:
         return "insufficient", blockers
 
@@ -97,6 +169,8 @@ _SUFFICIENCY_REASON_LABELS = {
     "no_substantive_sources": "no substantive full-text sources",
     "too_little_evidence_text": "too little evidence text",
     "low_query_term_coverage": "low query-term coverage",
+    "missing_query_anchor": "one or more key query entities are absent",
+    "future_outcome_not_observable": "the requested future outcome is not yet observable",
 }
 
 
@@ -254,6 +328,7 @@ async def gather_source_bundle(
 
     effective_max_sources = max(1, min(20, requested_max_sources))
     effective_chars_per_source = max(500, min(10000, requested_chars_per_source))
+    url_attempt_limit = max(effective_max_sources + 2, 12)
     clean_query = str(query or "").strip()
     search_queries = search_query_variants(clean_query)
     if requested_ranker not in {"lexical", "flashrank", "none"}:
@@ -309,18 +384,27 @@ async def gather_source_bundle(
     wikipedia_fallbacks = 0
     candidates: List[WebPage] = []
     try:
-        search_batches = await asyncio.gather(
-            *[
-                search_web(
+        search_batches = []
+        include_academic = bool(_ACADEMIC_QUERY_RE.search(clean_query))
+        for search_query in search_queries:
+            search_batches.append(
+                await search_web(
                     search_query,
                     "all",
                     max_results=6,
                     client=client,
-                    include_academic=True,
+                    include_academic=include_academic,
                 )
-                for search_query in search_queries
+            )
+        entity_batches = await asyncio.gather(
+            *[
+                search_wikipedia(entity_query, 2, client=client)
+                for entity_query in _entity_lookup_queries(clean_query)
+                if entity_query.casefold()
+                not in {query.casefold() for query in search_queries}
             ]
         )
+        search_batches = [*entity_batches, *search_batches]
         seen_results = set()
         for batch in search_batches:
             for result in batch:
@@ -334,14 +418,48 @@ async def gather_source_bundle(
                 seen.add(result.url)
                 urls.append(result.url)
 
-        attempted_urls = urls[:max(effective_max_sources * 2, 12)]
-        pages = await scrape_urls(
-            attempted_urls,
-            max_chars=30000,
-            client=client,
-            js_render=render_thin_pages,
+        attempted_urls = urls[:url_attempt_limit]
+        wikipedia_results = []
+        seen_wikipedia_urls = set()
+        for result in results:
+            if "wikipedia.org/wiki/" not in result.url:
+                continue
+            key = canonical_url(result.url)
+            if key in seen_wikipedia_urls:
+                continue
+            seen_wikipedia_urls.add(key)
+            wikipedia_results.append(result)
+            if len(wikipedia_results) == 3:
+                break
+        direct_pages, wikipedia_extracts = await asyncio.gather(
+            scrape_urls(
+                attempted_urls,
+                max_chars=30000,
+                concurrency=12,
+                client=client,
+                js_render=render_thin_pages,
+            ),
+            asyncio.gather(
+                *[
+                    fetch_wikipedia_extract(result.url, client)
+                    for result in wikipedia_results
+                ],
+                return_exceptions=True,
+            ),
         )
+        pages = direct_pages
         good = [page for page in pages if page.text and len(page.text) > 150 and not page.error]
+        for result, extract in zip(wikipedia_results, wikipedia_extracts):
+            if isinstance(extract, str) and extract:
+                good.append(
+                    WebPage(
+                        url=result.url,
+                        title=result.title,
+                        text=extract,
+                        content_origin="wikipedia_api",
+                    )
+                )
+                wikipedia_fallbacks += 1
         scraped = {page.url for page in good}
         for result in results:
             if result.url not in scraped and result.snippet and len(result.snippet) > 120:
@@ -358,40 +476,20 @@ async def gather_source_bundle(
         good = dedup_pages(good)
         substantive = [page for page in good if len(page.text) > 200]
         if len(substantive) < 3:
-            wiki_pages = await wikipedia_lookup(clean_query, client=client, max_pages=2)
-            wikipedia_fallbacks = len(wiki_pages)
+            wiki_pages = await wikipedia_lookup(
+                search_queries[-1], client=client, max_pages=2
+            )
+            wikipedia_fallbacks += len(wiki_pages)
             if wiki_pages:
                 good = dedup_pages(good + wiki_pages)
                 substantive = [page for page in good if len(page.text) > 200]
         candidates = substantive if len(substantive) >= 3 else good
 
-        wiki_indices = [
-            index for index, page in enumerate(candidates)
-            if "wikipedia.org/wiki/" in page.url
-        ]
-        if wiki_indices:
-            extracts = await asyncio.gather(
-                *[
-                    fetch_wikipedia_extract(candidates[index].url, client)
-                    for index in wiki_indices
-                ],
-                return_exceptions=True,
-            )
-            for index, extract in zip(wiki_indices, extracts):
-                if isinstance(extract, str) and len(extract) > len(candidates[index].text):
-                    candidates[index] = WebPage(
-                        url=candidates[index].url,
-                        title=candidates[index].title,
-                        text=extract,
-                        content_origin="wikipedia_api",
-                        published_at=candidates[index].published_at,
-                        published_at_method=candidates[index].published_at_method,
-                    )
     except Exception as exc:
         diagnostics = _diagnostics(
             search_results=len(results),
             unique_urls=len(urls),
-            urls_attempted=min(len(urls), max(effective_max_sources * 2, 12)),
+            urls_attempted=min(len(urls), url_attempt_limit),
             pages_scraped=len(pages),
             scrape_failures=sum(1 for page in pages if page.error),
             snippet_fallbacks=snippet_fallbacks,
@@ -574,14 +672,16 @@ async def gather_source_bundle(
         )
         fingerprints.append((canonical_url(page.url), source_hash, passage_fingerprint))
 
-    coverage = lexical_query_coverage(
-        clean_query,
-        [
-            text
-            for _, title, _, _, selected_passages in prepared
-            for text in [title, *(chunk.text for chunk, _, _ in selected_passages)]
-        ],
-    )
+    evidence_texts = [
+        text
+        for _, title, _, _, selected_passages in prepared
+        for text in [title, *(chunk.text for chunk, _, _ in selected_passages)]
+    ]
+    coverage = lexical_query_coverage(clean_query, evidence_texts)
+    evidence_terms = set().union(
+        *(lexical_query_terms(text) for text in evidence_texts)
+    ) if evidence_texts else set()
+    missing_anchor_terms = sorted(_query_anchor_terms(clean_query) - evidence_terms)
     domains = {
         urlsplit(page.url).netloc.lower().removeprefix("www.")
         for page, _, _, _, _ in prepared
@@ -616,6 +716,8 @@ async def gather_source_bundle(
         query_term_coverage=coverage.score,
         unique_domains=len(domains),
         independent_content_clusters=independent_content_clusters,
+        missing_anchor_terms=missing_anchor_terms,
+        future_outcome_unobservable=_future_outcome_is_unobservable(clean_query),
     )
     bundle_status: BundleStatus = (
         "ok" if evidence_sufficiency == "sufficient" else "insufficient_evidence"
@@ -661,7 +763,7 @@ async def gather_source_bundle(
             )
         )
 
-    attempted_count = min(len(urls), max(effective_max_sources * 2, 12))
+    attempted_count = min(len(urls), url_attempt_limit)
     diagnostics = _diagnostics(
         search_results=len(results),
         unique_urls=len(urls),

@@ -6,7 +6,7 @@ import math
 import re
 import time
 import unicodedata
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Awaitable, Callable, List, Sequence
 
 from .api import gather_bundle
@@ -36,6 +36,12 @@ class LiveRetrievalRun:
     source_count: int
     latency_ms: int
     error: str = ""
+    search_results: int = 0
+    urls_attempted: int = 0
+    pages_scraped: int = 0
+    scrape_failures: int = 0
+    wikipedia_fallbacks: int = 0
+    sufficiency_reasons: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -117,6 +123,12 @@ def evaluate_bundle(
         safe_trap_outcome=safe_trap_outcome,
         source_count=len(bundle.sources),
         latency_ms=bundle.diagnostics.latency_ms,
+        search_results=bundle.diagnostics.search_results,
+        urls_attempted=bundle.diagnostics.urls_attempted,
+        pages_scraped=bundle.diagnostics.pages_scraped,
+        scrape_failures=bundle.diagnostics.scrape_failures,
+        wikipedia_fallbacks=bundle.diagnostics.wikipedia_fallbacks,
+        sufficiency_reasons=bundle.diagnostics.sufficiency_reasons,
     )
 
 

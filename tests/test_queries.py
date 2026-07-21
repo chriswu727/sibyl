@@ -21,6 +21,20 @@ class TestSearchQueryVariants(unittest.TestCase):
 
         self.assertEqual(search_query_variants(query), [query])
 
+    def test_quoted_title_becomes_the_focused_variant(self):
+        query = (
+            'What is the publication date of the paper "Articulatory constraints '
+            'on stop insertion and elision in consonant clusters"?'
+        )
+
+        self.assertEqual(
+            search_query_variants(query),
+            [
+                query,
+                "Articulatory constraints on stop insertion and elision in consonant clusters",
+            ],
+        )
+
     def test_empty_query_has_no_variants(self):
         self.assertEqual(search_query_variants("  "), [])
 
