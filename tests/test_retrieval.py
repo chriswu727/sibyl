@@ -166,6 +166,39 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.duplicate_candidates, 1)
         self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
 
+    async def test_prefers_a_second_domain_before_same_domain_content(self):
+        results = [
+            SearchResult("Alpha primary", "https://a.example/one", "", "web"),
+            SearchResult("Alpha detail", "https://a.example/two", "", "web"),
+            SearchResult("Alpha review", "https://b.example/review", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                result.url,
+                result.title,
+                f"alpha evidence {index} " + f"distinct material {index} " * 30,
+            )
+            for index, result in enumerate(results)
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=2, client=object()
+            )
+
+        self.assertEqual(
+            [source.url for source in bundle.sources],
+            ["https://a.example/one", "https://b.example/review"],
+        )
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.status, "ok")
+
     async def test_syndicated_domains_are_not_independent_evidence(self):
         results = [
             SearchResult("Alpha report", "https://a.example/report", "", "news"),

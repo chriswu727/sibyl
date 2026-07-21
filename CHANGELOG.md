@@ -27,6 +27,7 @@
 - Release validation installs the real default dependency set and checks the public API.
 - Keyless search uses paced provider requests, an independent DuckDuckGo/Mojeek/Yahoo fallback chain, bounded search batches, and direct Wikipedia API enrichment.
 - Search snippets remain eligible for relevance ranking when full pages exist, while retaining their weaker provenance and sufficiency treatment.
+- Ranked source selection prefers a new content cluster on a new domain before filling slots with additional same-domain pages.
 - The post-Crossref three-repeat keyless launch gate improved answer coverage from 75.9% to 85.2%, stability from 33.3% to 62.1%, and ready bundles from 56.1% to 64.6%; the gate remains failed on stability and readiness.
 - A 105-request Tavily pilot reached 88.9% answer coverage and improved answerable readiness from 66.0% to 70.4%, while ready-state precision remained below its 95% gate.
 

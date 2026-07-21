@@ -644,17 +644,27 @@ async def gather_source_bundle(
     if selected_ranker == "none":
         selected_indices = ranked_indices[:effective_max_sources]
     else:
-        diverse_indices = []
+        domain_diverse_indices = []
+        same_domain_indices = []
         duplicate_indices = []
         seen_clusters = set()
+        seen_domains = set()
         for index in ranked_indices:
             cluster_id = content_clusters.cluster_ids[index]
             if cluster_id in seen_clusters:
                 duplicate_indices.append(index)
+                continue
+            seen_clusters.add(cluster_id)
+            domain = urlsplit(source_candidates[index][0].url).netloc.casefold()
+            domain = domain.removeprefix("www.")
+            if domain and domain not in seen_domains:
+                domain_diverse_indices.append(index)
+                seen_domains.add(domain)
             else:
-                diverse_indices.append(index)
-                seen_clusters.add(cluster_id)
-        selected_indices = (diverse_indices + duplicate_indices)[
+                same_domain_indices.append(index)
+        selected_indices = (
+            domain_diverse_indices + same_domain_indices + duplicate_indices
+        )[
             :effective_max_sources
         ]
     selected_sources = [
