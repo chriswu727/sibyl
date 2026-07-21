@@ -16,6 +16,22 @@ RecommendedAction = Literal[
     "revise_request",
     "retry",
 ]
+EvidenceLoopStatus = Literal[
+    "active",
+    "ready",
+    "budget_exhausted",
+    "invalid_request",
+    "failed",
+]
+EvidenceLoopAction = Literal[
+    "synthesize",
+    "refine_query",
+    "decompose_query",
+    "revise_request",
+    "retry",
+    "continue_or_finalize",
+    "none",
+]
 ContentOrigin = Literal[
     "direct_fetch",
     "jina_reader",
@@ -120,6 +136,48 @@ class SourceBundle:
     status: BundleStatus
     sources: List[EvidenceSource]
     diagnostics: BundleDiagnostics
+    error: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class EvidenceLoopStep:
+    step_id: str
+    query: str
+    bundle: SourceBundle
+
+
+@dataclass(frozen=True)
+class EvidenceLoopStepSummary:
+    step_id: str
+    query: str
+    bundle_id: str
+    status: BundleStatus
+    evidence_sufficiency: EvidenceSufficiency
+    recommended_action: RecommendedAction
+
+
+@dataclass(frozen=True)
+class EvidenceLoopDiagnostics:
+    max_steps: int
+    retrieval_calls: int
+    remaining_steps: int
+    expires_in_seconds: int
+
+
+@dataclass(frozen=True)
+class EvidenceLoop:
+    schema_version: Literal["1.0"]
+    loop_id: str
+    question: str
+    status: EvidenceLoopStatus
+    steps: List[EvidenceLoopStepSummary]
+    current_step: Optional[EvidenceLoopStep]
+    next_action: EvidenceLoopAction
+    diagnostics: EvidenceLoopDiagnostics
+    supporting_step_ids: List[str] = field(default_factory=list)
     error: str = ""
 
     def to_dict(self) -> Dict[str, Any]:

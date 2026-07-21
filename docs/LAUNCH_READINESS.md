@@ -1,6 +1,6 @@
 # Sibyl launch readiness
 
-Last reviewed: 2026-07-20
+Last reviewed: 2026-07-21
 
 ## Decision
 
@@ -16,6 +16,7 @@ Sibyl's differentiation is the combination of these properties, not web search o
 - `SourceBundle` preserves bundle, source, and passage identities; hashes; character offsets; timestamps; content origin; and diagnostics in a typed, versioned contract.
 - Content-derived clusters expose syndicated or substantially duplicated text instead of treating different domains as independent support.
 - Limited, missing, and failed retrievals remain explicit rather than being rendered as completed research.
+- `gather_evidence` turns host-planned follow-ups into a bounded four-call trace, rejects compound or repeated steps, and validates the SourceBundles selected for synthesis without MCP sampling.
 - The host model can remain the reasoning layer, while an optional configured model can produce a cited report when a one-shot workflow is preferred.
 
 Individual capabilities are not unique. Exa, Tavily, Firecrawl, and Perplexity all offer search or research through MCP. Exa offers AI-oriented search and extracted contents; Tavily offers hosted search and extraction; Firecrawl adds crawling and broad extraction; Perplexity provides hosted search, reasoning, and deep-research answers. Their hosted paths are stronger today in index quality, operational reliability, and turnkey synthesis, and they require API credentials or account authorization for normal production use.
@@ -31,7 +32,7 @@ Primary references:
 
 | Gate | Result | Status |
 |---|---:|---|
-| Unit suite | 258 tests on the launch-candidate branch | Pass |
+| Unit suite | 281 tests on the launch-candidate branch | Pass |
 | Python support in CI | 3.10, 3.11, 3.12 | Pass |
 | Fixed lexical ranking | 8/8 at rank 1 | Pass |
 | Fixed end-to-end retrieval | 8/8 usable and structurally valid | Pass |
@@ -93,7 +94,7 @@ Priority order:
 
 1. Use metric version 2 provider-path diagnostics to address false-ready and conservative-abstention cases from the Tavily pilot, then decide whether a complete 315-request run is justified; the keyless path remains the zero-setup beta fallback.
 2. Extend the new Crossref metadata path where publisher-specific facts are absent or ambiguous; never substitute Crossref record timestamps for publication dates.
-3. Build a bounded host-side decomposition loop around the new `query_complexity` and `recommended_action` diagnostics, then evaluate the complete multi-call workflow instead of grading only the first broad query.
+3. Evaluate the new bounded `gather_evidence` workflow on dependent fact chains instead of grading only the first broad query; add any host tool-selection or trace-interpretation failures as regressions.
 4. Rerun the live gate and compare it with the retained failed baseline.
 5. With explicit quota approval, evaluate the one-shot report path and either improve it or keep it clearly secondary.
 6. Run a small external beta and convert installation, tool-selection, and evidence-interpretation failures into regression cases or documentation fixes.

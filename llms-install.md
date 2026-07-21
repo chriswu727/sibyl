@@ -37,7 +37,8 @@ uvx --from sibyl-research sibyl-mcp --list-tools
 ```
 
 The default output should identify the `keyless` profile and list
-`gather_bundle`, `gather_sources`, `quick_search`, and `read_url`.
+`gather_evidence`, `gather_bundle`, `gather_sources`, `quick_search`, and
+`read_url`.
 
 ## Optional production search
 

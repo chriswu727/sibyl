@@ -9,7 +9,13 @@ from mcp.server.fastmcp.exceptions import ToolError
 import sibyl.mcp_server as mcp_server
 from sibyl.config import Config, Provider
 from sibyl.evidence import BundleDiagnostics, SourceBundle
-from sibyl.mcp_server import _format_report, gather_bundle, gather_sources, research
+from sibyl.mcp_server import (
+    _format_report,
+    gather_bundle,
+    gather_evidence,
+    gather_sources,
+    research,
+)
 from sibyl.researcher import ResearchReport
 from sibyl.verifier import FindingVerification
 
@@ -183,14 +189,21 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertIs(second, recovered)
         self.assertEqual(retrieve.await_count, 2)
 
-    async def test_mcp_registers_thirteen_tools(self):
+    async def test_mcp_registers_fourteen_tools(self):
         tools = await mcp_server.mcp.list_tools()
         names = {tool.name for tool in tools}
         structured_tool = next(tool for tool in tools if tool.name == "gather_bundle")
+        loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
-        self.assertEqual(len(tools), 13)
+        self.assertEqual(len(tools), 14)
+        self.assertIn("gather_evidence", names)
         self.assertIn("gather_bundle", names)
         self.assertIn("gather_sources", names)
+        self.assertEqual(
+            set(loop_tool.outputSchema["properties"]["status"]["enum"]),
+            {"active", "ready", "budget_exhausted", "invalid_request", "failed"},
+        )
+        self.assertIn("current_step", loop_tool.outputSchema["properties"])
         self.assertEqual(
             set(structured_tool.outputSchema["properties"]["status"]["enum"]),
             {"ok", "insufficient_evidence", "invalid_request", "failed"},
@@ -212,6 +225,22 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
                 "crossref_api",
             },
         )
+
+    async def test_evidence_loop_rejects_continuation_without_loop_id(self):
+        result = await gather_evidence(query="atomic query")
+
+        self.assertEqual(result.status, "invalid_request")
+        self.assertEqual(result.next_action, "revise_request")
+        self.assertIn("loop_id is required", result.error)
+
+    async def test_fastmcp_serializes_evidence_loop(self):
+        _, structured = await mcp_server.mcp.call_tool(
+            "gather_evidence", {"query": "atomic query"}
+        )
+
+        self.assertEqual(structured["schema_version"], "1.0")
+        self.assertEqual(structured["status"], "invalid_request")
+        self.assertIsNone(structured["current_step"])
 
     async def test_auto_profile_hides_tools_that_need_configuration(self):
         config = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])

@@ -11,6 +11,11 @@ content, extracted passages, publication metadata, and citation identifiers. The
 optional report mode also processes model prompts and generated reports. Finance
 tools process the ticker symbols and trend keywords supplied by the user.
 
+`gather_evidence` keeps its question, atomic follow-up queries, and retrieved
+public evidence in the local MCP process for up to ten minutes so the host can
+complete a bounded workflow. At most 64 loop records are retained; they are not
+written to disk and disappear when the process exits.
+
 Reports, Markdown files, PDFs, and charts are written only to paths selected by
 the user or calling agent. Sibyl does not upload those artifacts to the project
 maintainer.

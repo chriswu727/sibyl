@@ -13,6 +13,7 @@
 - Crossref metadata retrieval for academic titles, DOIs, and publication dates.
 - Provider-path and per-source query-coverage diagnostics.
 - Machine-readable query-complexity and recommended-action diagnostics for agent retry and decomposition loops.
+- A bounded `gather_evidence` MCP workflow that lets the host plan atomic follow-ups, preserves a lightweight retrieval trace, and validates synthesis-ready supporting steps without MCP sampling.
 - One bounded exclusion search for atomic queries whose relevant full-text evidence comes from only one domain, with explicit attempt and failure diagnostics.
 - A distinct `crossref_api` provenance label and metadata-fallback diagnostic, avoiding confusion with ordinary search snippets.
 - Live retrieval metric version 2 separates answerable readiness from trap safety, measures ready-state precision, and records configured and actual search providers.
@@ -23,6 +24,7 @@
 - The default installation contains the keyless evidence product; report, finance, extraction, and reranking dependencies are optional extras.
 - Limited evidence now returns `insufficient_evidence` instead of a completed-looking `ok` state.
 - The no-key MCP surface exposes only tools that can run with the installed profile.
+- The MCP SDK dependency is pinned to the compatible stable v1 line while the v2 API remains pre-release and incompatible.
 - Thin-page Jina rendering is opt-in in every workflow, improving default latency and preventing implicit URL disclosure.
 - PyPI metadata and CLI language now lead with evidence-first web research rather than prediction use cases.
 - Release validation installs the real default dependency set and checks the public API.

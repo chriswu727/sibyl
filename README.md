@@ -13,7 +13,7 @@ Sibyl is an MCP server and CLI that searches the web, extracts and ranks source 
 [![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/chriswu727/sibyl/blob/main/LICENSE)
 
-[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md) · [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
+[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Evidence-loop contract](https://github.com/chriswu727/sibyl/blob/main/docs/evidence-loop-1.0.md) · [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md) · [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
 
 </div>
 
@@ -31,6 +31,7 @@ Sibyl also provides an optional one-shot `research()` pipeline. That mode uses y
 |---|---|---:|---|---|
 | Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
 | Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
+| Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
 | One-shot research | `research()` | Yes | Sibyl's configured LLM | A finished report from one call |
 
 ## Quick start
@@ -71,7 +72,7 @@ For clients that accept an MCP server configuration:
 }
 ```
 
-No search or model key is required for `gather_bundle`, `gather_sources`, `quick_search`, or `read_url`.
+No search or model key is required for `gather_evidence`, `gather_bundle`, `gather_sources`, `quick_search`, or `read_url`.
 
 For repeatable production retrieval, opt into Tavily explicitly:
 
@@ -123,12 +124,13 @@ That policy matters more than a long system prompt: it tells the agent when evid
 
 ## MCP profiles and tools
 
-Without an LLM credential, the default `auto` profile exposes only the four keyless retrieval tools. A configured `[report]` installation exposes report tools automatically. Finance tools remain explicit so an agent does not pay the context cost for unrelated capabilities.
+Without an LLM credential, the default `auto` profile exposes only the five keyless retrieval tools. A configured `[report]` installation exposes report tools automatically. Finance tools remain explicit so an agent does not pay the context cost for unrelated capabilities.
 
 Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
 
 | Group | Tool | Result | LLM key |
 |---|---|---|---:|
+| Retrieval | `gather_evidence(question)` | Bounded multi-step evidence loop | No |
 | Retrieval | `gather_bundle(query)` | Structured SourceBundle 1.6 | No |
 | Retrieval | `gather_sources(query)` | Readable `[Source N]` evidence blocks | No |
 | Retrieval | `quick_search(query)` | Titles, URLs, and search snippets | No |
@@ -145,17 +147,15 @@ Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface direct
 
 ## Recommended agent workflow
 
-For a non-trivial question, one broad retrieval call is rarely enough. Use a small evidence loop:
+For a non-trivial question, one broad retrieval call is rarely enough. `gather_evidence()` makes the loop explicit and bounded:
 
-1. Break the question into focused, searchable claims.
-2. Call `gather_bundle()` for the first claim.
-3. Check `status`, `diagnostics.evidence_sufficiency`, and `sufficiency_reasons`.
-4. Inspect `content_origin`; use `search_snippet` only to plan another query.
-5. Compare `content_cluster_id` before treating domains as independent corroboration.
-6. Retrieve again for gaps, conflicts, or missing primary evidence.
-7. Synthesize only from returned passages and retain their `citation_id` values.
+1. Call `gather_evidence(question="...")`. Atomic questions may become `ready` immediately; dependent fact chains return `decompose_query` without wasting a broad retrieval.
+2. Continue with `gather_evidence(loop_id="...", query="one atomic query")` and follow `next_action`. Repeated and still-compound follow-ups are rejected.
+3. Inspect each returned `current_step.bundle`, including `content_origin`, `content_cluster_id`, sufficiency reasons, and passage citation IDs. Historical steps remain as compact summaries so evidence is not duplicated in the host context.
+4. Stop after at most four retrieval calls. When the evidence covers the original question, call `gather_evidence(loop_id="...", finish=true, supporting_step_ids=["E1", "E2"])`.
+5. Synthesize only when the loop returns `status="ready"`; selected supporting steps must individually have `recommended_action="synthesize"`.
 
-This makes missing evidence observable. It also prevents several different websites carrying the same syndicated article from looking like independent confirmation.
+The loop expires after ten minutes and never invokes MCP sampling or a hidden Sibyl model. The calling host remains responsible for semantic planning and synthesis; Sibyl enforces the retrieval budget and evidence-state checks. For one focused query, `gather_bundle()` remains the simpler primitive.
 
 ## SourceBundle 1.6
 
@@ -246,7 +246,7 @@ Ranking is local by default:
 | `flashrank` | `pip install 'sibyl-research[rerank]'` | Optional local cross-encoder; falls back explicitly to lexical |
 | `none` | Built in | Preserves retrieval order and returns `null` scores |
 
-Matching `gather_bundle()` and `gather_sources()` calls share in-flight work and reuse successful retrievals for 30 seconds within one MCP process. Failed retrievals are not cached.
+Matching `gather_evidence()`, `gather_bundle()`, and `gather_sources()` steps share in-flight work and reuse successful retrievals for 30 seconds within one MCP process. Failed retrievals are not cached.
 
 ## Truthful failure states
 

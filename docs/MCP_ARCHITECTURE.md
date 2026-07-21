@@ -60,6 +60,16 @@ Weighing it: the retrieval-provider model is strictly superior to sampling for t
 
 **Bottom line:** drop the sampling plan. Keep litellm+key as the CLI/API engine and as an optional heavyweight MCP tool; reshape sibyl-as-MCP into a retrieval/context provider where the host is the brain. Optionally add a capability-gated `SamplingBackend` seam for VS Code, but don't sell it as the architecture.
 
+### Implemented bounded loop
+
+The v0.4 launch candidate implements the multi-call path as ordinary MCP tools,
+not sampling. `gather_evidence` opens a ten-minute local trace, rejects repeated
+or still-dependent follow-up queries, caps retrieval at four calls, returns only
+the newest full SourceBundle plus lightweight history, and validates the
+synthesis-ready step IDs selected by the host. This preserves the architecture
+above: the host plans and reasons in its normal turn, while Sibyl enforces the
+retrieval and evidence-state boundaries.
+
 ## 5. What you can and cannot test from a dev box
 
 **Can test without any Claude client:**

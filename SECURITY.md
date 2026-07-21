@@ -31,6 +31,11 @@ misleading instructions intended for an MCP host. Sibyl extracts text but does
 not make that text trustworthy; hosts must treat source content as evidence, not
 as executable instructions.
 
+Evidence-loop identifiers use random UUIDs and expire after ten minutes. They
+prevent accidental cross-talk between concurrent local workflows, but they are
+not an authentication boundary; do not expose one Sibyl stdio process to
+mutually untrusted users.
+
 The direct fetch path allows only public HTTP(S) destinations on ports 80 and
 443. It rejects credential-bearing URLs and non-global addresses, validates and
 pins DNS results, revalidates redirects, and caps decompressed responses at 2

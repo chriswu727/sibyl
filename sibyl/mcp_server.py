@@ -11,7 +11,8 @@ from mcp.server.fastmcp.exceptions import ToolError
 
 from .async_cache import AsyncSingleFlightTTL
 from .config import Config
-from .evidence import SourceBundle
+from .evidence import EvidenceLoop, SourceBundle
+from .evidence_loop import EvidenceLoopManager
 from .ranking import RankingBackend
 from .retrieval import gather_source_bundle, render_source_bundle
 
@@ -26,6 +27,10 @@ RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU re
     Check diagnostics.recommended_action after every call. Synthesize only for
     "synthesize"; issue an atomic follow-up for "refine_query"; split dependent
     fact chains for "decompose_query"; retry or revise only as directed.
+  • gather_evidence(question) — a bounded multi-call workflow for complex questions.
+    Continue with gather_evidence(loop_id=..., query=...) using one atomic query at
+    a time, then finish with the synthesis-ready supporting step IDs. Sibyl enforces
+    a four-step ceiling and preserves every SourceBundle; the host still plans and reasons.
   • gather_sources(query) — the same retrieval rendered as readable [Source N] blocks
     for conversational use. Call either tool several times with focused sub-queries,
     cross-reference the evidence, and synthesize the answer YOURSELF — citing sources
@@ -47,8 +52,10 @@ _bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
     ttl_seconds=30.0,
     max_entries=64,
 )
+_evidence_loops = EvidenceLoopManager(ttl_seconds=600, max_entries=64)
 
 _KEYLESS_TOOLS = {
+    "gather_evidence",
     "gather_bundle",
     "gather_sources",
     "quick_search",
@@ -289,6 +296,85 @@ async def gather_bundle(
     """
     return await _cached_source_bundle(
         query, max_sources, chars_per_source, ranker, render_thin_pages
+    )
+
+
+@mcp.tool(structured_output=True)
+async def gather_evidence(
+    question: str = "",
+    loop_id: str = "",
+    query: str = "",
+    finish: bool = False,
+    supporting_step_ids: Optional[list[str]] = None,
+    max_steps: int = 3,
+    max_sources: int = 10,
+    chars_per_source: int = 7000,
+    ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
+) -> EvidenceLoop:
+    """Run a bounded evidence loop while leaving planning and synthesis to the host.
+
+    Start with question only. For a complex question, use the returned loop_id and
+    call this tool again with one atomic query. Continue according to next_action.
+    When the returned steps cover the question, call with finish=true and list the
+    synthesis-ready E-step IDs that support the answer. Only status="ready" permits
+    synthesis. Loops expire after ten minutes and allow at most four retrieval calls.
+
+    Args:
+        question: Original research question; use only when starting a loop
+        loop_id: Existing loop identifier for a continuation or finish call
+        query: One new atomic retrieval query for an existing loop
+        finish: Validate selected steps and close the loop for synthesis
+        supporting_step_ids: Synthesis-ready step IDs used to finish the loop
+        max_steps: Retrieval budget for a new loop (default 3; bounded to 1-4)
+        max_sources: Sources per retrieval call (default 10; bounded to 1-20)
+        chars_per_source: Characters per evidence passage (default 7000)
+        ranker: lexical (default), flashrank, or none
+        render_thin_pages: Send thin-page URLs to Jina Reader
+    """
+
+    async def retrieve(
+        step_query: str,
+        step_max_sources: int,
+        step_chars_per_source: int,
+        step_ranker: str,
+        step_render_thin_pages: bool,
+    ) -> SourceBundle:
+        return await _cached_source_bundle(
+            step_query,
+            step_max_sources,
+            step_chars_per_source,
+            step_ranker,
+            step_render_thin_pages,
+        )
+
+    clean_loop_id = str(loop_id or "").strip()
+    if clean_loop_id:
+        if str(question or "").strip():
+            return _evidence_loops.invalid(
+                str(question or "").strip(),
+                "question must be empty when continuing an existing loop.",
+            )
+        return await _evidence_loops.advance(
+            clean_loop_id,
+            query=query,
+            finish=finish,
+            supporting_step_ids=supporting_step_ids,
+            gather=retrieve,
+        )
+    if finish or str(query or "").strip() or supporting_step_ids:
+        return _evidence_loops.invalid(
+            str(question or "").strip(),
+            "loop_id is required for continuation and finish calls.",
+        )
+    return await _evidence_loops.start(
+        question,
+        max_steps=max_steps,
+        max_sources=max_sources,
+        chars_per_source=chars_per_source,
+        ranker=ranker,
+        render_thin_pages=render_thin_pages,
+        gather=retrieve,
     )
 
 
