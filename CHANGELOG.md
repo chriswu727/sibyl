@@ -23,6 +23,7 @@
 
 ### Fixed
 
+- Default stdio operation no longer emits per-request MCP and HTTP INFO logs.
 - Model-backed MCP failures now use protocol-level tool errors instead of successful text responses containing failure messages.
 - Natural-language questions retain the original query while adding a deterministic focused search variant.
 - Quoted titles use an exact focused query, and named entities receive a bounded Wikipedia lookup.

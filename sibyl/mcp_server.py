@@ -17,6 +17,7 @@ from .retrieval import gather_source_bundle, render_source_bundle
 
 mcp = FastMCP(
     "sibyl",
+    log_level="WARNING",
     instructions="""Sibyl gives you keyless web research. Two modes — pick based on who should do the reasoning:
 
 RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU reason:

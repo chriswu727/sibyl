@@ -102,6 +102,9 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             "question", 10, 7000, ranker="none", render_thin_pages=False
         )
 
+    async def test_stdio_defaults_to_warning_logs(self):
+        self.assertEqual(mcp_server.mcp.settings.log_level, "WARNING")
+
     async def test_fastmcp_serializes_structured_content(self):
         with mock.patch(
             "sibyl.mcp_server.gather_source_bundle",
