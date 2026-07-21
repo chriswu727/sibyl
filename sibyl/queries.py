@@ -8,12 +8,15 @@ from typing import List
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
 _QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
-_RELATIVE_CHAIN_RE = re.compile(r"\b(?:that|whose)\b", re.IGNORECASE)
+_RELATIVE_CHAIN_RE = re.compile(
+    r"\b(?:company|country|institution|organization|person)\s+"
+    r"(?:that|whose)\b",
+    re.IGNORECASE,
+)
 _CONTEXTUAL_QUESTION_RE = re.compile(
     r"[.!?]\s+(?:how|what|when|where|which|who|why)\b",
     re.IGNORECASE,
 )
-_TEMPORAL_CHAIN_RE = re.compile(r"\bwhen\s+the\b", re.IGNORECASE)
 _HISTORICAL_ROLE_RE = re.compile(
     r"^\s*who\s+(?:is|was|served\s+as)\s+(?:the\s+)?"
     r"(?P<role>[^?]{1,60}?)\s+(?:of|at|for)\b.*?"
@@ -90,7 +93,6 @@ def query_requires_decomposition(query: str) -> bool:
     return bool(
         _RELATIVE_CHAIN_RE.search(clean)
         or _CONTEXTUAL_QUESTION_RE.search(clean)
-        or _TEMPORAL_CHAIN_RE.search(clean)
     )
 
 

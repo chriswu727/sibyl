@@ -65,6 +65,13 @@ class TestSearchQueryVariants(unittest.TestCase):
             )
         )
 
+    def test_detects_intermediate_country_chain(self):
+        self.assertTrue(
+            query_requires_decomposition(
+                "Which river crosses the capital of the country that won the final?"
+            )
+        )
+
     def test_detects_question_after_leading_claim(self):
         self.assertTrue(
             query_requires_decomposition(
@@ -75,6 +82,20 @@ class TestSearchQueryVariants(unittest.TestCase):
     def test_keeps_atomic_question_single_step(self):
         self.assertFalse(
             query_requires_decomposition("In what year was NVIDIA founded?")
+        )
+
+    def test_keeps_direct_relative_description_single_step(self):
+        self.assertFalse(
+            query_requires_decomposition(
+                "What is the asteroid moonlet that DART impacted in 2022?"
+            )
+        )
+
+    def test_keeps_direct_event_date_single_step(self):
+        self.assertFalse(
+            query_requires_decomposition(
+                "What year was it when the headquarters was completed?"
+            )
         )
 
     def test_extracts_historical_role_requirement(self):
