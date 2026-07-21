@@ -4,9 +4,9 @@
 
 # Sibyl
 
-**Web research for AI agents — structured evidence or a finished cited report.**
+**Evidence retrieval for AI agents — ranked sources, provenance, and citation-ready passages.**
 
-Sibyl is an MCP server and CLI that searches the web, extracts and ranks source material, detects syndicated copies, and preserves citation provenance. Use its keyless retrieval tools to give your own agent a typed, versioned `SourceBundle`, or run the optional LLM-backed research pipeline to synthesize, verify, and format a finished report.
+Sibyl is an MCP server, CLI, and Python library that gives AI agents inspectable web evidence before they answer. It searches public sources, extracts and ranks relevant passages, detects syndicated copies, preserves citation provenance, and returns explicit evidence gaps in a typed `SourceBundle`. It is an evidence layer, not a hosted answer API: your agent remains the reasoning and writing layer.
 
 [![Tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
@@ -19,20 +19,20 @@ Sibyl is an MCP server and CLI that searches the web, extracts and ranks source 
 
 ## What Sibyl is
 
-Sibyl supports two research workflows built around a simple boundary:
+Sibyl is an evidence retrieval and delivery layer for AI agents, built around a simple boundary:
 
 > Sibyl retrieves evidence. The calling model decides what the evidence supports.
 
-The recommended path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states.
+The core path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states. For dependent questions, `gather_evidence()` adds a bounded, auditable sequence of atomic retrieval steps while leaving planning and synthesis to the host agent.
 
-Sibyl also provides an optional one-shot `research()` pipeline. That mode uses your configured LLM to search, synthesize, verify, and format a report. It is convenient, but its answer quality depends on the configured model; for agent systems, keeping retrieval and reasoning separate is usually the stronger design.
+An optional experimental `research()` pipeline can use a configured LLM to produce a one-shot report. It is a secondary convenience surface, not Sibyl's core product or quality claim; its output quality depends on the configured model.
 
 | Mode | Tool | API key | Who reasons? | Best for |
 |---|---|---:|---|---|
 | Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
 | Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
 | Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
-| One-shot research | `research()` | Yes | Sibyl's configured LLM | A finished report from one call |
+| Experimental report | `research()` | Yes | Sibyl's configured LLM | Optional one-shot convenience |
 
 ## Quick start
 
@@ -45,7 +45,7 @@ python -m pip install sibyl-research
 Sibyl requires Python 3.10 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
 
 ```bash
-python -m pip install 'sibyl-research[report]'   # LLM report + PDF
+python -m pip install 'sibyl-research[report]'   # experimental LLM report + PDF
 python -m pip install 'sibyl-research[finance]'  # market data, trends, charts
 python -m pip install 'sibyl-research[rerank]'   # local cross-encoder ranking
 python -m pip install 'sibyl-research[all]'      # every optional capability
@@ -275,11 +275,11 @@ Sibyl retrieves untrusted URLs, so the fetch path is deliberately constrained:
 - decompressed response bodies are capped at 2 MiB;
 - Jina rendering has bounded concurrency and request start-rate limits.
 
-When Jina Reader is used, the target URL is sent to that external service. It is disabled by default in every workflow. Set `render_thin_pages=true` for retrieval or `js_render: true`/`--js-render` for one-shot research only when this disclosure is acceptable.
+When Jina Reader is used, the target URL is sent to that external service. It is disabled by default in every workflow. Set `render_thin_pages=true` for retrieval or `js_render: true`/`--js-render` for experimental report generation only when this disclosure is acceptable.
 
-## Optional one-shot research
+## Optional experimental one-shot reports
 
-The `research()` tool and `sibyl` CLI run a full pipeline:
+The secondary `research()` tool and `sibyl` CLI run a full pipeline:
 
 ```text
 decompose → search → scrape → deduplicate → rank → synthesize → verify → report
@@ -366,7 +366,7 @@ The first three checks are deterministic and network-free. `eval_live_retrieval.
 
 The latest formal keyless three-repeat run is retained in [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). Answer coverage improved from 75.9% in the [original baseline](evals/results/live-retrieval-2026-07-21.json) to 85.2%, trap safety remained 100%, and p95 latency was 11.0 seconds. A subsequent [105-request Tavily pilot](evals/results/live-retrieval-tavily-pilot-2026-07-21.json) reached 88.9% answer coverage and 10.7-second p95 latency. Recomputed under metric version 2, Tavily produced synthesis-ready answer evidence on 70.4% of answerable cases with 92.7% ready-state precision; the gates are 75% and 95%. Sibyl therefore remains a public beta until a dated three-repeat run clears every threshold; offline checks or a single-repeat pilot are not release evidence.
 
-The repository also contains an exploratory 30-question SimpleQA comparison. In the measured concurrent run, a host model reasoning over `gather_sources()` answered 26/30 correctly, while the configured one-shot model answered 5/30. The experiment is small, agent-graded, and sensitive to keyless search throttling; read the [full method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md) rather than treating it as a broad benchmark.
+The repository also contains an exploratory 30-question SimpleQA comparison. In the measured concurrent run, a host model reasoning over `gather_sources()` answered 26/30 correctly, while the configured one-shot model answered 5/30. This is why Sibyl's product claim is the evidence layer, not autonomous report quality. The experiment is small, agent-graded, and sensitive to keyless search throttling; read the [full method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md) rather than treating it as a broad benchmark.
 
 The bounded evidence loop also has a [four-case keyless retrieval run](evals/results/evidence-loop-keyless-2026-07-21.json) covering the previously missed World Cup river, CUDA founding year, Inception/Batman, and Qantas currency chains. All four fixed host plans reached `ready` and contained the expected answer. This is a single-repeat retrieval test with hand-authored atomic queries; it does not measure whether an arbitrary host can produce the plan or synthesize the final answer.
 
@@ -378,7 +378,7 @@ The bounded evidence loop also has a [four-case keyless retrieval run](evals/res
 - `quality_score` is intentionally unpopulated while the production credibility model is still under evaluation.
 - Publication dates are extracted from explicit page metadata and may be wrong at the publisher.
 - Near-duplicate clustering is content-based and can miss heavily rewritten syndication.
-- The one-shot pipeline is only as capable and reliable as its configured LLM.
+- The experimental one-shot pipeline is only as capable and reliable as its configured LLM and is not part of the core evidence-retrieval quality claim.
 - Live web results are not deterministic; use the offline fixtures for regression testing.
 
 ## Development

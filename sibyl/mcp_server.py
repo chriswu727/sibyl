@@ -1,4 +1,4 @@
-"""Sibyl MCP Server — deep research tools for Claude Code and other MCP clients."""
+"""Evidence retrieval for AI agents, with optional experimental report tools."""
 from __future__ import annotations
 
 import os
@@ -19,9 +19,11 @@ from .retrieval import gather_source_bundle, render_source_bundle
 mcp = FastMCP(
     "sibyl",
     log_level="WARNING",
-    instructions="""Sibyl gives you keyless web research. Two modes — pick based on who should do the reasoning:
+    instructions="""Sibyl is the evidence retrieval layer for AI agents. It searches,
+extracts, deduplicates, ranks, and returns inspectable sources; you plan, reason,
+and write the answer.
 
-RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU reason:
+CORE WORKFLOW — Sibyl retrieves; YOU (the host model) reason:
   • gather_bundle(query) — structured keyless retrieval for agents and pipelines. Returns
     versioned sources/passages with stable IDs, hashes, timestamps, and diagnostics.
     Check diagnostics.recommended_action after every call. Synthesize only for
@@ -40,9 +42,10 @@ RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU re
   • quick_search(query) — raw search hits (title/url/snippet), no scraping.
   • read_url(url) — clean full text of one page.
 
-If optional report tools are enabled, research(query, depth) runs the full
-search→scrape→rank→synthesize→verify→report pipeline with the configured model.
-For factual questions, prefer gather_bundle/gather_sources + your own synthesis.
+If optional report tools are enabled, experimental research(query, depth) runs
+the full search→scrape→rank→synthesize→verify→report pipeline with the configured
+model. It is a secondary convenience surface. For factual questions, prefer
+gather_evidence/gather_bundle/gather_sources + your own synthesis.
 """,
 )
 

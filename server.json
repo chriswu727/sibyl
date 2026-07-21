@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.chriswu727/sibyl",
-  "title": "Sibyl — Evidence-First Web Research",
-  "description": "Keyless web evidence retrieval for AI agents with provenance and optional cited reports.",
+  "title": "Sibyl — Evidence Retrieval for AI Agents",
+  "description": "Ranked source bundles for AI agents with provenance, citation-ready passages, duplicate-content signals, and explicit insufficiency states.",
   "version": "0.4.0",
   "repository": {
     "url": "https://github.com/chriswu727/sibyl",

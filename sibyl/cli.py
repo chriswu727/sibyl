@@ -197,7 +197,7 @@ def gather_cli(query, max_sources, chars_per_source, ranker, render_thin_pages, 
 @click.group()
 @click.version_option(package_name="sibyl-research")
 def cli():
-    """Research the web as evidence or generate an optional cited report.
+    """Retrieve web evidence for AI agents or run an experimental cited report.
 
     Existing `sibyl "query"` report commands remain supported.
     """

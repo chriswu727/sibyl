@@ -22,6 +22,8 @@
 
 ### Changed
 
+- Product descriptions now consistently position Sibyl as an evidence-retrieval and delivery layer for AI agents; optional one-shot reports are explicitly secondary and experimental.
+- Package maturity metadata now matches Sibyl's documented public-beta status.
 - The default installation contains the keyless evidence product; report, finance, extraction, and reranking dependencies are optional extras.
 - Limited evidence now returns `insufficient_evidence` instead of a completed-looking `ok` state.
 - The no-key MCP surface exposes only tools that can run with the installed profile.
