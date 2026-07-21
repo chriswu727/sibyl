@@ -13,6 +13,7 @@
 - Crossref metadata retrieval for academic titles, DOIs, and publication dates.
 - Provider-path and per-source query-coverage diagnostics.
 - A distinct `crossref_api` provenance label and metadata-fallback diagnostic, avoiding confusion with ordinary search snippets.
+- Live retrieval metric version 2 separates answerable readiness from trap safety, measures ready-state precision, and records configured and actual search providers.
 - Official MCP Registry metadata, machine-readable install guidance, privacy and security policies, contribution guidance, and issue templates.
 
 ### Changed
@@ -26,6 +27,7 @@
 - Keyless search uses paced provider requests, an independent DuckDuckGo/Mojeek/Yahoo fallback chain, bounded search batches, and direct Wikipedia API enrichment.
 - Search snippets remain eligible for relevance ranking when full pages exist, while retaining their weaker provenance and sufficiency treatment.
 - The post-Crossref three-repeat keyless launch gate improved answer coverage from 75.9% to 85.2%, stability from 33.3% to 62.1%, and ready bundles from 56.1% to 64.6%; the gate remains failed on stability and readiness.
+- A 105-request Tavily pilot reached 88.9% answer coverage and improved answerable readiness from 66.0% to 70.4%, while ready-state precision remained below its 95% gate.
 
 ### Fixed
 

@@ -31,7 +31,7 @@ Primary references:
 
 | Gate | Result | Status |
 |---|---:|---|
-| Unit suite | 257 tests on the launch-candidate branch | Pass |
+| Unit suite | 258 tests on the launch-candidate branch | Pass |
 | Python support in CI | 3.10, 3.11, 3.12 | Pass |
 | Fixed lexical ranking | 8/8 at rank 1 | Pass |
 | Fixed end-to-end retrieval | 8/8 usable and structurally valid | Pass |
@@ -42,11 +42,28 @@ Primary references:
 | Adversarial live safety | 100% across 12 traps and three repeats | Pass |
 | Live p95 latency | 11.0 seconds; threshold 30 seconds | Pass |
 | Live answer coverage | 85.2%; threshold 80% | Pass |
-| Live synthesis-ready bundles | 64.6%; threshold 75% | **Fail** |
+| Live answerable ready rate | 66.0%; threshold 75% | **Fail** |
+| Live ready-state precision | 93.9%; threshold 95% | **Fail** |
 | Live repeat stability | 62.1%; threshold 90% | **Fail** |
 | One-shot report quality | No current authorized model-backed launch run | **Not tested** |
 
-The latest complete artifact is [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). It records `passed: false` and must not be described as launch evidence. The [original keyless baseline](../evals/results/live-retrieval-2026-07-21.json) remains available for comparison: answer coverage rose from 75.9% to 85.2%, stability from 33.3% to 62.1%, and ready bundles from 56.1% to 64.6% without weakening the committed thresholds.
+The latest complete three-repeat artifact is [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). It records `passed: false` and must not be described as launch evidence. The [original keyless baseline](../evals/results/live-retrieval-2026-07-21.json) remains available for comparison: answer coverage rose from 75.9% to 85.2% and stability from 33.3% to 62.1% without weakening those thresholds.
+
+Those artifacts used metric version 1, whose `ready_bundle_rate` counted every `status == ok`, including adversarial cases, and did not verify that an `ok` answerable bundle contained the expected answer. Metric version 2 replaces that launch gate with two product-facing measures: `answerable_ready_rate` requires both `ok` and answer evidence on answerable cases, while `ready_answer_precision` measures how often an `ok` state actually contains the answer. Historical v2 values can be derived from the retained run records: the latest keyless run scores 66.0% and 93.9%, below the new 75% and 95% gates.
+
+## Tavily production-search pilot
+
+The authorized single-repeat pilot consumed 105 Tavily basic searches and is retained in [`evals/results/live-retrieval-tavily-pilot-2026-07-21.json`](../evals/results/live-retrieval-tavily-pilot-2026-07-21.json).
+
+| Pilot metric | Tavily | Keyless three-run aggregate | Gate |
+|---|---:|---:|---:|
+| Answer coverage | 88.9% | 85.2% | 80% |
+| Trap safety | 100% | 100% | 80% |
+| Answerable ready rate | 70.4% | 66.0% | 75% |
+| Ready-state precision | 92.7% | 93.9% | 95% |
+| p95 latency | 10.7 s | 11.0 s | 30 s |
+
+Tavily improved answerable readiness by 4.4 percentage points, but the single run did not pass readiness or precision and cannot measure repeat stability. A full 315-request run is not justified until the false-ready cases and metric instrumentation are addressed.
 
 ## Why the live gate failed
 
@@ -74,7 +91,7 @@ Do not publish v0.4.0, update the official MCP Registry, or submit broad directo
 
 Priority order:
 
-1. Validate the new explicitly configured Tavily path on the complete live gate with a declared provider budget; the keyless path remains the zero-setup beta fallback.
+1. Use metric version 2 provider-path diagnostics to address false-ready and conservative-abstention cases from the Tavily pilot, then decide whether a complete 315-request run is justified; the keyless path remains the zero-setup beta fallback.
 2. Extend the new Crossref metadata path where publisher-specific facts are absent or ambiguous; never substitute Crossref record timestamps for publication dates.
 3. Add an agent-facing retry/refinement signal for limited bundles so the host can issue a focused follow-up instead of treating the first broad query as final.
 4. Rerun the live gate and compare it with the retained failed baseline.

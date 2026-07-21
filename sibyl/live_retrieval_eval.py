@@ -41,6 +41,9 @@ class LiveRetrievalRun:
     pages_scraped: int = 0
     scrape_failures: int = 0
     wikipedia_fallbacks: int = 0
+    metadata_fallbacks: int = 0
+    search_providers: List[str] = field(default_factory=list)
+    max_source_query_term_coverage: float | None = None
     sufficiency_reasons: List[str] = field(default_factory=list)
 
 
@@ -61,7 +64,9 @@ class LiveRetrievalEvalResult:
     answer_coverage: float
     trap_safe_rate: float
     stable_case_rate: float
-    ready_bundle_rate: float
+    status_ok_rate: float
+    answerable_ready_rate: float
+    ready_answer_precision: float
     p50_latency_ms: int
     p95_latency_ms: int
     cases: List[LiveRetrievalCaseResult]
@@ -128,6 +133,11 @@ def evaluate_bundle(
         pages_scraped=bundle.diagnostics.pages_scraped,
         scrape_failures=bundle.diagnostics.scrape_failures,
         wikipedia_fallbacks=bundle.diagnostics.wikipedia_fallbacks,
+        metadata_fallbacks=bundle.diagnostics.metadata_fallbacks,
+        search_providers=bundle.diagnostics.search_providers,
+        max_source_query_term_coverage=(
+            bundle.diagnostics.max_source_query_term_coverage
+        ),
         sufficiency_reasons=bundle.diagnostics.sufficiency_reasons,
     )
 
@@ -206,7 +216,16 @@ async def evaluate_live_retrieval(
         all(run.safe_trap_outcome for run in result.runs) for result in traps
     )
     all_runs = [run for result in results for run in result.runs]
-    ready_runs = sum(run.status == "ok" for run in all_runs)
+    status_ok_runs = sum(run.status == "ok" for run in all_runs)
+    answerable_runs = [
+        run for result in answerable for run in result.runs
+    ]
+    answerable_ok_runs = [
+        run for run in answerable_runs if run.status == "ok"
+    ]
+    answerable_ready_runs = sum(
+        run.answer_in_evidence for run in answerable_ok_runs
+    )
     latencies = [run.latency_ms for run in all_runs]
     return LiveRetrievalEvalResult(
         total_cases=len(results),
@@ -217,7 +236,13 @@ async def evaluate_live_retrieval(
         stable_case_rate=round(
             sum(result.stable for result in results) / len(results), 6
         ),
-        ready_bundle_rate=round(ready_runs / len(all_runs), 6),
+        status_ok_rate=round(status_ok_runs / len(all_runs), 6),
+        answerable_ready_rate=round(
+            answerable_ready_runs / len(answerable_runs), 6
+        ) if answerable_runs else 1.0,
+        ready_answer_precision=round(
+            answerable_ready_runs / len(answerable_ok_runs), 6
+        ) if answerable_ok_runs else 1.0,
         p50_latency_ms=_percentile(latencies, 0.5),
         p95_latency_ms=_percentile(latencies, 0.95),
         cases=results,

@@ -6,6 +6,7 @@ import argparse
 import asyncio
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -52,7 +53,8 @@ def main() -> int:
     parser.add_argument("--min-answer-coverage", type=float, default=0.8)
     parser.add_argument("--min-trap-safe-rate", type=float, default=0.8)
     parser.add_argument("--min-stable-case-rate", type=float, default=0.9)
-    parser.add_argument("--min-ready-bundle-rate", type=float, default=0.75)
+    parser.add_argument("--min-answerable-ready-rate", type=float, default=0.75)
+    parser.add_argument("--min-ready-answer-precision", type=float, default=0.95)
     parser.add_argument("--max-p95-latency-ms", type=int, default=30000)
     args = parser.parse_args()
 
@@ -92,12 +94,17 @@ def main() -> int:
         result.answer_coverage >= args.min_answer_coverage
         and result.trap_safe_rate >= args.min_trap_safe_rate
         and result.stable_case_rate >= args.min_stable_case_rate
-        and result.ready_bundle_rate >= args.min_ready_bundle_rate
+        and result.answerable_ready_rate >= args.min_answerable_ready_rate
+        and result.ready_answer_precision >= args.min_ready_answer_precision
         and result.p95_latency_ms <= args.max_p95_latency_ms
     )
     output = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "sibyl_version": __version__,
+        "metric_version": "2",
+        "configured_search_provider": os.environ.get(
+            "SIBYL_SEARCH_PROVIDER", "keyless"
+        ).strip().lower(),
         "datasets": [
             str(path.resolve().relative_to(ROOT))
             if path.resolve().is_relative_to(ROOT)
@@ -110,7 +117,8 @@ def main() -> int:
             "min_answer_coverage": args.min_answer_coverage,
             "min_trap_safe_rate": args.min_trap_safe_rate,
             "min_stable_case_rate": args.min_stable_case_rate,
-            "min_ready_bundle_rate": args.min_ready_bundle_rate,
+            "min_answerable_ready_rate": args.min_answerable_ready_rate,
+            "min_ready_answer_precision": args.min_ready_answer_precision,
             "max_p95_latency_ms": args.max_p95_latency_ms,
         },
         "passed": passed,
