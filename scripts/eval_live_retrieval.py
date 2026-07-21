@@ -98,7 +98,12 @@ def main() -> int:
     output = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "sibyl_version": __version__,
-        "datasets": [str(path) for path in datasets],
+        "datasets": [
+            str(path.resolve().relative_to(ROOT))
+            if path.resolve().is_relative_to(ROOT)
+            else str(path)
+            for path in datasets
+        ],
         "repeats": args.repeats,
         **result.to_dict(),
         "thresholds": {
