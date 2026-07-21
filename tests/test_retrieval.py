@@ -30,7 +30,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             first = await gather_source_bundle(" alpha ", max_sources=2, client=client)
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
-        self.assertEqual(first.status, "ok")
+        self.assertEqual(first.status, "insufficient_evidence")
         self.assertEqual(first.schema_version, "1.6")
         self.assertEqual(first.bundle_id, second.bundle_id)
         self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
@@ -81,6 +81,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         )
         self.assertGreater(first.diagnostics.evidence_chars, 0)
         self.assertEqual(first.diagnostics.evidence_sufficiency, "limited")
+        self.assertEqual(first.status, "insufficient_evidence")
         self.assertEqual(first.diagnostics.sufficiency_reasons, ["single_domain"])
         wiki.assert_not_awaited()
 
@@ -193,7 +194,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
                 client=object(),
             )
 
-        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.status, "insufficient_evidence")
         self.assertEqual(bundle.diagnostics.unique_domains, 2)
         self.assertEqual(bundle.diagnostics.substantive_sources, 2)
         self.assertEqual(bundle.diagnostics.independent_content_clusters, 1)

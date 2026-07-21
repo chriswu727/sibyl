@@ -4,6 +4,8 @@ import os
 import unittest
 from unittest import mock
 
+from mcp.server.fastmcp.exceptions import ToolError
+
 import sibyl.mcp_server as mcp_server
 from sibyl.config import Config, Provider
 from sibyl.evidence import BundleDiagnostics, SourceBundle
@@ -45,9 +47,8 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
         mcp_server._last_report = ResearchReport("old", "stale", [], [])
         with mock.patch.dict(os.environ, {}, clear=True), \
              mock.patch("sibyl.mcp_server._get_config", return_value=cfg):
-            text = await research("question")
-        self.assertIn("Research failed", text)
-        self.assertIn("requires an LLM provider key", text)
+            with self.assertRaisesRegex(ToolError, "requires an LLM provider key"):
+                await research("question")
         self.assertIsNone(mcp_server._last_report)
 
     async def test_per_call_flags_do_not_mutate_global_config(self):
@@ -200,6 +201,18 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             ),
             {"direct_fetch", "jina_reader", "wikipedia_api", "search_snippet"},
         )
+
+    async def test_auto_profile_hides_tools_that_need_configuration(self):
+        config = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(mcp_server._mcp_profile(config), "keyless")
+
+    async def test_auto_profile_enables_full_surface_with_credentials(self):
+        config = Config(
+            providers=[Provider(model="deepseek/deepseek-v4-flash", api_key="k")]
+        )
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(mcp_server._mcp_profile(config), "full")
 
 
 if __name__ == "__main__":

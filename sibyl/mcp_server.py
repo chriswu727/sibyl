@@ -6,6 +6,7 @@ from dataclasses import replace
 from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.exceptions import ToolError
 
 from .async_cache import AsyncSingleFlightTTL
 from .config import Config, Provider
@@ -49,6 +50,13 @@ _bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
     max_entries=64,
 )
 
+_KEYLESS_TOOLS = {
+    "gather_bundle",
+    "gather_sources",
+    "quick_search",
+    "read_url",
+}
+
 
 async def _cached_source_bundle(
     query: str,
@@ -88,6 +96,35 @@ def _get_config() -> Config:
                 api_base=os.environ.get("SIBYL_API_BASE", ""),
             )
     return _config
+
+
+def _mcp_profile(config: Config) -> str:
+    requested = os.environ.get("SIBYL_MCP_PROFILE", "auto").strip().lower()
+    if requested not in {"auto", "keyless", "full"}:
+        raise RuntimeError("SIBYL_MCP_PROFILE must be one of: auto, keyless, full")
+    if requested == "auto":
+        return "full" if config.has_llm_credentials() else "keyless"
+    return requested
+
+
+async def _configure_tool_profile() -> str:
+    profile = _mcp_profile(_get_config())
+    if profile == "keyless":
+        for tool in await mcp.list_tools():
+            if tool.name not in _KEYLESS_TOOLS:
+                mcp.remove_tool(tool.name)
+    return profile
+
+
+def _require_llm_config(capability: str) -> Config:
+    config = _get_config()
+    if not config.has_llm_credentials():
+        raise ToolError(
+            f"{capability} requires an LLM provider key or a configured "
+            "local/API-base backend. Use gather_bundle or gather_sources for "
+            "keyless research."
+        )
+    return config
 
 
 def _format_report(report: ResearchReport) -> str:
@@ -227,7 +264,9 @@ async def research(query: str, depth: int = 2, language: str = "auto", fast: boo
         fast: Skip the review/refine pass for ~20% faster results with slightly less polish
         verify: At depth 2+, verify each finding and flag unsupported claims (skipped in fast mode)
     """
-    base_config = _get_config()
+    global _last_report
+    _last_report = None
+    base_config = _require_llm_config("One-shot research")
     config = replace(base_config, providers=list(base_config.providers),
                      fast=fast, verify_claims=verify)
     researcher = Researcher(config)
@@ -236,15 +275,18 @@ async def research(query: str, depth: int = 2, language: str = "auto", fast: boo
     def on_progress(msg: str):
         progress_lines.append(msg)
 
-    global _last_report
-    _last_report = None
     try:
         report = await researcher.research(query, depth=depth, language=language, on_progress=on_progress)
         if report.status == "ok":
             _last_report = report
+        if report.status == "failed":
+            raise ToolError(report.error or "One-shot research failed.")
         return _format_report(report)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Research failed: {str(e)[:200]}\n\nProgress so far:\n" + "\n".join(progress_lines)
+        detail = str(e).strip().replace("\n", " ")[:200]
+        raise ToolError(f"One-shot research failed: {detail}") from e
 
 
 @mcp.tool()
@@ -316,9 +358,7 @@ async def analyze(text: str, question: str) -> str:
         text: The text content to analyze (article, report, data — up to 5000 chars)
         question: The specific question to answer about the text (e.g. "What are the main risks mentioned?" or "Summarize the key arguments for and against")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "Analysis requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("Analysis")
     provider = config.get_provider("analysis")
 
     import litellm
@@ -352,9 +392,7 @@ async def compare(items: str, query: str = "") -> str:
         items: Comma-separated items to compare (e.g. "NVDA,AMD,INTC" or "React,Vue,Angular")
         query: Context for the comparison (e.g. "for AI/ML workloads" or "for a startup in 2026")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "Comparison requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("Comparison")
     provider = config.get_provider("analysis")
 
     item_list = [i.strip() for i in items.split(",") if i.strip()]
@@ -382,9 +420,7 @@ async def swot(subject: str) -> str:
     Args:
         subject: What to analyze (e.g. "Tesla", "Canadian housing market", "remote work trend")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "SWOT analysis requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("SWOT analysis")
     provider = config.get_provider("analysis")
 
     researcher = Researcher(config)
@@ -423,9 +459,7 @@ async def timeline(topic: str) -> str:
     Args:
         topic: The topic to build a timeline for (e.g. "OpenAI history", "Canada immigration policy changes 2024-2026")
     """
-    config = _get_config()
-    if not config.has_llm_credentials():
-        return "Timeline generation requires an LLM provider key or a configured local/API-base backend."
+    config = _require_llm_config("Timeline generation")
     provider = config.get_provider("analysis")
 
     researcher = Researcher(config)
@@ -519,7 +553,7 @@ async def save_report(format: str = "both", output_dir: str = ".") -> str:
         output_dir: Directory to save files (default: current directory)
     """
     if _last_report is None:
-        return "No research report to save. Run research() first."
+        raise ToolError("No research report to save. Run research() first.")
 
     from .reporter import generate_pdf, _report_to_markdown
     from pathlib import Path
@@ -548,6 +582,9 @@ async def save_report(format: str = "both", output_dir: str = ".") -> str:
 
 def main():
     """Entry point for sibyl-mcp command."""
+    import asyncio
+
+    asyncio.run(_configure_tool_profile())
     mcp.run()
 
 

@@ -596,9 +596,7 @@ async def gather_source_bundle(
         independent_content_clusters=independent_content_clusters,
     )
     bundle_status: BundleStatus = (
-        "insufficient_evidence"
-        if evidence_sufficiency == "insufficient"
-        else "ok"
+        "ok" if evidence_sufficiency == "sufficient" else "insufficient_evidence"
     )
     bundle_id = _bundle_id(clean_query, bundle_status, fingerprints)
     retrieved_at = datetime.now(timezone.utc).isoformat()
