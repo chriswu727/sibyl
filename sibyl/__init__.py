@@ -1,4 +1,4 @@
-"""Web research for agents: structured evidence and optional cited reports."""
+"""Evidence retrieval for AI agents with auditable source provenance."""
 
 from .api import gather_bundle, gather_sources
 

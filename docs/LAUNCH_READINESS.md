@@ -17,7 +17,7 @@ Sibyl's differentiation is the combination of these properties, not web search o
 - Content-derived clusters expose syndicated or substantially duplicated text instead of treating different domains as independent support.
 - Limited, missing, and failed retrievals remain explicit rather than being rendered as completed research.
 - `gather_evidence` turns host-planned follow-ups into a bounded four-call trace, rejects compound or repeated steps, and validates the SourceBundles selected for synthesis without MCP sampling.
-- The host model can remain the reasoning layer, while an optional configured model can produce a cited report when a one-shot workflow is preferred.
+- The host model remains the reasoning layer. An optional configured model can produce an experimental one-shot report, but that secondary path is outside the core evidence-retrieval quality claim.
 
 Individual capabilities are not unique. Exa, Tavily, Firecrawl, and Perplexity all offer search or research through MCP. Exa offers AI-oriented search and extracted contents; Tavily offers hosted search and extraction; Firecrawl adds crawling and broad extraction; Perplexity provides hosted search, reasoning, and deep-research answers. Their hosted paths are stronger today in index quality, operational reliability, and turnkey synthesis, and they require API credentials or account authorization for normal production use.
 
@@ -107,10 +107,10 @@ Priority order:
 
 Allowed:
 
-- Public-beta web research for AI agents.
+- Public-beta evidence retrieval and delivery for AI agents.
 - Keyless evidence retrieval through MCP, CLI, and Python.
 - Typed passage provenance, duplicate-content signals, and explicit evidence gaps.
-- Optional model-backed cited reports whose quality depends on the configured model.
+- Optional experimental model-backed reports whose quality depends on the configured model.
 
 Not supported yet:
 

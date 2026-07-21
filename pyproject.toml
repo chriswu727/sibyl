@@ -1,14 +1,14 @@
 [project]
 name = "sibyl-research"
 dynamic = ["version"]
-description = "Web research for AI agents with keyless evidence retrieval and optional cited reports"
+description = "Evidence retrieval for AI agents with auditable sources, provenance, and explicit insufficiency states"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Yichen Wu", email = "yichenwujob@gmail.com"}]
 urls = {Homepage = "https://github.com/chriswu727/sibyl", Repository = "https://github.com/chriswu727/sibyl"}
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "License :: OSI Approved :: MIT License",

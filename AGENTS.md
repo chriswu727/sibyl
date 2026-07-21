@@ -8,15 +8,15 @@ This file helps AI agents (Claude Code, Cursor, etc.) use Sibyl effectively via 
 pip install sibyl-research
 # Optional local cross-encoder ranking:
 pip install 'sibyl-research[rerank]'
-# Optional one-shot reports and report export:
+# Optional experimental one-shot reports and report export:
 pip install 'sibyl-research[report]'
 # Retrieval-provider mode (recommended) needs NO key — you do the reasoning:
 claude mcp add sibyl -- sibyl-mcp
-# For the one-shot research() tool, add a provider key so sibyl's own model runs it:
+# For the experimental research() tool, add a provider key so sibyl's own model runs it:
 claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- sibyl-mcp --profile report
 ```
 
-## Two modes — who does the reasoning?
+## Core boundary — Sibyl retrieves, the host reasons
 
 **Recommended: YOU (the host model) research; sibyl only retrieves.** This is
 keyless and gives the best quality, because YOUR reasoning is applied to real
@@ -47,13 +47,14 @@ gather_evidence(question="In what year was the company that created CUDA founded
 → synthesize only after the loop status is ready; the host still does all reasoning.
 ```
 
-**One-shot: sibyl does everything with its own model** (needs a provider key):
+**Experimental one-shot report: Sibyl uses a configured model** (needs a provider key):
 ```
 research(query, depth=2)   # search→scrape→rank→synthesize→verify→report, by sibyl's LLM
 ```
 Prefer `gather_bundle` for programmatic agents and `gather_sources` for readable
 conversation context. In both cases, do your own synthesis for factual/hard
-questions; use `research()` when you want a finished report in one call.
+questions. `research()` is a secondary convenience for users who explicitly
+want a model-backed report in one call.
 
 The default `auto` MCP profile exposes only the five keyless retrieval tools
 unless the report extra and an LLM credential are both available. Use
@@ -63,7 +64,7 @@ third-party service.
 
 ## Recommended Workflows
 
-### Deep research on a topic
+### Experimental one-shot report
 ```
 research(query, depth=3, language="auto")
 → save_report("both")
@@ -101,7 +102,7 @@ timeline("OpenAI company history")
 
 | Goal | Use |
 |------|-----|
-| Full research report | `research(query, depth=1/2/3)` |
+| Experimental one-shot report | `research(query, depth=1/2/3)` |
 | Side-by-side comparison | `compare(items, query)` |
 | SWOT analysis | `swot(subject)` |
 | Google Trends data | `trends(keywords)` |
