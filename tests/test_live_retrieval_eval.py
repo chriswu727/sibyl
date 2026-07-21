@@ -5,13 +5,21 @@ from sibyl.evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, S
 from sibyl.live_retrieval_eval import LiveRetrievalCase, evaluate_live_retrieval
 
 
-def bundle(text, status="ok", sufficiency="sufficient"):
+def bundle(
+    text,
+    status="ok",
+    sufficiency="sufficient",
+    query_complexity="single_step",
+    recommended_action="synthesize",
+):
     diagnostics = BundleDiagnostics(
         1, 1, 1, 1, 0, 0, 0, 1, 10, 10, 7000, 7000, 125,
         evidence_sufficiency=sufficiency,
         search_providers=["tavily"],
         max_source_query_term_coverage=0.75,
         metadata_fallbacks=1,
+        query_complexity=query_complexity,
+        recommended_action=recommended_action,
     )
     passage = EvidencePassage("P1", "sb/S1/P1", text, "hash")
     source = EvidenceSource(
@@ -49,6 +57,8 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
             result.cases[0].runs[0].max_source_query_term_coverage,
             0.75,
         )
+        self.assertEqual(result.cases[0].runs[0].query_complexity, "single_step")
+        self.assertEqual(result.cases[0].runs[0].recommended_action, "synthesize")
 
     async def test_safe_traps_do_not_distort_answer_readiness(self):
         cases = [

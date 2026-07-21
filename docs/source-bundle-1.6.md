@@ -35,6 +35,8 @@ Search snippets still participate in relevance ranking when full pages are avail
 
 `substantive_sources` counts retrieved full-text sources that also contain every detected key query anchor. A long page about the general topic does not count as corroboration for a quoted paper, named entity, or other anchored target when that target is absent.
 
+Historical role questions with an explicit year require one local statement that connects the requested role to that year or to a tenure range covering it. Mentions of the role and year in unrelated sections do not satisfy this check, and modified roles such as `honorary`, `acting`, or `vice` do not substitute for the requested role.
+
 ## Publication time
 
 `published_at` is a normalized ISO 8601 date or timestamp when Sibyl finds explicit publication metadata; it is `null` when no supported value is present. `published_at_method` identifies the exact metadata path, such as `meta_article_published_time`, `json_ld_date_published`, or `jina_published_time`. It never claims that the publisher-supplied value is true, and consumers must not substitute `retrieved_at` for a missing publication time.

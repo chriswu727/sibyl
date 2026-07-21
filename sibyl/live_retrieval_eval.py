@@ -45,6 +45,8 @@ class LiveRetrievalRun:
     search_providers: List[str] = field(default_factory=list)
     max_source_query_term_coverage: float | None = None
     sufficiency_reasons: List[str] = field(default_factory=list)
+    query_complexity: str = "not_assessed"
+    recommended_action: str = "not_assessed"
 
 
 @dataclass(frozen=True)
@@ -139,6 +141,8 @@ def evaluate_bundle(
             bundle.diagnostics.max_source_query_term_coverage
         ),
         sufficiency_reasons=bundle.diagnostics.sufficiency_reasons,
+        query_complexity=bundle.diagnostics.query_complexity,
+        recommended_action=bundle.diagnostics.recommended_action,
     )
 
 

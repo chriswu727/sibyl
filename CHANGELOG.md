@@ -41,6 +41,7 @@
 - Quoted-target questions no longer combine disconnected query fragments across unrelated sources into a synthesis-ready state.
 - Unrelated long pages no longer count as substantive corroboration when they omit the query's key entities or quoted target.
 - High-confidence dependent fact chains fail closed with `decompose_query` instead of appearing synthesis-ready after one broad retrieval.
+- Historical role queries no longer combine a role mention and an unrelated year from different statements into apparent tenure evidence.
 
 ## 0.3.0 — 2026-07-14
 

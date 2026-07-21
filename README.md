@@ -259,7 +259,7 @@ SourceBundle never turns a retrieval failure into a completed-looking answer.
 
 `evidence_sufficiency` is a deterministic retrieval signal based on evidence volume, lexical coverage, domain diversity, and independent content clusters. It is not a correctness or credibility score.
 
-The checks also require named query anchors to appear in the selected evidence. A question that asks for a specific outcome in a future year is not marked synthesis-ready merely because forecasts or similarly named events were retrieved.
+The checks also require named query anchors to appear in the selected evidence. A question that asks for a specific outcome in a future year is not marked synthesis-ready merely because forecasts or similarly named events were retrieved. Historical role questions require a local statement connecting the role to the requested year or a covering tenure range; unrelated mentions elsewhere on the same page do not count.
 
 ## Network safety
 

@@ -1,7 +1,11 @@
 """Search-query variant tests."""
 import unittest
 
-from sibyl.queries import query_requires_decomposition, search_query_variants
+from sibyl.queries import (
+    historical_role_requirement,
+    query_requires_decomposition,
+    search_query_variants,
+)
 
 
 class TestSearchQueryVariants(unittest.TestCase):
@@ -71,6 +75,19 @@ class TestSearchQueryVariants(unittest.TestCase):
     def test_keeps_atomic_question_single_step(self):
         self.assertFalse(
             query_requires_decomposition("In what year was NVIDIA founded?")
+        )
+
+    def test_extracts_historical_role_requirement(self):
+        self.assertEqual(
+            historical_role_requirement(
+                "Who was the rector of Hacettepe University in 2006?"
+            ),
+            ("rector", 2006),
+        )
+
+    def test_ignores_non_historical_role_question(self):
+        self.assertIsNone(
+            historical_role_requirement("Who founded Hacettepe University?")
         )
 
 

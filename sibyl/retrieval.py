@@ -26,7 +26,11 @@ from .evidence import (
     SourceBundle,
 )
 from .passages import TextPassage, split_passages
-from .queries import query_requires_decomposition, search_query_variants
+from .queries import (
+    historical_role_requirement,
+    query_requires_decomposition,
+    search_query_variants,
+)
 from .ranking import (
     RankingBackend,
     flashrank_relevance_scores,
@@ -55,6 +59,13 @@ _QUESTION_OPENERS = {
     "after", "at", "how", "in", "on", "the", "what", "when", "where", "which", "who",
 }
 _FUTURE_YEAR_RE = re.compile(r"\b[2-9]\d{3}\b")
+_TENURE_RANGE_RE = re.compile(
+    r"\b([12]\d{3})\s*(?:-|–|—|to|through|until)\s*([12]\d{3})\b",
+    re.IGNORECASE,
+)
+_ROLE_MODIFIERS = {
+    "acting", "assistant", "deputy", "former", "honorary", "interim", "vice",
+}
 
 
 def _query_anchor_terms(query: str) -> set[str]:
@@ -102,6 +113,36 @@ def _future_outcome_is_unobservable(query: str) -> bool:
     return any(int(year) > current_year for year in _FUTURE_YEAR_RE.findall(query))
 
 
+def _has_historical_role_support(query: str, evidence_units: List[str]) -> bool:
+    requirement = historical_role_requirement(query)
+    if requirement is None:
+        return True
+    role, target_year = requirement
+    role_pattern = re.compile(rf"\b{re.escape(role)}\b", re.IGNORECASE)
+    target_pattern = re.compile(rf"\b{target_year}\b")
+    for unit in evidence_units:
+        for statement in re.split(r"(?<=[.!?])\s+", unit):
+            for role_match in role_pattern.finditer(statement):
+                prefix = statement[
+                    max(0, role_match.start() - 20):role_match.start()
+                ]
+                prefix_terms = _QUERY_WORD_RE.findall(prefix.casefold())
+                if prefix_terms and prefix_terms[-1] in _ROLE_MODIFIERS:
+                    continue
+                if any(
+                    abs(year_match.start() - role_match.start()) <= 180
+                    for year_match in target_pattern.finditer(statement)
+                ):
+                    return True
+                for range_match in _TENURE_RANGE_RE.finditer(statement):
+                    if abs(range_match.start() - role_match.start()) > 180:
+                        continue
+                    start_year, end_year = map(int, range_match.groups())
+                    if start_year <= target_year <= end_year:
+                        return True
+    return False
+
+
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
@@ -136,6 +177,7 @@ def _assess_evidence_sufficiency(
     future_outcome_unobservable: bool,
     fragmented_query_support: bool,
     multi_step_query: bool,
+    historical_role_support_missing: bool,
 ) -> Tuple[EvidenceSufficiency, List[str]]:
     if source_count == 0:
         return "insufficient", ["no_sources"]
@@ -155,6 +197,8 @@ def _assess_evidence_sufficiency(
         blockers.append("fragmented_query_support")
     if multi_step_query:
         blockers.append("multi_step_query")
+    if historical_role_support_missing:
+        blockers.append("missing_historical_role_tenure")
     if blockers:
         return "insufficient", blockers
 
@@ -183,6 +227,9 @@ _SUFFICIENCY_REASON_LABELS = {
         "no single source sufficiently covers the quoted target and requested fact"
     ),
     "multi_step_query": "the question contains a dependent fact chain",
+    "missing_historical_role_tenure": (
+        "no local statement connects the requested role to the target year"
+    ),
 }
 
 
@@ -796,6 +843,14 @@ async def gather_source_bundle(
             and max_source_query_term_coverage < 0.6
         ),
         multi_step_query=multi_step_query,
+        historical_role_support_missing=not _has_historical_role_support(
+            clean_query,
+            [
+                " ".join([title, chunk.text])
+                for _, title, _, _, selected_passages in prepared
+                for chunk, _, _ in selected_passages
+            ],
+        ),
     )
     recommended_action: RecommendedAction
     if multi_step_query:

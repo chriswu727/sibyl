@@ -360,6 +360,90 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.recommended_action, "decompose_query")
         self.assertIn("multi_step_query", bundle.diagnostics.sufficiency_reasons)
 
+    async def test_historical_role_requires_local_tenure_support(self):
+        query = "Who was the rector of Example University in 2006?"
+        results = [
+            SearchResult(
+                "Department history", "https://a.example/history", "", "web"
+            ),
+            SearchResult(
+                "University profile", "https://b.example/profile", "", "web"
+            ),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "Rector Alice founded the Example University department in 1969. "
+                + "Department chairs served from 2003-2006 and 2006-2012. "
+                + "The archive describes faculty programs and academic records. " * 15,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "Example University appointed a new rector. "
+                + "An unrelated conference took place in 2006. "
+                + "The profile describes campus programs and student services. " * 15,
+            ),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.recommended_action, "refine_query")
+        self.assertIn(
+            "missing_historical_role_tenure",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_historical_role_accepts_covering_tenure_range(self):
+        query = "Who was the rector of Example University in 2006?"
+        results = [
+            SearchResult(
+                "Official history", "https://a.example/rectors", "", "web"
+            ),
+            SearchResult(
+                "Archived profile", "https://b.example/archive", "", "web"
+            ),
+        ]
+        texts = [
+            "Alice Example was rector of Example University from 2003 to 2008. "
+            + "The official archive records her term and administrative work. " * 15,
+            "Example University named Alice Example as rector for the 2004-2007 term. "
+            + "The preserved profile documents leadership and institutional history. " * 15,
+        ]
+        pages = [
+            WebPage(
+                result.url,
+                result.title,
+                text,
+            )
+            for result, text in zip(results, texts)
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.recommended_action, "synthesize")
+        self.assertNotIn(
+            "missing_historical_role_tenure",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
     async def test_marks_search_snippet_content_origin(self):
         result = SearchResult(
             "Alpha evidence",

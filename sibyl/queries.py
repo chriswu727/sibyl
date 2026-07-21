@@ -14,6 +14,12 @@ _CONTEXTUAL_QUESTION_RE = re.compile(
     re.IGNORECASE,
 )
 _TEMPORAL_CHAIN_RE = re.compile(r"\bwhen\s+the\b", re.IGNORECASE)
+_HISTORICAL_ROLE_RE = re.compile(
+    r"^\s*who\s+(?:is|was|served\s+as)\s+(?:the\s+)?"
+    r"(?P<role>[^?]{1,60}?)\s+(?:of|at|for)\b.*?"
+    r"\bin\s+(?P<year>[12]\d{3})\s*\??$",
+    re.IGNORECASE,
+)
 _SEARCH_STOP_WORDS = _QUESTION_WORDS | {
     "a",
     "an",
@@ -86,3 +92,13 @@ def query_requires_decomposition(query: str) -> bool:
         or _CONTEXTUAL_QUESTION_RE.search(clean)
         or _TEMPORAL_CHAIN_RE.search(clean)
     )
+
+
+def historical_role_requirement(query: str) -> tuple[str, int] | None:
+    match = _HISTORICAL_ROLE_RE.match(" ".join(str(query or "").split()))
+    if not match:
+        return None
+    role = " ".join(match.group("role").split()).casefold()
+    if not role or len(_TERM_RE.findall(role)) > 4:
+        return None
+    return role, int(match.group("year"))
