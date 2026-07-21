@@ -34,6 +34,7 @@
 - Default stdio operation no longer emits per-request MCP and HTTP INFO logs.
 - Model-backed MCP failures now use protocol-level tool errors instead of successful text responses containing failure messages.
 - Natural-language questions retain the original query while adding a deterministic focused search variant.
+- Questions with leading context or prepositions, such as `In what year...` and `On which...`, now receive the same focused search variant as questions that begin with a question word.
 - Quoted titles use an exact focused query, and named entities receive a bounded Wikipedia lookup.
 - Missing query entities and explicitly requested future outcomes no longer produce synthesis-ready evidence states.
 - Quoted-target questions no longer combine disconnected query fragments across unrelated sources into a synthesis-ready state.

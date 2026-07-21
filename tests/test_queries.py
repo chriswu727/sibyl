@@ -21,6 +21,22 @@ class TestSearchQueryVariants(unittest.TestCase):
 
         self.assertEqual(search_query_variants(query), [query])
 
+    def test_rewrites_prepositional_question(self):
+        query = "In what year was the company that created CUDA founded?"
+
+        self.assertEqual(
+            search_query_variants(query),
+            [query, "year company created CUDA founded"],
+        )
+
+    def test_rewrites_question_after_leading_context(self):
+        query = "In distributed systems, what algorithm is easier than Paxos?"
+
+        self.assertEqual(
+            search_query_variants(query),
+            [query, "distributed systems algorithm easier than Paxos"],
+        )
+
     def test_quoted_title_becomes_the_focused_variant(self):
         query = (
             'What is the publication date of the paper "Articulatory constraints '

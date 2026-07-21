@@ -8,7 +8,7 @@ from typing import List
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
 _QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
-_SEARCH_STOP_WORDS = {
+_SEARCH_STOP_WORDS = _QUESTION_WORDS | {
     "a",
     "an",
     "and",
@@ -49,7 +49,9 @@ def search_query_variants(query: str) -> List[str]:
         return []
 
     terms = _TERM_RE.findall(clean)
-    if not terms or terms[0].casefold() not in _QUESTION_WORDS:
+    if not terms or not any(
+        term.casefold() in _QUESTION_WORDS for term in terms
+    ):
         return [clean]
 
     quoted_match = _QUOTED_RE.search(clean)
