@@ -3,16 +3,16 @@ from __future__ import annotations
 
 import os
 from dataclasses import replace
-from typing import Optional
+from importlib.util import find_spec
+from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 
 from .async_cache import AsyncSingleFlightTTL
-from .config import Config, Provider
+from .config import Config
 from .evidence import SourceBundle
 from .ranking import RankingBackend
-from .researcher import Researcher, ResearchReport
 from .retrieval import gather_source_bundle, render_source_bundle
 
 mcp = FastMCP(
@@ -31,20 +31,14 @@ RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU re
   • quick_search(query) — raw search hits (title/url/snippet), no scraping.
   • read_url(url) — clean full text of one page.
 
-ONE-SHOT — sibyl does the whole thing with its own model (needs sibyl's provider key):
-  • research(query, depth) — full pipeline (search→scrape→rank→synthesize→verify→report)
-    run by sibyl's configured LLM (e.g. DeepSeek). Findings are verified against sources.
-    Use when you want a finished report in one call and accept sibyl's model/key does it.
-
-Also: fetch_market_data(symbols), chart(symbols), compare/swot/timeline/trends, save_report().
-For factual questions, prefer gather_bundle/gather_sources + your own synthesis — it beats
-the one-shot pipeline on hard questions and makes evidence-based abstention possible.
-depth=1/2/3 = quick/standard/deep.
+If optional report tools are enabled, research(query, depth) runs the full
+search→scrape→rank→synthesize→verify→report pipeline with the configured model.
+For factual questions, prefer gather_bundle/gather_sources + your own synthesis.
 """,
 )
 
 _config: Optional[Config] = None
-_last_report: Optional[ResearchReport] = None
+_last_report: Optional[Any] = None
 _bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
     ttl_seconds=30.0,
     max_entries=64,
@@ -56,6 +50,15 @@ _KEYLESS_TOOLS = {
     "quick_search",
     "read_url",
 }
+_REPORT_TOOLS = {
+    "analyze",
+    "compare",
+    "research",
+    "save_report",
+    "swot",
+    "timeline",
+}
+_FINANCE_TOOLS = {"chart", "fetch_market_data", "trends"}
 
 
 async def _cached_source_bundle(
@@ -100,19 +103,44 @@ def _get_config() -> Config:
 
 def _mcp_profile(config: Config) -> str:
     requested = os.environ.get("SIBYL_MCP_PROFILE", "auto").strip().lower()
-    if requested not in {"auto", "keyless", "full"}:
-        raise RuntimeError("SIBYL_MCP_PROFILE must be one of: auto, keyless, full")
+    profiles = {"auto", "keyless", "report", "finance", "full"}
+    if requested not in profiles:
+        raise RuntimeError(
+            "SIBYL_MCP_PROFILE must be one of: auto, keyless, report, finance, full"
+        )
     if requested == "auto":
-        return "full" if config.has_llm_credentials() else "keyless"
+        report_installed = all(find_spec(name) for name in ("litellm", "fpdf"))
+        return "report" if config.has_llm_credentials() and report_installed else "keyless"
     return requested
 
 
 async def _configure_tool_profile() -> str:
     profile = _mcp_profile(_get_config())
-    if profile == "keyless":
-        for tool in await mcp.list_tools():
-            if tool.name not in _KEYLESS_TOOLS:
-                mcp.remove_tool(tool.name)
+    enabled = set(_KEYLESS_TOOLS)
+    if profile in {"report", "full"}:
+        missing = [name for name in ("litellm", "fpdf") if find_spec(name) is None]
+        if missing:
+            raise RuntimeError(
+                "Report tools require 'pip install sibyl-research[report]' "
+                f"(missing: {', '.join(missing)})."
+            )
+        _require_llm_config("Report tools")
+        enabled.update(_REPORT_TOOLS)
+    if profile in {"finance", "full"}:
+        missing = [
+            name
+            for name in ("matplotlib", "pandas", "pytrends", "yfinance")
+            if find_spec(name) is None
+        ]
+        if missing:
+            raise RuntimeError(
+                "Finance tools require 'pip install sibyl-research[finance]' "
+                f"(missing: {', '.join(missing)})."
+            )
+        enabled.update(_FINANCE_TOOLS)
+    for tool in await mcp.list_tools():
+        if tool.name not in enabled:
+            mcp.remove_tool(tool.name)
     return profile
 
 
@@ -127,7 +155,7 @@ def _require_llm_config(capability: str) -> Config:
     return config
 
 
-def _format_report(report: ResearchReport) -> str:
+def _format_report(report: Any) -> str:
     """Format a research report as readable text."""
     if report.status != "ok":
         heading = "Insufficient evidence" if report.status == "insufficient_evidence" else "Research failed"
@@ -269,6 +297,8 @@ async def research(query: str, depth: int = 2, language: str = "auto", fast: boo
     base_config = _require_llm_config("One-shot research")
     config = replace(base_config, providers=list(base_config.providers),
                      fast=fast, verify_claims=verify)
+    from .researcher import Researcher
+
     researcher = Researcher(config)
 
     progress_lines = []
@@ -401,6 +431,8 @@ async def compare(items: str, query: str = "") -> str:
         full_query += f" — {query}"
 
     # Quick research for context
+    from .researcher import Researcher
+
     researcher = Researcher(config)
     report = await researcher.research(full_query, depth=1)
     if report.status != "ok":
@@ -422,6 +454,8 @@ async def swot(subject: str) -> str:
     """
     config = _require_llm_config("SWOT analysis")
     provider = config.get_provider("analysis")
+
+    from .researcher import Researcher
 
     researcher = Researcher(config)
     report = await researcher.research(f"SWOT analysis {subject}", depth=1)
@@ -461,6 +495,8 @@ async def timeline(topic: str) -> str:
     """
     config = _require_llm_config("Timeline generation")
     provider = config.get_provider("analysis")
+
+    from .researcher import Researcher
 
     researcher = Researcher(config)
     report = await researcher.research(f"timeline of key events {topic}", depth=1)

@@ -67,7 +67,7 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
                 return ResearchReport(query, "summary", [], [])
 
         with mock.patch("sibyl.mcp_server._get_config", return_value=cfg), \
-             mock.patch("sibyl.mcp_server.Researcher", FakeResearcher):
+             mock.patch("sibyl.researcher.Researcher", FakeResearcher):
             await research("question", fast=True, verify=False)
 
         self.assertFalse(cfg.fast)
@@ -207,12 +207,12 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertEqual(mcp_server._mcp_profile(config), "keyless")
 
-    async def test_auto_profile_enables_full_surface_with_credentials(self):
+    async def test_auto_profile_enables_report_surface_with_credentials(self):
         config = Config(
             providers=[Provider(model="deepseek/deepseek-v4-flash", api_key="k")]
         )
         with mock.patch.dict(os.environ, {}, clear=True):
-            self.assertEqual(mcp_server._mcp_profile(config), "full")
+            self.assertEqual(mcp_server._mcp_profile(config), "report")
 
 
 if __name__ == "__main__":

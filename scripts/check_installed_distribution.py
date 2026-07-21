@@ -35,8 +35,14 @@ def main() -> int:
     if not expected_scripts.items() <= console_scripts.items():
         print(f"missing console scripts: {expected_scripts!r} not in {console_scripts!r}", file=sys.stderr)
         return 1
+    if not callable(sibyl.gather_bundle) or not callable(sibyl.gather_sources):
+        print("missing top-level keyless retrieval API", file=sys.stderr)
+        return 1
 
-    print(f"installed sibyl-research {installed.version} with both console scripts")
+    print(
+        f"installed sibyl-research {installed.version} with console scripts "
+        "and the keyless Python API"
+    )
     return 0
 
 
