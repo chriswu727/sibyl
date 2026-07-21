@@ -374,6 +374,7 @@ Useful project documents:
 - [SourceBundle 1.6 consumer contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md)
 - [Performance notes](https://github.com/chriswu727/sibyl/blob/main/docs/PERFORMANCE.md)
 - [MCP architecture notes](https://github.com/chriswu727/sibyl/blob/main/docs/MCP_ARCHITECTURE.md)
+- [Launch readiness and competitive position](https://github.com/chriswu727/sibyl/blob/main/docs/LAUNCH_READINESS.md)
 - [MCP installation reference](https://github.com/chriswu727/sibyl/blob/main/llms-install.md)
 - [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md)
 - [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md)
