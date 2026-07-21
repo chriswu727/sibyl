@@ -98,7 +98,9 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
 
         self.assertIs(result, self.bundle)
         self.assertEqual(result.to_dict()["bundle_id"], "sb_test")
-        gather.assert_awaited_once_with("question", 10, 7000, ranker="none")
+        gather.assert_awaited_once_with(
+            "question", 10, 7000, ranker="none", render_thin_pages=False
+        )
 
     async def test_fastmcp_serializes_structured_content(self):
         with mock.patch(

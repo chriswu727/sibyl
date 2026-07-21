@@ -162,13 +162,18 @@ async def _run(cfg, query, depth, symbols="", language="auto"):
     show_default=True,
 )
 @click.option(
+    "--render-thin-pages",
+    is_flag=True,
+    help="Send thin-page URLs to Jina Reader for another extraction attempt.",
+)
+@click.option(
     "--format",
     "output_format",
     type=click.Choice(["text", "json"]),
     default="text",
     show_default=True,
 )
-def gather_cli(query, max_sources, chars_per_source, ranker, output_format):
+def gather_cli(query, max_sources, chars_per_source, ranker, render_thin_pages, output_format):
     """Gather keyless web evidence without generating an answer."""
     bundle = asyncio.run(
         gather_bundle(
@@ -176,6 +181,7 @@ def gather_cli(query, max_sources, chars_per_source, ranker, output_format):
             max_sources=max_sources,
             chars_per_source=chars_per_source,
             ranker=ranker,
+            render_thin_pages=render_thin_pages,
         )
     )
     if output_format == "json":

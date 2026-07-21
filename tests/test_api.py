@@ -29,6 +29,7 @@ class TestPublicRetrievalApi(unittest.IsolatedAsyncioTestCase):
             max_sources=10,
             chars_per_source=7000,
             ranker="none",
+            render_thin_pages=False,
             client=None,
         )
 

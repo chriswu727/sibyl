@@ -148,7 +148,8 @@ This makes missing evidence observable. It also prevents several different websi
     "substantive_sources": 3,
     "independent_content_clusters": 2,
     "evidence_sufficiency": "sufficient",
-    "sufficiency_reasons": []
+    "sufficiency_reasons": [],
+    "search_queries": ["Python 3.14 release date"]
   },
   "error": ""
 }
@@ -173,7 +174,7 @@ For each focused query, Sibyl:
 
 1. Searches multiple keyless sources.
 2. Fetches public pages and extracts readable content.
-3. Uses Wikipedia to expand thin result coverage and Jina Reader to render thin JavaScript shells.
+3. Uses Wikipedia to expand thin result coverage; Jina Reader rendering is available only when `render_thin_pages=true` is explicitly requested.
 4. Canonicalizes URLs, removes duplicates, and clusters syndicated text.
 5. Ranks sources and passages for query relevance.
 6. Prefers independent content clusters before filling remaining source slots.
@@ -195,8 +196,8 @@ SourceBundle never turns a retrieval failure into a completed-looking answer.
 
 | Status | Meaning | Consumer action |
 |---|---|---|
-| `ok` | Evidence is usable, though it may still be limited | Inspect diagnostics and synthesize carefully |
-| `insufficient_evidence` | Retrieval returned leads but not enough substantive support | Refine the query or abstain |
+| `ok` | Evidence passed the deterministic sufficiency checks | Inspect diagnostics and synthesize carefully |
+| `insufficient_evidence` | Evidence is limited or insufficient; returned sources are leads | Refine the query or abstain |
 | `invalid_request` | Query or parameters are invalid | Fix the request |
 | `failed` | Search or retrieval failed | Retry later or use another source path |
 
@@ -214,7 +215,7 @@ Sibyl retrieves untrusted URLs, so the fetch path is deliberately constrained:
 - decompressed response bodies are capped at 2 MiB;
 - Jina rendering has bounded concurrency and request start-rate limits.
 
-When Jina Reader is used, the target URL is sent to that external service. The current `gather_bundle()` and `gather_sources()` path enables thin-page rendering automatically; do not use it for target URLs that must not be disclosed to a third-party renderer. The one-shot pipeline can disable `js_render` in its configuration.
+When Jina Reader is used, the target URL is sent to that external service. `gather_bundle()` and `gather_sources()` do not use it by default; set `render_thin_pages=true` only when this disclosure is acceptable. The one-shot pipeline controls the same behavior with `js_render` in its configuration.
 
 ## Optional one-shot research
 
@@ -289,9 +290,10 @@ python -m unittest discover tests -v
 python scripts/eval_retrieval.py --ranker lexical
 python scripts/eval_retrieval_pipeline.py --ranker lexical
 python scripts/eval_source_quality.py
+python scripts/eval_live_retrieval.py --repeats 3
 ```
 
-These checks guard deterministic behavior and regression floors. They are not claims about general web-answering accuracy.
+The first three checks are deterministic and network-free. `eval_live_retrieval.py` runs 66 natural-language and adversarial questions against the public web without an LLM, measuring lexical answer coverage, safe trap evidence, run-to-run stability, and p50/p95 latency. Live results vary with public search and publisher availability and must be saved with their date when used as launch evidence.
 
 The repository also contains an exploratory 30-question SimpleQA comparison. In the measured concurrent run, a host model reasoning over `gather_sources()` answered 26/30 correctly, while the configured one-shot model answered 5/30. The experiment is small, agent-graded, and sensitive to keyless search throttling; read the [full method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md) rather than treating it as a broad benchmark.
 

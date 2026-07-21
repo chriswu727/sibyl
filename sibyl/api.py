@@ -16,6 +16,7 @@ async def gather_bundle(
     chars_per_source: int = 7000,
     *,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
     client: Optional[httpx.AsyncClient] = None,
 ) -> SourceBundle:
     return await gather_source_bundle(
@@ -23,6 +24,7 @@ async def gather_bundle(
         max_sources=max_sources,
         chars_per_source=chars_per_source,
         ranker=ranker,
+        render_thin_pages=render_thin_pages,
         client=client,
     )
 
@@ -33,6 +35,7 @@ async def gather_sources(
     chars_per_source: int = 7000,
     *,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
     client: Optional[httpx.AsyncClient] = None,
 ) -> str:
     bundle = await gather_bundle(
@@ -40,6 +43,7 @@ async def gather_sources(
         max_sources=max_sources,
         chars_per_source=chars_per_source,
         ranker=ranker,
+        render_thin_pages=render_thin_pages,
         client=client,
     )
     return render_source_bundle(bundle)

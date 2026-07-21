@@ -66,17 +66,23 @@ async def _cached_source_bundle(
     max_sources: int,
     chars_per_source: int,
     ranker: RankingBackend,
+    render_thin_pages: bool,
 ) -> SourceBundle:
     key = (
         str(query or "").strip(),
         str(max_sources),
         str(chars_per_source),
         str(ranker or "").strip().lower(),
+        bool(render_thin_pages),
     )
 
     async def retrieve() -> SourceBundle:
         return await gather_source_bundle(
-            query, max_sources, chars_per_source, ranker=ranker
+            query,
+            max_sources,
+            chars_per_source,
+            ranker=ranker,
+            render_thin_pages=render_thin_pages,
         )
 
     return await _bundle_cache.get_or_create(
@@ -228,6 +234,7 @@ async def gather_sources(
     max_sources: int = 10,
     chars_per_source: int = 7000,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
 ) -> str:
     """Keyless web retrieval: search + scrape + dedup, returning the top FULL-TEXT
     sources for a query WITHOUT writing an answer — so YOU (the calling model)
@@ -244,9 +251,10 @@ async def gather_sources(
         max_sources: How many sources to return (default 10; bounded to 1-20)
         chars_per_source: Max characters of text per source (default 7000; bounded to 500-10000)
         ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
+        render_thin_pages: Send thin-page URLs to Jina Reader (default false)
     """
     bundle = await _cached_source_bundle(
-        query, max_sources, chars_per_source, ranker=ranker
+        query, max_sources, chars_per_source, ranker, render_thin_pages
     )
     return render_source_bundle(bundle)
 
@@ -257,6 +265,7 @@ async def gather_bundle(
     max_sources: int = 10,
     chars_per_source: int = 7000,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
 ) -> SourceBundle:
     """Return a structured, keyless SourceBundle without synthesizing an answer.
 
@@ -271,9 +280,10 @@ async def gather_bundle(
         max_sources: How many sources to return (default 10; bounded to 1-20)
         chars_per_source: Max characters per evidence passage (default 7000; bounded to 500-10000)
         ranker: lexical (default), flashrank (optional extra), or none (retrieval order)
+        render_thin_pages: Send thin-page URLs to Jina Reader (default false)
     """
     return await _cached_source_bundle(
-        query, max_sources, chars_per_source, ranker=ranker
+        query, max_sources, chars_per_source, ranker, render_thin_pages
     )
 
 

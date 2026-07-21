@@ -6,6 +6,8 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 
 - Require schema major version `1`; accept additive fields within the same major version instead of comparing the entire version string or exact key set.
 - Check `status` before reading evidence. Only `ok` is synthesis-ready; `insufficient_evidence` may contain leads but must retain its warning.
+- `limited` evidence also maps to `insufficient_evidence`; consumers should refine the query instead of treating a thin or single-cluster result as complete.
+- Inspect `diagnostics.search_queries` to see the original and any deterministic focused query used during retrieval.
 - Treat `citation_id` as bundle-scoped. Persist `bundle_id`, `source_id`, and `passage_id` together when storing evidence.
 - Verify `content_hash` before reusing cached source or passage text.
 - Treat `relevance_score` and passage `score` as ranking signals, not truth probabilities.

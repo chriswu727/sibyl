@@ -23,6 +23,7 @@ from .evidence import (
     SourceBundle,
 )
 from .passages import TextPassage, split_passages
+from .queries import search_query_variants
 from .ranking import (
     RankingBackend,
     flashrank_relevance_scores,
@@ -153,6 +154,7 @@ def _diagnostics(
     content_cluster_method: str = "not_run",
     evidence_sufficiency: EvidenceSufficiency = "not_assessed",
     sufficiency_reasons: Optional[List[str]] = None,
+    search_queries: Optional[List[str]] = None,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -190,6 +192,7 @@ def _diagnostics(
         content_cluster_method=content_cluster_method,
         evidence_sufficiency=evidence_sufficiency,
         sufficiency_reasons=sufficiency_reasons or [],
+        search_queries=search_queries or [],
     )
 
 
@@ -221,6 +224,7 @@ async def gather_source_bundle(
     chars_per_source: int = 7000,
     client: Optional[httpx.AsyncClient] = None,
     ranker: RankingBackend = "lexical",
+    render_thin_pages: bool = False,
 ) -> SourceBundle:
     started_at = time.monotonic()
     requested_ranker = str(ranker or "").strip().lower()
@@ -251,6 +255,7 @@ async def gather_source_bundle(
     effective_max_sources = max(1, min(20, requested_max_sources))
     effective_chars_per_source = max(500, min(10000, requested_chars_per_source))
     clean_query = str(query or "").strip()
+    search_queries = search_query_variants(clean_query)
     if requested_ranker not in {"lexical", "flashrank", "none"}:
         diagnostics = _diagnostics(
             requested_max_sources=requested_max_sources,
@@ -304,9 +309,25 @@ async def gather_source_bundle(
     wikipedia_fallbacks = 0
     candidates: List[WebPage] = []
     try:
-        results = await search_web(
-            clean_query, "all", max_results=6, client=client, include_academic=True
+        search_batches = await asyncio.gather(
+            *[
+                search_web(
+                    search_query,
+                    "all",
+                    max_results=6,
+                    client=client,
+                    include_academic=True,
+                )
+                for search_query in search_queries
+            ]
         )
+        seen_results = set()
+        for batch in search_batches:
+            for result in batch:
+                result_key = canonical_url(result.url)
+                if result_key not in seen_results:
+                    seen_results.add(result_key)
+                    results.append(result)
         seen = set()
         for result in results:
             if result.url.startswith("http") and result.url not in seen:
@@ -318,7 +339,7 @@ async def gather_source_bundle(
             attempted_urls,
             max_chars=30000,
             client=client,
-            js_render=True,
+            js_render=render_thin_pages,
         )
         good = [page for page in pages if page.text and len(page.text) > 150 and not page.error]
         scraped = {page.url for page in good}
@@ -381,6 +402,7 @@ async def gather_source_bundle(
             effective_chars_per_source=effective_chars_per_source,
             started_at=started_at,
             requested_ranking_method=requested_ranker,
+            search_queries=search_queries,
         )
         return SourceBundle(
             schema_version="1.6",
@@ -678,6 +700,7 @@ async def gather_source_bundle(
         content_cluster_method=(content_clusters.method if candidates else "not_run"),
         evidence_sufficiency=evidence_sufficiency,
         sufficiency_reasons=sufficiency_reasons,
+        search_queries=search_queries,
     )
     return SourceBundle(
         schema_version="1.6",

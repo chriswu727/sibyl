@@ -2,7 +2,7 @@
   "schema_version": "1.6",
   "bundle_id": "sb_contractexample",
   "query": "example evidence query",
-  "status": "ok",
+  "status": "insufficient_evidence",
   "sources": [
     {
       "source_id": "S1",
@@ -94,7 +94,10 @@
     "evidence_sufficiency": "limited",
     "sufficiency_reasons": [
       "fewer_than_two_substantive_sources"
+    ],
+    "search_queries": [
+      "example evidence query"
     ]
   },
-  "error": ""
+  "error": "Found 2 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
 }

@@ -92,6 +92,7 @@ class BundleDiagnostics:
     content_cluster_method: str = "not_run"
     evidence_sufficiency: EvidenceSufficiency = "not_assessed"
     sufficiency_reasons: List[str] = field(default_factory=list)
+    search_queries: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
