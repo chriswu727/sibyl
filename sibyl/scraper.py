@@ -423,6 +423,16 @@ async def scrape_url(
                     return WebPage(url=url, title="", text="", error=redirect_error)
 
                 if resp.status_code == 200:
+                    if not _is_html_ish(resp):
+                        content_type = str(
+                            resp.headers.get("content-type", "unknown")
+                        ).split(";", 1)[0]
+                        return WebPage(
+                            url=url,
+                            title="",
+                            text="",
+                            error=f"Unsupported content type: {content_type}",
+                        )
                     page = await asyncio.to_thread(
                         _extract_content,
                         resp.text,

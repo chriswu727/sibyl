@@ -97,7 +97,13 @@
     ],
     "search_queries": [
       "example evidence query"
-    ]
+    ],
+    "search_providers": [
+      "duckduckgo",
+      "google_news"
+    ],
+    "max_source_query_term_coverage": 1.0,
+    "metadata_fallbacks": 0
   },
   "error": "Found 2 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
 }

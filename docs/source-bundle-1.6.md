@@ -8,6 +8,8 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 - Check `status` before reading evidence. Only `ok` is synthesis-ready; `insufficient_evidence` may contain leads but must retain its warning.
 - `limited` evidence also maps to `insufficient_evidence`; consumers should refine the query instead of treating a thin or single-cluster result as complete.
 - Inspect `diagnostics.search_queries` to see the original and any deterministic focused query used during retrieval.
+- Inspect `diagnostics.search_providers` to see which search and metadata providers contributed retained candidates. A configured provider can fail over, so do not infer the actual path from environment configuration alone.
+- Compare aggregate `query_term_coverage` with `max_source_query_term_coverage`. A large gap can mean different sources each mention disconnected pieces of the question rather than one source supporting the requested fact.
 - Treat `citation_id` as bundle-scoped. Persist `bundle_id`, `source_id`, and `passage_id` together when storing evidence.
 - Verify `content_hash` before reusing cached source or passage text.
 - Treat `relevance_score` and passage `score` as ranking signals, not truth probabilities.
@@ -15,14 +17,21 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 
 ## Content origin
 
-`content_origin` is an enum with four values:
+`content_origin` is an enum with five values:
 
 - `direct_fetch`: full text extracted from the destination response.
 - `jina_reader`: full text returned by Jina Reader after a blocked or thin direct response.
 - `wikipedia_api`: article text returned by the Wikipedia API.
 - `search_snippet`: partial search-result text used only when full text was unavailable.
+- `crossref_api`: structured bibliographic metadata returned directly by Crossref.
 
 Consumers should use `search_snippet` as a lead for additional retrieval and avoid treating it as equivalent to full-page evidence.
+
+`crossref_api` is stronger than an ordinary search snippet for fields explicitly identified in the returned text, such as DOI or `published-online`. It does not authorize interpreting Crossref record creation or update timestamps as publication dates.
+
+Search snippets still participate in relevance ranking when full pages are available. Their origin label and the substantive-source diagnostics prevent a precise metadata result from being discarded while preserving the distinction from retrieved full text.
+
+`substantive_sources` counts retrieved full-text sources that also contain every detected key query anchor. A long page about the general topic does not count as corroboration for a quoted paper, named entity, or other anchored target when that target is absent.
 
 ## Publication time
 

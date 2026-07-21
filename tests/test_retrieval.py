@@ -353,6 +353,155 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.sources[0].content_origin, "search_snippet")
         self.assertEqual(bundle.diagnostics.snippet_fallbacks, 1)
 
+    async def test_relevant_snippet_competes_with_scraped_pages(self):
+        target = SearchResult(
+            "Target paper",
+            "https://doi.org/10.1/target",
+            "Target paper DOI: 10.1/target. Exact target evidence. " * 4,
+            "academic",
+            "crossref",
+        )
+        noise = [
+            SearchResult(
+                f"Publication guide {index}",
+                f"https://noise{index}.example/guide",
+                "",
+                "web",
+            )
+            for index in range(3)
+        ]
+        pages = [
+            WebPage(target.url, target.title, "", error="HTTP 202"),
+            *[
+                WebPage(result.url, result.title, "generic publication guide " * 30)
+                for result in noise
+            ],
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=[target, *noise]),
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=mock.AsyncMock(return_value=pages),
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ):
+            bundle = await gather_source_bundle(
+                "Target paper DOI 10.1/target",
+                max_sources=1,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.sources[0].url, target.url)
+        self.assertEqual(bundle.sources[0].content_origin, "crossref_api")
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.search_providers, ["crossref"])
+        self.assertEqual(bundle.diagnostics.metadata_fallbacks, 1)
+        self.assertIn(
+            "fewer_than_two_substantive_sources",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_quoted_target_requires_coherent_source_support(self):
+        query = 'What is the online date of "Target paper"?'
+        target = SearchResult(
+            "Target paper",
+            "https://doi.org/10.1/target",
+            "Target paper. Published in print in January 2011. " * 4,
+            "academic",
+            "crossref",
+        )
+        noise = [
+            SearchResult(
+                f"Date guide {index}",
+                f"https://noise{index}.example/guide",
+                "",
+                "web",
+            )
+            for index in range(3)
+        ]
+        pages = [
+            WebPage(target.url, target.title, "", error="HTTP 202"),
+            *[
+                WebPage(
+                    result.url,
+                    result.title,
+                    "generic online date publication guide " * 30,
+                )
+                for result in noise
+            ],
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=[target, *noise]),
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=mock.AsyncMock(return_value=pages),
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ):
+            bundle = await gather_source_bundle(
+                query,
+                max_sources=4,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.diagnostics.query_term_coverage, 1.0)
+        self.assertLess(bundle.diagnostics.max_source_query_term_coverage, 0.6)
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn(
+            "fragmented_query_support",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_unrelated_full_pages_do_not_count_as_corroboration(self):
+        query = 'When was "Target paper" published online?'
+        results = [
+            SearchResult(
+                "Target paper",
+                "https://target.example/paper",
+                "",
+                "academic",
+            ),
+            SearchResult("Generic guide", "https://noise.example/guide", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "Target paper was published online on September 5, 2011. " * 10,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "A long generic publication guide about dates and citations. " * 20,
+            ),
+        ]
+
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=results),
+        ), mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=mock.AsyncMock(return_value=pages),
+        ), mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.diagnostics.substantive_sources, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 1)
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn(
+            "fewer_than_two_substantive_sources",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
     async def test_reranks_candidates_before_applying_source_limit(self):
         results = [
             SearchResult("Cooking", "https://example.com/cooking", "", "web"),

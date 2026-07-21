@@ -132,6 +132,7 @@ def _assess_evidence_sufficiency(
     independent_content_clusters: int,
     missing_anchor_terms: List[str],
     future_outcome_unobservable: bool,
+    fragmented_query_support: bool,
 ) -> Tuple[EvidenceSufficiency, List[str]]:
     if source_count == 0:
         return "insufficient", ["no_sources"]
@@ -147,6 +148,8 @@ def _assess_evidence_sufficiency(
         blockers.append("missing_query_anchor")
     if future_outcome_unobservable:
         blockers.append("future_outcome_not_observable")
+    if fragmented_query_support:
+        blockers.append("fragmented_query_support")
     if blockers:
         return "insufficient", blockers
 
@@ -171,6 +174,9 @@ _SUFFICIENCY_REASON_LABELS = {
     "low_query_term_coverage": "low query-term coverage",
     "missing_query_anchor": "one or more key query entities are absent",
     "future_outcome_not_observable": "the requested future outcome is not yet observable",
+    "fragmented_query_support": (
+        "no single source sufficiently covers the quoted target and requested fact"
+    ),
 }
 
 
@@ -200,6 +206,7 @@ def _diagnostics(
     scrape_failures: int = 0,
     snippet_fallbacks: int = 0,
     wikipedia_fallbacks: int = 0,
+    metadata_fallbacks: int = 0,
     sources_returned: int = 0,
     requested_max_sources: int,
     effective_max_sources: int,
@@ -229,6 +236,8 @@ def _diagnostics(
     evidence_sufficiency: EvidenceSufficiency = "not_assessed",
     sufficiency_reasons: Optional[List[str]] = None,
     search_queries: Optional[List[str]] = None,
+    search_providers: Optional[List[str]] = None,
+    max_source_query_term_coverage: Optional[float] = None,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -267,6 +276,9 @@ def _diagnostics(
         evidence_sufficiency=evidence_sufficiency,
         sufficiency_reasons=sufficiency_reasons or [],
         search_queries=search_queries or [],
+        search_providers=search_providers or [],
+        max_source_query_term_coverage=max_source_query_term_coverage,
+        metadata_fallbacks=metadata_fallbacks,
     )
 
 
@@ -382,6 +394,7 @@ async def gather_source_bundle(
     pages: List[WebPage] = []
     snippet_fallbacks = 0
     wikipedia_fallbacks = 0
+    metadata_fallbacks = 0
     candidates: List[WebPage] = []
     try:
         search_batches = []
@@ -463,15 +476,23 @@ async def gather_source_bundle(
         scraped = {page.url for page in good}
         for result in results:
             if result.url not in scraped and result.snippet and len(result.snippet) > 120:
+                content_origin = (
+                    "crossref_api"
+                    if result.provider == "crossref"
+                    else "search_snippet"
+                )
                 good.append(
                     WebPage(
                         url=result.url,
                         title=result.title,
                         text=result.snippet,
-                        content_origin="search_snippet",
+                        content_origin=content_origin,
                     )
                 )
-                snippet_fallbacks += 1
+                if content_origin == "crossref_api":
+                    metadata_fallbacks += 1
+                else:
+                    snippet_fallbacks += 1
 
         good = dedup_pages(good)
         substantive = [page for page in good if len(page.text) > 200]
@@ -483,7 +504,7 @@ async def gather_source_bundle(
             if wiki_pages:
                 good = dedup_pages(good + wiki_pages)
                 substantive = [page for page in good if len(page.text) > 200]
-        candidates = substantive if len(substantive) >= 3 else good
+        candidates = good
 
     except Exception as exc:
         diagnostics = _diagnostics(
@@ -494,6 +515,7 @@ async def gather_source_bundle(
             scrape_failures=sum(1 for page in pages if page.error),
             snippet_fallbacks=snippet_fallbacks,
             wikipedia_fallbacks=wikipedia_fallbacks,
+            metadata_fallbacks=metadata_fallbacks,
             requested_max_sources=requested_max_sources,
             effective_max_sources=effective_max_sources,
             requested_chars_per_source=requested_chars_per_source,
@@ -501,6 +523,9 @@ async def gather_source_bundle(
             started_at=started_at,
             requested_ranking_method=requested_ranker,
             search_queries=search_queries,
+            search_providers=sorted(
+                {result.provider for result in results if result.provider}
+            ),
         )
         return SourceBundle(
             schema_version="1.6",
@@ -678,10 +703,31 @@ async def gather_source_bundle(
         for text in [title, *(chunk.text for chunk, _, _ in selected_passages)]
     ]
     coverage = lexical_query_coverage(clean_query, evidence_texts)
+    query_anchor_terms = _query_anchor_terms(clean_query)
+    source_evidence_terms = [
+        set().union(
+            *(
+                lexical_query_terms(text)
+                for text in [
+                    title,
+                    *(chunk.text for chunk, _, _ in selected_passages),
+                ]
+            )
+        )
+        for _, title, _, _, selected_passages in prepared
+    ]
+    source_coverages = [
+        lexical_query_coverage(
+            clean_query,
+            [title, *(chunk.text for chunk, _, _ in selected_passages)],
+        ).score
+        for _, title, _, _, selected_passages in prepared
+    ]
+    max_source_query_term_coverage = max(source_coverages, default=0.0)
     evidence_terms = set().union(
         *(lexical_query_terms(text) for text in evidence_texts)
     ) if evidence_texts else set()
-    missing_anchor_terms = sorted(_query_anchor_terms(clean_query) - evidence_terms)
+    missing_anchor_terms = sorted(query_anchor_terms - evidence_terms)
     domains = {
         urlsplit(page.url).netloc.lower().removeprefix("www.")
         for page, _, _, _, _ in prepared
@@ -689,8 +735,14 @@ async def gather_source_bundle(
     }
     substantive_prepared = [
         (page, source_hash)
-        for page, _, source_hash, _, _ in prepared
-        if len(page.text) > 200 and page.content_origin != "search_snippet"
+        for (page, _, source_hash, _, _), source_terms in zip(
+            prepared, source_evidence_terms
+        )
+        if (
+            len(page.text) > 200
+            and page.content_origin != "search_snippet"
+            and (not query_anchor_terms or query_anchor_terms <= source_terms)
+        )
     ]
     substantive_sources = len(substantive_prepared)
     selected_cluster_ids = {
@@ -718,6 +770,10 @@ async def gather_source_bundle(
         independent_content_clusters=independent_content_clusters,
         missing_anchor_terms=missing_anchor_terms,
         future_outcome_unobservable=_future_outcome_is_unobservable(clean_query),
+        fragmented_query_support=(
+            bool(_QUOTED_TEXT_RE.search(clean_query))
+            and max_source_query_term_coverage < 0.6
+        ),
     )
     bundle_status: BundleStatus = (
         "ok" if evidence_sufficiency == "sufficient" else "insufficient_evidence"
@@ -772,6 +828,7 @@ async def gather_source_bundle(
         scrape_failures=sum(1 for page in pages if page.error),
         snippet_fallbacks=snippet_fallbacks,
         wikipedia_fallbacks=wikipedia_fallbacks,
+        metadata_fallbacks=metadata_fallbacks,
         sources_returned=len(sources),
         requested_max_sources=requested_max_sources,
         effective_max_sources=effective_max_sources,
@@ -803,6 +860,12 @@ async def gather_source_bundle(
         evidence_sufficiency=evidence_sufficiency,
         sufficiency_reasons=sufficiency_reasons,
         search_queries=search_queries,
+        search_providers=sorted(
+            {result.provider for result in results if result.provider}
+        ),
+        max_source_query_term_coverage=(
+            max_source_query_term_coverage if sources else None
+        ),
     )
     return SourceBundle(
         schema_version="1.6",

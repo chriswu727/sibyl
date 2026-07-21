@@ -12,6 +12,7 @@ ContentOrigin = Literal[
     "jina_reader",
     "wikipedia_api",
     "search_snippet",
+    "crossref_api",
 ]
 PublishedAtMethod = Literal[
     "",
@@ -93,6 +94,9 @@ class BundleDiagnostics:
     evidence_sufficiency: EvidenceSufficiency = "not_assessed"
     sufficiency_reasons: List[str] = field(default_factory=list)
     search_queries: List[str] = field(default_factory=list)
+    search_providers: List[str] = field(default_factory=list)
+    max_source_query_term_coverage: Optional[float] = None
+    metadata_fallbacks: int = 0
 
 
 @dataclass(frozen=True)

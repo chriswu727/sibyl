@@ -9,6 +9,10 @@
 - Capability-aware MCP profiles plus `--version`, `--list-tools`, and `--profile` verification commands.
 - Deterministic focused search variants for natural-language questions, recorded in SourceBundle diagnostics.
 - A 66-question, model-free live retrieval launch gate covering answer evidence, adversarial safety, availability, stability, and latency.
+- An explicitly configured Tavily general-web provider with transparent keyless fallback.
+- Crossref metadata retrieval for academic titles, DOIs, and publication dates.
+- Provider-path and per-source query-coverage diagnostics.
+- A distinct `crossref_api` provenance label and metadata-fallback diagnostic, avoiding confusion with ordinary search snippets.
 - Official MCP Registry metadata, machine-readable install guidance, privacy and security policies, contribution guidance, and issue templates.
 
 ### Changed
@@ -20,6 +24,7 @@
 - PyPI metadata and CLI language now lead with evidence-first web research rather than prediction use cases.
 - Release validation installs the real default dependency set and checks the public API.
 - Keyless search uses paced provider requests, an independent DuckDuckGo/Mojeek/Yahoo fallback chain, bounded search batches, and direct Wikipedia API enrichment.
+- Search snippets remain eligible for relevance ranking when full pages exist, while retaining their weaker provenance and sufficiency treatment.
 
 ### Fixed
 
@@ -28,6 +33,8 @@
 - Natural-language questions retain the original query while adding a deterministic focused search variant.
 - Quoted titles use an exact focused query, and named entities receive a bounded Wikipedia lookup.
 - Missing query entities and explicitly requested future outcomes no longer produce synthesis-ready evidence states.
+- Quoted-target questions no longer combine disconnected query fragments across unrelated sources into a synthesis-ready state.
+- Unrelated long pages no longer count as substantive corroboration when they omit the query's key entities or quoted target.
 
 ## 0.3.0 — 2026-07-14
 

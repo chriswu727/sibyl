@@ -204,7 +204,13 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
                 structured_tool.outputSchema["$defs"]["EvidenceSource"]
                 ["properties"]["content_origin"]["enum"]
             ),
-            {"direct_fetch", "jina_reader", "wikipedia_api", "search_snippet"},
+            {
+                "direct_fetch",
+                "jina_reader",
+                "wikipedia_api",
+                "search_snippet",
+                "crossref_api",
+            },
         )
 
     async def test_auto_profile_hides_tools_that_need_configuration(self):

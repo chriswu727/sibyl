@@ -14,7 +14,8 @@ from unittest import mock
 from sibyl.search import (
     search_duckduckgo, search_reddit, search_wikipedia, search_google_news,
     search_mojeek, search_yahoo, _search_general_web, fetch_wikipedia_extract,
-    wikipedia_lookup, search_web, SearchResult,
+    wikipedia_lookup, search_web, SearchResult, search_tavily, search_crossref,
+    _configured_search_provider, _search_configured_general_web,
 )
 
 
@@ -26,7 +27,142 @@ def _client_returning(text=None, payload=None, status=200):
     resp.json = mock.Mock(return_value=payload or {})
     client = mock.Mock()
     client.get = mock.AsyncMock(return_value=resp)
+    client.post = mock.AsyncMock(return_value=resp)
     return client
+
+
+class TestTavily(unittest.IsolatedAsyncioTestCase):
+    async def test_requires_an_explicit_key(self):
+        with mock.patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "TAVILY_API_KEY"):
+                await search_tavily("q", client=_client_returning())
+
+    async def test_posts_basic_search_and_parses_results(self):
+        client = _client_returning(payload={
+            "results": [
+                {
+                    "title": "Relevant result",
+                    "url": "https://example.com/relevant",
+                    "content": "Evidence returned by Tavily.",
+                }
+            ]
+        })
+
+        results = await search_tavily("question", 5, client=client, api_key="tvly-test")
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].provider, "tavily")
+        self.assertEqual(results[0].snippet, "Evidence returned by Tavily.")
+        request = client.post.call_args
+        self.assertEqual(request.args[0], "https://api.tavily.com/search")
+        self.assertEqual(request.kwargs["headers"]["Authorization"], "Bearer tvly-test")
+        self.assertEqual(request.kwargs["json"]["search_depth"], "basic")
+        self.assertFalse(request.kwargs["json"]["include_answer"])
+        self.assertFalse(request.kwargs["json"]["include_raw_content"])
+
+    async def test_explicit_provider_falls_back_when_tavily_fails(self):
+        keyless = [SearchResult("K", "https://keyless.example", "fallback")]
+        with mock.patch(
+            "sibyl.search.search_tavily",
+            new=mock.AsyncMock(side_effect=RuntimeError("unavailable")),
+        ), mock.patch(
+            "sibyl.search._search_general_web",
+            new=mock.AsyncMock(return_value=keyless),
+        ) as fallback:
+            results = await _search_configured_general_web(
+                "q", 5, "tavily", client=object()
+            )
+
+        self.assertEqual(results, keyless)
+        fallback.assert_awaited_once()
+
+    def test_provider_is_keyless_by_default_and_tavily_is_explicit(self):
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(_configured_search_provider(), "keyless")
+        with mock.patch.dict(
+            "os.environ",
+            {"SIBYL_SEARCH_PROVIDER": "tavily", "TAVILY_API_KEY": "tvly-test"},
+            clear=True,
+        ):
+            self.assertEqual(_configured_search_provider(), "tavily")
+
+    def test_tavily_provider_requires_key_at_configuration_boundary(self):
+        with mock.patch.dict(
+            "os.environ",
+            {"SIBYL_SEARCH_PROVIDER": "tavily"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(ValueError, "TAVILY_API_KEY"):
+                _configured_search_provider()
+
+    def test_unknown_provider_is_rejected(self):
+        with mock.patch.dict(
+            "os.environ",
+            {"SIBYL_SEARCH_PROVIDER": "unknown"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(ValueError, "keyless, tavily"):
+                _configured_search_provider()
+
+
+class TestCrossref(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_doi_and_online_publication_date(self):
+        title = "Articulatory constraints on stop insertion and elision in consonant clusters"
+        client = _client_returning(payload={
+            "message": {
+                "items": [
+                    {
+                        "title": [title],
+                        "DOI": "10.1017/S0025100311000118",
+                        "published-online": {"date-parts": [[2011, 9, 5]]},
+                        "container-title": ["Journal of the International Phonetic Association"],
+                        "author": [{"given": "Example", "family": "Author"}],
+                    }
+                ]
+            }
+        })
+
+        results = await search_crossref(title, client=client)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].provider, "crossref")
+        self.assertIn("10.1017/S0025100311000118", results[0].snippet)
+        self.assertIn("5th September, 2011", results[0].snippet)
+        self.assertEqual(results[0].source, "academic")
+
+    async def test_rejects_an_unrelated_crossref_match(self):
+        client = _client_returning(payload={
+            "message": {
+                "items": [
+                    {"title": ["A completely unrelated paper"], "DOI": "10.1/nope"}
+                ]
+            }
+        })
+
+        results = await search_crossref(
+            "Generating Semantic Maps through Multidimensional Scaling",
+            client=client,
+        )
+
+        self.assertEqual(results, [])
+
+    async def test_rejects_a_related_but_different_title(self):
+        query = (
+            "Generating Semantic Maps through Multidimensional Scaling: "
+            "Linguistic Applications and Theory"
+        )
+        client = _client_returning(payload={
+            "message": {
+                "items": [
+                    {
+                        "title": ["Semantic Maps and Multidimensional Scaling"],
+                        "DOI": "10.1163/9789004363533_009",
+                    }
+                ]
+            }
+        })
+
+        self.assertEqual(await search_crossref(query, client=client), [])
 
 
 class TestDuckDuckGo(unittest.IsolatedAsyncioTestCase):

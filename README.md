@@ -73,6 +73,17 @@ For clients that accept an MCP server configuration:
 
 No search or model key is required for `gather_bundle`, `gather_sources`, `quick_search`, or `read_url`.
 
+For repeatable production retrieval, opt into Tavily explicitly:
+
+```bash
+export SIBYL_SEARCH_PROVIDER=tavily
+export TAVILY_API_KEY=tvly-...
+```
+
+Sibyl sends general-web queries to Tavily's basic Search API and falls back to the keyless DuckDuckGo/Mojeek/Yahoo chain if a Tavily request fails or returns no results. This setting is never enabled merely because a key exists. Tavily bills each request according to its own plan, and one `gather_bundle()` call can issue more than one focused query; review the [Tavily Search API documentation](https://docs.tavily.com/documentation/api-reference/endpoint/search) before enabling it.
+
+Academic and DOI-oriented questions also query the public Crossref REST API. No key is required. Set `CROSSREF_MAILTO=you@example.com` to identify your client to Crossref's polite pool; see [Crossref's API guidance](https://www.crossref.org/documentation/retrieve-metadata/rest-api/access-and-authentication/).
+
 Verify the isolated installation:
 
 ```bash
@@ -183,11 +194,14 @@ This makes missing evidence observable. It also prevents several different websi
   "diagnostics": {
     "ranking_method": "lexical_v1",
     "query_term_coverage": 0.75,
+    "max_source_query_term_coverage": 0.67,
     "substantive_sources": 3,
     "independent_content_clusters": 2,
     "evidence_sufficiency": "sufficient",
     "sufficiency_reasons": [],
-    "search_queries": ["Python 3.14 release date"]
+    "search_queries": ["Python 3.14 release date"],
+    "search_providers": ["tavily", "wikipedia"],
+    "metadata_fallbacks": 0
   },
   "error": ""
 }
@@ -210,7 +224,7 @@ The complete rules and machine-validated fixture are in the [consumer contract](
 
 For each focused query, Sibyl:
 
-1. Searches multiple keyless sources with provider pacing, bounded waits, and independent general-web failover.
+1. Searches the configured general-web provider plus complementary public sources with provider pacing and bounded waits. The default path uses independent keyless failover; Tavily is an explicit opt-in.
 2. Fetches public pages and extracts readable content.
 3. Uses Wikipedia to expand thin result coverage; Jina Reader rendering is available only when `render_thin_pages=true` is explicitly requested.
 4. Canonicalizes URLs, removes duplicates, and clusters syndicated text.
@@ -351,6 +365,7 @@ The repository also contains an exploratory 30-question SimpleQA comparison. In 
 ## Known limitations
 
 - Keyless search engines and public websites can throttle, block, or change behavior.
+- Tavily improves the operational search path but is optional, credentialed, and usage-billed by Tavily; it does not make publisher pages or the wider web deterministic.
 - Retrieval relevance does not establish factual truth or source credibility.
 - `quality_score` is intentionally unpopulated while the production credibility model is still under evaluation.
 - Publication dates are extracted from explicit page metadata and may be wrong at the publisher.

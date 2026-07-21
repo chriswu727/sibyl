@@ -31,7 +31,7 @@ Primary references:
 
 | Gate | Result | Status |
 |---|---:|---|
-| Unit suite | 244 tests on the launch-candidate branch | Pass |
+| Unit suite | 257 tests on the launch-candidate branch | Pass |
 | Python support in CI | 3.10, 3.11, 3.12 | Pass |
 | Fixed lexical ranking | 8/8 at rank 1 | Pass |
 | Fixed end-to-end retrieval | 8/8 usable and structurally valid | Pass |
@@ -55,6 +55,8 @@ The live run exposed two different limits:
 1. Anonymous public search endpoints vary and throttle under sustained use. The same question often alternated between multiple substantive domains and a Wikipedia-only result. This changed the bundle from `ok` to `insufficient_evidence` even when the answer text remained present.
 2. Some tasks need specialized retrieval or multiple queries. DOI lookup, exact publication dates, obscure historical facts, and multi-hop questions were the persistent misses. One broad keyless query is not yet a reliable replacement for an academic index or an agent-directed evidence loop.
 
+The launch candidate now includes an explicit Tavily path and Crossref academic metadata, but neither changes this decision yet. The Tavily path has offline contract coverage and still requires a complete budgeted live run. Crossref fixes the retained DOI case while honestly leaving an ambiguous online-publication date case insufficient; record creation timestamps are not treated as publication dates.
+
 Lowering the thresholds or treating a single domain as independent corroboration would hide these limits rather than fix them.
 
 ## Launch gates
@@ -72,8 +74,8 @@ Do not publish v0.4.0, update the official MCP Registry, or submit broad directo
 
 Priority order:
 
-1. Add an optional production search provider backed by a supported API, while retaining the keyless path as a zero-setup beta fallback.
-2. Add specialized academic metadata retrieval for quoted paper titles and DOI/publication-date questions.
+1. Validate the new explicitly configured Tavily path on the complete live gate with a declared provider budget; the keyless path remains the zero-setup beta fallback.
+2. Extend the new Crossref metadata path where publisher-specific facts are absent or ambiguous; never substitute Crossref record timestamps for publication dates.
 3. Add an agent-facing retry/refinement signal for limited bundles so the host can issue a focused follow-up instead of treating the first broad query as final.
 4. Rerun the live gate and compare it with the retained failed baseline.
 5. With explicit quota approval, evaluate the one-shot report path and either improve it or keep it clearly secondary.

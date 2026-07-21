@@ -18,8 +18,12 @@ maintainer.
 ## Where data can go
 
 - Keyless retrieval sends search terms to DuckDuckGo, Mojeek, or Yahoo Search;
-  Google News, Reddit, Wikipedia, and Semantic Scholar; then requests pages from
-  the selected publishers.
+  Google News, Reddit, Wikipedia, Semantic Scholar, and—for academic or DOI
+  questions—Crossref; then requests pages from the selected publishers.
+- When `SIBYL_SEARCH_PROVIDER=tavily` is explicitly configured, general-web
+  search terms are sent to Tavily instead. Tavily receives the request metadata
+  associated with that traffic and applies its own privacy and retention terms.
+  Failed or empty Tavily requests fall back to the keyless search chain.
 - Jina rendering is disabled by default. When `render_thin_pages`, `js_render`,
   or the `--js-render` CLI flag is explicitly enabled, the destination URL is
   sent to Jina Reader for extraction.
@@ -41,3 +45,7 @@ Sibyl reads provider credentials from environment variables or a user-selected
 configuration file. It does not intentionally include credentials in reports or
 send them to the project maintainer. Keep configuration files outside source
 control and follow the selected provider's key-rotation guidance.
+
+`CROSSREF_MAILTO` is optional and, when set, is sent to Crossref with academic
+metadata requests. Use an address you are comfortable disclosing to that
+service.
