@@ -993,6 +993,7 @@ def render_source_bundle(bundle: SourceBundle) -> str:
         f"cite [Source N]; if the answer isn't here, gather more or say you don't know.\n\n"
         + "\n---\n".join(parts)
     )
+    action = f"Recommended action: {bundle.diagnostics.recommended_action}."
     if bundle.status == "insufficient_evidence":
-        return f"Evidence warning: {bundle.error}\n\n{rendered}"
-    return rendered
+        return f"Evidence warning: {bundle.error}\n{action}\n\n{rendered}"
+    return f"{action}\n\n{rendered}"

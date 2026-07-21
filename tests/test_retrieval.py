@@ -236,6 +236,10 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(bundle.sources), 2)
         self.assertIn("low query-term coverage", bundle.error)
         self.assertIn("Evidence warning", render_source_bundle(bundle))
+        self.assertIn(
+            "Recommended action: refine_query",
+            render_source_bundle(bundle),
+        )
 
     async def test_missing_query_entity_is_not_synthesis_ready(self):
         results = [
@@ -858,7 +862,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
 
 class TestRenderSourceBundle(unittest.TestCase):
     def test_legacy_renderer_keeps_source_blocks(self):
-        diagnostics = mock.Mock()
+        diagnostics = mock.Mock(recommended_action="synthesize")
         passage = mock.Mock(text="Evidence text")
         source = mock.Mock(title="Title", url="https://example.com", evidence=[passage])
         bundle = mock.Mock(status="ok", sources=[source], query="question", diagnostics=diagnostics)
@@ -866,6 +870,7 @@ class TestRenderSourceBundle(unittest.TestCase):
         text = render_source_bundle(bundle)
 
         self.assertIn("Retrieved 1 sources", text)
+        self.assertIn("Recommended action: synthesize", text)
         self.assertIn("[Source 1: Title]", text)
         self.assertIn("URL: https://example.com", text)
         self.assertIn("Evidence text", text)

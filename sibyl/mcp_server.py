@@ -23,6 +23,9 @@ mcp = FastMCP(
 RECOMMENDED — you (the host model) are the researcher. Sibyl retrieves; YOU reason:
   • gather_bundle(query) — structured keyless retrieval for agents and pipelines. Returns
     versioned sources/passages with stable IDs, hashes, timestamps, and diagnostics.
+    Check diagnostics.recommended_action after every call. Synthesize only for
+    "synthesize"; issue an atomic follow-up for "refine_query"; split dependent
+    fact chains for "decompose_query"; retry or revise only as directed.
   • gather_sources(query) — the same retrieval rendered as readable [Source N] blocks
     for conversational use. Call either tool several times with focused sub-queries,
     cross-reference the evidence, and synthesize the answer YOURSELF — citing sources
@@ -275,6 +278,7 @@ async def gather_bundle(
     Passage/source relevance defaults to the dependency-free lexical_v1 ranker.
     FlashRank is optional and falls back to lexical_v1 with an explicit diagnostic.
     Source quality remains null until a separate quality evaluator computes it.
+    Follow diagnostics.recommended_action; only "synthesize" permits synthesis.
 
     Args:
         query: One focused search query
