@@ -7,6 +7,7 @@ from unittest import mock
 from mcp.server.fastmcp.exceptions import ToolError
 
 import sibyl.mcp_server as mcp_server
+from sibyl.runtime import get_runtime
 from sibyl.config import Config, Provider
 from sibyl.evidence import BundleDiagnostics, SourceBundle
 from sibyl.mcp_server import (
@@ -50,12 +51,12 @@ class TestMcpFormatting(unittest.TestCase):
 class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
     async def test_missing_credentials_fails_before_network(self):
         cfg = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
-        mcp_server._last_report = ResearchReport("old", "stale", [], [])
+        get_runtime().last_report = ResearchReport("old", "stale", [], [])
         with mock.patch.dict(os.environ, {}, clear=True), \
-             mock.patch("sibyl.mcp_server._get_config", return_value=cfg):
+             mock.patch("sibyl.mcp_tools._get_config", return_value=cfg):
             with self.assertRaisesRegex(ToolError, "requires an LLM provider key"):
                 await research("question")
-        self.assertIsNone(mcp_server._last_report)
+        self.assertIsNone(get_runtime().last_report)
 
     async def test_per_call_flags_do_not_mutate_global_config(self):
         cfg = Config(
@@ -72,7 +73,7 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
             async def research(self, query, **kwargs):
                 return ResearchReport(query, "summary", [], [])
 
-        with mock.patch("sibyl.mcp_server._get_config", return_value=cfg), \
+        with mock.patch("sibyl.mcp_tools._get_config", return_value=cfg), \
              mock.patch("sibyl.researcher.Researcher", FakeResearcher):
             await research("question", fast=True, verify=False)
 
@@ -97,7 +98,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
     async def test_structured_tool_returns_source_bundle(self):
         gather = mock.AsyncMock(return_value=self.bundle)
         with mock.patch(
-            "sibyl.mcp_server.gather_source_bundle",
+            "sibyl.mcp_tools.gather_source_bundle",
             new=gather,
         ):
             result = await gather_bundle("question", ranker="none")
@@ -113,7 +114,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
 
     async def test_fastmcp_serializes_structured_content(self):
         with mock.patch(
-            "sibyl.mcp_server.gather_source_bundle",
+            "sibyl.mcp_tools.gather_source_bundle",
             new=mock.AsyncMock(return_value=self.bundle),
         ):
             _, structured = await mcp_server.mcp.call_tool(
@@ -125,7 +126,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
 
     async def test_legacy_tool_renders_same_bundle(self):
         with mock.patch(
-            "sibyl.mcp_server.gather_source_bundle",
+            "sibyl.mcp_tools.gather_source_bundle",
             new=mock.AsyncMock(return_value=self.bundle),
         ):
             result = await gather_sources("question")
@@ -144,7 +145,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             await release.wait()
             return self.bundle
 
-        with mock.patch("sibyl.mcp_server.gather_source_bundle", new=retrieve):
+        with mock.patch("sibyl.mcp_tools.gather_source_bundle", new=retrieve):
             legacy = asyncio.create_task(gather_sources(" question "))
             await started.wait()
             structured = asyncio.create_task(gather_bundle("question"))
@@ -179,7 +180,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         retrieve = mock.AsyncMock(side_effect=[failed, recovered])
 
         with mock.patch(
-            "sibyl.mcp_server.gather_source_bundle",
+            "sibyl.mcp_tools.gather_source_bundle",
             new=retrieve,
         ):
             first = await gather_bundle("failure-case")

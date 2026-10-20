@@ -36,7 +36,8 @@ The workflow filename and environment name are part of the OIDC identity. Renami
 
    ```bash
    rm -rf dist
-   .venv/bin/python -m pip install build==1.5.1 twine==6.2.0
+   .venv/bin/python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1
+   .venv/bin/python -m pip_audit --vulnerability-service osv --skip-editable
    .venv/bin/python scripts/check_release.py v0.4.0
    .venv/bin/python -m build
    .venv/bin/python -m twine check dist/*

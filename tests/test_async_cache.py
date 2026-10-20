@@ -84,12 +84,14 @@ class TestAsyncSingleFlightTTL(unittest.IsolatedAsyncioTestCase):
 
         waiter = asyncio.create_task(cache.get_or_create("key", factory))
         await started.wait()
+        other = asyncio.create_task(cache.get_or_create("key", factory))
+        await asyncio.sleep(0)
         waiter.cancel()
         with self.assertRaises(asyncio.CancelledError):
             await waiter
         release.set()
 
-        self.assertEqual(await cache.get_or_create("key", factory), 42)
+        self.assertEqual(await other, 42)
         self.assertEqual(calls, 1)
 
     async def test_factory_exception_does_not_poison_the_key(self):

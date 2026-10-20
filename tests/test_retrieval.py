@@ -960,12 +960,13 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_retrieval_failure_is_returned_as_failure(self):
         with mock.patch(
             "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(side_effect=RuntimeError("engine unavailable")),
+            new=mock.AsyncMock(side_effect=RuntimeError("engine unavailable: token=SECRET")),
         ):
             bundle = await gather_source_bundle("query", client=object())
 
         self.assertEqual(bundle.status, "failed")
-        self.assertIn("engine unavailable", bundle.error)
+        self.assertIn("Retrieval failed", bundle.error)
+        self.assertNotIn("SECRET", bundle.error)
         self.assertEqual(render_source_bundle(bundle), bundle.error)
 
         with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])), \

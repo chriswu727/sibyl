@@ -9,6 +9,7 @@ import re
 import threading
 import time
 import weakref
+import zlib
 from collections import deque
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -95,13 +96,33 @@ async def _bounded_get(
             except ValueError:
                 pass
 
+        content_encoding = response.headers.get("content-encoding", "identity").lower().strip()
+        if content_encoding not in {"identity", "gzip", "deflate"}:
+            raise ValueError("Unsupported content encoding")
+        decoder = None
+        if content_encoding != "identity":
+            decoder = zlib.decompressobj(31 if content_encoding == "gzip" else 15)
         content = bytearray()
-        async for chunk in response.aiter_bytes():
-            content.extend(chunk)
-            if len(content) > max_response_bytes:
+        wire_size = 0
+        # MockTransport may deliver an already-buffered response; real streams stay raw.
+        stream = response.aiter_bytes() if response.is_stream_consumed else response.aiter_raw()
+        if response.is_stream_consumed:
+            decoder = None
+        async for chunk in stream:
+            wire_size += len(chunk)
+            if wire_size > max_response_bytes:
+                raise ResponseTooLargeError(f"Response exceeds {max_response_bytes} bytes")
+            remaining = max_response_bytes - len(content)
+            decoded = decoder.decompress(chunk, remaining + 1) if decoder else chunk
+            if len(decoded) > remaining:
                 raise ResponseTooLargeError(
                     f"Response exceeds {max_response_bytes} bytes"
                 )
+            content.extend(decoded)
+        if decoder and not decoder.eof:
+            raise ValueError("Truncated compressed response")
+        if decoder and decoder.unused_data:
+            raise ValueError("Trailing compressed response data")
         encoding = response.encoding or "utf-8"
         return _ResponseSnapshot(
             status_code=response.status_code,
@@ -463,10 +484,10 @@ async def scrape_url(
                 return WebPage(url=url, title="", text="", error="timeout")
             except ResponseTooLargeError as exc:
                 return WebPage(url=url, title="", text="", error=str(exc))
-            except Exception as e:
+            except Exception:
                 if attempt == 0:
                     continue
-                return WebPage(url=url, title="", text="", error=str(e)[:200])
+                return WebPage(url=url, title="", text="", error="Page retrieval failed")
 
         return WebPage(url=url, title="", text="", error="All attempts failed")
     finally:

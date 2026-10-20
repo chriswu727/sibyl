@@ -196,13 +196,18 @@ class EvidenceLoopManager:
         if query_requires_decomposition(clean_question):
             return self._snapshot(state)
 
-        bundle = await gather(
-            clean_question,
-            max_sources,
-            chars_per_source,
-            ranker,
-            render_thin_pages,
-        )
+        try:
+            async with state.lock:
+                bundle = await gather(
+                    clean_question,
+                    max_sources,
+                    chars_per_source,
+                    ranker,
+                    render_thin_pages,
+                )
+        except BaseException:
+            self._loops.pop(state.loop_id, None)
+            raise
         current_step = EvidenceLoopStep("E1", clean_question, bundle)
         state.steps.append(current_step)
         state.updated_at = time.monotonic()

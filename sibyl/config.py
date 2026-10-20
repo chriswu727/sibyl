@@ -11,8 +11,8 @@ import yaml
 @dataclass
 class Provider:
     model: str          # LiteLLM model string, e.g. "deepseek/deepseek-v4-flash"
-    api_key: str = ""
-    api_base: str = ""
+    api_key: str = field(default="", repr=False)
+    api_base: str = field(default="", repr=False)
     role: str = "general"   # general, analysis, fast, synthesis, verify, compaction
     weight: float = 1.0     # routing weight
 

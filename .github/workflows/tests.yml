@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "23 9 * * 1"
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -18,7 +23,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
-        run: pip install -e '.[report,finance,extract]'
+        run: |
+          python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
+          python -m pip install ruff==0.17.1 -e '.[report,finance,extract]'
+      - name: Check Python correctness
+        run: ruff check sibyl tests scripts
       - name: Run tests
         run: python -m unittest discover tests -v
       - name: Smoke-test the keyless MCP stdio surface
@@ -31,3 +40,33 @@ jobs:
         run: python scripts/eval_source_quality.py
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
+
+  security:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile: [core, report-finance-extract]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install isolated application and audit environments
+        env:
+          PROFILE: ${{ matrix.profile }}
+        run: |
+          python -m venv /tmp/sibyl-audit
+          /tmp/sibyl-audit/bin/pip install pip-audit==2.10.1
+          python -m venv /tmp/sibyl-app
+          /tmp/sibyl-app/bin/pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
+          if [ "$PROFILE" = "core" ]; then
+            /tmp/sibyl-app/bin/pip install .
+          else
+            /tmp/sibyl-app/bin/pip install '.[report,finance,extract]'
+          fi
+          /tmp/sibyl-app/bin/pip check
+      - name: Audit installed application dependencies
+        run: |
+          /tmp/sibyl-audit/bin/pip-audit \
+            --path /tmp/sibyl-app/lib/python3.12/site-packages \
+            --vulnerability-service osv --progress-spinner off
