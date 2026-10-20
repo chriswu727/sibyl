@@ -40,19 +40,26 @@ An optional experimental `research()` pipeline can use a configured LLM to produ
 
 ## Quick start
 
-### 1. Install the current release
+### 1. Install the current source checkout
+
+This guide describes unreleased `main`. The published 0.3.0 package does not
+provide the current CLI subcommands, capability profiles, or evidence-loop API.
 
 ```bash
-python -m pip install sibyl-research
+git clone https://github.com/chriswu727/sibyl.git
+cd sibyl
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
 ```
 
 Sibyl requires Python 3.10 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
 
 ```bash
-python -m pip install 'sibyl-research[report]'   # experimental LLM report + PDF
-python -m pip install 'sibyl-research[finance]'  # market data, trends, charts
-python -m pip install 'sibyl-research[rerank]'   # local cross-encoder ranking
-python -m pip install 'sibyl-research[all]'      # every optional capability
+python -m pip install -e '.[report]'   # experimental LLM report + PDF
+python -m pip install -e '.[finance]'  # market data, trends, charts
+python -m pip install -e '.[rerank]'   # local cross-encoder ranking
+python -m pip install -e '.[all]'      # every optional capability
 ```
 
 ### 2. Add the keyless MCP server
@@ -60,17 +67,17 @@ python -m pip install 'sibyl-research[all]'      # every optional capability
 For Claude Code:
 
 ```bash
-claude mcp add sibyl -- uvx --from sibyl-research sibyl-mcp
+claude mcp add sibyl -- /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile keyless
 ```
 
-For clients that accept an MCP server configuration:
+For clients that accept an MCP server configuration, replace the absolute path:
 
 ```json
 {
   "mcpServers": {
     "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research", "sibyl-mcp"]
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
+      "args": ["--profile", "keyless"]
     }
   }
 }
@@ -92,8 +99,8 @@ Academic and DOI-oriented questions also query the public Crossref REST API. No 
 Verify the isolated installation:
 
 ```bash
-uvx --from sibyl-research sibyl-mcp --version
-uvx --from sibyl-research sibyl-mcp --list-tools
+sibyl-mcp --version
+sibyl-mcp --profile keyless --list-tools
 ```
 
 ### 3. Use the keyless CLI or Python API
@@ -252,7 +259,7 @@ Ranking is local by default:
 | Ranker | Setup | Behavior |
 |---|---|---|
 | `lexical` | Built in | Deterministic, dependency-free relevance ranking |
-| `flashrank` | `pip install 'sibyl-research[rerank]'` | Optional local cross-encoder; falls back explicitly to lexical |
+| `flashrank` | `pip install -e '.[rerank]'` | Optional local cross-encoder; falls back explicitly to lexical |
 | `none` | Built in | Preserves retrieval order and returns `null` scores |
 
 Matching `gather_evidence()`, `gather_bundle()`, and `gather_sources()` steps share in-flight work and reuse successful retrievals for 30 seconds within one MCP process. Failed retrievals are not cached.
@@ -299,7 +306,7 @@ They require an LLM provider key or a configured local/API-compatible backend. S
 Install the report capability first:
 
 ```bash
-python -m pip install 'sibyl-research[report]'
+python -m pip install -e '.[report]'
 ```
 
 | Provider | Environment variable |
@@ -314,7 +321,7 @@ Run the MCP server with one-shot tools enabled:
 
 ```bash
 claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- \
-  uvx --from 'sibyl-research[report]' sibyl-mcp --profile report
+  /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile report
 ```
 
 Or use the CLI:
