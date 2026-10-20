@@ -2,6 +2,27 @@
 
 ## 0.4.0 — Unreleased
 
+### Persistent research workflows
+
+- Added host-assisted and explicitly configured-model research jobs sharing the
+  SourceBundle evidence pipeline. Existing retrieval and one-shot tools remain.
+- Added bounded SQLite checkpoints, progress events, cancellation, explicit resume,
+  stale-revision protection, immutable completed reports, and checkpoint deletion.
+- Interleave evidence across queries so gap-filling results can enter a full source window.
+- Removed mandatory finding counts, numeric claims, fabricated forecast probabilities,
+  and minimum-length regeneration from report synthesis.
+- Verify report blocks as well as findings, visibly flag unsupported content, and
+  never treat lexical overlap or string-valued booleans as semantic verification.
+- Added provider-free report serialization and JSON export; host-authored reports
+  disclose citation-target-only validation.
+- Fixed PDF cursor positioning that could silently omit consecutive list items.
+- Parallel model failures now cancel and await sibling calls before returning.
+- Keyless MCP now exposes eleven tools; the complete catalog contains nineteen.
+  Model operations have a 600-second default deadline. Research jobs additionally
+  bound retrieval attempts, model-call count, reserved output tokens, and storage.
+- Repositioned the product around deep research and traceable reports, without a
+  new live-quality claim. PDF ingestion and incremental refresh remain future work.
+
 ### Runtime and security hardening
 
 - Split MCP composition, tool registration, application operations, and per-server

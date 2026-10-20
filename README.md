@@ -2,16 +2,16 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/chriswu727/sibyl/main/assets/sibyl-banner.svg" alt="Sibyl — evidence in, grounded answers out. Your agent reasons. Sibyl retrieves." width="100%">
+<img src="https://raw.githubusercontent.com/chriswu727/sibyl/main/assets/sibyl-banner.svg" alt="Sibyl — deep research, traceable reports." width="100%">
 
 [![Tests & security](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=0f766e)](https://pypi.org/project/sibyl-research/)
 [![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
-**An MCP server that gives AI agents inspectable web evidence before they answer.**
+**A deep-research MCP server that turns complex questions into evidence-backed reports.**
 
-Search. Extract. Rank. Cite. Know when the evidence is missing.
+Plan. Investigate. Check the evidence. Deliver a report—with its limitations.
 
 [Quick start](#quick-start) · [How it works](#how-it-works) · [Architecture](docs/MCP_ARCHITECTURE.md) · [Tool reference](docs/USAGE.md) · [Security](SECURITY.md)
 
@@ -19,12 +19,17 @@ Search. Extract. Rank. Cite. Know when the evidence is missing.
 
 ---
 
-## Your agent reasons. Sibyl retrieves.
+## From a question to a traceable report
 
-A search result is not yet evidence. Sibyl turns public-web results into ranked
-source bundles with relevant passages, citation IDs, provenance, and explicit
-evidence gaps. Your existing agent plans the research and writes the answer.
-The default path needs **no model key, no search key, and no second LLM**.
+A search result is not yet a research report. Sibyl keeps the plan, searches,
+evidence, progress, and final report together in a bounded local research job.
+Your existing agent can plan and write using the **keyless host-assisted mode**.
+An optional configured model can run the research in the background, including
+a bounded follow-up search and report-wide source-support checks.
+
+Both modes use the same inspectable evidence pipeline. Host mode needs **no
+model key, no search key, and no second LLM**. Autonomous mode has its own model
+configuration and billing; it does not inherit the host's subscription.
 
 - **Inspectable evidence:** versioned sources and passages with hashes, offsets,
   retrieval timestamps, publication metadata, and content-origin labels.
@@ -34,6 +39,10 @@ The default path needs **no model key, no search key, and no second LLM**.
   the host does not mistake repetition for corroboration.
 - **One evidence layer, three interfaces:** MCP for agents, a CLI for inspection,
   and an async Python API for applications.
+- **Persistent research:** task IDs, progress events, explicit continuation,
+  cancellation, and local SQLite checkpoints; unfinished drafts may be regenerated.
+- **Portable reports:** Markdown and JSON without an LLM dependency, optional PDF,
+  source provenance, and explicit verification scope.
 
 > **Public beta.** Engineering hardening does not imply production-grade retrieval
 > accuracy. The historical live evaluation still misses readiness and precision
@@ -89,7 +98,32 @@ The Python API is a single-call library interface. Server admission limits and
 shared state apply to the MCP runtime; applications embedding the API own their
 concurrency and overall deadlines.
 
-## How it works
+## Research workflow
+
+Use these MCP calls from your host agent:
+
+1. `start_research(question="...", sub_questions=["...", "..."])` creates a host job.
+2. `continue_research(job_id="...", query="one focused question")` retrieves evidence.
+3. `get_research(job_id="...")` returns progress, passages, current citation numbers,
+   and limitations. Investigate missing perspectives or conflicting evidence.
+4. `complete_research(job_id="...", revision=..., summary="... [Source 1]",
+   key_findings=["... [Source 2]"], limitations=["..."])` saves the host's report.
+5. `save_report(job_id="...", format="md")` exports it; `json` and optional `pdf`
+   use the same report contract.
+
+Citation numbering can change after a search. Submit the current revision to
+prevent a stale draft from binding to different sources. Host report completion
+checks citation targets, **not semantic truth**. Reports are immutable once saved.
+
+For autonomous execution, install `.[report]`, configure a model, and call
+`start_research(question="...", mode="autonomous")`. Poll `get_research`;
+`continue_research(job_id="...")` explicitly resumes interrupted work and may
+incur additional model usage. `cancel_research` stops work; `delete=true` also
+removes its checkpoint. Neither mode promises exhaustive coverage of the web.
+
+[Detailed workflow and limits](docs/USAGE.md#persistent-research-jobs)
+
+## Evidence primitives
 
 ```mermaid
 flowchart LR
@@ -139,8 +173,8 @@ not import the LLM SDK. See the [module map and design decisions](docs/MCP_ARCHI
 
 - **Bounded work:** eight concurrent MCP calls, total operation deadlines,
   bounded single-flight retrieval, and cancellation when the last consumer leaves.
-- **Isolated state:** reports, evidence loops, and cache entries belong to one
-  server runtime; shutdown cancels work and clears retained state.
+- **Isolated state:** one runtime owns a research directory; shutdown cancels work,
+  clears transient caches, and retains explicit research checkpoints for continuation.
 - **Public-network fetches:** DNS validation and IP pinning, redirect revalidation,
   and separately bounded compressed and decompressed page bodies.
 - **Controlled artifacts:** MCP reports and charts stay under `SIBYL_OUTPUT_ROOT`,
@@ -158,7 +192,7 @@ Keep the default install small; opt into integrations you actually need.
 
 | Extra | Capability |
 |---|---|
-| `[report]` | Experimental model-assisted reports and PDF export |
+| `[report]` | Autonomous model-assisted research and PDF export |
 | `[finance]` | Market data, trends, and charts |
 | `[extract]` | Alternative full-text extraction with Trafilatura |
 | `[rerank]` | Local FlashRank reranking, with explicit lexical fallback |
@@ -166,7 +200,7 @@ Keep the default install small; opt into integrations you actually need.
 Report tools require configured credentials or a local/API-compatible model
 backend. Finance tools require an explicit `finance` or `full` MCP profile.
 Tavily search and Jina rendering are opt-in and disclose queries or URLs to those
-providers. See [configuration, profiles, and all 14 tools](docs/USAGE.md).
+providers. See [configuration, profiles, and all 19 tools](docs/USAGE.md).
 
 ## Quality and limitations
 
@@ -175,9 +209,11 @@ about today's search services. The three-repeat keyless run achieved 85.2% answe
 coverage. A separate 105-request Tavily pilot achieved 70.4% answerable readiness
 and 92.7% ready-state precision, below the 75% and 95% gates.
 
-This upgrade hardens execution and structure; it does **not** establish a new
-retrieval-quality result. Keyless providers can throttle, passages can be wrong,
-and sufficiency checks cannot prove a claim true.
+This upgrade adds a research workflow; it does **not** establish a new live
+report-quality result or prove superiority over a strong model with search.
+Keyless providers can throttle, passages can be wrong, and sufficiency checks
+cannot prove a claim true. Model checks can be wrong too; unverified blocks stay
+marked inline. PDF ingestion and incremental report refresh are not yet supported.
 
 [Launch gates](docs/LAUNCH_READINESS.md) ·
 [Historical evaluation details](docs/USAGE.md#evaluation-and-reproducibility) ·

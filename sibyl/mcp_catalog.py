@@ -12,6 +12,29 @@ from mcp.server.fastmcp.exceptions import ToolError
 
 from .async_cache import CapacityError
 from .runtime import SibylRuntime, current_runtime, get_runtime
+from .research_state import ResearchBudgetExceeded
+
+
+def _validate_payload(values):
+    size = 0
+
+    def visit(value, depth=0):
+        nonlocal size
+        if depth > 8:
+            raise ToolError("Tool input is too deeply nested.")
+        if isinstance(value, str):
+            if len(value) > 10000:
+                raise ToolError("Text parameters must be at most 10000 characters.")
+            size += len(value)
+        elif isinstance(value, (list, tuple, dict)):
+            if len(value) > 128:
+                raise ToolError("Tool input contains too many items.")
+            for item in (value.values() if isinstance(value, dict) else value):
+                visit(item, depth + 1)
+        if size > 64000:
+            raise ToolError("Combined tool text must be at most 64000 characters.")
+
+    visit(values)
 
 
 class ToolCatalog:
@@ -22,16 +45,12 @@ class ToolCatalog:
         def register(function):
             @wraps(function)
             async def bounded(*args, **kwargs):
-                if any(
-                    isinstance(value, str) and len(value) > 10000
-                    for value in (*args, *kwargs.values())
-                ):
-                    raise ToolError("Text parameters must be at most 10000 characters.")
+                _validate_payload([*args, *kwargs.values()])
                 try:
                     return await get_runtime().execute(
                         function.__name__, lambda: function(*args, **kwargs)
                     )
-                except CapacityError as exc:
+                except (CapacityError, ResearchBudgetExceeded) as exc:
                     raise ToolError(str(exc)) from None
                 except ValueError:
                     raise ToolError(

@@ -1,7 +1,7 @@
 [project]
 name = "sibyl-research"
 dynamic = ["version"]
-description = "Evidence retrieval for AI agents with auditable sources, provenance, and explicit insufficiency states"
+description = "Deep-research MCP with persistent investigations, traceable evidence, and cited reports"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}

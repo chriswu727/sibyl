@@ -371,6 +371,9 @@ async def gather_source_bundle(
     client: Optional[httpx.AsyncClient] = None,
     ranker: RankingBackend = "lexical",
     render_thin_pages: bool = False,
+    search_engine: str = "all",
+    extractor: str = "bs4",
+    jina_fallback: bool = False,
 ) -> SourceBundle:
     started_at = time.monotonic()
     requested_ranker = str(ranker or "").strip().lower()
@@ -474,7 +477,7 @@ async def gather_source_bundle(
             search_batches.append(
                 await search_web(
                     search_query,
-                    "all",
+                    search_engine,
                     max_results=6,
                     client=client,
                     include_academic=include_academic,
@@ -522,6 +525,8 @@ async def gather_source_bundle(
                 concurrency=12,
                 client=client,
                 js_render=render_thin_pages,
+                extractor=extractor,
+                jina_fallback=jina_fallback,
             ),
             asyncio.gather(
                 *[
@@ -588,7 +593,7 @@ async def gather_source_bundle(
             try:
                 refinement_results = await search_web(
                     refinement_query,
-                    "all",
+                    search_engine,
                     max_results=6,
                     client=client,
                     include_academic=include_academic,
@@ -617,6 +622,8 @@ async def gather_source_bundle(
                         concurrency=4,
                         client=client,
                         js_render=render_thin_pages,
+                        extractor=extractor,
+                        jina_fallback=jina_fallback,
                     )
                 except Exception:
                     refinement_pages = []

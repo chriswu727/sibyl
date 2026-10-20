@@ -29,9 +29,10 @@ class TestExtractCitations(unittest.TestCase):
 
 
 class TestLexicalVerdict(unittest.TestCase):
-    def test_supported_when_overlap(self):
+    def test_overlap_is_not_semantic_support(self):
         v = _lexical_verdict(1, "NVIDIA data center revenue reached 40 billion [Source 1]", _pages())
-        self.assertTrue(v.supported)
+        self.assertFalse(v.supported)
+        self.assertIn("semantic verification unavailable", v.note)
 
     def test_unsupported_no_citation(self):
         v = _lexical_verdict(1, "Some claim with no citation", _pages())

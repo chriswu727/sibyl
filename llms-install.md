@@ -1,9 +1,9 @@
 # Install Sibyl MCP
 
-Sibyl is a local stdio evidence-retrieval MCP server for AI agents. Its default
-keyless profile searches, extracts, deduplicates, ranks, and returns inspectable
-source bundles; the host agent plans and writes the answer. It does not require
-a search or model API key.
+Sibyl is a local stdio deep-research MCP server. Its default keyless profile
+supports persistent host-assisted research, inspectable evidence, and cited
+Markdown/JSON reports. The host agent plans and writes; no second model key is
+required. Configured-model autonomous research and PDF export are optional.
 
 ## Requirements
 
@@ -44,7 +44,8 @@ Verify the source installation:
 
 The default output should identify the `keyless` profile and list
 `gather_evidence`, `gather_bundle`, `gather_sources`, `quick_search`, and
-`read_url`.
+`read_url`, `start_research`, `get_research`, `continue_research`,
+`complete_research`, `cancel_research`, and `save_report`.
 
 ## Optional production search
 

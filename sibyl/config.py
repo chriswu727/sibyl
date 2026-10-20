@@ -72,7 +72,7 @@ class Config:
     max_synth_sources: int = 12      # sources fed to synthesis
     rich_citations: bool = True      # carry supporting snippet per source
     tier: str = "standard"           # quick | standard | deep (used when depth unset)
-    reflect_rounds: int = 0          # extra reflect→search→re-synthesize cycles (opt-in)
+    reflect_rounds: int = 1          # bounded coverage review and follow-up retrieval
 
     def get_provider(self, role: str = "general") -> Provider:
         """Get the best provider for a role, degrading down its fallback chain."""
@@ -135,7 +135,7 @@ class Config:
             max_synth_sources=data.get("max_synth_sources", 12),
             rich_citations=data.get("rich_citations", True),
             tier=data.get("tier", "standard"),
-            reflect_rounds=data.get("reflect_rounds", 0),
+            reflect_rounds=data.get("reflect_rounds", 1),
         )
 
     @classmethod

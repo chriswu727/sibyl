@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class RuntimePolicy:
     max_active: int = 8
     tool_timeout: float = 60.0
-    report_timeout: float = 180.0
+    report_timeout: float = 600.0
     max_query_chars: int = 1000
     output_root: Path = Path("reports")
 
@@ -65,6 +65,16 @@ class SibylRuntime:
         self.completed = 0
         self.failed = 0
         self.cancelled = 0
+        self._research_jobs = None
+
+    @property
+    def research_jobs(self):
+        if self.closed:
+            raise RuntimeError("Server runtime is closed.")
+        if self._research_jobs is None:
+            from .research_jobs import ResearchJobs
+            self._research_jobs = ResearchJobs(self)
+        return self._research_jobs
 
     @property
     def config(self) -> Config:
@@ -137,6 +147,8 @@ class SibylRuntime:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        if self._research_jobs is not None:
+            await self._research_jobs.close()
         await self.bundle_cache.aclose()
         self.evidence_loops.clear()
         self.last_report = None
