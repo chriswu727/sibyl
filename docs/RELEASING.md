@@ -59,5 +59,8 @@ The workflow filename and environment name are part of the OIDC identity. Renami
 8. Confirm that the GitHub Release has both distribution assets, PyPI exposes
    the new version, and the official MCP Registry entry shows the same title,
    description, package version, and website URL.
+9. Verify the README and `llms-install.md` examples against that published wheel.
+   Only then replace source-checkout quick starts and unreleased notices with
+   the matching PyPI/`uvx` installation instructions.
 
 Never reuse a version already uploaded to PyPI. If publishing fails after PyPI accepts one distribution, diagnose the workflow and release a new patch version if any uploaded file must change.

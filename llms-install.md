@@ -8,33 +8,38 @@ a search or model API key.
 ## Requirements
 
 - Python 3.10 or newer
-- [`uv`](https://docs.astral.sh/uv/) for isolated `uvx` execution
+- Git and a local virtual environment
+
+This guide targets unreleased `main`. PyPI 0.3.0 predates the current evidence
+API and profile flags. Install the checkout before using this configuration:
+
+```bash
+git clone https://github.com/chriswu727/sibyl.git
+cd sibyl
+python -m venv .venv
+.venv/bin/python -m pip install -e .
+```
 
 ## Keyless MCP configuration
+
+Replace `/absolute/path/to/sibyl` with the checkout's absolute path.
 
 ```json
 {
   "mcpServers": {
     "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research", "sibyl-mcp"]
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
+      "args": ["--profile", "keyless"]
     }
   }
 }
 ```
 
-Equivalent commands:
+Verify the source installation:
 
 ```bash
-claude mcp add sibyl -- uvx --from sibyl-research sibyl-mcp
-codex mcp add sibyl -- uvx --from sibyl-research sibyl-mcp
-```
-
-Verify the published package:
-
-```bash
-uvx --from sibyl-research sibyl-mcp --version
-uvx --from sibyl-research sibyl-mcp --list-tools
+.venv/bin/sibyl-mcp --version
+.venv/bin/sibyl-mcp --profile keyless --list-tools
 ```
 
 The default output should identify the `keyless` profile and list
@@ -50,8 +55,8 @@ sources remain available:
 {
   "mcpServers": {
     "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research", "sibyl-mcp"],
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
+      "args": ["--profile", "keyless"],
       "env": {
         "SIBYL_SEARCH_PROVIDER": "tavily",
         "TAVILY_API_KEY": "${TAVILY_API_KEY}",
@@ -69,14 +74,15 @@ optional.
 
 ## Optional experimental report profile
 
-Install the report extra and provide a model credential:
+Install the report extra from the checkout with
+`.venv/bin/python -m pip install -e '.[report]'` and provide a model credential:
 
 ```json
 {
   "mcpServers": {
     "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research[report]", "sibyl-mcp", "--profile", "report"],
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
+      "args": ["--profile", "report"],
       "env": {
         "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY}"
       }

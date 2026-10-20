@@ -2,8 +2,10 @@
 
 ## Supported versions
 
-Security fixes are made on the latest published Sibyl release. Upgrade before
-reporting a problem so the report reflects the current code.
+Security fixes are developed on `main` and delivered in subsequent releases.
+The runtime hardening documented here is not yet in the published 0.3.0 package;
+use the source-checkout instructions in the README to evaluate it. Include the
+package version or commit when reporting a problem.
 
 ## Reporting a vulnerability
 
@@ -93,10 +95,11 @@ using `[rerank]` should audit that installed environment separately.
 A clean audit means no known matching advisory was found at that time—not that
 every dependency or execution path has been proven secure.
 
-When upgrading an existing environment, update transitive dependencies too:
+When upgrading an existing source-checkout environment, update transitive
+dependencies too. Run from the checked-out repository:
 
 ```bash
-python -m pip install --upgrade --upgrade-strategy eager sibyl-research
+python -m pip install --upgrade --upgrade-strategy eager -e .
 python -m pip check
 ```
 

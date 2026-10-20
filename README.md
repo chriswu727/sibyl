@@ -41,29 +41,9 @@ The default path needs **no model key, no search key, and no second LLM**.
 
 ## Quick start
 
-Requires Python 3.10+. Add this to a client that supports local stdio MCP servers:
-
-```json
-{
-  "mcpServers": {
-    "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research", "sibyl-mcp", "--profile", "keyless"]
-    }
-  }
-}
-```
-
-Or use the CLI:
-
-```bash
-python -m pip install --upgrade --upgrade-strategy eager sibyl-research
-sibyl gather "Python 3.14 release date" --format json
-sibyl-mcp --profile keyless --list-tools
-```
-
-The commands above install the latest **published** release. The runtime/security
-upgrade described here is on `main`, pending release. To evaluate this checkout:
+Requires Python 3.10+. **The current evidence API and runtime/security upgrade
+are on `main`, pending release. PyPI 0.3.0 predates these interfaces.**
+Use the source checkout for the workflow documented here:
 
 ```bash
 git clone https://github.com/chriswu727/sibyl.git
@@ -71,9 +51,24 @@ cd sibyl
 python -m venv .venv
 .venv/bin/python -m pip install -e .
 .venv/bin/sibyl-mcp --profile keyless --list-tools
+.venv/bin/sibyl gather "Python 3.14 release date" --format json
 ```
 
-For an application:
+Add the installed executable to a client that supports local stdio MCP servers.
+Replace `/absolute/path/to/sibyl` with your checkout's absolute path:
+
+```json
+{
+  "mcpServers": {
+    "sibyl": {
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
+      "args": ["--profile", "keyless"]
+    }
+  }
+}
+```
+
+For an application, use the same virtual environment:
 
 ```python
 import asyncio
