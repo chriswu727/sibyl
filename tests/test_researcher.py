@@ -272,6 +272,42 @@ class TestPipelineStructure(unittest.IsolatedAsyncioTestCase):
 
 
 class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
+    async def test_reflection_retrieves_new_query_then_resynthesizes(self):
+        config = _cfg()
+        config.reflect_rounds = 2
+        config.verify_claims = False
+        researcher = Researcher(config)
+        researcher._decompose_question = mock.AsyncMock(return_value=[])
+        researcher._reflect = mock.AsyncMock(side_effect=[(["replication limits"], False), ([], True)])
+        researcher._synthesize = mock.AsyncMock(side_effect=[
+            ResearchReport("question", "Initial [Source 1]", ["Initial [Source 1]"], []),
+            ResearchReport("question", "Revised [Source 1]", ["Revised [Source 1]"], []),
+        ])
+        researcher._review_and_refine = mock.AsyncMock(side_effect=lambda report, *args: report)
+        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(
+                side_effect=lambda query, **kwargs: evidence_bundle(query, 1))) as retrieve:
+            report = await researcher.research("question", depth=2)
+        self.assertEqual([call.args[0] for call in retrieve.call_args_list], ["question", "replication limits"])
+        self.assertEqual(researcher._synthesize.await_count, 2)
+        self.assertEqual(report.summary, "Revised [Source 1]")
+        self.assertEqual(report.research_stats["reflection_rounds"], 2)
+        self.assertEqual([step["round"] for step in report.research_stats["steps"]], [1, 2])
+
+    async def test_reflection_stops_when_search_adds_no_usable_evidence(self):
+        config = _cfg()
+        config.reflect_rounds = 2
+        config.verify_claims = False
+        researcher = Researcher(config)
+        researcher._decompose_question = mock.AsyncMock(return_value=[])
+        researcher._reflect = mock.AsyncMock(return_value=(["replication limits"], False))
+        researcher._synthesize = mock.AsyncMock(return_value=ResearchReport("q", "S [Source 1]", ["F [Source 1]"], []))
+        researcher._review_and_refine = mock.AsyncMock(side_effect=lambda report, *args: report)
+        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(return_value=evidence_bundle("same", 1))):
+            report = await researcher.research("q", depth=2)
+        self.assertEqual(researcher._reflect.await_count, 1)
+        self.assertEqual(researcher._synthesize.await_count, 1)
+        self.assertIn("Follow-up research did not add usable evidence.", report.limitations)
+
     async def test_failed_parallel_model_work_cancels_siblings(self):
         import asyncio
         from sibyl.async_utils import gather_owned

@@ -36,7 +36,7 @@ class ResearchNotebook:
     def begin_search(self, query: str) -> None:
         if len(self.attempts) >= self.max_steps:
             raise ResearchBudgetExceeded("Research retrieval budget exhausted.")
-        self.attempts.append({"query": query, "status": "running"})
+        self.attempts.append({"query": query, "status": "running", "round": len(self.attempts) + 1})
 
     def finish_search(self, query: str, bundle: SourceBundle | None) -> None:
         attempt = next(

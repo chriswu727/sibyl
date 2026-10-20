@@ -9,7 +9,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
-**A deep-research MCP server that turns complex questions into evidence-backed reports.**
+**A Deep Research MCP that turns complex questions into traceable reports through multi-round retrieval, source tracking, and evidence review.**
 
 Plan. Investigate. Check the evidence. Deliver a report—with its limitations.
 
@@ -33,6 +33,10 @@ configuration and billing; it does not inherit the host's subscription.
 
 - **Inspectable evidence:** versioned sources and passages with hashes, offsets,
   retrieval timestamps, publication metadata, and content-origin labels.
+- **Multi-round investigation:** inspect initial evidence, identify gaps, refine
+  queries, and investigate again. Host reviews can propose focused follow-up
+  searches; each retrieval records its round, prior gaps, revision, and rationale.
+  The host directs this loop; optional autonomous mode uses model reflection.
 - **Research beyond a search result:** per-question evidence reviews, explicit
   counterevidence investigations, citation-following reads, and visible gaps.
   Scholarly discovery is opt-in with `source_policy="academic"`; primary-source

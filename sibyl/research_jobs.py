@@ -184,11 +184,12 @@ class ResearchJobs:
             finally:
                 self.tasks.pop(job["job_id"], None)
 
-    async def continue_job(self, job_id, query, url="", question_id="", purpose="explore", parent_passage_id=""):
+    async def continue_job(self, job_id, query, url="", question_id="", purpose="explore", parent_passage_id="",
+                           rationale=""):
         job = self.store.get(job_id)
         self._idle(job)
         if job["mode"] == "autonomous":
-            if query or url or question_id or parent_passage_id or purpose != "explore":
+            if query or url or question_id or parent_passage_id or rationale or purpose != "explore":
                 raise ValueError("Autonomous continuation reuses its saved plan; omit query.")
             self._launch(job)
             return self.get(job_id)
@@ -199,6 +200,8 @@ class ResearchJobs:
             raise ValueError("Unknown investigation purpose.")
         if len(url) > 2000:
             raise ValueError("Source URL is too long.")
+        if len(rationale) > 1000:
+            raise ResearchRequestError("Retrieval rationale must be at most 1000 characters.")
         if len(self.tasks) >= 2:
             raise CapacityError("Research worker capacity reached.")
         remaining = self.runtime.policy.report_timeout - job["elapsed_seconds"]
@@ -216,10 +219,15 @@ class ResearchJobs:
         if purpose == "follow_citation" and (not url or not parent_passage_id):
             raise ValueError("Citation following requires a URL and parent passage ID.")
         query = query.strip() or plan_questions[question_id]
+        previous_question = next(item for item in research_plan(notebook)["questions"]
+                                 if item["question_id"] == question_id)
         notebook.begin_search(query)
         notebook.attempts[-1].update(question_id=question_id, purpose=purpose,
                                      url=display_url(url) if url else "",
-                                     parent_passage_id=parent_passage_id)
+                                     parent_passage_id=parent_passage_id,
+                                     rationale=rationale.strip(), based_on_revision=job["revision"],
+                                     prior_gaps=previous_question["gaps"],
+                                     prior_review_status=(previous_question["review"] or {}).get("status"))
         job["notebook"] = notebook.to_dict()
         job["status"] = "running"
         self._event(job, f"Retrieving evidence: {query}")
@@ -254,13 +262,15 @@ class ResearchJobs:
                 self.tasks.pop(job_id, None)
         return self.get(job_id)
 
-    def assess(self, job_id, revision, question_id, status, supporting, challenging, conclusion, counterevidence_note):
+    def assess(self, job_id, revision, question_id, status, supporting, challenging, conclusion, counterevidence_note,
+               follow_up_queries=None):
         job = self.store.get(job_id)
         self._idle(job)
         if job["mode"] != "host" or revision != job["revision"]:
             raise ResearchRequestError("Reload the host research job and use its current revision.")
         notebook = ResearchNotebook.from_dict(job["notebook"])
-        review_question(notebook, question_id, status, supporting, challenging, conclusion, counterevidence_note)
+        review_question(notebook, question_id, status, supporting, challenging, conclusion, counterevidence_note,
+                        follow_up_queries)
         job["notebook"] = notebook.to_dict()
         self._event(job, f"Host reviewed {question_id}: {status}; semantic support is not independently verified.")
         self.store.save(job)

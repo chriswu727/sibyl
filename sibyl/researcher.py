@@ -209,6 +209,8 @@ class Researcher:
             report.limitations.append("Semantic claim verification was not performed.")
         report.research_stats = {
             "retrieval_attempts": len(notebook.attempts),
+            "steps": notebook.attempts,
+            "reflection_rounds": notebook.reflection_rounds,
             "model_calls": notebook.model_calls,
             "reserved_output_tokens": notebook.reserved_output_tokens,
         }

@@ -4,6 +4,9 @@
 
 ### Evidence-led host research
 
+- Made multi-round retrieval explicit: reviews can propose focused follow-up queries,
+  attempts retain prior gaps/revisions and host rationale, and completed searches
+  are omitted from follow-up suggestions without resetting the retrieval budget.
 - Added per-question support/challenge reviews, counterevidence investigation gates,
   stale-review detection, and explicit incomplete-report delivery.
 - Added budgeted source reads and host-declared citation lineage inside persistent jobs.

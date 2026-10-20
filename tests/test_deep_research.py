@@ -204,6 +204,65 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(job["research_plan"]["ready_to_complete"])
         self.assertTrue(any("New retrieval" in s for s in job["research_plan"]["questions"][0]["gaps"]))
 
+    async def test_review_drives_next_round_across_restart_and_export(self):
+        server = create_server(self.runtime)
+        job = await self.retrieve(self.start(3))
+        _, job = await server.call_tool("assess_research", {
+            "job_id": job["job_id"], "revision": job["revision"], "question_id": "Q0",
+            "status": "unresolved", "conclusion": "The replication evidence is missing.",
+            "counterevidence_note": "The initial source only describes the original experiment.",
+            "follow_up_queries": ["independent replication methods"],
+        })
+        self.assertEqual(job["research_plan"]["suggested_queries"][0]["query"], "independent replication methods")
+        await self.runtime.aclose()
+        self.runtime = SibylRuntime(self.policy, Config())
+        self.jobs = self.runtime.research_jobs
+        server = create_server(self.runtime)
+        with mock.patch("sibyl.research_jobs.gather_source_bundle", mock.AsyncMock(
+                return_value=evidence_bundle("replication", 1))):
+            _, updated = await server.call_tool("continue_research", {
+                "job_id": job["job_id"], "query": "independent replication methods", "question_id": "Q0",
+                "purpose": "counterevidence", "rationale": "Resolve the missing independent replication evidence.",
+            })
+        step = updated["attempts"][-1]
+        self.assertEqual(step["round"], 2)
+        self.assertEqual(step["based_on_revision"], job["revision"])
+        self.assertEqual(step["prior_review_status"], "unresolved")
+        self.assertTrue(step["prior_gaps"])
+        self.assertIn("replication", step["rationale"])
+        self.assertNotIn("independent replication methods",
+                         [s["query"] for s in updated["research_plan"]["suggested_queries"]])
+        updated = self.assess(updated)
+        self.assertTrue(updated["research_plan"]["ready_to_complete"])
+        self.assertEqual(updated["research_plan"]["suggested_queries"], [])
+        result = self.jobs.complete(updated["job_id"], updated["revision"], "S [Source 1]",
+                                    ["F [Source 1]"], "", [])
+        self.assertEqual(result["report"]["research_stats"]["steps"][-1], step)
+
+    async def test_follow_up_input_limits_do_not_mutate_job(self):
+        job = self.start()
+        for queries in [[""], ["x" * 1001], ["a", "b", "c", "d", "e"]]:
+            with self.assertRaisesRegex(ValueError, "follow-up"):
+                self.jobs.assess(job["job_id"], job["revision"], "Q0", "unresolved", [], [],
+                                 "Missing evidence", "No counterevidence yet", queries)
+        with self.assertRaisesRegex(ValueError, "rationale"):
+            await self.jobs.continue_job(job["job_id"], "q", rationale="x" * 1001)
+        current = self.jobs.get(job["job_id"])
+        self.assertEqual(current["revision"], job["revision"])
+        self.assertEqual(current["attempts"], [])
+
+    async def test_failed_follow_up_remains_retryable_but_budget_exhaustion_stops_suggestions(self):
+        job = self.start(2)
+        job = self.jobs.assess(job["job_id"], job["revision"], "Q0", "unresolved", [], [],
+                               "Missing paper", "Need replication", ["replication study"])
+        with mock.patch("sibyl.research_jobs.gather_source_bundle", mock.AsyncMock(side_effect=RuntimeError("failed"))):
+            job = await self.jobs.continue_job(job["job_id"], "replication study")
+            self.assertEqual(job["research_plan"]["suggested_queries"][0]["query"], "replication study")
+            job = await self.jobs.continue_job(job["job_id"], "replication study")
+        self.assertEqual(job["research_plan"]["suggested_queries"], [])
+        self.assertEqual(job["research_plan"]["next_action"], "review_or_report_limitations")
+        self.assertFalse(job["research_plan"]["ready_to_complete"])
+
     async def test_review_rejects_stale_revision_unknown_reference_and_false_conflict(self):
         initial = self.start()
         job = await self.retrieve(initial)

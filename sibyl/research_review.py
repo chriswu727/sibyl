@@ -22,7 +22,8 @@ def question_attempts(notebook, question_id, question):
             or (not a.get("question_id") and a["query"] == question)]
 
 
-def review_question(notebook, question_id, status, supporting, challenging, conclusion, counterevidence_note):
+def review_question(notebook, question_id, status, supporting, challenging, conclusion, counterevidence_note,
+                    follow_up_queries=None):
     if question_id not in questions(notebook):
         raise ResearchRequestError("Unknown research question ID; read the research plan first.")
     if status not in {"supported", "disputed", "unresolved"}:
@@ -40,11 +41,15 @@ def review_question(notebook, question_id, status, supporting, challenging, conc
         raise ResearchRequestError("Supported reviews require support and no unresolved challenging passages.")
     if status == "disputed" and (not supporting or not challenging):
         raise ResearchRequestError("Disputed reviews require both supporting and challenging evidence.")
+    follow_ups = follow_up_queries or []
+    if len(follow_ups) > 4 or any(not query.strip() or len(query) > 1000 for query in follow_ups):
+        raise ResearchRequestError("Use at most four nonempty follow-up queries of at most 1000 characters.")
     review = dict(question_id=question_id, status=status, conclusion=conclusion.strip(),
                   supporting_passage_ids=list(dict.fromkeys(supporting)),
                   challenging_passage_ids=list(dict.fromkeys(challenging)),
                   counterevidence_note=counterevidence_note.strip(),
-                  reviewed_attempts=len(notebook.attempts), assessment_origin="host")
+                  reviewed_attempts=len(notebook.attempts), assessment_origin="host",
+                  follow_up_queries=list(dict.fromkeys(query.strip() for query in follow_ups)))
     updated = dict(notebook.reviews, **{question_id: review})
     urls = {index[item][0].url for item_review in updated.values()
             for item in [*item_review["supporting_passage_ids"], *item_review["challenging_passage_ids"]]}
@@ -58,6 +63,31 @@ def review_question(notebook, question_id, status, supporting, challenging, conc
     if not all_refs <= selected_refs:
         notebook.reviews = previous
         raise ResearchRequestError("Review links duplicate or conflicting source snapshots; select one snapshot per source/content cluster.")
+
+
+def _suggested_queries(notebook, items):
+    suggestions = []
+    for item in items:
+        if not item["gaps"]:
+            continue
+        attempts = question_attempts(notebook, item["question_id"], item["question"])
+        completed = {" ".join(a["query"].casefold().split()) for a in attempts
+                     if a["status"] in {"ok", "insufficient_evidence"} and not a.get("url")}
+        review = item["review"] or {}
+        follow_ups = review.get("follow_up_queries", [])
+        candidates = [(query, "explore", "host_review_gap") for query in follow_ups]
+        if not follow_ups:
+            suffix = (" original research paper methods results limitations" if notebook.source_policy == "academic"
+                      else " primary source official documentation")
+            candidates.append((item["question"] + suffix, "explore", "research_plan_gap"))
+        candidates.append((item["question"] + " limitations conflicting evidence replication",
+                           "counterevidence", "counterevidence_check"))
+        for query, purpose, reason in candidates:
+            normalized = " ".join(query.casefold().split())
+            if normalized not in completed:
+                suggestions.append(dict(question_id=item["question_id"], purpose=purpose, query=query, reason=reason))
+                completed.add(normalized)
+    return suggestions
 
 
 def research_plan(notebook) -> dict:
@@ -94,11 +124,5 @@ def research_plan(notebook) -> dict:
         questions=items, ready_to_complete=ready,
         next_action="synthesize" if ready else ("review_or_report_limitations" if not remaining else "investigate_gaps"),
         remaining_steps=remaining, assessment_scope="host_declared_evidence_links_not_semantic_verification",
-        suggested_queries=[
-            dict(question_id=item["question_id"], purpose=purpose, query=item["question"] + suffix)
-            for item in items if item["gaps"]
-            for purpose, suffix in [("explore", " original research paper methods results limitations"
-                                     if notebook.source_policy == "academic" else " primary source official documentation"),
-                                    ("counterevidence", " limitations conflicting evidence replication")]
-        ],
+        suggested_queries=_suggested_queries(notebook, items) if remaining else [],
     )

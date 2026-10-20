@@ -258,6 +258,38 @@ steps. Markdown includes reviews and compact source references instead of dumpin
 large source excerpts. PDF retains the narrative and limitations; use JSON for the
 complete machine-readable evidence package.
 
+### Multi-round retrieval
+
+Multi-round research is an evidence-feedback loop, not a fixed list of searches.
+In host mode the calling agent supplies the reasoning; Sibyl retains its state,
+recommends outstanding follow-ups, and enforces the existing retrieval budget:
+
+1. Retrieve initial evidence for a planned question.
+2. Review the result with `assess_research`. If the evidence leaves a gap, use
+   `status="unresolved"` and `follow_up_queries=["a focused replication query"]`.
+3. Read `research_plan.suggested_queries`, then call `continue_research` with a
+   chosen query and `rationale="Resolve the missing replication evidence"`.
+   Choose `purpose="counterevidence"` when investigating contrary evidence.
+4. Inspect the new passages and reassess. Finish only when the required reviews
+   are ready, or explicitly deliver an incomplete report with its gaps.
+
+Each attempt retains its round number, prior evidence revision, prior gaps,
+prior review status, and optional host rationale in the checkpoint and JSON report.
+Reviews accept at most four follow-up queries of up to 1,000 characters. Completed
+searches are omitted from suggestions for that question (case/whitespace normalized);
+failed attempts remain retryable and consume budget. Explicit repeats are allowed
+for freshness checks. Empty suggestions do not prove exhaustive coverage.
+Budget exhaustion returns no more suggestions and asks for review or explicit
+limitations; it never silently grants a quality pass. Resuming a checkpoint does
+not reset the budget or lose the earlier rounds.
+
+Autonomous mode already uses a configured model to reflect on a draft, generate
+follow-up queries, retrieve, and re-synthesize when usable evidence changes. It
+allows at most two reflection rounds, also bounded by retrieval/model/time budgets;
+fast mode skips reflection. No additional usable evidence stops the loop with a
+limitation. Model reflection remains fallible and incurs configured-provider usage.
+Offline tests mock model calls and verify the loop, not research quality.
+
 ### Comparing with ordinary web search
 
 Engineering gates are not evidence of superior research quality. For a quality A/B,

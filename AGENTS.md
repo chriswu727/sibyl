@@ -20,6 +20,9 @@ and PDF export; Markdown/JSON host reports need no optional model dependency.
 4. Call `assess_research` for each question with stable supporting/challenging
    passage IDs, a conclusion, and a counterevidence note. Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
+   For unresolved gaps, supply focused `follow_up_queries`, then use
+   `continue_research(..., rationale="the gap this round addresses")`. Inspect the
+   new evidence and reassess; a repeated call alone does not establish deeper research.
 5. Submit `complete_research(job_id, revision, summary, key_findings, analysis,
    limitations)`. Summary and each finding must cite selected `[Source N]`.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
