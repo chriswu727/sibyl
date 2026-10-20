@@ -57,7 +57,7 @@ Requires Python 3.10+. Add this to a client that supports local stdio MCP server
 Or use the CLI:
 
 ```bash
-python -m pip install --upgrade sibyl-research
+python -m pip install --upgrade --upgrade-strategy eager sibyl-research
 sibyl gather "Python 3.14 release date" --format json
 sibyl-mcp --profile keyless --list-tools
 ```

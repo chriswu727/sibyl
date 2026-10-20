@@ -82,8 +82,9 @@ must bound their own concurrency and whole-operation deadlines.
 
 ## Dependency maintenance
 
-CI audits clean core and report/finance/extract installations against OSV, on
-pull requests and weekly. Audit failures block a green workflow. Dependabot tracks
+CI audits clean core and report/finance/extract installations on Python 3.10,
+3.11, and 3.12 against OSV, on pull requests and weekly. Audit failures block a
+green workflow. Dependabot tracks
 Python requirements and GitHub Actions. Release validation audits its environment.
 Actions are commit-pinned and publication uses GitHub OIDC rather than a stored
 PyPI token. Optional FlashRank is not part of the default audit matrix; operators
@@ -91,3 +92,13 @@ using `[rerank]` should audit that installed environment separately.
 
 A clean audit means no known matching advisory was found at that time—not that
 every dependency or execution path has been proven secure.
+
+When upgrading an existing environment, update transitive dependencies too:
+
+```bash
+python -m pip install --upgrade --upgrade-strategy eager sibyl-research
+python -m pip check
+```
+
+Include your selected extras in that install command. Fresh-install CI results
+do not certify an old environment whose transitive dependencies remain pinned.
