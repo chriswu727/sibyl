@@ -5,6 +5,8 @@ Run: python -m unittest discover tests
 import os
 import tempfile
 import unittest
+import shutil
+import subprocess
 from pathlib import Path
 from unittest import mock
 
@@ -67,6 +69,18 @@ class TestVerificationRendering(unittest.TestCase):
 
 
 class TestPdfGeneration(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("pdftotext"), "Poppler text extractor is optional")
+    def test_consecutive_bullets_and_limitations_are_not_silently_lost(self):
+        report = _report()
+        report.limitations = ["First limitation retained.", "Second limitation retained."]
+        with tempfile.TemporaryDirectory() as directory:
+            path = generate_pdf(report, directory)
+            extracted = subprocess.run(
+                ["pdftotext", path, "-"], capture_output=True, text=True, check=True
+            ).stdout
+        for expected in ("second bullet", "Closing paragraph.", *report.limitations):
+            self.assertIn(expected, extracted)
+
     def assert_valid_pdf(self, path):
         data = Path(path).read_bytes()
         self.assertGreater(len(data), 1000)

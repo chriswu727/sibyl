@@ -37,7 +37,7 @@ class ArtifactStore:
     def publish(self, temporary: Path, label: str, suffix: str) -> Path:
         if temporary.parent != self.root:
             raise ValueError("Artifact staging file is outside the store.")
-        if not label.isalnum() or suffix not in {".md", ".pdf", ".png"}:
+        if not label.isalnum() or suffix not in {".md", ".pdf", ".png", ".json"}:
             raise ValueError("Invalid artifact name.")
         os.chmod(temporary, 0o600)
         destination = self.root / f"sibyl_{label}_{uuid4().hex}{suffix}"

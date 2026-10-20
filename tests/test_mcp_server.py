@@ -190,13 +190,15 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertIs(second, recovered)
         self.assertEqual(retrieve.await_count, 2)
 
-    async def test_mcp_registers_fourteen_tools(self):
+    async def test_mcp_registers_research_and_legacy_tools(self):
         tools = await mcp_server.mcp.list_tools()
         names = {tool.name for tool in tools}
         structured_tool = next(tool for tool in tools if tool.name == "gather_bundle")
         loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
-        self.assertEqual(len(tools), 14)
+        self.assertEqual(len(tools), 19)
+        self.assertTrue({"start_research", "get_research", "continue_research",
+                         "complete_research", "cancel_research"} <= names)
         self.assertIn("gather_evidence", names)
         self.assertIn("gather_bundle", names)
         self.assertIn("gather_sources", names)

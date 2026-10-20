@@ -46,16 +46,22 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append("")
 
     if report.predictions:
-        lines.append("## Predictions")
+        lines.append("## Uncertainties and Outlook")
         lines.append("")
         lines.append(report.predictions)
         lines.append("")
+
+    lines.extend(["## Research Limitations", "", f"Verification scope: {report.verification_scope}", ""])
+    lines.extend(f"- {note}" for note in report.limitations)
+    lines.append("")
 
     lines.append("## References")
     lines.append("")
     for i, src in enumerate(report.sources, 1):
         lines.append(f"{i}. **{src.title}**  ")
         lines.append(f"   {display_url(src.url)}")
+        if src.retrieved_at:
+            lines.append(f"   Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}")
         evidence = src.supporting_snippet or src.snippet
         if evidence:
             lines.append(f"   > {evidence}")
@@ -94,7 +100,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     def heading(text, size=18, style="B"):
         try:
             pdf.set_font(font_name, style, size)
-            pdf.multi_cell(0, 8, text[:200])
+            pdf.multi_cell(0, 8, text[:200], new_x="LMARGIN", new_y="NEXT")
             pdf.ln(2)
         except Exception:
             pass
@@ -106,7 +112,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         clean = re.sub(r'^#{1,6}\s*', '', clean)
         try:
             pdf.set_font(font_name, "", size)
-            pdf.multi_cell(0, 6, clean)
+            pdf.multi_cell(0, 6, clean, new_x="LMARGIN", new_y="NEXT")
         except Exception:
             pass
 
@@ -128,7 +134,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
                 hsize = {1: 15, 2: 13, 3: 12}.get(len(hm.group(1)), 11)
                 try:
                     pdf.set_font(font_name, "B", hsize)
-                    pdf.multi_cell(0, 6, hm.group(2), markdown=True)
+                    pdf.multi_cell(0, 6, hm.group(2), markdown=True, new_x="LMARGIN", new_y="NEXT")
                     pdf.ln(1)
                 except Exception:
                     _plain(stripped, size)
@@ -137,13 +143,13 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
             if bm:
                 try:
                     pdf.set_font(font_name, "", size)
-                    pdf.multi_cell(0, 6, "   •  " + bm.group(1), markdown=True)
+                    pdf.multi_cell(0, 6, "   -  " + bm.group(1), markdown=True, new_x="LMARGIN", new_y="NEXT")
                 except Exception:
                     _plain(stripped, size)
                 continue
             try:
                 pdf.set_font(font_name, "", size)
-                pdf.multi_cell(0, 6, line, markdown=True)
+                pdf.multi_cell(0, 6, line, markdown=True, new_x="LMARGIN", new_y="NEXT")
             except Exception:
                 _plain(line, size)
         pdf.ln(2)
@@ -170,7 +176,8 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     if report.cross_analysis:
         toc_items.append(f"{len(toc_items)+1}. Source Cross-Analysis")
     if report.predictions:
-        toc_items.append(f"{len(toc_items)+1}. Predictions")
+        toc_items.append(f"{len(toc_items)+1}. Uncertainties and Outlook")
+    toc_items.append(f"{len(toc_items)+1}. Research Limitations")
     if report.market_data_summary or report.charts:
         toc_items.append(f"{len(toc_items)+1}. Market Data")
     toc_items.append(f"{len(toc_items)+1}. Sources ({len(report.sources)})")
@@ -224,9 +231,15 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
 
     # Predictions
     if report.predictions:
-        heading("Predictions", 14)
+        heading("Uncertainties and Outlook", 14)
         body(report.predictions)
         separator()
+
+    heading("Research Limitations", 14)
+    body(f"Verification scope: {report.verification_scope}")
+    for note in report.limitations:
+        body(f"- {note}")
+    separator()
 
     # Market Data + Charts
     if report.market_data_summary or report.charts:
@@ -239,7 +252,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
                 if line:
                     try:
                         pdf.set_font(font_name, "", 9)
-                        pdf.multi_cell(0, 5, line)
+                        pdf.multi_cell(0, 5, line, new_x="LMARGIN", new_y="NEXT")
                     except Exception:
                         pass
             pdf.ln(4)
@@ -260,7 +273,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     for i, src in enumerate(report.sources, 1):
         try:
             pdf.set_font(font_name, "B", 9)
-            pdf.multi_cell(0, 5, f"{i}. {src.title}")
+            pdf.multi_cell(0, 5, f"{i}. {src.title}", new_x="LMARGIN", new_y="NEXT")
         except Exception:
             pass
         try:

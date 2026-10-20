@@ -16,6 +16,16 @@ public evidence in the local MCP process for up to ten minutes so the host can
 complete a bounded workflow. At most 64 loop records are retained; they are not
 written to disk and disappear when the process exits.
 
+Persistent research is separate: `start_research` stores questions, plans,
+retrieval attempts, selected public evidence, progress events, counters, and
+reports in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`. These records survive
+restart and have no automatic time-based expiry. At most 64 jobs are retained,
+with a 1 MiB payload limit per job; new jobs are rejected when history is full.
+`cancel_research(job_id=..., delete=true)` removes a checkpoint but does not
+delete exported reports, backups, host conversation history, or provider records.
+SQLite deletion is not a guarantee of forensic erasure. The database uses
+owner-only file permissions, not encryption at rest.
+
 MCP reports and charts are written below the operator-selected
 `SIBYL_OUTPUT_ROOT` (default: `reports/`); calling agents can select only relative
 subdirectories for report export. CLI/Python callers may explicitly select their
@@ -23,7 +33,8 @@ own output directory. Sibyl does not upload artifacts to the project maintainer.
 
 MCP retrieval results may also remain in a per-runtime memory cache for 30 seconds
 (at most 64 entries). Cancelling the final consumer stops its in-flight retrieval;
-server shutdown clears retained runtime state. Diagnostic runtime logs contain
+server shutdown clears transient runtime state but retains explicit research
+checkpoints. Diagnostic runtime logs contain
 tool names and aggregate completion/failure/cancellation counts, not tool arguments,
 page bodies, or provider exception details. They are local logs, not telemetry.
 
@@ -42,6 +53,10 @@ page bodies, or provider exception details. They are local logs, not telemetry.
 - Optional report and analysis tools send prompts and selected source text to
   the LLM provider configured by the user. A local or API-compatible backend can
   be used instead.
+- `start_research(mode="autonomous")` and explicit autonomous continuation
+  authorize configured-model calls. Host mode does not call a Sibyl model.
+  Checkpoints contain no configured provider keys, but public evidence and user
+  queries can themselves contain sensitive text; review them before retaining.
 - Optional finance tools contact Yahoo Finance and Google Trends.
 - The MCP host may send Sibyl tool inputs and outputs to its own configured model
   provider. The host and provider privacy terms apply independently.

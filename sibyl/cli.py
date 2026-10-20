@@ -12,7 +12,7 @@ from .config import Config
 
 @click.command(name="research")
 @click.argument("query")
-@click.option("--depth", "-d", default=2, help="Research depth: 1=quick, 2=standard, 3=deep with predictions")
+@click.option("--depth", "-d", default=2, help="Research depth: 1=focused, 2=standard, 3=deep with uncertainty analysis")
 @click.option("--model", default="", help="LLM model (e.g. deepseek/deepseek-v4-flash, gpt-4o)")
 @click.option("--api-key", default="", help="API key (overrides env var)")
 @click.option("--api-base", default="", help="Custom API base URL")
@@ -29,9 +29,9 @@ from .config import Config
 @click.option("--js-render/--no-js-render", default=False, help="Send thin/JS page URLs to r.jina.ai for rendering")
 @click.option("--effort", "-e", type=click.Choice(["quick", "standard", "deep"]), default=None, help="Effort tier (overrides --depth)")
 @click.option("--compact", is_flag=True, help="Compact each source before synthesis to weigh more sources")
-@click.option("--reflect-rounds", default=0, help="Extra reflect->search->re-synthesize cycles (0=off)")
+@click.option("--reflect-rounds", type=click.IntRange(0, 2), default=1, help="Coverage-review and follow-up cycles (0=off)")
 @click.option("--perspectives/--no-perspectives", default=True, help="Perspective-guided query generation")
-@click.option("--verify/--no-verify", default=True, help="Verify each finding against its cited source")
+@click.option("--verify/--no-verify", default=True, help="Check report blocks and findings against source evidence")
 def research_cli(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor, jina_fallback, js_render, effort, compact, reflect_rounds, perspectives, verify):
     """Generate a cited research report with a configured LLM.
 
@@ -75,7 +75,7 @@ def research_cli(query, depth, model, api_key, api_base, config_file, max_source
     cfg.js_render = js_render
     cfg.compact_sources = compact
     if compact and cfg.max_synth_sources == 12:
-        cfg.max_synth_sources = 40  # compaction makes more sources affordable
+        cfg.max_synth_sources = 24
     cfg.reflect_rounds = reflect_rounds
     cfg.perspectives = perspectives
     cfg.verify_claims = verify

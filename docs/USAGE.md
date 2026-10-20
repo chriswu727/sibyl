@@ -8,9 +8,9 @@ This reference follows the `main` branch. See the [landing page](../README.md)
 for release status and the [architecture guide](MCP_ARCHITECTURE.md) for current
 execution limits.
 
-**Evidence retrieval for AI agents — ranked sources, provenance, and citation-ready passages.**
+**Deep research through MCP — persistent investigations and traceable reports.**
 
-Sibyl is an MCP server, CLI, and Python library that gives AI agents inspectable web evidence before they answer. It searches public sources, extracts and ranks relevant passages, detects syndicated copies, preserves citation provenance, and returns explicit evidence gaps in a typed `SourceBundle`. It is an evidence layer, not a hosted answer API: your agent remains the reasoning and writing layer.
+Sibyl is a local MCP server for public-web research and cited reports. Its CLI and Python API also expose evidence retrieval and model-backed research. A shared `SourceBundle` pipeline searches, extracts, ranks, and preserves provenance. Persistent jobs support host-assisted writing or an explicitly configured autonomous model; Sibyl is not a hosted service.
 
 [![Tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
@@ -23,20 +23,22 @@ Sibyl is an MCP server, CLI, and Python library that gives AI agents inspectable
 
 ## What Sibyl is
 
-Sibyl is an evidence retrieval and delivery layer for AI agents, built around a simple boundary:
+Sibyl combines a research workflow with an inspectable evidence boundary:
 
-> Sibyl retrieves evidence. The calling model decides what the evidence supports.
+> Research produces a report. Evidence makes that report inspectable—not automatically true.
 
 The core path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states. For dependent questions, `gather_evidence()` adds a bounded, auditable sequence of atomic retrieval steps while leaving planning and synthesis to the host agent.
 
-An optional experimental `research()` pipeline can use a configured LLM to produce a one-shot report. It is a secondary convenience surface, not Sibyl's core product or quality claim; its output quality depends on the configured model.
+Persistent jobs are the report-oriented workflow. The existing `research()` tool remains a blocking configured-model interface. Both use the same retrieval pipeline. Report quality depends on evidence and model behavior; no current-model comparative quality claim has been established.
 
 | Mode | Tool | API key | Who reasons? | Best for |
 |---|---|---:|---|---|
 | Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
 | Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
 | Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
-| Experimental report | `research()` | Yes | Sibyl's configured LLM | Optional one-shot convenience |
+| Host-assisted report | `start_research(mode="host")` | No | Your agent | Persistent research and Markdown/JSON delivery |
+| Autonomous report | `start_research(mode="autonomous")` | Configured backend | Sibyl's model | Background research, progress, explicit resume |
+| Blocking report | `research()` | Configured backend | Sibyl's model | Existing one-call integrations |
 
 ## Quick start
 
@@ -140,12 +142,17 @@ MCP report/chart exports use `SIBYL_OUTPUT_ROOT` (default `reports/`).
 an absolute path. Stateful report operations reject overlapping calls.
 The CLI's explicit `--output` option remains an operator-controlled path.
 
-Without an LLM credential, the default `auto` profile exposes only the five keyless retrieval tools. A configured `[report]` installation exposes report tools automatically. Finance tools remain explicit so an agent does not pay the context cost for unrelated capabilities.
+Without an LLM credential, the default `auto` profile exposes eleven tools: five evidence primitives, five research-job operations, and report export. Host jobs and Markdown/JSON export need no model key. Autonomous mode requires `[report]` and a configured model; PDF requires the rendering extra. A configured `[report]` installation also exposes the legacy model tools. Finance tools remain explicit.
 
 Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
 
 | Group | Tool | Result | LLM key |
 |---|---|---|---:|
+| Jobs | `start_research(question)` | Persistent host or autonomous job | Autonomous only |
+| Jobs | `get_research(job_id)` | Progress, evidence, revision, report; omit ID to list | No |
+| Jobs | `continue_research(job_id, query)` | Focused host search or explicit autonomous resume | Autonomous only |
+| Jobs | `complete_research(job_id, revision, ...)` | Immutable host-authored report | No |
+| Jobs | `cancel_research(job_id, delete=false)` | Cancel or explicitly remove checkpoint | No |
 | Retrieval | `gather_evidence(question)` | Bounded multi-step evidence loop | No |
 | Retrieval | `gather_bundle(query)` | Structured SourceBundle 1.6 | No |
 | Retrieval | `gather_sources(query)` | Readable `[Source N]` evidence blocks | No |
@@ -159,7 +166,77 @@ Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface direct
 | Data | `trends(keywords)` | Google Trends series and related queries | No |
 | Data | `fetch_market_data(symbols)` | Yahoo Finance market summary | No |
 | Data | `chart(symbols)` | Local PNG price chart | No |
-| Output | `save_report(format)` | PDF and/or Markdown from the last report | After `research()` |
+| Output | `save_report(format, job_id)` | Markdown, JSON, or optional PDF; omit ID for last one-shot report | No |
+
+## Persistent research jobs
+
+`start_research` defaults to `mode="host"`. Supply up to five sub-questions,
+then call `continue_research` with focused queries. Responses include selected
+passages, retrieval timestamps, citation IDs, attempts, progress events, and
+limitations. Evidence from different queries is interleaved, newest first,
+so supplementary searches can contribute even when the synthesis window is full.
+Search snippets are leads and are excluded from report source selection.
+
+After investigating the question, get the latest job and submit:
+
+```text
+complete_research(
+  job_id="the returned ID",
+  revision=the_current_revision,
+  summary="An evidence-backed answer [Source 1].",
+  key_findings=["A supported finding [Source 2]."],
+  analysis="Interpretation, explicitly distinguished from sourced facts.",
+  limitations=["A specific unresolved question."]
+)
+save_report(job_id="the returned ID", format="json")
+```
+
+Summary and each finding must cite a selected `[Source N]`. Numbering may change
+after retrieval; the revision check prevents stale submissions. Citation target
+validation is not entailment checking. Host reports state
+`verification_scope="citation_targets_only"`; the host owns semantic judgment.
+Completed reports are immutable. Start another job for a new edition.
+
+For `mode="autonomous"`, the optional report installation and configured model
+are required. The server runs research asynchronously; poll `get_research`.
+It decomposes the question, retrieves shared source bundles, drafts, performs
+one bounded coverage-review round by default, and checks report blocks against
+the cited evidence. Unsupported or unassessed blocks are visibly marked.
+Model verification is fallible and does not establish source truth.
+
+`continue_research(job_id=...)` with no query explicitly resumes an autonomous
+job. Saved evidence, completed plan, and consumed budgets survive restart;
+unfinished synthesis may run again and incur additional model charges.
+There is no automatic restart of interrupted work and no exactly-once model call
+guarantee. Source pages remain untrusted data, including during resume.
+
+| Limit | Default / ceiling |
+|---|---|
+| Retrieval attempts | 8 per job, caller-selectable from 1 to 12 |
+| Selected report sources | 12; one-shot configuration can select up to 24 |
+| Simultaneous job workers | 2 |
+| Active execution time | 600 seconds across continuations; host thinking time excluded |
+| Autonomous model calls | 40 attempts, including retries and verification |
+| Reserved completion tokens | 60,000 across attempts; not an exact charge or input-token limit |
+| Checkpoint records | 64; explicit deletion required when full |
+| Checkpoint payload | 1 MiB per job |
+| SQLite database | 16,384 pages; approximately 64 MiB with default page size |
+| Progress history | Last 80 events per job |
+
+A retrieval attempt can itself issue multiple search-provider requests. These
+limits do not promise an exact dollar budget; external search/model pricing,
+input tokens, provider retries, and already-dispatched requests still matter.
+Cancelled requests may still be billed by the provider.
+
+The private database lives in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`.
+Only one runtime may own that directory at a time. Cancellation preserves the
+checkpoint; `cancel_research(job_id=..., delete=true)` removes it and reclaims
+history capacity, but does not remove exported files. SQLite deletion is not
+guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
+
+JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
+source passage IDs, timestamps, limitations, verification scope, and model-call
+counters. PDF is an export format, not currently a supported research input.
 
 ## Recommended agent workflow
 
@@ -293,12 +370,12 @@ Sibyl retrieves untrusted URLs, so the fetch path is deliberately constrained:
 
 When Jina Reader is used, the target URL is sent to that external service. It is disabled by default in every workflow. Set `render_thin_pages=true` for retrieval or `js_render: true`/`--js-render` for experimental report generation only when this disclosure is acceptable.
 
-## Optional experimental one-shot reports
+## Configured-model one-shot reports
 
-The secondary `research()` tool and `sibyl` CLI run a full pipeline:
+The compatible `research()` tool and `sibyl` CLI run a blocking pipeline:
 
 ```text
-decompose → search → scrape → deduplicate → rank → synthesize → verify → report
+plan → shared source bundles → draft → coverage review / follow-up → report-wide audit → report
 ```
 
 They require an LLM provider key or a configured local/API-compatible backend. Sibyl auto-detects common provider environment variables:
@@ -318,6 +395,12 @@ python -m pip install -e '.[report]'
 | ZhipuAI / GLM | `ZHIPUAI_API_KEY` |
 
 Run the MCP server with one-shot tools enabled:
+
+Select a model explicitly through `SIBYL_MODEL` / `SIBYL_API_KEY` (and
+`SIBYL_API_BASE` when needed), or `SIBYL_CONFIG` with role-specific providers.
+Provider autodetection defaults exist for compatibility; they are not a claim
+that those models are current or optimal. Measure a candidate model on the same
+research tasks and budget before changing defaults.
 
 ```bash
 claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- \
@@ -382,7 +465,7 @@ The first three checks are deterministic and network-free. `eval_live_retrieval.
 
 The latest formal keyless three-repeat run is retained in [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). Answer coverage improved from 75.9% in the [original baseline](../evals/results/live-retrieval-2026-07-21.json) to 85.2%, trap safety remained 100%, and p95 latency was 11.0 seconds. A subsequent [105-request Tavily pilot](../evals/results/live-retrieval-tavily-pilot-2026-07-21.json) reached 88.9% answer coverage and 10.7-second p95 latency. Recomputed under metric version 2, Tavily produced synthesis-ready answer evidence on 70.4% of answerable cases with 92.7% ready-state precision; the gates are 75% and 95%. Sibyl therefore remains a public beta until a dated three-repeat run clears every threshold; offline checks or a single-repeat pilot are not release evidence.
 
-The repository also contains an exploratory 30-question SimpleQA comparison. In the measured concurrent run, a host model reasoning over `gather_sources()` answered 26/30 correctly, while the configured one-shot model answered 5/30. This is why Sibyl's product claim is the evidence layer, not autonomous report quality. The experiment is small, agent-graded, and sensitive to keyless search throttling; read the [full method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md) rather than treating it as a broad benchmark.
+The repository also contains an exploratory 30-question SimpleQA comparison: the measured host workflow answered 26/30 correctly and the configured one-shot workflow 5/30. This small, agent-graded, model/configuration-confounded experiment does not establish the quality of this new workflow or current models. Read the [method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md). A fresh comparison must use the same model, source access, budget, and realistic research questions; report coverage, citation support, contradictions, freshness, cost, and latency separately.
 
 The bounded evidence loop also has a [four-case keyless retrieval run](../evals/results/evidence-loop-keyless-2026-07-21.json) covering the previously missed World Cup river, CUDA founding year, Inception/Batman, and Qantas currency chains. All four fixed host plans reached `ready` and contained the expected answer. This is a single-repeat retrieval test with hand-authored atomic queries; it does not measure whether an arbitrary host can produce the plan or synthesize the final answer.
 
@@ -394,7 +477,7 @@ The bounded evidence loop also has a [four-case keyless retrieval run](../evals/
 - `quality_score` is intentionally unpopulated while the production credibility model is still under evaluation.
 - Publication dates are extracted from explicit page metadata and may be wrong at the publisher.
 - Near-duplicate clustering is content-based and can miss heavily rewritten syndication.
-- The experimental one-shot pipeline is only as capable and reliable as its configured LLM and is not part of the core evidence-retrieval quality claim.
+- Autonomous reports are only as capable and reliable as their configured model and retrieved evidence. Offline workflow tests do not measure live report accuracy.
 - Live web results are not deterministic; use the offline fixtures for regression testing.
 
 ## Development

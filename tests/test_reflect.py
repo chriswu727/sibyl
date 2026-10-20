@@ -45,7 +45,7 @@ class TestReflect(unittest.IsolatedAsyncioTestCase):
         r._llm_call = fake_llm
         rep = mock.Mock(summary="s", key_findings=["f"])
         qs, suff = await r._reflect("q", rep)
-        self.assertEqual((qs, suff), ([], True))
+        self.assertEqual((qs, suff), ([], False))
 
 
 if __name__ == "__main__":

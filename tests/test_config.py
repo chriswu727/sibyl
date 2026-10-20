@@ -21,7 +21,7 @@ class TestTiersAndRoles(unittest.TestCase):
         self.assertFalse(c.compact_sources)
         self.assertTrue(c.rich_citations)
         self.assertEqual(c.tier, "standard")
-        self.assertEqual(c.reflect_rounds, 0)
+        self.assertEqual(c.reflect_rounds, 1)
 
     def test_standard_tier_is_todays_behavior(self):
         # standard must reproduce the current 1600-token synthesis budget

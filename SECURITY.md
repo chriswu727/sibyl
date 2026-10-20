@@ -56,12 +56,25 @@ boundary. Install only the extras you need and review their policies separately.
 
 - Each MCP runtime admits at most eight simultaneous calls. Busy admission fails
   immediately; there is no unbounded task queue. Default deadlines are 60 seconds
-  for retrieval/data/export and 180 seconds for model-assisted tools.
+  for retrieval/data/export and 600 seconds for model-assisted tools.
 - Matching retrievals share one task. Cancelling one consumer does not interrupt
   another; cancelling the last consumer cancels the factory. Completed results
   have a 30-second TTL and a 64-entry cap. Shutdown cancels runtime-owned tasks.
 - Stateful report operations are mutually exclusive. Reports, loops, and caches
   are not shared between independently created server runtimes.
+- Persistent research admits two job workers, bounds retrieval/model attempts
+  and reserved completion tokens, and requires explicit continuation after
+  interruption. Checkpoints reserve attempts before dispatch. These are not exact
+  provider billing limits; input tokens and already-dispatched work can be billed.
+- Research state uses an owner-locked private SQLite database below the output
+  root, with 64 records, a 1 MiB payload ceiling per job, 80 progress events per
+  job, and a 16,384-page database limit. A stale revision cannot finalize a host
+  report against different citation numbering. Finished reports are immutable.
+- Host report validation checks citation targets, not semantic entailment.
+  Automated report audits are fallible. Lexical overlap never establishes support;
+  unassessed or unsupported blocks remain visibly marked.
+- Tool text is bounded recursively: 10,000 characters per string, 64,000 combined,
+  128 elements per collection, and eight nesting levels.
 - Artifact names are unique, writes are staged then atomically published, and
   files have mode `0600`. Relative traversal and symlinked subdirectories are
   rejected. The root is resolved at startup/use from trusted operator settings.
