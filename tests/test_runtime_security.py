@@ -101,7 +101,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
 
         server = create_server(SibylRuntime())
         page = WebPage(
-            "https://example.com/?token=SECRET", "title", "original evidence"
+            "https://example.com/?token=SECRET", "title", "original evidence " * 20
         )
         with mock.patch(
             "sibyl.scraper.scrape_url", new=mock.AsyncMock(return_value=page)

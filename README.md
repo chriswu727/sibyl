@@ -33,6 +33,10 @@ configuration and billing; it does not inherit the host's subscription.
 
 - **Inspectable evidence:** versioned sources and passages with hashes, offsets,
   retrieval timestamps, publication metadata, and content-origin labels.
+- **Research beyond a search result:** per-question evidence reviews, explicit
+  counterevidence investigations, citation-following reads, and visible gaps.
+  Scholarly discovery is opt-in with `source_policy="academic"`; primary-source
+  preferences never imply that a source is peer reviewed or factually correct.
 - **Honest stopping rules:** machine-readable instructions to synthesize, refine,
   decompose, retry, or revise—not an answer-shaped guess when retrieval fails.
 - **Independent support:** near-duplicate clusters expose syndicated copies so
@@ -102,18 +106,31 @@ concurrency and overall deadlines.
 
 Use these MCP calls from your host agent:
 
-1. `start_research(question="...", sub_questions=["...", "..."])` creates a host job.
-2. `continue_research(job_id="...", query="one focused question")` retrieves evidence.
+1. `start_research(question="...", sub_questions=["...", "..."],
+   source_policy="academic")` creates a paper-led host job. Use `primary` for
+   general investigations and current official documentation.
+2. `continue_research(job_id="...", question_id="Q1", query="one focused question")`
+   retrieves evidence. Repeat with `purpose="counterevidence"` to examine limitations
+   or conflicting results. Supply `url` to read a source into the same evidence store.
 3. `get_research(job_id="...")` returns progress, passages, current citation numbers,
    and limitations. Investigate missing perspectives or conflicting evidence.
-4. `complete_research(job_id="...", revision=..., summary="... [Source 1]",
+4. `assess_research(job_id="...", revision=..., question_id="Q1", status="supported",
+   supporting_passage_ids=["..."], conclusion="...", counterevidence_note="...")`
+   records the host's evidence assessment. Repeat for each question; use `disputed`
+   with both supporting and challenging passages, or `unresolved` with an explanation.
+5. `complete_research(job_id="...", revision=..., summary="... [Source 1]",
    key_findings=["... [Source 2]"], limitations=["..."])` saves the host's report.
-5. `save_report(job_id="...", format="md")` exports it; `json` and optional `pdf`
+6. `save_report(job_id="...", format="md")` exports it; `json` and optional `pdf`
    use the same report contract.
 
 Citation numbering can change after a search. Submit the current revision to
 prevent a stale draft from binding to different sources. Host report completion
 checks citation targets, **not semantic truth**. Reports are immutable once saved.
+New host jobs also check research-plan readiness. If gaps cannot be resolved,
+`allow_incomplete=true` saves a report with those gaps explicitly preserved.
+Source-type labels and coverage checks are heuristics, not an independent reviewer.
+Full PDF-paper ingestion and automatic citation-graph crawling are not implemented;
+use accessible HTML papers, and explicitly follow selected references.
 
 For autonomous execution, install `.[report]`, configure a model, and call
 `start_research(question="...", mode="autonomous")`. Poll `get_research`;
@@ -200,7 +217,7 @@ Keep the default install small; opt into integrations you actually need.
 Report tools require configured credentials or a local/API-compatible model
 backend. Finance tools require an explicit `finance` or `full` MCP profile.
 Tavily search and Jina rendering are opt-in and disclose queries or URLs to those
-providers. See [configuration, profiles, and all 19 tools](docs/USAGE.md).
+providers. See [configuration, profiles, and all 20 tools](docs/USAGE.md).
 
 ## Quality and limitations
 

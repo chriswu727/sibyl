@@ -84,6 +84,7 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         completed = self.jobs.complete(
             job["job_id"], restored["revision"], "Summary [Source 1]",
             ["Finding [Source 1]"], "", ["One question remains unresolved."],
+            allow_incomplete=True,
         )
         self.assertEqual(completed["status"], "completed")
         self.assertEqual(completed["report"]["verification_scope"], "citation_targets_only")
@@ -106,7 +107,7 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         job = await self.retrieve(self.start())
         for summary, finding in [("No citation", "F [Source 1]"), ("S [Source 1]", "F [Source 999]")]:
             with self.assertRaises(ValueError):
-                self.jobs.complete(job["job_id"], job["revision"], summary, [finding], "", [])
+                self.jobs.complete(job["job_id"], job["revision"], summary, [finding], "", [], allow_incomplete=True)
 
     async def test_failed_step_uses_budget_and_reports_failure(self):
         job = self.start(max_steps=1)

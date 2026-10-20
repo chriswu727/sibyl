@@ -142,7 +142,7 @@ MCP report/chart exports use `SIBYL_OUTPUT_ROOT` (default `reports/`).
 an absolute path. Stateful report operations reject overlapping calls.
 The CLI's explicit `--output` option remains an operator-controlled path.
 
-Without an LLM credential, the default `auto` profile exposes eleven tools: five evidence primitives, five research-job operations, and report export. Host jobs and Markdown/JSON export need no model key. Autonomous mode requires `[report]` and a configured model; PDF requires the rendering extra. A configured `[report]` installation also exposes the legacy model tools. Finance tools remain explicit.
+Without an LLM credential, the default `auto` profile exposes twelve tools: five evidence primitives, six research-job operations, and report export. Host jobs and Markdown/JSON export need no model key. Autonomous mode requires `[report]` and a configured model; PDF requires the rendering extra. A configured `[report]` installation also exposes the legacy model tools. Finance tools remain explicit.
 
 Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
 
@@ -152,6 +152,7 @@ Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface direct
 | Jobs | `get_research(job_id)` | Progress, evidence, revision, report; omit ID to list | No |
 | Jobs | `continue_research(job_id, query)` | Focused host search or explicit autonomous resume | Autonomous only |
 | Jobs | `complete_research(job_id, revision, ...)` | Immutable host-authored report | No |
+| Jobs | `assess_research(job_id, revision, question_id, ...)` | Host assessment with stable support/challenge links | No |
 | Jobs | `cancel_research(job_id, delete=false)` | Cancel or explicitly remove checkpoint | No |
 | Retrieval | `gather_evidence(question)` | Bounded multi-step evidence loop | No |
 | Retrieval | `gather_bundle(query)` | Structured SourceBundle 1.6 | No |
@@ -173,11 +174,63 @@ Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface direct
 `start_research` defaults to `mode="host"`. Supply up to five sub-questions,
 then call `continue_research` with focused queries. Responses include selected
 passages, retrieval timestamps, citation IDs, attempts, progress events, and
-limitations. Evidence from different queries is interleaved, newest first,
-so supplementary searches can contribute even when the synthesis window is full.
+limitations. Primary and scholarly candidates are selected before encyclopedia,
+community, and metadata-only sources, with coverage across retrieval rounds.
+Reviewed evidence is pinned; duplicate URLs and content clusters do not establish
+independent corroboration. Type labels are heuristics and do not certify authority.
 Search snippets are leads and are excluded from report source selection.
 
-After investigating the question, get the latest job and submit:
+### Evidence-led investigation
+
+Choose `source_policy="academic"` to enable scholarly discovery through the existing
+search/Crossref path, or `primary` (default) for general research. Supply up to
+sixteen `preferred_domains` such as a relevant official documentation host. Match
+the source type to the claim: papers for methods and experiments, current official
+docs for product capabilities and pricing. Preprints and publisher-platform entries
+are not automatically peer reviewed. Crossref metadata does not count as full text.
+
+`research_plan.questions` provides stable IDs (`Q1` through `Q5`, or `Q0` when no
+sub-questions were supplied), explicit gaps, and suggested follow-up searches.
+Link each `continue_research` to a `question_id`; a single question is inferred.
+Use `purpose="counterevidence"` to seek replication, limitations, or conflicting
+results, not merely more confirming material. An empty or failed retrieval does not
+establish the absence of contrary evidence and does not satisfy that gate.
+
+To follow a paper citation or source link, call:
+
+```text
+continue_research(job_id="...", question_id="Q1", query="Inspect the original experiment",
+                  url="https://public.example/paper", purpose="follow_citation",
+                  parent_passage_id="the previously inspected passage ID")
+```
+
+URL reads use the same safe-network boundary, timeout, worker, and retrieval budgets
+as search. Extracted text is bounded to 16,000 characters and split into hashed
+passages with offsets. Thin/unsupported pages add no evidence. Use HTML papers:
+PDF parsing and automatic reference-link crawling are not implemented. Parent links
+are host-declared; the server does not prove that a hyperlink existed in the parent.
+The source catalog retains passage IDs even when a source falls out of the selected
+report window. Inspect one with `get_research(job_id="...", passage_id="...")`.
+
+After reading the evidence, call `assess_research` for each question:
+
+```text
+assess_research(job_id="...", revision=the_current_revision, question_id="Q1",
+                status="disputed", supporting_passage_ids=["bundle/S1/P1"],
+                challenging_passage_ids=["other/S1/P2"],
+                conclusion="The results differ under these experimental conditions...",
+                counterevidence_note="Compared the original study and the replication...")
+```
+
+Use `supported`, `disputed`, or `unresolved`. A supported review needs supporting
+passages; disputed needs both sides; unresolved needs an explanation, not invented
+evidence. Only cite passages actually inspected. The server checks link integrity,
+revision freshness, and structural completeness, **not semantic correctness**.
+New evidence for a reviewed question makes that review stale. Linked sources stay
+in the report window; more than twelve distinct reviewed sources or contradictory
+duplicate snapshots require narrowing the review rather than silently losing links.
+
+After investigating and reviewing all questions, get the latest job and submit:
 
 ```text
 complete_research(
@@ -196,6 +249,30 @@ after retrieval; the revision check prevents stale submissions. Citation target
 validation is not entailment checking. Host reports state
 `verification_scope="citation_targets_only"`; the host owns semantic judgment.
 Completed reports are immutable. Start another job for a new edition.
+New host jobs reject completion when required reviews or counterevidence checks are
+missing. `allow_incomplete=true` explicitly permits delivery with every remaining
+gap recorded in report limitations; it is not a quality pass. Existing pre-upgrade
+checkpoints remain readable and retain their former completion behavior. JSON exports
+preserve exact selected passages, hashes, offsets, the review ledger, and investigation
+steps. Markdown includes reviews and compact source references instead of dumping
+large source excerpts. PDF retains the narrative and limitations; use JSON for the
+complete machine-readable evidence package.
+
+### Comparing with ordinary web search
+
+Engineering gates are not evidence of superior research quality. For a quality A/B,
+use the same host model, dated questions, model effort, search provider, and overall
+time/call budget. Compare ordinary search with the persistent deep workflow on
+predeclared measures: important-question coverage, claim-to-source support, original
+source discovery, counterevidence, correct abstention, and cost/latency. Record both
+outputs before judging; keep evidence fixtures separate from the evaluation questions.
+Repeat across technical explanations, current-product comparisons, and contested
+research, with reviewers blind to which workflow produced each report where feasible.
+
+The offline deep-research tests establish selection, provenance, and readiness
+contracts only. No controlled same-model report-quality A/B has yet established a
+Sibyl advantage over ordinary web search. Model-backed evaluations require explicit
+operator approval; do not spend a subscription/API budget implicitly.
 
 For `mode="autonomous"`, the optional report installation and configured model
 are required. The server runs research asynchronously; poll `get_research`.

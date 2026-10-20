@@ -137,6 +137,7 @@ class Researcher:
                         search_engine=self.config.search_engine,
                         extractor=self.config.extractor,
                         jina_fallback=self.config.jina_fallback,
+                        include_academic=True if notebook.source_policy == "academic" else None,
                     )
                 except Exception:
                     notebook.finish_search(search_query, None)

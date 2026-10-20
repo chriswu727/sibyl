@@ -2,6 +2,23 @@
 
 ## 0.4.0 — Unreleased
 
+### Evidence-led host research
+
+- Added per-question support/challenge reviews, counterevidence investigation gates,
+  stale-review detection, and explicit incomplete-report delivery.
+- Added budgeted source reads and host-declared citation lineage inside persistent jobs.
+- Prioritized primary/scholarly source candidates over background material; pinned
+  reviewed evidence and exposed excluded passages for inspection.
+- Added academic discovery routing and operator-selected primary domains without
+  treating source types as proof of authority, truth, or peer review.
+- Preserved short numeric cells and table boundaries during HTML extraction; thin
+  direct reads no longer look like successful evidence extraction.
+- JSON exports now retain selected passage text/hashes/offsets and the review ledger;
+  Markdown references are compact. Keyless/full catalogs contain 12/20 tools.
+- Existing checkpoints remain readable. New host jobs require review unless
+  `allow_incomplete=true` is explicitly supplied. Controlled model-quality A/B testing
+  and full PDF-paper ingestion remain outstanding.
+
 ### Persistent research workflows
 
 - Added host-assisted and explicitly configured-model research jobs sharing the

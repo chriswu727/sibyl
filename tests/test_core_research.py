@@ -42,7 +42,8 @@ async def main():
             runtime.research_jobs.store.save(job)
             _, completed = await server.call_tool('complete_research', {
                 'job_id': job['job_id'], 'revision': job['revision'],
-                'summary': 'Summary [Source 1]', 'key_findings': ['Finding [Source 1]']})
+                'summary': 'Summary [Source 1]', 'key_findings': ['Finding [Source 1]'],
+                'allow_incomplete': True})
             assert completed['status'] == 'completed'
             for format in ('md', 'json'):
                 await server.call_tool('save_report', {'job_id': job['job_id'], 'format': format})

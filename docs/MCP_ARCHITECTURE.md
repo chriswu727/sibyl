@@ -40,6 +40,10 @@ flowchart TD
 | `scraper.py` | Redirects, bounded decoding, extraction, optional Jina fallback |
 | `report_models.py` | Report data contracts without importing an LLM SDK |
 | `research_state.py` | Shared checkpoints, budgets, cross-query evidence selection |
+| `source_policy.py` | Heuristic source classification and primary/academic routing priority |
+| `research_sources.py` | Budgeted direct-page evidence with stable hashes and passage offsets |
+| `research_review.py` | Host evidence links, per-question gaps, stale reviews, completion gates |
+| `research_errors.py` | Application-authored validation errors safe for the MCP boundary |
 | `research_jobs.py` | Host/autonomous job lifecycle, progress, cancellation, continuation |
 | `job_store.py` | Private bounded SQLite, directory ownership, optimistic revisions |
 | `report_audit.py` | Citation-target validation and report-wide source-support disclosure |
@@ -94,6 +98,16 @@ root. An OS-held file lock prevents simultaneous owners of the same directory.
 Each update uses an optimistic revision; host report submission must match the
 current citation snapshot. Completed reports are immutable. Checkpoints store
 plans, evidence, progress, budgets, and reports—not credentials or model sessions.
+
+New host investigations link retrieval attempts to question IDs and an explicit
+purpose. Direct reads and citation-following reads share the search budget.
+Reviews pin supporting/challenging passages into the bounded report window;
+later retrieval for a question makes its review stale. Completion requires a
+review and a substantive counterevidence investigation per question, or explicit
+incomplete delivery with the remaining gaps preserved. These checks validate
+structure, not semantic truth, source independence, or research exhaustiveness.
+Older checkpoints retain their previous completion behavior. Autonomous mode
+does not populate this host review ledger.
 
 Autonomous work runs as runtime-owned asyncio tasks (two job workers maximum).
 Shutdown cancels and awaits them before releasing the store. Explicit continuation
@@ -154,6 +168,9 @@ cancellation, blocking optional libraries, and OS-level resource isolation.
 - **New research behavior:** extend `research_state` or `researcher`, keeping
   retrieval shared. Test interruption/resume and budget accounting. Persistence
   belongs in `job_store`, not MCP handlers.
+- **New research quality gate:** extend `research_review`; keep source-type
+  heuristics in `source_policy` separate from host reasoning. Export gaps and
+  evidence links rather than silently converting missing evidence into success.
 - **New runtime limit:** add it to `RuntimePolicy`, test exhaustion/cancellation,
   and document whether it applies to MCP only or the library API too.
 
@@ -170,7 +187,7 @@ without a task broker, cloud deployment, or tenant identity system.
 Predictable resource limits matter more than accepting work that cannot finish.
 
 **Compatible contracts, explicit policy changes.** SourceBundle 1.6,
-EvidenceLoop 1.0, and the fourteen existing tool names remain intact; five job
+EvidenceLoop 1.0, and the fourteen existing tool names remain intact; six job
 operations are additive. MCP output-directory
 confinement and final-consumer cancellation are intentional behavioral changes.
 

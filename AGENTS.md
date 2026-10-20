@@ -13,13 +13,31 @@ and PDF export; Markdown/JSON host reports need no optional model dependency.
 ## Default workflow: host-assisted research
 
 1. Call `start_research(question, sub_questions=[...])`. Host mode is the default.
-2. Call `continue_research(job_id, query)` with focused questions. Follow leads,
+2. Call `continue_research(job_id, query, question_id)` with focused questions. Follow leads,
    investigate contradictions, and look for original sources.
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
-4. Submit `complete_research(job_id, revision, summary, key_findings, analysis,
+4. Call `assess_research` for each question with stable supporting/challenging
+   passage IDs, a conclusion, and a counterevidence note. Investigate counterevidence
+   with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
+5. Submit `complete_research(job_id, revision, summary, key_findings, analysis,
    limitations)`. Summary and each finding must cite selected `[Source N]`.
-5. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
+6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
+
+Use `source_policy="academic"` to enable scholarly discovery, and
+`preferred_domains` for topic-appropriate primary publishers. These are routing
+hints, not verified authority or peer-review labels. Encyclopedia/community
+sources are background. Metadata and abstracts are not full papers.
+
+Read a source into the job using `continue_research(url=...)`; it shares the
+retrieval budget. `purpose="follow_citation"` also records a parent passage ID.
+This lineage is host-declared, not proof that a hyperlink was extracted.
+Excluded source passages remain accessible through the source catalog and
+`get_research(passage_id=...)`. Reviewed sources are pinned for report export.
+New host jobs require per-question reviews and a substantive counterevidence
+investigation; use `allow_incomplete=true` only to deliver explicit gaps.
+Legacy checkpoints retain their previous completion behavior. The autonomous
+pipeline does not populate the new host review ledger.
 
 The host plans and writes. Sibyl persists the investigation and checks citation
 targets, not semantic entailment. Do not describe host reports as independently
