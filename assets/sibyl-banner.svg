@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">Sibyl</title>
+  <desc id="desc">Evidence in. Grounded answers out. Your agent reasons. Sibyl retrieves.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1">
+      <stop stop-color="#0b1220"/><stop offset="1" stop-color="#123c3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="20" fill="url(#bg)"/>
+  <g fill="none" stroke="#2c6661" stroke-width="1" opacity=".35">
+    <path d="M720 0v300M840 0v300M960 0v300M1080 0v300M600 60h600M600 120h600M600 180h600M600 240h600"/>
+  </g>
+  <text x="58" y="62" fill="#73dfc1" font-family="monospace" font-size="14" letter-spacing="3">THE EVIDENCE LAYER FOR AI AGENTS</text>
+  <text x="54" y="148" fill="#f0fdfa" font-family="Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-3">Sibyl</text>
+  <text x="58" y="201" fill="#d1e6e1" font-family="Arial, sans-serif" font-size="26">Evidence in. Grounded answers out.</text>
+  <text x="58" y="247" fill="#96b7b1" font-family="Arial, sans-serif" font-size="17">Your agent reasons. Sibyl retrieves.</text>
+  <g font-family="monospace" font-size="14">
+    <rect x="785" y="65" width="330" height="170" rx="14" fill="#0d242b" stroke="#37736a"/>
+    <circle cx="810" cy="91" r="4" fill="#73dfc1"/>
+    <text x="826" y="96" fill="#73dfc1">SOURCE BUNDLE</text>
+    <path d="M807 112h286" stroke="#284a4a"/>
+    <text x="808" y="143" fill="#d1e6e1">sources    · ranked + deduplicated</text>
+    <text x="808" y="172" fill="#d1e6e1">passages   · traceable citations</text>
+    <text x="808" y="201" fill="#d1e6e1">next step  · explicit diagnostics</text>
+  </g>
+</svg>

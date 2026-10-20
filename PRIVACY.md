@@ -16,9 +16,16 @@ public evidence in the local MCP process for up to ten minutes so the host can
 complete a bounded workflow. At most 64 loop records are retained; they are not
 written to disk and disappear when the process exits.
 
-Reports, Markdown files, PDFs, and charts are written only to paths selected by
-the user or calling agent. Sibyl does not upload those artifacts to the project
-maintainer.
+MCP reports and charts are written below the operator-selected
+`SIBYL_OUTPUT_ROOT` (default: `reports/`); calling agents can select only relative
+subdirectories for report export. CLI/Python callers may explicitly select their
+own output directory. Sibyl does not upload artifacts to the project maintainer.
+
+MCP retrieval results may also remain in a per-runtime memory cache for 30 seconds
+(at most 64 entries). Cancelling the final consumer stops its in-flight retrieval;
+server shutdown clears retained runtime state. Diagnostic runtime logs contain
+tool names and aggregate completion/failure/cancellation counts, not tool arguments,
+page bodies, or provider exception details. They are local logs, not telemetry.
 
 ## Where data can go
 

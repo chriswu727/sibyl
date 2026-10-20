@@ -1,4 +1,5 @@
 """Bounded evidence-loop tests. No network."""
+import asyncio
 import unittest
 from unittest import mock
 
@@ -37,6 +38,44 @@ def bundle(query: str, action: str = "synthesize") -> SourceBundle:
 
 
 class TestEvidenceLoopManager(unittest.IsolatedAsyncioTestCase):
+    async def test_active_initial_retrieval_is_not_evicted(self):
+        manager = EvidenceLoopManager(max_entries=1)
+        started, release = asyncio.Event(), asyncio.Event()
+
+        async def gather(query, *args):
+            started.set()
+            await release.wait()
+            return bundle(query)
+
+        kwargs = dict(max_steps=2, max_sources=5, chars_per_source=1000,
+                      ranker="lexical", render_thin_pages=False, gather=gather)
+        first = asyncio.create_task(manager.start("What is Rust?", **kwargs))
+        await started.wait()
+        second = await manager.start("What is Python?", **kwargs)
+        self.assertEqual(second.status, "failed")
+        self.assertIn("capacity", second.error)
+        release.set()
+        result = await first
+        self.assertIn(result.loop_id, manager._loops)
+
+    async def test_cancelled_start_releases_capacity(self):
+        manager = EvidenceLoopManager(max_entries=1)
+        started = asyncio.Event()
+
+        async def gather(*args):
+            started.set()
+            await asyncio.Event().wait()
+
+        task = asyncio.create_task(manager.start(
+            "What is Rust?", max_steps=2, max_sources=5, chars_per_source=1000,
+            ranker="lexical", render_thin_pages=False, gather=gather,
+        ))
+        await started.wait()
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await task
+        self.assertEqual(len(manager._loops), 0)
+
     def setUp(self):
         self.manager = EvidenceLoopManager()
 

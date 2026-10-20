@@ -18,6 +18,11 @@ V = TypeVar("V")
 class _CacheState(Generic[K, V]):
     entries: OrderedDict[K, Tuple[float, V]] = field(default_factory=OrderedDict)
     inflight: Dict[K, asyncio.Task[V]] = field(default_factory=dict)
+    waiters: Dict[K, int] = field(default_factory=dict)
+
+
+class CapacityError(RuntimeError):
+    """The bounded executor cannot admit another operation."""
 
 
 class AsyncSingleFlightTTL(Generic[K, V]):
@@ -26,14 +31,21 @@ class AsyncSingleFlightTTL(Generic[K, V]):
         ttl_seconds: float,
         max_entries: int,
         clock: Callable[[], float] = time.monotonic,
+        *,
+        max_inflight: int = 8,
+        operation_timeout: float = 60.0,
     ) -> None:
         if ttl_seconds <= 0:
             raise ValueError("ttl_seconds must be positive")
         if max_entries <= 0:
             raise ValueError("max_entries must be positive")
+        if max_inflight <= 0 or operation_timeout <= 0:
+            raise ValueError("execution limits must be positive")
         self.ttl_seconds = ttl_seconds
         self.max_entries = max_entries
         self.clock = clock
+        self.max_inflight = max_inflight
+        self.operation_timeout = operation_timeout
         self._states = weakref.WeakKeyDictionary()
         self._states_lock = threading.Lock()
 
@@ -63,12 +75,34 @@ class AsyncSingleFlightTTL(Generic[K, V]):
 
         task = state.inflight.get(key)
         if task is None:
+            if len(state.inflight) >= self.max_inflight:
+                raise CapacityError("Retrieval capacity is busy. Retry later.")
             task = asyncio.create_task(
                 self._populate(state, key, factory, should_cache)
             )
             task.add_done_callback(self._observe_completion)
             state.inflight[key] = task
-        return await asyncio.shield(task)
+        state.waiters[key] = state.waiters.get(key, 0) + 1
+        try:
+            return await asyncio.shield(task)
+        finally:
+            remaining = state.waiters.get(key, 1) - 1
+            if remaining:
+                state.waiters[key] = remaining
+            else:
+                state.waiters.pop(key, None)
+                if not task.done():
+                    task.cancel()
+                    # Keep the admission slot until the factory releases its resources.
+                    await asyncio.gather(task, return_exceptions=True)
+
+    async def aclose(self) -> None:
+        state = self._state()
+        tasks = list(state.inflight.values())
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        state.entries.clear()
 
     @staticmethod
     def _observe_completion(task: asyncio.Task[V]) -> None:
@@ -84,7 +118,7 @@ class AsyncSingleFlightTTL(Generic[K, V]):
     ) -> V:
         task = asyncio.current_task()
         try:
-            value = await factory()
+            value = await asyncio.wait_for(factory(), self.operation_timeout)
             if should_cache(value):
                 state.entries[key] = (self.clock() + self.ttl_seconds, value)
                 state.entries.move_to_end(key)

@@ -1,10 +1,11 @@
 """Report generator — creates PDF and Markdown reports from research results."""
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 
-from .researcher import ResearchReport
+from .report_models import ResearchReport
+from .storage import ArtifactStore
+from .privacy import display_url
 
 
 def _report_to_markdown(report: ResearchReport) -> str:
@@ -54,7 +55,7 @@ def _report_to_markdown(report: ResearchReport) -> str:
     lines.append("")
     for i, src in enumerate(report.sources, 1):
         lines.append(f"{i}. **{src.title}**  ")
-        lines.append(f"   {src.url}")
+        lines.append(f"   {display_url(src.url)}")
         evidence = src.supporting_snippet or src.snippet
         if evidence:
             lines.append(f"   > {evidence}")
@@ -265,7 +266,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         try:
             pdf.set_font(font_name, "", 7)
             pdf.set_text_color(30, 30, 180)
-            pdf.write(4, src.url)
+            pdf.write(4, display_url(src.url))
             pdf.ln(4)
             pdf.set_text_color(0, 0, 0)
         except Exception:
@@ -282,10 +283,4 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         pdf.ln(3)
 
     # Save
-    out = Path(output_dir)
-    out.mkdir(parents=True, exist_ok=True)
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"sibyl_{_safe_filename(report.query)}_{ts}.pdf"
-    path = out / filename
-    pdf.output(str(path))
-    return str(path)
+    return str(ArtifactStore(output_dir).write(bytes(pdf.output()), "report", ".pdf"))

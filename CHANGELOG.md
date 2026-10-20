@@ -2,6 +2,31 @@
 
 ## 0.4.0 — Unreleased
 
+### Runtime and security hardening
+
+- Split MCP composition, tool registration, application operations, and per-server
+  runtime state. Added deterministic shutdown and fail-fast admission limits.
+- Added total MCP operation deadlines, bounded single-flight retrieval, and
+  cancellation when the final consumer leaves. Active initial evidence loops
+  can no longer be pruned while retrieval is running.
+- Serialized stateful report operations and separated report contracts from the
+  optional LLM SDK.
+- Bounded gzip/zlib-deflate expansion before allocating decoded page bodies.
+- Confined MCP artifacts to `SIBYL_OUTPUT_ROOT`, with private atomic writes,
+  collision-resistant names, and relative-path/symlink checks.
+- Hid provider exception details and credential-bearing displayed URL metadata;
+  preserved structured evidence text, hashes, and offsets.
+- Raised MCP and LiteLLM security floors, added isolated core/optional dependency
+  audits and scheduled checks, and added Dependabot.
+- Restricted Docker build inputs and switched its runtime to a non-root user.
+- Redesigned the repository landing page and documented module responsibilities,
+  extension points, operational limits, and remaining trust boundaries.
+
+Migration: `save_report(output_dir=...)` now accepts only relative subdirectories
+of the operator-controlled output root (default `reports/`). Cancelling the final
+retrieval consumer no longer leaves work running in the background. Public
+SourceBundle 1.6 and EvidenceLoop 1.0 schemas and tool names are unchanged.
+
 ### Added
 
 - A public keyless Python API through `from sibyl import gather_bundle, gather_sources`.
@@ -27,7 +52,7 @@
 - The default installation contains the keyless evidence product; report, finance, extraction, and reranking dependencies are optional extras.
 - Limited evidence now returns `insufficient_evidence` instead of a completed-looking `ok` state.
 - The no-key MCP surface exposes only tools that can run with the installed profile.
-- The MCP SDK dependency is pinned to the compatible stable v1 line while the v2 API remains pre-release and incompatible.
+- The MCP SDK dependency stays on the compatible stable v1 line; a v2 migration requires separate compatibility validation.
 - Thin-page Jina rendering is opt-in in every workflow, improving default latency and preventing implicit URL disclosure.
 - PyPI metadata and CLI language now lead with evidence-first web research rather than prediction use cases.
 - Release validation installs the real default dependency set and checks the public API.

@@ -91,7 +91,7 @@ class TestMcpSourceBundleContract(unittest.IsolatedAsyncioTestCase):
         bundle = TypeAdapter(SourceBundle).validate_python(expected)
 
         with mock.patch(
-            "sibyl.mcp_server.gather_source_bundle",
+            "sibyl.mcp_tools.gather_source_bundle",
             new=mock.AsyncMock(return_value=bundle),
         ):
             _, structured = await mcp_server.mcp.call_tool(

@@ -19,7 +19,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install release tooling
-        run: python -m pip install build==1.5.1 twine==6.2.0 -e '.[report,finance,extract]'
+        run: |
+          python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
+          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 -e '.[report,finance,extract]'
+      - name: Audit release environment
+        run: python -m pip_audit --vulnerability-service osv --skip-editable --progress-spinner off
       - name: Validate tag and package version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}

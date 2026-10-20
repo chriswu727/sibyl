@@ -9,11 +9,14 @@ import threading
 import time
 import weakref
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 from urllib.parse import quote, unquote, urlparse, parse_qs, quote_plus
 
 import httpx
 from bs4 import BeautifulSoup
+
+if TYPE_CHECKING:
+    from .scraper import WebPage
 
 
 @dataclass

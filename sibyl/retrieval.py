@@ -359,8 +359,7 @@ async def _score_documents(
         )
         return scores, "flashrank", ""
     except Exception as exc:
-        detail = str(exc).strip().replace("\n", " ")[:160]
-        reason = f"{type(exc).__name__}: {detail}" if detail else type(exc).__name__
+        reason = type(exc).__name__
         warning = f"FlashRank failed ({reason}); fell back to lexical_v1."
         return lexical_relevance_scores(query, documents), "lexical_v1", warning
 
@@ -430,7 +429,7 @@ async def gather_source_bundle(
             error="ranker must be one of: lexical, flashrank, none.",
         )
     selected_ranker = cast(RankingBackend, requested_ranker)
-    if not clean_query:
+    if not clean_query or len(clean_query) > 1000:
         diagnostics = _diagnostics(
             requested_max_sources=requested_max_sources,
             effective_max_sources=effective_max_sources,
@@ -448,7 +447,7 @@ async def gather_source_bundle(
             status="invalid_request",
             sources=[],
             diagnostics=diagnostics,
-            error="query must not be empty.",
+            error="query must not be empty." if not clean_query else "query must be at most 1000 characters.",
         )
 
     own_client = client is None
@@ -702,7 +701,7 @@ async def gather_source_bundle(
             status="failed",
             sources=[],
             diagnostics=diagnostics,
-            error=f"Retrieval failed: {str(exc)[:200]}",
+            error="Retrieval failed. Check provider configuration or retry.",
         )
     finally:
         if own_client and client is not None:

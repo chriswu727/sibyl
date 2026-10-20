@@ -1,86 +1,150 @@
-# MCP LLM-backend investigation (sampling vs retrieval-provider)
+# Architecture
 
-Verdict: do NOT build on MCP sampling; reshape sibyl-as-MCP into a retrieval/context provider so the host model (Claude) is the brain.
+Sibyl is a local, asynchronous evidence-retrieval application with MCP, CLI, and
+Python interfaces. It is not a hosted answer API or a multi-tenant service.
+The default workload is public-web I/O followed by deterministic local processing.
+The host owns planning, synthesis, and semantic judgment.
 
-# SIBYL LLM-backend architecture — final investigation report
+## Module boundaries
 
-## 1. VERDICT: NO (do not build sibyl's reasoning path on MCP sampling)
+```mermaid
+flowchart TD
+    MCP[mcp_server: composition + profiles] --> CAT[mcp_catalog: request boundary]
+    CAT --> RT[runtime: admission + lifecycle + state]
+    RT --> TOOLS[mcp_tools: application operations]
+    CLI[cli / api] --> RET[retrieval: evidence pipeline]
+    TOOLS --> RET
+    RET --> NET[search / scraper / safe_http / url_safety]
+    RET --> PURE[dedup / passages / ranking / evidence]
+    TOOLS --> OPT[researcher: optional model workflow]
+    OPT --> MODELS[report_models: provider-free contracts]
+    TOOLS --> STORE[storage / reporter: artifact boundary]
+```
 
-MCP sampling is **not** a viable engine for a research agent that makes many LLM calls per run. Three independent, each-sufficient blockers — all three verified against primary sources:
+| Module | Owns |
+|---|---|
+| `mcp_server.py` | Server construction, profile selection, console startup |
+| `mcp_catalog.py` | Tool registration, runtime binding, public error boundary |
+| `mcp_tools.py` | Tool schemas and application-level orchestration |
+| `runtime.py` | Policy, lazy configuration, per-server state, execution lifecycle |
+| `async_cache.py` | Event-loop-local single-flight, TTL, capacity, waiter cancellation |
+| `evidence_loop.py` | Bounded evidence workflow state machine |
+| `retrieval.py` | Search/extraction/ranking coordination and evidence sufficiency |
+| `evidence.py` | Versioned source, passage, diagnostic, and loop contracts |
+| `url_safety.py`, `safe_http.py` | Destination validation and DNS-pinned connections |
+| `scraper.py` | Redirects, bounded decoding, extraction, optional Jina fallback |
+| `report_models.py` | Report data contracts without importing an LLM SDK |
+| `storage.py` | Output-root policy, private staging, atomic publication |
+| `privacy.py` | Display-only URL metadata redaction |
 
-- **The Claude hosts you care about don't implement the client side.** Claude Code is a confirmed ❌ in the apify/mcp-client-capabilities matrix, corroborated by claude-code issue [#1785](https://github.com/anthropics/claude-code/issues/1785), open since 2025-06-08, assigned but with no ship commitment. Claude.ai is a confirmed ❌ in the same matrix. **Claude Desktop is an inference, not a verified fact** — Desktop is *not a row in the apify matrix at all*, so its ❌ is extrapolated from Claude.ai plus secondary "not yet supported" write-ups (and there exists at least one mid-2025 post titled "MCP Sampling with Claude Desktop" muddying the picture). The inference is low-risk and almost certainly correct, but treat it as inference. Net: inside the exact hosts where you wanted "keyless frontier Claude," a `sampling/createMessage` request is not serviced, and you fall back to your own DeepSeek key every time. The headline benefit does not exist today. Evidence: apify/mcp-client-capabilities (community matrix), github.com/anthropics/claude-code/issues/1785.
+The retained tool exports in `mcp_server` preserve Python import compatibility.
+The `Source` and `ResearchReport` names remain importable from `researcher`, but
+new code should import their provider-independent definitions from `report_models`.
 
-- **The feature is deprecated in the upcoming draft spec — not yet in the live governing spec.** The current *stable* protocol is **2025-11-25, which does not deprecate sampling.** The deprecation lands in the **draft/RC revision `2026-07-28` (SEP-2577)**, which as of today (2026-07-03) is unreleased. That draft says verbatim: *"New implementations SHOULD NOT adopt it; existing implementations SHOULD migrate to integrating directly with LLM provider APIs"* — with a ≥12-month grace before removal-eligibility. So the direction of travel is unambiguous, but state it precisely: sampling is **on a deprecation track in the next revision**, not deprecated in the spec that governs clients right now. Relatedly, the Python SDK's `@deprecated` decorator on `create_message` is **on the `main` branch / upcoming release**, not confirmed in any pinned or released version — verify against your actual installed `mcp` version before citing it. Evidence: modelcontextprotocol spec draft 2026-07-28 / SEP-2577.
+## Request lifecycle
 
-- **Even where it works, the economics, consent flow, and rate limits are wrong for an autonomous agent.** Sampling runs on the *user's own subscription/quota* (keyless ≠ free), and the spec mandates human-in-the-loop with **no spec-level auto-approve**. Plain sampling is up to two approvals (prompt + response) per call — and that's the floor: the spec's own sequence diagram shows **tool-enabled sampling adds more gates** (approve request, approve tool calls, approve continuation, approve final response, per loop iteration). Sibyl's 5-stage pipeline, fanned out, means dozens of popups per run. Two further operational blockers the original draft understated: (a) the spec lists **"Clients SHOULD implement rate limiting"** as Security Consideration #4 — for an agent firing dozens of calls per run, client-imposed rate limiting is an independent failure mode; (b) the reason clients gate every call and refuse auto-approve is the documented **quota-drain / sampling-abuse attack vector** (Unit42, practical-devsecops) — a malicious or runaway server draining the user's paid quota. That abuse risk *reinforces* the approval-spam blocker rather than being a footnote. And `modelPreferences` hints are advisory — you cannot even guarantee Claude does the work.
+1. MCP validates the registered schema.
+2. The catalog binds the call to that server's runtime with a context variable.
+   There is no shared mutable report/loop/cache state across server instances.
+3. The runtime admits or rejects the call. Eight calls may run concurrently;
+   a full runtime returns a retryable capacity error instead of building a queue.
+4. A whole-operation deadline covers the tool coroutine, including its awaits:
+   60 seconds normally, 180 seconds for model-assisted operations.
+5. A normalized retrieval key coalesces identical in-flight bundle requests.
+   Each key has a consumer count. The final departing consumer cancels the work.
+   Failed results are not cached; successful/insufficient results expire after
+   30 seconds, with at most 64 cached bundles.
+6. The catalog returns known user-facing errors or an opaque provider-failure
+   message. It does not serialize raw provider exceptions into MCP output.
+7. Server lifespan shutdown cancels runtime-owned tasks, drains cache tasks,
+   clears evidence loops, and releases the last report.
 
-The one thing sampling had going for it — "let the host's frontier model reason, keyless" — is precisely what the next spec revision is steering everyone away from.
+Runtime logs expose aggregate completion/failure/cancellation counts and tool
+names through Python logging. They do not record arguments or page contents.
+Logging defaults to `WARNING` so stdio protocol output remains clean.
 
-## 2. CLIENT SUPPORT TRUTH: thinly implemented, and not in the Claude hosts
+The library API deliberately remains a direct async operation: it does not hide
+an ambient server runtime inside an embedding application. Library callers own
+their concurrency, cancellation, and overall deadlines.
 
-Only **one** support claim rests on a first-party primary source. Everything else rests on a single community matrix that **contradicts itself on re-read** (when fetched directly, its summary placed OpenAI Codex under ❌ — the opposite of what a column-parse suggested). So the roster below is split by evidence quality, not asserted flat.
+## State and consistency
 
-| Client | Sampling support | Evidence quality |
-|---|---|---|
-| **VS Code (GitHub Copilot)** | ✅ | First-party primary doc (code.visualstudio.com) |
-| Claude Code | ❌ | Verified — apify matrix + open issue #1785 |
-| Claude.ai | ❌ | Verified — apify matrix |
-| Claude Desktop | ❌ (inferred) | **Not in the matrix; inference only** |
-| Cursor, Cline, Windsurf, Zed, Gemini CLI, Goose | ❌ | Community matrix, unverified |
-| OpenAI Codex, JetBrains AI Assistant, Postman, Glama, Le Chat, AmpCode | listed ✅, **unverified** | Single community matrix that contradicts itself on re-read (Codex read as ❌ on direct fetch) — do not rely on |
+Evidence loops use random IDs, a ten-minute TTL, a 64-entry cap, and per-loop
+locks. Initial retrieval holds the lock too, so capacity pruning cannot evict an
+active start. A cancelled/failed start removes its unfinished state.
+The limit is four retrieval steps; the host supplies the atomic query plan.
 
-The load-bearing facts: **the only mainstream host where sampling is confirmed to light up via a primary source is VS Code / Copilot** — a client where the reasoning model is *not* Claude-guaranteed and where sibyl's benefit is marginal. The Claude hosts are ❌ (two verified, Desktop inferred). Any aggregator blog claiming "Claude Desktop supports sampling" is citing stale, contradicted info. Evidence: apify/mcp-client-capabilities; code.visualstudio.com/docs (MCP sampling).
+Optional report tools retain one successful report per runtime.
+`research`, `save_report`, `fetch_market_data`, and `chart` are mutually exclusive:
+an overlapping stateful call fails as busy instead of racing the latest report.
+This preserves the existing `research` → `save_report` workflow without inventing
+a database or durable report service.
 
-## 3. Not viable → skip the full sampling implementation
+This state is ephemeral and owned by one trusted local host. UUIDs and separate
+runtime objects are not user authentication. Do not multiplex mutually untrusted
+users into one stdio process.
 
-Because the verdict is NO, this is not a sampling-first backend. But a small, capability-gated hedge is cheap, so here is the scoped version.
+## Security boundaries
 
-Keep **litellm + user key as the real engine in BOTH CLI and MCP modes.** That is the spec's own migration recommendation and it works everywhere today. Do **not** hard-cut DeepSeek.
+Public-page fetches validate scheme, credentials, ports, hostnames, and resolved
+addresses, then pin the connection to the validated IPs while preserving TLS SNI.
+Every redirect is revalidated. Both wire bytes and decoded page bytes are capped
+at 2 MiB. gzip/zlib-deflate decoding limits output allocation; unsupported stacked
+encodings and truncated streams fail closed.
 
-If you want the VS-Code-only upside, add an `LLMBackend` abstraction with two implementations behind one interface (`generate(messages, system, max_tokens, model_prefs) -> str`):
+Only direct page fetching uses this pinned transport. Search services and
+optional provider SDKs use their own outbound clients; they are separate trust
+boundaries, not covered by a blanket "all networking is sandboxed" claim.
 
-- `LiteLLMBackend` — current DeepSeek path, the **default**.
-- `SamplingBackend` — calls `ctx.session.create_message(...)`, gated strictly by runtime detection via `ctx.session.check_client_capability(ClientCapabilities(sampling=SamplingCapability()))`. Only select it when that returns True. Wrap every call in `try/except (McpError, NoBackChannelError)` **and** `asyncio.wait_for(timeout)` because it blocks on human approval; on any failure/denial (`code: -1`), fall through to `LiteLLMBackend`. Convert prompts via `SamplingMessage(role='user', content=TextContent(type='text', text=...))`, pass your prompt through `system_prompt=`, set `include_context='none'`, hints `['claude']`, `intelligencePriority≈0.9` — treating the model as best-effort.
+MCP exports are confined to an operator-selected root. Agents can request a
+relative subdirectory, not an arbitrary absolute destination. Staging files are
+private, output names are collision-resistant, and publication is an atomic
+rename. The filesystem root must not be writable by untrusted local processes.
 
-**Version note (important):** the pseudocode above targets the **legacy sampling shape** — the initialize-time `check_client_capability` handshake and `create_message` of **2025-06-18 / 2025-11-25**. That is the **correct thing to code against today** on the current released SDK. But be aware the draft `2026-07-28` redesign is **stateless**: it removes the initialize handshake and moves to the **MRTR / `InputRequiredResult`** pattern with capabilities in per-request `_meta.io.modelcontextprotocol/clientCapabilities`. So the seam you build now is deliberately the pre-stateless one; see §4 on why you should *not* chase MRTR yet.
+URL display redaction never mutates hashed passage text or offsets. Structured
+evidence can contain sensitive material present in a public page; redaction is
+not DLP. Sources can also contain prompt injection. The host must treat their
+contents as data, not instructions.
 
-Approval-spam mitigation (only partially solvable): collapse the pipeline to **as few sampling round-trips as possible** — batch query-gen + rerank into one call, synthesis + cross-analysis into one, rather than per-source fan-out. But be honest that even 2–3 approvals per run is friction, that client-side rate limiting can independently throttle you, and that this path realistically only benefits VS Code users. Given all that, rate `SamplingBackend` as **optional / nice-to-have, not worth blocking a release on.** Ship the abstraction as a seam if you want it; don't ship it as the story.
+See [SECURITY.md](../SECURITY.md) for limitations, including cooperative async
+cancellation, blocking optional libraries, and OS-level resource isolation.
 
-## 4. The honest alternative — better at your real goal
+## Where new code belongs
 
-Your real goal is *"let the host AI (Claude) do the reasoning, keyless for the user."* Sampling was a bad way to get there. There is a native way that works in **every** client today, needs zero deprecated/draft features, and adds zero approval popups.
+- **New MCP operation:** implement it in `mcp_tools`, register its schema in the
+  catalog, assign a profile, and add offline tool/serialization tests. Stateful
+  report operations must join the runtime's exclusivity policy.
+- **New search provider:** add an adapter in `search`, preserve transparent
+  provider provenance and fallback behavior, and test without external calls.
+- **New extractor or HTTP behavior:** use `scraper` and the existing network
+  boundary. Do not bypass `safe_http` with a generic client for arbitrary URLs.
+- **New ranking/sufficiency rule:** keep it in deterministic retrieval helpers;
+  run lexical, pipeline, and source-quality regression gates.
+- **New evidence field:** update the versioned contracts, schema fixture, docs,
+  and serialization tests together. Preserve hash/offset consistency.
+- **New export:** render from `report_models`; publish through `ArtifactStore`.
+  Do not put model-provider imports into data contracts.
+- **New runtime limit:** add it to `RuntimePolicy`, test exhaustion/cancellation,
+  and document whether it applies to MCP only or the library API too.
 
-**In MCP mode, demote sibyl from a self-contained agent to a retrieval / structured-context provider, and let the host model be the brain.** The host that called your tool *is already Claude* — so instead of borrowing Claude's tokens through a side channel, hand Claude the raw material and let it reason in its own turn.
+## Design decisions
 
-Concretely, expose thin tools that fan out searches and return **structured intermediate artifacts**: `search_web`, `fetch_source`, `rank_sources`, `extract_claims`, `build_comparison` — each returning ranked sources, per-source snippets, candidate claims, comparison tables. Claude then does query planning, synthesis, cross-analysis, and claim verification natively. This is keyless, free of DeepSeek for the MCP user, works in Claude Desktop / Code / Cursor / everything, and gives *better* reasoning than DeepSeek-flash ever did.
+**Host reasoning, not hidden sampling.** Retrieval works in local stdio clients
+without depending on host sampling support or another model credential. An
+experimental report profile remains optional and explicit.
 
-Keep **one heavyweight `research` tool** that still runs the full DeepSeek pipeline end-to-end with sibyl's own key, for hosts/users who want a one-shot answer and accept that sibyl pays. Expose both surfaces; let the host choose.
+**Single process, not distributed infrastructure.** The current workload does
+not require a database, task broker, cloud deployment, or tenant identity system.
+Those would add operational obligations without improving this local contract.
 
-Weighing it: the retrieval-provider model is strictly superior to sampling for the stated goal — it achieves "host does the reasoning, keyless" *without* the deprecation track, the client-support gap, the approval spam, or the rate-limit/quota-drain exposure. The one cost is that it is a genuine redesign of the MCP surface (thin tools + artifacts) rather than a drop-in backend swap, and the "full autonomous research in one call" experience only survives via the heavyweight keyed tool. That is the right trade. Do **not** invest in the MRTR / `InputRequiredResult` successor now — it is even more round-trip-heavy and still needs client adoption Claude does not have; make it a watch-item.
+**Fail-fast admission, not an unbounded queue.** A host can retry a busy call.
+Predictable resource limits matter more than accepting work that cannot finish.
 
-**Bottom line:** drop the sampling plan. Keep litellm+key as the CLI/API engine and as an optional heavyweight MCP tool; reshape sibyl-as-MCP into a retrieval/context provider where the host is the brain. Optionally add a capability-gated `SamplingBackend` seam for VS Code, but don't sell it as the architecture.
+**Compatible contracts, explicit policy changes.** SourceBundle 1.6,
+EvidenceLoop 1.0, and the 14-tool catalog remain intact. MCP output-directory
+confinement and final-consumer cancellation are intentional behavioral changes.
 
-### Implemented bounded loop
-
-The v0.4 launch candidate implements the multi-call path as ordinary MCP tools,
-not sampling. `gather_evidence` opens a ten-minute local trace, rejects repeated
-or still-dependent follow-up queries, caps retrieval at four calls, returns only
-the newest full SourceBundle plus lightweight history, and validates the
-synthesis-ready step IDs selected by the host. This preserves the architecture
-above: the host plans and reasons in its normal turn, while Sibyl enforces the
-retrieval and evidence-state boundaries.
-
-## 5. What you can and cannot test from a dev box
-
-**Can test without any Claude client:**
-- That `check_client_capability(sampling)` correctly returns False and cleanly falls back to litellm — use the **MCP Inspector** or a client that declares no sampling; confirm no hang/crash.
-- The full sampling code path *end-to-end* against a **supporting client**. **VS Code / Copilot is the only proving ground backed by a first-party doc**; MCPJam, `fast-agent`, and `mcp-agent` are *suggested but unverified* — confirm each actually declares the sampling capability before relying on it. This proves your `create_message` wiring, prompt→`SamplingMessage` conversion, error handling, and timeout logic, and lets you **measure how many approval prompts a real run generates** and whether client rate limiting kicks in.
-- The retrieval-provider design fully: structured tools + artifacts are just normal MCP tools; testable in Inspector and in any client including real Claude Code.
-- Whether your **pinned** `mcp` SDK version already emits `@deprecated` warnings — check the installed version rather than assuming (the decorator is on `main`, not confirmed for releases).
-
-**Cannot test from a dev box:**
-- That sampling routes to **Claude specifically** inside Claude Desktop / Code — those clients don't implement the client side (Code verified, Desktop inferred), so there is nothing to hit. You cannot validate the original architecture's premise anywhere, because the premise is false.
-- Real quota accounting / rate-limit behavior against a Claude Max subscription — no such path exists to measure.
-- Whether/when #1785 ships — that is a monitoring task, not a test. Gate any future work on the apify matrix flipping Claude to ✅.
-
-The decisive fact — "keyless Claude reasoning via sampling inside Claude hosts" — is not something a dev box can make true; it is blocked on Anthropic shipping a feature that is simultaneously unimplemented in their clients and on a deprecation track in the next spec revision. Build for the world that exists.
+**Tests are evidence, not a guarantee.** Unit tests and real stdio smoke tests
+cover runtime and transport contracts. Offline retrieval fixtures prevent known
+regressions. Dependency audits check known advisories in resolved installations.
+Live accuracy claims still require a new dated live evaluation.

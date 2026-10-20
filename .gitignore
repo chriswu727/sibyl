@@ -8,6 +8,8 @@ build/
 .venv/
 venv/
 .env
+.env.*
+!.env.example
 *.yaml
 !sibyl.yaml.example
 reports/
@@ -21,6 +23,7 @@ reports/
 !SECURITY.md
 !llms-install.md
 !docs/*.md
+!.github/dependabot.yml
 
 # eval cache
 evals/cache/
