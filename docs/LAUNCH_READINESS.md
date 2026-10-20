@@ -2,6 +2,10 @@
 
 Last reviewed: 2026-07-21
 
+Compatibility update (2026-10-20): current development requires Python 3.11+
+and CI targets 3.11, 3.12, and 3.13. The dated evidence below describes the
+historical launch candidate and is not a fresh quality evaluation.
+
 ## Decision
 
 Sibyl is ready to be shown as a public beta. It is not ready for a broad production launch or a v0.4.0 release.
@@ -87,7 +91,7 @@ Do not publish v0.4.0, update the official MCP Registry, or submit broad directo
 1. A new dated 66-case, three-repeat live run passes every committed threshold without changing the thresholds after seeing the result.
 2. The optional report path completes a bounded evaluation with a declared model, configuration, cost, rubric, and saved results. Running this gate requires explicit approval because it consumes model quota or API spend.
 3. The release wheel passes the clean default and report-extra installation smoke tests.
-4. GitHub CI passes on Python 3.10, 3.11, and 3.12.
+4. GitHub CI passes on the current Python 3.11, 3.12, and 3.13 matrix.
 5. README, PyPI metadata, Registry metadata, and the product page describe the same capabilities, maturity, install command, and limitations.
 6. At least three external beta users install Sibyl without maintainer intervention, complete a representative research task, and report whether the evidence state and citations were understandable.
 

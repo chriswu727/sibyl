@@ -2,6 +2,15 @@
 
 ## 0.4.0 — Unreleased
 
+### Runtime compatibility
+
+- Raised the minimum Python version to 3.11 and test/audit coverage to 3.11–3.13.
+- Required Pillow 13.0.0 or newer in report, finance, and all extras to exclude
+  known-vulnerable older releases; the core installation remains Pillow-free.
+- Security matrix jobs now finish independently so one failure does not cancel
+  the remaining audits. Python 3.10 users must recreate their environment with
+  a supported interpreter before upgrading.
+
 ### Evidence-led host research
 
 - Made multi-round retrieval explicit: reviews can propose focused follow-up queries,

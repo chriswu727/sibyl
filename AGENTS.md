@@ -5,6 +5,9 @@ investigations into reports with inspectable evidence and explicit limitations.
 
 ## Installation
 
+Use Python 3.11 or newer. Report/finance extras require Pillow 13.0.0 or newer;
+do not restore Python 3.10 compatibility by weakening the security floor.
+
 The current workflow is on unreleased `main`; PyPI 0.3.0 predates these APIs.
 Use the source-checkout installation in README.md. The core installation needs
 no search or model key. Install `.[report]` for autonomous model-backed research

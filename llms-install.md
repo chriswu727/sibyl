@@ -7,7 +7,7 @@ required. Configured-model autonomous research and PDF export are optional.
 
 ## Requirements
 
-- Python 3.10 or newer
+- Python 3.11 or newer
 - Git and a local virtual environment
 
 This guide targets unreleased `main`. PyPI 0.3.0 predates the current evidence
@@ -45,7 +45,7 @@ Verify the source installation:
 The default output should identify the `keyless` profile and list
 `gather_evidence`, `gather_bundle`, `gather_sources`, `quick_search`, and
 `read_url`, `start_research`, `get_research`, `continue_research`,
-`complete_research`, `cancel_research`, and `save_report`.
+`assess_research`, `complete_research`, `cancel_research`, and `save_report`.
 
 ## Optional production search
 

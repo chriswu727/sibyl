@@ -58,7 +58,7 @@ configuration and billing; it does not inherit the host's subscription.
 
 ## Quick start
 
-Requires Python 3.10+. **The current evidence API and runtime/security upgrade
+Requires Python 3.11+. **The current evidence API and runtime/security upgrade
 are on `main`, pending release. PyPI 0.3.0 predates these interfaces.**
 Use the source checkout for the workflow documented here:
 

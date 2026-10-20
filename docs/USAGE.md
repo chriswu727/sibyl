@@ -55,7 +55,7 @@ python -m venv .venv
 python -m pip install -e .
 ```
 
-Sibyl requires Python 3.10 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
+Sibyl requires Python 3.11 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
 
 ```bash
 python -m pip install -e '.[report]'   # experimental LLM report + PDF
@@ -559,7 +559,7 @@ Do not commit real API keys. The keyless retrieval tools remain available when n
 
 ## Evaluation and reproducibility
 
-The default CI suite is network-free and runs on Python 3.10, 3.11, and 3.12. It includes unit tests, fixed retrieval-ranking cases, full retrieval-pipeline fixtures, SourceBundle contract checks, and a source-quality control baseline.
+The functional CI suite is network-free and runs on Python 3.11, 3.12, and 3.13. It includes unit tests, fixed retrieval-ranking cases, full retrieval-pipeline fixtures, SourceBundle contract checks, and a source-quality control baseline. Dependency security audits separately query OSV.
 
 ```bash
 python -m unittest discover tests -v
