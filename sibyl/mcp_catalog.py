@@ -13,6 +13,7 @@ from mcp.server.fastmcp.exceptions import ToolError
 from .async_cache import CapacityError
 from .runtime import SibylRuntime, current_runtime, get_runtime
 from .research_state import ResearchBudgetExceeded
+from .research_errors import ResearchRequestError
 
 
 def _validate_payload(values):
@@ -50,7 +51,7 @@ class ToolCatalog:
                     return await get_runtime().execute(
                         function.__name__, lambda: function(*args, **kwargs)
                     )
-                except (CapacityError, ResearchBudgetExceeded) as exc:
+                except (CapacityError, ResearchBudgetExceeded, ResearchRequestError) as exc:
                     raise ToolError(str(exc)) from None
                 except ValueError:
                     raise ToolError(

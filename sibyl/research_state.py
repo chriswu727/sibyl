@@ -8,6 +8,7 @@ from .dedup import canonical_url
 from .evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, SourceBundle
 from .report_models import Source
 from .scraper import WebPage
+from .source_policy import source_kind, source_priority
 
 
 class ResearchBudgetExceeded(RuntimeError):
@@ -27,11 +28,15 @@ class ResearchNotebook:
     max_output_tokens: int = 60000
     synthesis_limit: int = 12
     reflection_rounds: int = 0
+    source_policy: str = "primary"
+    preferred_domains: list[str] = field(default_factory=list)
+    reviews: dict = field(default_factory=dict)
+    require_review: bool = False
 
     def begin_search(self, query: str) -> None:
         if len(self.attempts) >= self.max_steps:
             raise ResearchBudgetExceeded("Research retrieval budget exhausted.")
-        self.attempts.append({"query": query, "status": "running"})
+        self.attempts.append({"query": query, "status": "running", "round": len(self.attempts) + 1})
 
     def finish_search(self, query: str, bundle: SourceBundle | None) -> None:
         attempt = next(
@@ -39,6 +44,11 @@ class ResearchNotebook:
             if item["query"] == query and item["status"] == "running"
         )
         attempt["status"] = bundle.status if bundle else "failed"
+        attempt["substantive_sources"] = sum(
+            s.content_origin not in {"search_snippet", "crossref_api"} and bool(s.evidence)
+            for s in bundle.sources
+        ) if bundle else 0
+        attempt["bundle_id"] = bundle.bundle_id if bundle else ""
         if bundle is not None:
             self.bundles.append(bundle)
 
@@ -53,26 +63,38 @@ class ResearchNotebook:
         # Interleave query results, newest first: gap-filling sources must not be
         # crowded out by an already-full first search batch.
         groups = [
-            [source for source in bundle.sources
-             if source.content_origin != "search_snippet" and source.evidence]
+            sorted([source for source in bundle.sources
+                    if source.content_origin != "search_snippet" and source.evidence],
+                   key=lambda source: source_priority(source, self.source_policy, self.preferred_domains),
+                   reverse=True)
             for bundle in reversed(self.bundles)
             if bundle.status in {"ok", "insufficient_evidence"}
         ]
         selected, urls, clusters = [], set(), set()
-        for position in range(max((len(group) for group in groups), default=0)):
-            for group in groups:
-                if position >= len(group):
-                    continue
-                source = group[position]
-                url = canonical_url(source.url)
-                cluster = source.content_cluster_id or source.content_hash
-                if url in urls or cluster in clusters:
-                    continue
+        pinned = {ref for review in self.reviews.values()
+                  for ref in [*review["supporting_passage_ids"], *review["challenging_passage_ids"]]}
+
+        def add(source):
+            url = canonical_url(source.url)
+            cluster = source.content_cluster_id or source.content_hash or url
+            if url not in urls and cluster not in clusters and len(selected) < self.synthesis_limit:
                 selected.append(source)
                 urls.add(url)
                 clusters.add(cluster)
-                if len(selected) >= self.synthesis_limit:
-                    return selected
+
+        for group in groups:
+            for source in group:
+                if any(p.citation_id in pinned for p in source.evidence):
+                    add(source)
+        # Background material must not win a round-robin slot ahead of primary leads.
+        for background in (False, True):
+            filtered = [[s for s in group if (source_kind(s, self.preferred_domains) in {
+                "encyclopedia", "community", "scholarly_metadata"
+            }) == background] for group in groups]
+            for position in range(max((len(g) for g in filtered), default=0)):
+                for group in filtered:
+                    if position < len(group):
+                        add(group[position])
         return selected
 
     def pages(self) -> list[WebPage]:
@@ -99,12 +121,19 @@ class ResearchNotebook:
             passage_ids=[passage.citation_id for passage in source.evidence],
             retrieved_at=source.retrieved_at, published_at=source.published_at,
             content_origin=source.content_origin,
+            content_hash=source.content_hash,
+            source_kind=source_kind(source, self.preferred_domains),
+            evidence=[asdict(passage) for passage in source.evidence],
         ) for source in self.selected_sources()]
 
     def limitations(self) -> list[str]:
+        from .research_review import question_attempts, questions, research_plan
+
         notes = ["Public-web research is bounded; inaccessible or unindexed material may be missing."]
-        for question in self.sub_questions:
-            if not any(bundle.query == question for bundle in self.bundles):
+        for question_id, question in questions(self).items():
+            investigated = any(a["status"] in {"ok", "insufficient_evidence"}
+                               for a in question_attempts(self, question_id, question))
+            if self.sub_questions and not investigated and not any(bundle.query == question for bundle in self.bundles):
                 notes.append(f"Not separately searched: {question}")
         for bundle in self.bundles:
             if bundle.diagnostics.evidence_sufficiency != "sufficient":
@@ -113,6 +142,12 @@ class ResearchNotebook:
             notes.append("Retrieval step budget reached; additional gaps may remain.")
         if any(item["status"] in {"failed", "running"} for item in self.attempts):
             notes.append("Some retrieval attempts failed or were interrupted.")
+        if self.require_review:
+            for item in research_plan(self)["questions"]:
+                notes.extend(f"{item['question_id']}: {gap}" for gap in item["gaps"])
+        if any(source_kind(s, self.preferred_domains) == "preprint" for s in self.selected_sources()):
+            notes.append("Preprints are not assumed peer reviewed; inspect publication and replication status.")
+        notes.append("Source-type and preferred-domain labels are routing hints, not verified authority or truth.")
         return list(dict.fromkeys(notes))
 
     def to_dict(self) -> dict:

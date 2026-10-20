@@ -374,6 +374,7 @@ async def gather_source_bundle(
     search_engine: str = "all",
     extractor: str = "bs4",
     jina_fallback: bool = False,
+    include_academic: bool | None = None,
 ) -> SourceBundle:
     started_at = time.monotonic()
     requested_ranker = str(ranker or "").strip().lower()
@@ -406,6 +407,8 @@ async def gather_source_bundle(
     effective_chars_per_source = max(500, min(10000, requested_chars_per_source))
     url_attempt_limit = max(effective_max_sources + 2, 12)
     clean_query = str(query or "").strip()
+    site_hosts = [urlsplit("https://" + value).hostname for value in
+                  re.findall(r"(?<![-\w])site:([^\s]+)", clean_query, re.IGNORECASE)]
     search_queries = search_query_variants(clean_query)
     multi_step_query = query_requires_decomposition(clean_query)
     query_complexity: QueryComplexity = (
@@ -472,7 +475,7 @@ async def gather_source_bundle(
     candidates: List[WebPage] = []
     try:
         search_batches = []
-        include_academic = bool(_ACADEMIC_QUERY_RE.search(clean_query))
+        include_academic = bool(_ACADEMIC_QUERY_RE.search(clean_query)) if include_academic is None else include_academic
         for search_query in search_queries:
             search_batches.append(
                 await search_web(
@@ -487,7 +490,7 @@ async def gather_source_bundle(
             *[
                 search_wikipedia(entity_query, 2, client=client)
                 for entity_query in _entity_lookup_queries(clean_query)
-                if entity_query.casefold()
+                if not site_hosts and entity_query.casefold()
                 not in {query.casefold() for query in search_queries}
             ]
         )
@@ -495,6 +498,10 @@ async def gather_source_bundle(
         seen_results = set()
         for batch in search_batches:
             for result in batch:
+                if site_hosts:
+                    host = (urlsplit(result.url).hostname or "").lower()
+                    if not any(domain and (host == domain or host.endswith("." + domain)) for domain in site_hosts):
+                        continue
                 result_key = canonical_url(result.url)
                 if result_key not in seen_results:
                     seen_results.add(result_key)
@@ -585,7 +592,7 @@ async def gather_source_bundle(
             )
             and urlsplit(page.url).netloc
         }
-        if len(relevant_domains) == 1 and not multi_step_query:
+        if len(relevant_domains) == 1 and not multi_step_query and not site_hosts:
             excluded_domain = next(iter(relevant_domains))
             refinement_query = f"{search_queries[-1]} -site:{excluded_domain}"
             search_queries.append(refinement_query)
@@ -666,7 +673,7 @@ async def gather_source_bundle(
                         snippet_fallbacks += 1
                 good = dedup_pages(good)
         substantive = [page for page in good if len(page.text) > 200]
-        if len(substantive) < 3:
+        if len(substantive) < 3 and not site_hosts:
             wiki_pages = await wikipedia_lookup(
                 search_queries[-1], client=client, max_pages=2
             )

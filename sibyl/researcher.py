@@ -137,6 +137,7 @@ class Researcher:
                         search_engine=self.config.search_engine,
                         extractor=self.config.extractor,
                         jina_fallback=self.config.jina_fallback,
+                        include_academic=True if notebook.source_policy == "academic" else None,
                     )
                 except Exception:
                     notebook.finish_search(search_query, None)
@@ -208,6 +209,8 @@ class Researcher:
             report.limitations.append("Semantic claim verification was not performed.")
         report.research_stats = {
             "retrieval_attempts": len(notebook.attempts),
+            "steps": notebook.attempts,
+            "reflection_rounds": notebook.reflection_rounds,
             "model_calls": notebook.model_calls,
             "reserved_output_tokens": notebook.reserved_output_tokens,
         }

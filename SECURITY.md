@@ -97,8 +97,8 @@ must bound their own concurrency and whole-operation deadlines.
 
 ## Dependency maintenance
 
-CI audits clean core and report/finance/extract installations on Python 3.10,
-3.11, and 3.12 against OSV, on pull requests and weekly. Audit failures block a
+CI audits clean core and report/finance/extract installations on Python 3.11,
+3.12, and 3.13 against OSV, on pull requests and weekly. Audit failures block a
 green workflow. Dependabot tracks
 Python requirements and GitHub Actions. Release validation audits its environment.
 Actions are commit-pinned and publication uses GitHub OIDC rather than a stored
@@ -107,6 +107,10 @@ using `[rerank]` should audit that installed environment separately.
 
 A clean audit means no known matching advisory was found at that time—not that
 every dependency or execution path has been proven secure.
+
+Python 3.11 is the minimum supported runtime. Report and finance extras require
+Pillow 13.0.0 or newer to exclude known-vulnerable older versions; Pillow 13 no
+longer supports Python 3.10. The core installation does not require Pillow.
 
 When upgrading an existing source-checkout environment, update transitive
 dependencies too. Run from the checked-out repository:

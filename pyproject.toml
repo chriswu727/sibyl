@@ -3,7 +3,7 @@ name = "sibyl-research"
 dynamic = ["version"]
 description = "Deep-research MCP with persistent investigations, traceable evidence, and cited reports"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Yichen Wu", email = "yichenwujob@gmail.com"}]
 urls = {Homepage = "https://github.com/chriswu727/sibyl", Repository = "https://github.com/chriswu727/sibyl"}
@@ -32,8 +32,10 @@ report = [
     # register v4-flash; ceiling protects the provider-specific thinking contract.
     "litellm>=1.96.2,<2.0.0",
     "fpdf2>=2.7.0",
+    "pillow>=13.0.0",
 ]
 finance = [
+    "pillow>=13.0.0",
     "yfinance>=0.2.0",
     "matplotlib>=3.8.0",
     "pandas>=2.0.0",
@@ -42,6 +44,7 @@ finance = [
 extract = ["trafilatura>=2.0,<3.0"]
 rerank = ["flashrank>=0.2.10,<0.3"]
 all = [
+    "pillow>=13.0.0",
     "litellm>=1.96.2,<2.0.0",
     "fpdf2>=2.7.0",
     "yfinance>=0.2.0",
@@ -64,7 +67,7 @@ packages = ["sibyl"]
 path = "sibyl/__init__.py"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E9", "F63", "F7", "F82"]

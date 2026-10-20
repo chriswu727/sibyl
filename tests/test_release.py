@@ -1,10 +1,28 @@
 """Release guard tests. No network."""
 import json
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
 from scripts.check_release import validate_release
+
+
+class TestRuntimeCompatibility(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.project = tomllib.loads((Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())["project"]
+
+    def test_minimum_python_excludes_unsupported_runtime(self):
+        self.assertEqual(self.project["requires-python"], ">=3.11")
+
+    def test_image_using_extras_enforce_pillow_security_floor(self):
+        for extra in ("report", "finance", "all"):
+            with self.subTest(extra=extra):
+                self.assertIn("pillow>=13.0.0", self.project["optional-dependencies"][extra])
+
+    def test_core_does_not_pull_in_pillow(self):
+        self.assertFalse(any(item.lower().startswith("pillow") for item in self.project["dependencies"]))
 
 
 class TestReleaseValidation(unittest.TestCase):

@@ -19,6 +19,9 @@ class Source:
     retrieved_at: str = ""
     published_at: str | None = None
     content_origin: str = ""
+    content_hash: str = ""
+    source_kind: str = ""
+    evidence: List[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -55,6 +58,7 @@ class ResearchReport:
     limitations: List[str] = field(default_factory=list)
     verification_scope: str = "not_performed"
     research_stats: dict = field(default_factory=dict)
+    research_plan: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         data = asdict(self)

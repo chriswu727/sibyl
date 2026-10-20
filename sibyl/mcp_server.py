@@ -14,6 +14,7 @@ from .config import Config
 from .mcp_tools import _format_report as _format_report
 from .mcp_tools import (
     analyze,
+    assess_research,
     chart,
     cancel_research,
     complete_research,
@@ -40,6 +41,7 @@ __all__ = [
     "main",
     "mcp",
     "analyze",
+    "assess_research",
     "chart",
     "cancel_research",
     "complete_research",

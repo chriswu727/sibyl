@@ -2,6 +2,35 @@
 
 ## 0.4.0 — Unreleased
 
+### Runtime compatibility
+
+- Raised the minimum Python version to 3.11 and test/audit coverage to 3.11–3.13.
+- Required Pillow 13.0.0 or newer in report, finance, and all extras to exclude
+  known-vulnerable older releases; the core installation remains Pillow-free.
+- Security matrix jobs now finish independently so one failure does not cancel
+  the remaining audits. Python 3.10 users must recreate their environment with
+  a supported interpreter before upgrading.
+
+### Evidence-led host research
+
+- Made multi-round retrieval explicit: reviews can propose focused follow-up queries,
+  attempts retain prior gaps/revisions and host rationale, and completed searches
+  are omitted from follow-up suggestions without resetting the retrieval budget.
+- Added per-question support/challenge reviews, counterevidence investigation gates,
+  stale-review detection, and explicit incomplete-report delivery.
+- Added budgeted source reads and host-declared citation lineage inside persistent jobs.
+- Prioritized primary/scholarly source candidates over background material; pinned
+  reviewed evidence and exposed excluded passages for inspection.
+- Added academic discovery routing and operator-selected primary domains without
+  treating source types as proof of authority, truth, or peer review.
+- Preserved short numeric cells and table boundaries during HTML extraction; thin
+  direct reads no longer look like successful evidence extraction.
+- JSON exports now retain selected passage text/hashes/offsets and the review ledger;
+  Markdown references are compact. Keyless/full catalogs contain 12/20 tools.
+- Existing checkpoints remain readable. New host jobs require review unless
+  `allow_incomplete=true` is explicitly supplied. Controlled model-quality A/B testing
+  and full PDF-paper ingestion remain outstanding.
+
 ### Persistent research workflows
 
 - Added host-assisted and explicitly configured-model research jobs sharing the

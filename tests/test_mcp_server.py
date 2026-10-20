@@ -196,7 +196,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         structured_tool = next(tool for tool in tools if tool.name == "gather_bundle")
         loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
-        self.assertEqual(len(tools), 19)
+        self.assertEqual(len(tools), 20)
         self.assertTrue({"start_research", "get_research", "continue_research",
                          "complete_research", "cancel_research"} <= names)
         self.assertIn("gather_evidence", names)

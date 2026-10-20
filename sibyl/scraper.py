@@ -135,7 +135,7 @@ def _clean_lines(text: str, max_chars: int) -> str:
     lines = []
     for line in text.splitlines():
         line = line.strip()
-        if line and len(line) > 5:  # Skip very short lines (likely UI elements)
+        if line:
             lines.append(line)
     return "\n".join(lines)[:max_chars]
 
@@ -143,15 +143,29 @@ def _clean_lines(text: str, max_chars: int) -> str:
 def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
     """Legacy BeautifulSoup body extraction (noise-stripped soup)."""
     main = (
-        soup.find("article")
+        soup.select_one(".model-card")
+        or soup.select_one(".markdown-body")
         or soup.find("main")
         or soup.find("div", {"role": "main"})
+        or soup.find("article")
         or soup.find("div", class_=lambda c: c and any(
             x in (c if isinstance(c, str) else " ".join(c))
             for x in ["content", "article", "post", "entry", "body"]
         ))
         or soup.find("body")
     )
+    if main:
+        for table in reversed(list(main.find_all("table"))):
+            rows = []
+            for row in table.find_all("tr"):
+                cells = []
+                for cell in row.find_all(["td", "th"], recursive=False):
+                    value = cell.get_text(" ", strip=True).replace("|", "\\|")
+                    spans = [f"{key}={cell[key]}" for key in ("rowspan", "colspan") if cell.get(key)]
+                    cells.append(value + (" [" + ", ".join(spans) + "]" if spans else ""))
+                if cells:
+                    rows.append("| " + " | ".join(cells) + " |")
+            table.replace_with("\n" + "\n".join(rows) + "\n")
     text = main.get_text(separator="\n", strip=True) if main else ""
     return _clean_lines(text, max_chars)
 
@@ -291,8 +305,13 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
     soup = BeautifulSoup(html, "lxml")
     published_at, published_at_method = _extract_published_at(soup)
     for tag in soup(["script", "style", "nav", "footer", "header", "aside",
-                      "noscript", "iframe", "form", "button"]):
+                      "noscript", "iframe", "form"]):
         tag.decompose()
+    for button in soup.find_all("button"):
+        if button.find_parent("table"):
+            button.unwrap()
+        else:
+            button.decompose()
 
     title = ""
     if soup.title and soup.title.string:

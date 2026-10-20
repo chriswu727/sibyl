@@ -15,6 +15,7 @@ EXPECTED_KEYLESS_TOOLS = {
     "get_research",
     "continue_research",
     "complete_research",
+    "assess_research",
     "cancel_research",
     "save_report",
     "gather_evidence",
@@ -83,7 +84,7 @@ def main() -> int:
     except Exception as exc:
         print(f"MCP stdio smoke check failed: {exc}", file=sys.stderr)
         return 1
-    print("MCP stdio smoke check passed with eleven keyless tools")
+    print("MCP stdio smoke check passed with twelve keyless tools")
     return 0
 
 

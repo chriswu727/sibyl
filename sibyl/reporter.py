@@ -31,6 +31,7 @@ def _report_to_markdown(report: ResearchReport) -> str:
     fv = report.finding_verifications or []
     if report.key_findings and not fv:
         lines.append("> Claim verification was not performed for this report.")
+        lines.append("")
     for i, finding in enumerate(report.key_findings, 1):
         v = fv[i - 1] if i - 1 < len(fv) else None
         tag = ""
@@ -51,6 +52,21 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append(report.predictions)
         lines.append("")
 
+    if report.research_plan:
+        lines.extend(["## Evidence Review", "",
+                      "Host-declared assessments; passage links do not establish semantic truth.", ""])
+        for item in report.research_plan.get("questions", []):
+            lines.extend([f"### {item['question_id']}: {item['question']}", ""])
+            review = item.get("review")
+            if review:
+                lines.extend([f"Status: {review['status']}", "", review["conclusion"], "",
+                              "Counterevidence investigation: " + review["counterevidence_note"], ""])
+                for key, label in (("supporting_passage_ids", "Supporting"), ("challenging_passage_ids", "Challenging")):
+                    lines.append(f"{label} passages: " + (", ".join(review[key]) or "none recorded"))
+                lines.append("")
+            lines.extend(f"- Gap: {gap}" for gap in item["gaps"])
+            lines.append("")
+
     lines.extend(["## Research Limitations", "", f"Verification scope: {report.verification_scope}", ""])
     lines.extend(f"- {note}" for note in report.limitations)
     lines.append("")
@@ -62,9 +78,12 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append(f"   {display_url(src.url)}")
         if src.retrieved_at:
             lines.append(f"   Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}")
-        evidence = src.supporting_snippet or src.snippet
-        if evidence:
-            lines.append(f"   > {evidence}")
+        if src.source_kind:
+            lines.append(f"   Source-type hint: {src.source_kind}")
+        if src.passage_ids:
+            lines.append(f"   Passages: {', '.join(src.passage_ids)}")
+        if src.content_hash:
+            lines.append(f"   Content SHA-256: {src.content_hash}")
     lines.append("")
 
     if report.search_queries:
