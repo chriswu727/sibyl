@@ -50,14 +50,15 @@ configuration and billing; it does not inherit the host's subscription.
 - **Persistent research:** task IDs, progress events, explicit continuation,
   cancellation, and local SQLite checkpoints; unfinished drafts may be regenerated.
 - **Portable reports:** Markdown and JSON without an LLM dependency, optional PDF,
-  source provenance, and explicit verification scope.
+  source provenance, explicit verification scope, and separate cited-source and
+  uncited-background sections without changing citation IDs.
 - **Paper reading:** optional text-PDF extraction with page markers, bounded
   child processes, and explicit truncation or unreadable-page warnings.
 - **Local observability:** authenticated, read-only health, readiness, status,
   and Prometheus endpoints; no research text or credentials in metrics.
 
 > **Public beta.** Engineering hardening does not imply production-grade retrieval
-> accuracy. The historical live evaluation still misses readiness and precision
+> accuracy. The current live evaluation still misses readiness and stability
 > gates. See [quality and limitations](#quality-and-limitations).
 
 ### Available now
@@ -68,16 +69,24 @@ configuration and billing; it does not inherit the host's subscription.
 | Published package | PyPI 0.3.0; does not contain the workflow documented here |
 | Default MCP profile | 12 keyless tools; 20 tools in the configured full profile |
 | Engineering evidence | Python 3.11–3.13 CI, real stdio/monitoring smoke tests, dependency audits |
-| Research-quality evidence | Historical live gates remain unmet; no current same-model superiority claim |
+| Research-quality evidence | 2026-10-21 live run misses readiness/stability gates; no same-model superiority claim |
 
 The [release readiness record](docs/LAUNCH_READINESS.md) separates current
 engineering evidence from dated experiments. The [roadmap](docs/QUALITY_BUILD_PLAN.md)
 tracks remaining work; it is not a list of already available features.
 
-See a [complete, reproducible research example](docs/examples/sqlite-wal/README.md):
-two rounds of official-source evidence, a documented gap, counterevidence,
-citation review, and an exported report. The example is an offline replay with
-host-authored conclusions, not a live accuracy benchmark.
+### See the investigation
+
+[![A two-round investigation: read WAL documentation, record a gap, investigate counterevidence, and export a narrower conclusion. Offline replay with host-authored reasoning.](https://raw.githubusercontent.com/chriswu727/sibyl/main/assets/research-replay.svg)](docs/examples/sqlite-wal/README.md)
+
+**[Read the report](docs/examples/sqlite-wal/report.md)** ·
+[Inspect the source excerpts](docs/examples/sqlite-wal/sources.json) ·
+[Reproduce the MCP replay](docs/examples/sqlite-wal/README.md)
+
+The diagram summarizes a real, reproducible **offline** MCP replay—not an app
+screenshot or a live accuracy benchmark. The host authors the reasoning and
+conclusions. Sibyl records the gap, counterevidence read, citation targets,
+exports, and restartable state. Two official pages still represent one publisher.
 
 ## Quick start
 
@@ -269,13 +278,22 @@ alert examples, recovery, retention, and the precise readiness boundary.
 
 ## Quality and limitations
 
+The [2026-10-21 post-fix keyless run](evals/results/live-retrieval-keyless-budget-fix-2026-10-21.json)
+tested 66 questions three times. It reached 83.3% answer coverage and 97.3%
+ready-state answer precision, but **failed** answerable readiness (66.0% vs 75%)
+and repeat stability (68.2% vs 90%). These are evidence-retrieval metrics based
+on gold/alias text matching, not semantic answer or report accuracy.
+
 The archived July 2026 evaluation is evidence about those runs, not a fresh claim
 about today's search services. The three-repeat keyless run achieved 85.2% answer
 coverage. A separate 105-request Tavily pilot achieved 70.4% answerable readiness
 and 92.7% ready-state precision, below the 75% and 95% gates.
 
-This upgrade adds a research workflow; it does **not** establish a new live
-report-quality result or prove superiority over a strong model with search.
+A [live host self-evaluation](docs/examples/idempotency-live/README.md) on
+2026-10-21 returned an explicit partial report: both search rounds failed to
+find useful primary evidence, while host-supplied official URLs could be read.
+It tests a bounded workflow, not autonomous discovery or report-quality superiority.
+This upgrade does **not** prove superiority over a strong model with search.
 Keyless providers can throttle, passages can be wrong, and sufficiency checks
 cannot prove a claim true. Model checks can be wrong too; unverified blocks stay
 marked inline. PDF reading does not recover scanned text or guarantee correct

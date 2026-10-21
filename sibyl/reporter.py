@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .privacy import display_url
 from .report_models import ResearchReport
+from .report_references import reference_groups
 from .storage import ArtifactStore
 
 
@@ -114,21 +115,22 @@ def _report_to_markdown(report: ResearchReport) -> str:
     lines.extend(f"- {note}" for note in report.limitations)
     lines.append("")
 
-    lines.append("## References")
-    lines.append("")
-    for i, src in enumerate(report.sources, 1):
-        lines.append(f"{i}. **{src.title}**  ")
-        lines.append(f"   {display_url(src.url)}")
-        if src.retrieved_at:
-            lines.append(
-                f"   Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}"
-            )
-        if src.source_kind:
-            lines.append(f"   Source-type hint: {src.source_kind}")
-        if src.passage_ids:
-            lines.append(f"   Passages: {', '.join(src.passage_ids)}")
-        if src.content_hash:
-            lines.append(f"   Content SHA-256: {src.content_hash}")
+    for title, note, sources in reference_groups(report):
+        lines.extend([f"## {title} ({len(sources)})", "", note, ""])
+        for i, src in sources:
+            lines.append(f"- **[Source {i}] {src.title}**  ")
+            lines.append(f"  {display_url(src.url)}")
+            if src.retrieved_at:
+                lines.append(
+                    f"  Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}"
+                )
+            if src.source_kind:
+                lines.append(f"  Source-type hint: {src.source_kind}")
+            if src.passage_ids:
+                lines.append(f"  Passages: {', '.join(src.passage_ids)}")
+            if src.content_hash:
+                lines.append(f"  Content SHA-256: {src.content_hash}")
+        lines.append("")
     lines.append("")
 
     if report.search_queries:
@@ -267,7 +269,8 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     toc_items.append(f"{len(toc_items) + 1}. Research Limitations")
     if report.market_data_summary or report.charts:
         toc_items.append(f"{len(toc_items) + 1}. Market Data")
-    toc_items.append(f"{len(toc_items) + 1}. Sources ({len(report.sources)})")
+    for title, _, sources in reference_groups(report):
+        toc_items.append(f"{len(toc_items) + 1}. {title} ({len(sources)})")
     for item in toc_items:
         pdf.set_font(font_name, "", 10)
         try:
@@ -358,11 +361,12 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         separator()
 
     # Sources
-    heading(f"Sources ({len(report.sources)})", 14)
-    for i, src in enumerate(report.sources, 1):
+    def reference(i, src):
         try:
             pdf.set_font(font_name, "B", 9)
-            pdf.multi_cell(0, 5, f"{i}. {src.title}", new_x="LMARGIN", new_y="NEXT")
+            pdf.multi_cell(
+                0, 5, f"[Source {i}] {src.title}", new_x="LMARGIN", new_y="NEXT"
+            )
         except Exception:
             pass
         try:
@@ -383,6 +387,12 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
             except Exception:
                 pass
         pdf.ln(3)
+
+    for title, note, sources in reference_groups(report):
+        heading(f"{title} ({len(sources)})", 14)
+        body(note, 9)
+        for i, src in sources:
+            reference(i, src)
 
     # Save
     return str(ArtifactStore(output_dir).write(bytes(pdf.output()), "report", ".pdf"))

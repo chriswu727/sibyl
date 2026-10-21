@@ -9,6 +9,9 @@ from urllib.parse import urlsplit
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
 _SITE_RE = re.compile(r"""(?<![-\w])site:["']?([^\s"'()\[\]{},;]+)""", re.IGNORECASE)
 _QUOTED_RE = re.compile(r"""["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)""")
+_SEARCH_OPERATOR_RE = re.compile(
+    r"(?<!\w)-?(?:site|filetype|intitle|inurl):|(?:^|\s)-\w", re.IGNORECASE
+)
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
 _RELATIVE_CHAIN_RE = re.compile(
     r"\b(?:company|country|institution|organization|person)\s+"
@@ -82,6 +85,8 @@ def search_query_variants(query: str) -> List[str]:
     clean = " ".join(str(query or "").split())
     if not clean:
         return []
+    if _SEARCH_OPERATOR_RE.search(clean):
+        return [clean]
 
     terms = _TERM_RE.findall(clean)
     if not terms or not any(term.casefold() in _QUESTION_WORDS for term in terms):

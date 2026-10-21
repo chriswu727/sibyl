@@ -2,6 +2,34 @@
 
 Sibyl publishes `sibyl-research` to PyPI and `io.github.chriswu727/sibyl` to the official MCP Registry from `.github/workflows/release.yml` when a GitHub Release is published. Authentication uses GitHub OIDC; the repository does not store a PyPI or MCP Registry token.
 
+## Publication channels
+
+The release path follows the same three-stage distribution flow as Argus:
+GitHub Release, PyPI, then the official MCP Registry. Directory listings and
+the product page are separate surfaces, not additional package registries.
+
+| Channel | Sibyl destination | Update and verification |
+|---|---|---|
+| GitHub Releases | [Release history](https://github.com/chriswu727/sibyl/releases) | Publish the verified tag; confirm wheel and source archive assets |
+| PyPI | [`sibyl-research`](https://pypi.org/project/sibyl-research/) | Release workflow with Trusted Publishing; install the exact public version |
+| Official MCP Registry | `io.github.chriswu727/sibyl` | Workflow runs after PyPI; confirm the public manifest matches the release |
+| Glama directory | [Sibyl listing](https://glama.ai/mcp/servers/chriswu727/sibyl) | Check repository indexing, build status, README, and tool schema separately |
+| Product page | [yichenwu.dev/projects/sibyl](https://yichenwu.dev/projects/sibyl) | Update the website repository; verify the deployed version and examples |
+
+Channel inventory checked on 2026-10-21: GitHub and PyPI expose 0.3.0.
+The official Registry's exact-name latest endpoint returned HTTP 404; the
+next publish must be verified as a first visible registration, not assumed to
+be an update. Glama already lists Sibyl, but its publicly indexed descriptions
+and tool schema lag the current repository. Its listing is not evidence that
+the latest commit has built successfully. The product page describes an older
+source preview and needs to be reconciled with the release candidate.
+
+`glama.json` declares the repository maintainer for directory integration. It
+does not publish a package, refresh a listing on demand, or prove a successful
+build. If directory refresh requires account access or manual review, record
+that as pending rather than claiming all channels are synchronized. No npm,
+Docker Hub, or other package publication is configured by this workflow.
+
 ## One-time setup
 
 1. Create a GitHub environment named `pypi` and require manual approval for deployments.
@@ -17,12 +45,12 @@ The workflow filename and environment name are part of the OIDC identity. Renami
 ## Release checklist
 
 Prerequisite: every gate in [Launch readiness](LAUNCH_READINESS.md#release-gates)
-must be satisfied, including live/report-quality evaluation and external beta
-feedback. The current 0.4.0 development version is not cleared for release.
+must be satisfied, including live/report-quality evaluation. The current 0.4.0
+development version is not cleared for release.
 `server.json` is the next-version manifest, not a statement that PyPI/Registry
 already contains that version. `check_release.py` validates matching version strings.
 Publication also passes `--require-release-note`, rejecting an undated/Unreleased
-changelog. This does not enforce the human or live-quality gates.
+changelog. This does not enforce the research-quality gates.
 
 1. Update `sibyl.__version__`, `server.json`, and its package version together; date the matching `CHANGELOG.md` section and remove its Unreleased label only after the gates pass.
 2. Run the complete local verification:

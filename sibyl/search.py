@@ -31,6 +31,8 @@ class SearchResult:
 
 _HEADERS = {"User-Agent": "Sibyl/0.4 (+https://github.com/chriswu727/sibyl)"}
 _SEARCH_BATCH_TIMEOUT_SECONDS = 8.0
+_GENERAL_WEB_TIMEOUT_SECONDS = 7.0
+_TAVILY_TIMEOUT_SECONDS = 2.0
 _SEARCH_PROVIDERS = {"keyless", "tavily"}
 _logger = logging.getLogger(__name__)
 
@@ -321,24 +323,27 @@ async def _search_general_web(
     query: str,
     max_results: int = 10,
     client: Optional[httpx.AsyncClient] = None,
+    *,
+    timeout: float = _GENERAL_WEB_TIMEOUT_SECONDS,
 ) -> List[SearchResult]:
     """Search DuckDuckGo HTML, then fail over to Mojeek and Yahoo."""
-
-    async def search_with_failover():
+    providers = (search_duckduckgo, search_mojeek, search_yahoo)
+    deadline = asyncio.get_running_loop().time() + timeout
+    for index, provider in enumerate(providers):
+        remaining = deadline - asyncio.get_running_loop().time()
+        if remaining <= 0:
+            break
+        # Reserve time for every fallback, including provider pacing/queue waits.
+        attempt_timeout = remaining / (len(providers) - index)
         try:
-            results = await search_duckduckgo(query, max_results, client=client)
+            results = await asyncio.wait_for(
+                provider(query, max_results, client=client), timeout=attempt_timeout
+            )
         except Exception:
-            results = []
-        if not results:
-            results = await search_mojeek(query, max_results, client=client)
-        if not results:
-            results = await search_yahoo(query, max_results, client=client)
-        return results
-
-    try:
-        return await asyncio.wait_for(search_with_failover(), timeout=9.0)
-    except asyncio.TimeoutError:
-        return []
+            continue
+        if results:
+            return results
+    return []
 
 
 async def _search_configured_general_web(
@@ -350,18 +355,31 @@ async def _search_configured_general_web(
     if provider == "keyless":
         return await _search_general_web(query, max_results, client=client)
 
+    started = asyncio.get_running_loop().time()
     try:
-        results = await search_tavily(query, max_results, client=client)
+        results = await asyncio.wait_for(
+            search_tavily(query, max_results, client=client),
+            timeout=_TAVILY_TIMEOUT_SECONDS,
+        )
     except Exception as exc:
         _logger.warning(
             "Tavily search failed (%s); falling back to keyless search.",
             type(exc).__name__,
         )
-        return await _search_general_web(query, max_results, client=client)
+        results = []
+    else:
+        if not results:
+            _logger.warning(
+                "Tavily returned no results; falling back to keyless search."
+            )
     if results:
         return results
-    _logger.warning("Tavily returned no results; falling back to keyless search.")
-    return await _search_general_web(query, max_results, client=client)
+    remaining = _GENERAL_WEB_TIMEOUT_SECONDS - (
+        asyncio.get_running_loop().time() - started
+    )
+    return await _search_general_web(
+        query, max_results, client=client, timeout=max(0.0, remaining)
+    )
 
 
 # ── Google News (via RSS) ─────────────────────────────────────────
@@ -889,11 +907,13 @@ async def search_web(
             )
 
         tasks = [asyncio.create_task(coroutine) for coroutine in coroutines]
-        done, pending = await asyncio.wait(tasks, timeout=_SEARCH_BATCH_TIMEOUT_SECONDS)
-        for task in pending:
-            task.cancel()
-        if pending:
-            await asyncio.gather(*pending, return_exceptions=True)
+        try:
+            done, _ = await asyncio.wait(tasks, timeout=_SEARCH_BATCH_TIMEOUT_SECONDS)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
         results_lists = []
         for task in tasks:
             if task not in done or task.cancelled():

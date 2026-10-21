@@ -1,0 +1,5989 @@
+{
+  "generated_at": "2026-10-21T21:15:24.313326+00:00",
+  "sibyl_version": "0.4.0",
+  "metric_version": "2",
+  "configured_search_provider": "keyless",
+  "datasets": [
+    "evals/gold/simpleqa_real_30.jsonl",
+    "evals/gold/hard_24.jsonl",
+    "evals/gold/adversarial_12.jsonl"
+  ],
+  "repeats": 3,
+  "total_cases": 66,
+  "answerable_cases": 54,
+  "trap_cases": 12,
+  "answer_coverage": 0.833333,
+  "trap_safe_rate": 0.916667,
+  "stable_case_rate": 0.621212,
+  "status_ok_rate": 0.631313,
+  "answerable_ready_rate": 0.635802,
+  "ready_answer_precision": 0.971698,
+  "p50_latency_ms": 5505,
+  "p95_latency_ms": 10626,
+  "cases": [
+    {
+      "case_id": "real01",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4387,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "google_news",
+            "semantic_scholar",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7463,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 6146,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real02",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4688,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5592,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 7616,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real03",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 9091,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 9675,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 8345,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.857143,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real04",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 9433,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5534,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5386,
+          "error": "",
+          "search_results": 26,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real05",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 7157,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.866667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7248,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.866667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 3922,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real06",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 11347,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 15026,
+          "error": "",
+          "search_results": 29,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 14311,
+          "error": "",
+          "search_results": 28,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real07",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3692,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 6,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 4354,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 6,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 2831,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.538462,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "fragmented_query_support"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real08",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3025,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 2998,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 3108,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real09",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5206,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6844,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8630,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real10",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3704,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.947368,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 3740,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.947368,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 5751,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.947368,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real11",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4800,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.75,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 2091,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.5,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 2734,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.5,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real12",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 5212,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 5992,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 4507,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real13",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 11630,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 7204,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 11734,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real14",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5800,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.916667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4474,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3369,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real15",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4419,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 6,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3916,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.6,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3187,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.6,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real16",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5849,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 9170,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7499,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real17",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4042,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 6,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3678,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 2,
+          "latency_ms": 5408,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.333333,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real18",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 5871,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 5260,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3169,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real19",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 10626,
+          "error": "",
+          "search_results": 35,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 4069,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4557,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real20",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5436,
+          "error": "",
+          "search_results": 20,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 3724,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 5246,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 13,
+          "pages_scraped": 13,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real21",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4668,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.769231,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6173,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5505,
+          "error": "",
+          "search_results": 20,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real22",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 11719,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 5939,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 6434,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real23",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3279,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "missing_historical_role_tenure"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 4835,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "missing_historical_role_tenure"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 6113,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "missing_historical_role_tenure"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real24",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3355,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "duckduckgo",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.615385,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 5591,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.615385,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 9212,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.615385,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real25",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5417,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 6781,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 5063,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real26",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4588,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 6095,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.5,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 5976,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.5,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real27",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4426,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6347,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6325,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real28",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 6168,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 5200,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 4895,
+          "error": "",
+          "search_results": 6,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real29",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4493,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6236,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6256,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "real30",
+      "case_type": "simpleqa_official",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4952,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.909091,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 6154,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.909091,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources",
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 6203,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.909091,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h01",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5872,
+          "error": "",
+          "search_results": 25,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.7,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6762,
+          "error": "",
+          "search_results": 24,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.7,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4024,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h02",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 3667,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7968,
+          "error": "",
+          "search_results": 25,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 5636,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h03",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6418,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3176,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7157,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h04",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7393,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3598,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5182,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h05",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8218,
+          "error": "",
+          "search_results": 26,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 7311,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 6536,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h06",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 6267,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 5325,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 5262,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h07",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4603,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6581,
+          "error": "",
+          "search_results": 27,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4670,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h08",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5002,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.916667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6409,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.916667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8656,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.916667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h09",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5052,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6838,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 5346,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h10",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4239,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4027,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 3,
+          "latency_ms": 5588,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 13,
+          "pages_scraped": 13,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h11",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6531,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.7,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8444,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.7,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 7648,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.7,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h12",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4895,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4174,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4991,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h13",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5418,
+          "error": "",
+          "search_results": 20,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 5683,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 5746,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h14",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 4947,
+          "error": "",
+          "search_results": 14,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 5,
+          "latency_ms": 5507,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 13,
+          "pages_scraped": 13,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [
+            "single_domain"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 4412,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h15",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7137,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 14,
+          "pages_scraped": 14,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8714,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "PDF extraction limited to the first 40 pages; this is not the complete document.",
+            "PDF text was truncated at the extraction character limit; read other sources for missing evidence."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 8621,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [
+            "PDF extraction limited to the first 40 pages; this is not the complete document.",
+            "PDF text was truncated at the extraction character limit; read other sources for missing evidence."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h16",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5650,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5350,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.875,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 4263,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.75,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h17",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3655,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 4779,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 5056,
+          "error": "",
+          "search_results": 12,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h18",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4968,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5652,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4558,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h19",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 11514,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 5089,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 6,
+          "latency_ms": 4837,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [
+            "multi_step_query"
+          ],
+          "query_complexity": "multi_step",
+          "recommended_action": "decompose_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h20",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 6668,
+          "error": "",
+          "search_results": 26,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 7041,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 6512,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h21",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 3517,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 5245,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 9,
+          "latency_ms": 4955,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.9,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h22",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5207,
+          "error": "",
+          "search_results": 23,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.909091,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7489,
+          "error": "",
+          "search_results": 27,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7368,
+          "error": "",
+          "search_results": 27,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 3,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h23",
+      "case_type": "frames",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4617,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4566,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 6000,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "h24",
+      "case_type": "obscure",
+      "expects_answer": true,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 4696,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.923077,
+          "sufficiency_reasons": [
+            "PDF text was truncated at the extraction character limit; read other sources for missing evidence."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5685,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.923077,
+          "sufficiency_reasons": [
+            "PDF text was truncated at the extraction character limit; read other sources for missing evidence."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": true,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 7712,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 9,
+          "pages_scraped": 9,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.923077,
+          "sufficiency_reasons": [
+            "PDF text was truncated at the extraction character limit; read other sources for missing evidence."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv01",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5268,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.916667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 8417,
+          "error": "",
+          "search_results": 29,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 7860,
+          "error": "",
+          "search_results": 29,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv02",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 4523,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5282,
+          "error": "",
+          "search_results": 24,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 6270,
+          "error": "",
+          "search_results": 18,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 1.0,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv03",
+      "case_type": "nonexistent",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 12625,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 2,
+          "latency_ms": 4644,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 2,
+          "latency_ms": 4900,
+          "error": "",
+          "search_results": 2,
+          "urls_attempted": 2,
+          "pages_scraped": 2,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.833333,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv04",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 7049,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "PDF text was truncated at the extraction character limit; read other sources for missing evidence."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 5575,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.555556,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 7,
+          "latency_ms": 5971,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.555556,
+          "sufficiency_reasons": [
+            "no_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv05",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 4404,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.555556,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 5759,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.555556,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 8339,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.555556,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv06",
+      "case_type": "nonexistent",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 3922,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.777778,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 10126,
+          "error": "",
+          "search_results": 30,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 6455,
+          "error": "",
+          "search_results": 21,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.888889,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv07",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 4204,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.8,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 10815,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.8,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 5291,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 15,
+          "pages_scraped": 15,
+          "scrape_failures": 1,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.8,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv08",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": false,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "limited",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 4970,
+          "error": "",
+          "search_results": 15,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 4,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [
+            "fewer_than_two_substantive_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 4,
+          "latency_ms": 4102,
+          "error": "",
+          "search_results": 9,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.285714,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 4944,
+          "error": "",
+          "search_results": 10,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 2,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv09",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 7096,
+          "error": "",
+          "search_results": 22,
+          "urls_attempted": 13,
+          "pages_scraped": 13,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 4666,
+          "error": "",
+          "search_results": 13,
+          "urls_attempted": 10,
+          "pages_scraped": 10,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 5072,
+          "error": "",
+          "search_results": 11,
+          "urls_attempted": 11,
+          "pages_scraped": 11,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv10",
+      "case_type": "nonexistent",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 6,
+          "latency_ms": 5715,
+          "error": "",
+          "search_results": 6,
+          "urls_attempted": 6,
+          "pages_scraped": 6,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.714286,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "missing_query_anchor"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 0,
+          "latency_ms": 3985,
+          "error": "",
+          "search_results": 0,
+          "urls_attempted": 0,
+          "pages_scraped": 0,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 0,
+          "metadata_fallbacks": 0,
+          "search_providers": [],
+          "max_source_query_term_coverage": null,
+          "sufficiency_reasons": [
+            "no_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": true,
+          "source_count": 0,
+          "latency_ms": 3026,
+          "error": "",
+          "search_results": 0,
+          "urls_attempted": 0,
+          "pages_scraped": 0,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 0,
+          "metadata_fallbacks": 0,
+          "search_providers": [],
+          "max_source_query_term_coverage": null,
+          "sufficiency_reasons": [
+            "no_sources"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv11",
+      "case_type": "false_premise",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 4982,
+          "error": "",
+          "search_results": 20,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 6439,
+          "error": "",
+          "search_results": 17,
+          "urls_attempted": 12,
+          "pages_scraped": 12,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 10,
+          "latency_ms": 6369,
+          "error": "",
+          "search_results": 27,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.666667,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    },
+    {
+      "case_id": "adv12",
+      "case_type": "unanswerable",
+      "expects_answer": false,
+      "stable": true,
+      "runs": [
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 6846,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.857143,
+          "sufficiency_reasons": [
+            "future_outcome_not_observable"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 7345,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.857143,
+          "sufficiency_reasons": [
+            "future_outcome_not_observable"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": true,
+          "safe_trap_outcome": true,
+          "source_count": 8,
+          "latency_ms": 7746,
+          "error": "",
+          "search_results": 19,
+          "urls_attempted": 16,
+          "pages_scraped": 16,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.857143,
+          "sufficiency_reasons": [
+            "future_outcome_not_observable"
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        }
+      ]
+    }
+  ],
+  "thresholds": {
+    "min_answer_coverage": 0.8,
+    "min_trap_safe_rate": 0.8,
+    "min_stable_case_rate": 0.9,
+    "min_answerable_ready_rate": 0.75,
+    "min_ready_answer_precision": 0.95,
+    "max_p95_latency_ms": 30000
+  },
+  "passed": false
+}
