@@ -23,6 +23,9 @@ measure usability and correctness separately from speed.
 | Tool deadline | 60 seconds normally; 600 seconds for configured-model operations |
 | Persistent job workers | 2; active execution time accumulates across continuations |
 | Bundle cache | 30-second TTL, 64 entries, single-flight work shared among consumers |
+| Search batch | 8-second collection deadline; cancellation awaits all provider tasks |
+| General-web fallback | 7-second budget shared across DuckDuckGo, Mojeek, and Yahoo; each attempt reserves time for remaining providers |
+| Configured Tavily search | At most 2 seconds before keyless fallback uses the remaining general-web budget |
 | Page fetch | DNS-pinned HTTP; 2 MiB wire and decompressed body caps |
 | HTML extraction | Offloaded with `asyncio.to_thread`; cancellation cannot kill the thread |
 | PDF extraction | 2 workers per event loop; 6-second worker deadline; first 40 pages |
@@ -30,6 +33,12 @@ measure usability and correctness separately from speed.
 | Persistence | Bounded SQLite jobs and serialized payloads; no remote database dependency |
 
 The direct Python API does not inherit MCP admission or whole-operation deadlines.
+Search deadlines include provider pacing and queue waits. These are cancellation
+deadlines, not a guarantee that an external service responds; cancellation cleanup
+or event-loop stalls can add time. A timed-out request can still have been processed
+by its provider. Empty or blocked search results do not establish that no evidence
+exists. No CAPTCHA bypass or automatic provider-key provisioning is performed.
+
 Embedding applications own those limits. Optional PDF export/chart libraries can
 block the event loop; monitoring shares that loop and cannot diagnose a stalled
 process from inside it. Use an external process/scrape timeout as well.
@@ -53,6 +62,27 @@ outcomes, capacity, cache counts, and store state. Counters reset at restart;
 rejected calls contribute zero-duration observations. A completed invocation is
 not a quality verdict. Internal model calls and host thinking are not independent
 MCP latency observations.
+
+## Bounded runtime recovery check
+
+Run `python scripts/check_runtime_soak.py --rounds 300 --monitor --pdf` with the
+monitor/PDF extras installed. The harness uses temporary storage and no public
+network or model calls. It exercises two concurrent workers with injected read
+errors, timeouts, and cancellation, rejecting a third worker without consuming
+its budget. It also checks artifact deletion, real authenticated monitoring,
+malformed-PDF worker cleanup, and stopped-store backup/restore.
+
+The [2026-10-21 result](../evals/results/runtime-soak-2026-10-21.json) passed 300
+measured rounds plus three warm-up rounds in 28.947 seconds on macOS/Python 3.12.
+The fixture retained three files totaling 16 KiB, with nine open descriptors
+throughout the measured rounds and seven after shutdown. No new tasks or child
+processes remained. Retained traced Python allocations grew by 123,360 bytes;
+the sample list itself is retained. This is not process RSS or a guarantee of
+zero leaks over hours of real-provider traffic. Temporary files are removed on exit.
+
+CI runs 100 rounds with monitoring/PDF on Python 3.12; the core unit suite runs
+a short six-round profile. Use `--output new-result.json` to retain raw samples;
+the output path must not already exist.
 
 ## Tuning without changing the claim
 

@@ -4,6 +4,7 @@ Run: python -m unittest discover tests
 """
 
 import unittest
+from unittest import mock
 
 from sibyl.analyzer import CrossAnalysis, format_cross_analysis
 from sibyl.scraper import _extract_content, scrape_url
@@ -11,6 +12,84 @@ from sibyl.search import _extract_ddg_url
 
 
 class TestExtractContent(unittest.TestCase):
+    def test_whitespace_cleanup_does_not_expose_html_comments(self):
+        page = _extract_content(
+            "<main><p>Visible evidence.</p><!-- hidden   instructions --></main>",
+            "https://example.com",
+            6000,
+        )
+        self.assertIn("Visible evidence.", page.text)
+        self.assertNotIn("hidden", page.text)
+
+    def test_placeholder_titles_fall_back_to_heading(self):
+        page = _extract_content(
+            '<title>references-details-empty</title><meta property="og:title" '
+            'content="references-details-empty"><main><h1>Retry safety</h1>'
+            "<p>Request tokens have retention limits.</p></main>",
+            "https://example.com",
+            6000,
+        )
+        self.assertEqual(page.title, "Retry safety")
+
+    def test_metadata_title_precedes_heading_when_document_title_is_missing(self):
+        page = _extract_content(
+            '<meta name="twitter:title" content="  Research  paper "><h1>Overview</h1>',
+            "https://example.com",
+            6000,
+        )
+        self.assertEqual(page.title, "Research paper")
+
+    def test_whitespace_cleanup_leaves_room_for_later_evidence(self):
+        html = (
+            "<main><p>Retries"
+            + " " * 500
+            + "need tokens.</p><pre>…"
+            + " " * 4000
+            + '"ClientToken": "abc", …</pre>'
+            + "<p>Expired tokens permit a new request.</p></main>"
+        )
+        page = _extract_content(html, "https://example.com", 200)
+        self.assertIn("Expired tokens permit a new request.", page.text)
+        self.assertIn('"ClientToken": "abc"', page.text)
+        self.assertTrue(
+            any("preformatted" in warning for warning in page.extraction_warnings)
+        )
+        self.assertFalse(
+            any("truncated" in warning for warning in page.extraction_warnings)
+        )
+
+    def test_normal_code_spacing_is_preserved(self):
+        page = _extract_content(
+            '<main><pre><code>value = "a  b"\nif value:\n    print(value)</code></pre></main>',
+            "https://example.com",
+            6000,
+        )
+        self.assertIn('value = "a  b"', page.text)
+        self.assertFalse(page.extraction_warnings)
+
+    def test_html_truncation_is_disclosed(self):
+        page = _extract_content(
+            "<main>" + "word " * 100 + "</main>", "https://example.com", 100
+        )
+        self.assertEqual(len(page.text), 100)
+        self.assertIn(
+            "HTML text truncated to 100 characters.", page.extraction_warnings
+        )
+
+    def test_optional_extractor_receives_cleaned_html(self):
+        fake = mock.Mock()
+        fake.extract.return_value = "Optional extractor text " * 20
+        with mock.patch.dict("sys.modules", {"trafilatura": fake}):
+            page = _extract_content(
+                "<main>word" + " " * 500 + "text</main>",
+                "https://example.com",
+                100,
+                "trafilatura",
+            )
+        self.assertNotIn(" " * 500, fake.extract.call_args.args[0])
+        self.assertEqual(len(page.text), 100)
+        self.assertTrue(page.extraction_warnings)
+
     def test_article_survives_navigation_wrapper(self):
         html = (
             "<body><nav><a>Menu</a><main><p>"

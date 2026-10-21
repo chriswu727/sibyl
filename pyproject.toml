@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Yichen Wu", email = "yichenwujob@gmail.com"}]
-urls = {Homepage = "https://github.com/chriswu727/sibyl", Repository = "https://github.com/chriswu727/sibyl"}
+urls = {Homepage = "https://yichenwu.dev/projects/sibyl", Documentation = "https://github.com/chriswu727/sibyl#readme", Repository = "https://github.com/chriswu727/sibyl", Issues = "https://github.com/chriswu727/sibyl/issues"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

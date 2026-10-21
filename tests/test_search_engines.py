@@ -92,6 +92,28 @@ class TestTavily(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(results, keyless)
         fallback.assert_awaited_once()
 
+    async def test_slow_tavily_reserves_keyless_fallback_budget(self):
+        cancelled = asyncio.Event()
+
+        async def slow(*args, **kwargs):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+
+        with (
+            mock.patch("sibyl.search._TAVILY_TIMEOUT_SECONDS", 0.01),
+            mock.patch("sibyl.search.search_tavily", slow),
+            mock.patch(
+                "sibyl.search._search_general_web", mock.AsyncMock(return_value=[])
+            ) as fallback,
+        ):
+            await _search_configured_general_web("q", 5, "tavily", client=object())
+
+        self.assertTrue(cancelled.is_set())
+        self.assertGreater(fallback.call_args.kwargs["timeout"], 0)
+        self.assertLess(fallback.call_args.kwargs["timeout"], 7.0)
+
     def test_provider_is_keyless_by_default_and_tavily_is_explicit(self):
         with mock.patch.dict("os.environ", {}, clear=True):
             self.assertEqual(_configured_search_provider(), "keyless")
@@ -398,6 +420,57 @@ class TestYahoo(unittest.IsolatedAsyncioTestCase):
 
 
 class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
+    async def test_slow_providers_leave_time_for_last_fallback(self):
+        cancelled = []
+
+        async def slow(name):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.append(name)
+
+        yahoo = mock.AsyncMock(
+            return_value=[SearchResult("Y", "https://y.com", "s", "web")]
+        )
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", lambda *a, **kw: slow("ddg")),
+            mock.patch("sibyl.search.search_mojeek", lambda *a, **kw: slow("mojeek")),
+            mock.patch("sibyl.search.search_yahoo", yahoo),
+        ):
+            results = await _search_general_web("q", timeout=0.15)
+
+        self.assertEqual(results[0].url, "https://y.com")
+        self.assertEqual(cancelled, ["ddg", "mojeek"])
+        yahoo.assert_awaited_once()
+
+    async def test_cancellation_does_not_start_fallback(self):
+        started = asyncio.Event()
+        stopped = asyncio.Event()
+
+        async def slow(*args, **kwargs):
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                stopped.set()
+
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", slow),
+            mock.patch("sibyl.search.search_mojeek", mock.AsyncMock()) as fallback,
+        ):
+            task = asyncio.create_task(_search_general_web("q"))
+            await started.wait()
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+        self.assertTrue(stopped.is_set())
+        fallback.assert_not_awaited()
+
+    async def test_no_budget_does_not_issue_requests(self):
+        with mock.patch("sibyl.search.search_duckduckgo", mock.AsyncMock()) as ddg:
+            self.assertEqual(await _search_general_web("q", timeout=0), [])
+        ddg.assert_not_awaited()
+
     async def test_ddg_results_skip_mojeek(self):
         ddg = mock.AsyncMock(
             return_value=[SearchResult("T", "https://x.com", "s", "web")]
@@ -457,6 +530,41 @@ class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
 
 
 class TestSearchBatchBudget(unittest.IsolatedAsyncioTestCase):
+    async def test_parent_cancellation_awaits_all_provider_cleanup(self):
+        started = set()
+        stopped = set()
+        all_started = asyncio.Event()
+
+        async def hanging(name):
+            started.add(name)
+            if len(started) == 4:
+                all_started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                stopped.add(name)
+
+        with (
+            mock.patch(
+                "sibyl.search._search_general_web", lambda *a, **kw: hanging("web")
+            ),
+            mock.patch(
+                "sibyl.search.search_google_news", lambda *a, **kw: hanging("news")
+            ),
+            mock.patch(
+                "sibyl.search.search_reddit", lambda *a, **kw: hanging("reddit")
+            ),
+            mock.patch(
+                "sibyl.search.search_wikipedia", lambda *a, **kw: hanging("wiki")
+            ),
+        ):
+            task = asyncio.create_task(search_web("q"))
+            await asyncio.wait_for(all_started.wait(), timeout=2)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+        self.assertEqual(stopped, started)
+
     async def test_returns_completed_sources_without_waiting_for_slow_helper(self):
         async def hanging(*args, **kwargs):
             await asyncio.Event().wait()

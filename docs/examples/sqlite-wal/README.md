@@ -1,5 +1,7 @@
 # Example: does SQLite WAL eliminate write contention?
 
+![Diagram of the two-round offline MCP replay](../../../assets/research-replay.svg)
+
 This example demonstrates a complete host-assisted investigation, not a model
 benchmark. Read the [exported report](report.md) and [recorded source excerpts](sources.json).
 The original pages were read through Sibyl on 2026-10-21. Excerpts are selected

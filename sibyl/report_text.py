@@ -2,11 +2,12 @@
 
 from .privacy import display_url
 from .report_models import ResearchReport
+from .report_references import reference_groups
 
 
 def _format_report(report: ResearchReport) -> str:
     """Format a research report as readable text."""
-    if report.status != "ok":
+    if report.status not in {"ok", "partial"}:
         heading = (
             "Insufficient evidence"
             if report.status == "insufficient_evidence"
@@ -29,6 +30,11 @@ def _format_report(report: ResearchReport) -> str:
         f"# Research Report: {report.query}",
         f"*Generated at {report.timestamp.strftime('%Y-%m-%d %H:%M')} using {report.model_used}*",
         "",
+        *(
+            ["> Partial report: unresolved research gaps remain.", ""]
+            if report.status == "partial"
+            else []
+        ),
         "## Summary",
         report.summary,
         "",
@@ -75,13 +81,13 @@ def _format_report(report: ResearchReport) -> str:
     )
     lines.extend(f"- {note}" for note in report.limitations)
 
-    lines.append("")
-    lines.append(f"## Sources ({len(report.sources)})")
-    for i, src in enumerate(report.sources, 1):
-        lines.append(f"{i}. [{src.title}]({display_url(src.url)})")
-        evidence = src.supporting_snippet or src.snippet
-        if evidence:
-            lines.append(f"   {evidence}")
+    for title, note, sources in reference_groups(report):
+        lines.extend(["", f"## {title} ({len(sources)})", "", note, ""])
+        for i, src in sources:
+            lines.append(f"- [Source {i}] [{src.title}]({display_url(src.url)})")
+            evidence = src.supporting_snippet or src.snippet
+            if evidence:
+                lines.append(f"   {evidence}")
 
     if report.market_data_summary:
         lines.append("")

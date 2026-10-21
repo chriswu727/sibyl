@@ -11,6 +11,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from sibyl.report_references import reference_groups
+from sibyl.report_text import _format_report
 from sibyl.reporter import _report_to_markdown, generate_pdf
 from sibyl.researcher import ResearchReport, Source
 
@@ -28,6 +30,57 @@ def _report():
 
 
 class TestMarkdownReport(unittest.TestCase):
+    def test_reference_groups_preserve_citation_numbers_and_report(self):
+        report = _report()
+        report.sources = [
+            Source(f"https://ex.com/{i}", f"Title {i}", "") for i in range(1, 5)
+        ]
+        report.summary = "Summary [Source 3]"
+        report.key_findings = ["Finding [source 1]"]
+        before = report.to_dict()
+        for render in (_report_to_markdown, _format_report):
+            text = render(report)
+            cited, background = text.split("## Uncited Background (2)")
+            self.assertIn("## Cited Sources (2)", cited)
+            self.assertIn("[Source 3]", cited)
+            self.assertNotIn("Title 2", cited)
+            self.assertIn("[Source 2]", background)
+            self.assertIn("[Source 4]", background)
+            self.assertIn("does not establish", cited)
+        self.assertEqual(report.to_dict(), before)
+        self.assertEqual(ResearchReport.from_dict(before).to_dict(), before)
+
+    def test_uncited_and_invalid_citations_do_not_create_support(self):
+        report = _report()
+        report.summary = "Unknown [Source 999]"
+        report.key_findings = []
+        self.assertEqual(
+            [group[0] for group in reference_groups(report)], ["Uncited Background"]
+        )
+        report.sources = []
+        self.assertEqual(reference_groups(report), [])
+
+    def test_citations_in_other_sections_are_included(self):
+        for name in (
+            "analysis",
+            "predictions",
+            "cross_analysis",
+            "market_data_summary",
+        ):
+            report = _report()
+            report.summary = "Summary"
+            report.key_findings = []
+            setattr(report, name, "Evidence [Source 1]")
+            self.assertEqual(reference_groups(report)[0][0], "Cited Sources")
+
+    def test_partial_plain_text_report_keeps_content(self):
+        report = _report()
+        report.status = "partial"
+        text = _format_report(report)
+        self.assertIn("Partial report: unresolved research gaps remain.", text)
+        self.assertIn(report.summary, text)
+        self.assertNotIn("Research failed", text)
+
     def test_partial_report_displays_warning_without_losing_content(self):
         report = _report()
         report.status = "partial"
@@ -86,6 +139,26 @@ class TestVerificationRendering(unittest.TestCase):
 
 
 class TestPdfGeneration(unittest.TestCase):
+    @unittest.skipUnless(
+        shutil.which("pdftotext"), "Poppler text extractor is optional"
+    )
+    def test_pdf_separates_background_without_renumbering(self):
+        report = _report()
+        report.sources.insert(
+            0, Source("https://ex.com/background", "Background only", "")
+        )
+        report.summary = "Summary [Source 2]"
+        report.key_findings = ["Finding [Source 2]"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = generate_pdf(report, directory)
+            text = subprocess.run(
+                ["pdftotext", path, "-"], capture_output=True, text=True, check=True
+            ).stdout
+        self.assertIn("Cited Sources (1)", text)
+        self.assertIn("Uncited Background (1)", text)
+        self.assertIn("[Source 2] Example", text)
+        self.assertIn("[Source 1] Background only", text)
+
     @unittest.skipUnless(
         shutil.which("pdftotext"), "Poppler text extractor is optional"
     )

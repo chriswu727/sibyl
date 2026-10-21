@@ -1,0 +1,2117 @@
+{
+  "passed": true,
+  "rounds": 300,
+  "warmup_rounds": 3,
+  "concurrent_workers": 2,
+  "upstream": "injected read errors, cancellation, and timeouts; no public network/model calls",
+  "monitor": true,
+  "pdf_worker_calls": 31,
+  "backup_restore": "passed with runtime stopped",
+  "elapsed_seconds": 28.947,
+  "retained_python_growth_bytes": 123360,
+  "traced_peak_bytes": 505488,
+  "final_open_descriptors": 7,
+  "samples": [
+    {
+      "round": 1,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 24566
+    },
+    {
+      "round": 2,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 14457
+    },
+    {
+      "round": 3,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 14427
+    },
+    {
+      "round": 4,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 17148
+    },
+    {
+      "round": 5,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 18998
+    },
+    {
+      "round": 6,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 14265
+    },
+    {
+      "round": 7,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 17138
+    },
+    {
+      "round": 8,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 20122
+    },
+    {
+      "round": 9,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 20030
+    },
+    {
+      "round": 10,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 22879
+    },
+    {
+      "round": 11,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 38565
+    },
+    {
+      "round": 12,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 26033
+    },
+    {
+      "round": 13,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 28579
+    },
+    {
+      "round": 14,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 32012
+    },
+    {
+      "round": 15,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 31741
+    },
+    {
+      "round": 16,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 34415
+    },
+    {
+      "round": 17,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 37232
+    },
+    {
+      "round": 18,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 37266
+    },
+    {
+      "round": 19,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 39441
+    },
+    {
+      "round": 20,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 42177
+    },
+    {
+      "round": 21,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 57709
+    },
+    {
+      "round": 22,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 46089
+    },
+    {
+      "round": 23,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 48938
+    },
+    {
+      "round": 24,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 48955
+    },
+    {
+      "round": 25,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 33222
+    },
+    {
+      "round": 26,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 35983
+    },
+    {
+      "round": 27,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 36449
+    },
+    {
+      "round": 28,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 39322
+    },
+    {
+      "round": 29,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 42188
+    },
+    {
+      "round": 30,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 42039
+    },
+    {
+      "round": 31,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 56854
+    },
+    {
+      "round": 32,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 47505
+    },
+    {
+      "round": 33,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 46578
+    },
+    {
+      "round": 34,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 48678
+    },
+    {
+      "round": 35,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 51072
+    },
+    {
+      "round": 36,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 50290
+    },
+    {
+      "round": 37,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 52500
+    },
+    {
+      "round": 38,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 54853
+    },
+    {
+      "round": 39,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 54198
+    },
+    {
+      "round": 40,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 41401
+    },
+    {
+      "round": 41,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 55542
+    },
+    {
+      "round": 42,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 44467
+    },
+    {
+      "round": 43,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 46728
+    },
+    {
+      "round": 44,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 49096
+    },
+    {
+      "round": 45,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 48458
+    },
+    {
+      "round": 46,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 50668
+    },
+    {
+      "round": 47,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 52839
+    },
+    {
+      "round": 48,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 52009
+    },
+    {
+      "round": 49,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 53938
+    },
+    {
+      "round": 50,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 56419
+    },
+    {
+      "round": 51,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67638
+    },
+    {
+      "round": 52,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 58023
+    },
+    {
+      "round": 53,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 60282
+    },
+    {
+      "round": 54,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 59796
+    },
+    {
+      "round": 55,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 60328
+    },
+    {
+      "round": 56,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 62720
+    },
+    {
+      "round": 57,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 63106
+    },
+    {
+      "round": 58,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 65269
+    },
+    {
+      "round": 59,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67526
+    },
+    {
+      "round": 60,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 66858
+    },
+    {
+      "round": 61,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 79453
+    },
+    {
+      "round": 62,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67852
+    },
+    {
+      "round": 63,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 66914
+    },
+    {
+      "round": 64,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69205
+    },
+    {
+      "round": 65,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 71274
+    },
+    {
+      "round": 66,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 51435
+    },
+    {
+      "round": 67,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 53965
+    },
+    {
+      "round": 68,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 56104
+    },
+    {
+      "round": 69,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 55452
+    },
+    {
+      "round": 70,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 52566
+    },
+    {
+      "round": 71,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 66104
+    },
+    {
+      "round": 72,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 55353
+    },
+    {
+      "round": 73,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 57627
+    },
+    {
+      "round": 74,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 59807
+    },
+    {
+      "round": 75,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 58969
+    },
+    {
+      "round": 76,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 61004
+    },
+    {
+      "round": 77,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 63445
+    },
+    {
+      "round": 78,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 62810
+    },
+    {
+      "round": 79,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 64766
+    },
+    {
+      "round": 80,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67025
+    },
+    {
+      "round": 81,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 82189
+    },
+    {
+      "round": 82,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 68351
+    },
+    {
+      "round": 83,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 70435
+    },
+    {
+      "round": 84,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69935
+    },
+    {
+      "round": 85,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 57634
+    },
+    {
+      "round": 86,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 59561
+    },
+    {
+      "round": 87,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 59899
+    },
+    {
+      "round": 88,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 62476
+    },
+    {
+      "round": 89,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 64679
+    },
+    {
+      "round": 90,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 63849
+    },
+    {
+      "round": 91,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69470
+    },
+    {
+      "round": 92,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 60023
+    },
+    {
+      "round": 93,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 61210
+    },
+    {
+      "round": 94,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 63565
+    },
+    {
+      "round": 95,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 65792
+    },
+    {
+      "round": 96,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 64760
+    },
+    {
+      "round": 97,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67098
+    },
+    {
+      "round": 98,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69445
+    },
+    {
+      "round": 99,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 61025
+    },
+    {
+      "round": 100,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 63258
+    },
+    {
+      "round": 101,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 76045
+    },
+    {
+      "round": 102,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 65021
+    },
+    {
+      "round": 103,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67155
+    },
+    {
+      "round": 104,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69318
+    },
+    {
+      "round": 105,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 68751
+    },
+    {
+      "round": 106,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 70834
+    },
+    {
+      "round": 107,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 73140
+    },
+    {
+      "round": 108,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 72227
+    },
+    {
+      "round": 109,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 74390
+    },
+    {
+      "round": 110,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 65457
+    },
+    {
+      "round": 111,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 76780
+    },
+    {
+      "round": 112,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 67982
+    },
+    {
+      "round": 113,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 70290
+    },
+    {
+      "round": 114,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69509
+    },
+    {
+      "round": 115,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 71830
+    },
+    {
+      "round": 116,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 74057
+    },
+    {
+      "round": 117,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 66891
+    },
+    {
+      "round": 118,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 69048
+    },
+    {
+      "round": 119,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 71363
+    },
+    {
+      "round": 120,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 70725
+    },
+    {
+      "round": 121,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 84058
+    },
+    {
+      "round": 122,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 75592
+    },
+    {
+      "round": 123,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 74796
+    },
+    {
+      "round": 124,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 76710
+    },
+    {
+      "round": 125,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 78888
+    },
+    {
+      "round": 126,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 78258
+    },
+    {
+      "round": 127,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 80549
+    },
+    {
+      "round": 128,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 82808
+    },
+    {
+      "round": 129,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 71471
+    },
+    {
+      "round": 130,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 73858
+    },
+    {
+      "round": 131,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 86693
+    },
+    {
+      "round": 132,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 75296
+    },
+    {
+      "round": 133,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 77611
+    },
+    {
+      "round": 134,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 79966
+    },
+    {
+      "round": 135,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 73143
+    },
+    {
+      "round": 136,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 75282
+    },
+    {
+      "round": 137,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 77509
+    },
+    {
+      "round": 138,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 76561
+    },
+    {
+      "round": 139,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 78707
+    },
+    {
+      "round": 140,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 74909
+    },
+    {
+      "round": 141,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 86665
+    },
+    {
+      "round": 142,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 77922
+    },
+    {
+      "round": 143,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 80290
+    },
+    {
+      "round": 144,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 79556
+    },
+    {
+      "round": 145,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 81695
+    },
+    {
+      "round": 146,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 83747
+    },
+    {
+      "round": 147,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 76710
+    },
+    {
+      "round": 148,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 78883
+    },
+    {
+      "round": 149,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 81157
+    },
+    {
+      "round": 150,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 80538
+    },
+    {
+      "round": 151,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 93869
+    },
+    {
+      "round": 152,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 85176
+    },
+    {
+      "round": 153,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 84299
+    },
+    {
+      "round": 154,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 86597
+    },
+    {
+      "round": 155,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 88890
+    },
+    {
+      "round": 156,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 88188
+    },
+    {
+      "round": 157,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 80592
+    },
+    {
+      "round": 158,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 82913
+    },
+    {
+      "round": 159,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 82955
+    },
+    {
+      "round": 160,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 85101
+    },
+    {
+      "round": 161,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 98577
+    },
+    {
+      "round": 162,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 87083
+    },
+    {
+      "round": 163,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 89246
+    },
+    {
+      "round": 164,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 89425
+    },
+    {
+      "round": 165,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 90642
+    },
+    {
+      "round": 166,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 92717
+    },
+    {
+      "round": 167,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 94848
+    },
+    {
+      "round": 168,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 94187
+    },
+    {
+      "round": 169,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 96478
+    },
+    {
+      "round": 170,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 97554
+    },
+    {
+      "round": 171,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 96164
+    },
+    {
+      "round": 172,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 86720
+    },
+    {
+      "round": 173,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 88906
+    },
+    {
+      "round": 174,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 89102
+    },
+    {
+      "round": 175,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 91353
+    },
+    {
+      "round": 176,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 93802
+    },
+    {
+      "round": 177,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 93070
+    },
+    {
+      "round": 178,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 95186
+    },
+    {
+      "round": 179,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 95251
+    },
+    {
+      "round": 180,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 96239
+    },
+    {
+      "round": 181,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 108826
+    },
+    {
+      "round": 182,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 100648
+    },
+    {
+      "round": 183,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 100326
+    },
+    {
+      "round": 184,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 102395
+    },
+    {
+      "round": 185,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 104654
+    },
+    {
+      "round": 186,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 104019
+    },
+    {
+      "round": 187,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 90079
+    },
+    {
+      "round": 188,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 92178
+    },
+    {
+      "round": 189,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 92510
+    },
+    {
+      "round": 190,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 94914
+    },
+    {
+      "round": 191,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 108149
+    },
+    {
+      "round": 192,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 96503
+    },
+    {
+      "round": 193,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 98713
+    },
+    {
+      "round": 194,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 100837
+    },
+    {
+      "round": 195,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 100217
+    },
+    {
+      "round": 196,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 102052
+    },
+    {
+      "round": 197,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 104439
+    },
+    {
+      "round": 198,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 103529
+    },
+    {
+      "round": 199,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 105692
+    },
+    {
+      "round": 200,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 107904
+    },
+    {
+      "round": 201,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 105285
+    },
+    {
+      "round": 202,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 97022
+    },
+    {
+      "round": 203,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 99290
+    },
+    {
+      "round": 204,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 98637
+    },
+    {
+      "round": 205,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 100817
+    },
+    {
+      "round": 206,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 103155
+    },
+    {
+      "round": 207,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 95546
+    },
+    {
+      "round": 208,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 97550
+    },
+    {
+      "round": 209,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 99952
+    },
+    {
+      "round": 210,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 99180
+    },
+    {
+      "round": 211,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 112273
+    },
+    {
+      "round": 212,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 103859
+    },
+    {
+      "round": 213,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 103157
+    },
+    {
+      "round": 214,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 105112
+    },
+    {
+      "round": 215,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 107236
+    },
+    {
+      "round": 216,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 106294
+    },
+    {
+      "round": 217,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 108498
+    },
+    {
+      "round": 218,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 110885
+    },
+    {
+      "round": 219,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 99609
+    },
+    {
+      "round": 220,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 102092
+    },
+    {
+      "round": 221,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 115247
+    },
+    {
+      "round": 222,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 103705
+    },
+    {
+      "round": 223,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 105757
+    },
+    {
+      "round": 224,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 107880
+    },
+    {
+      "round": 225,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 107676
+    },
+    {
+      "round": 226,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 109376
+    },
+    {
+      "round": 227,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 111588
+    },
+    {
+      "round": 228,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 110727
+    },
+    {
+      "round": 229,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 112708
+    },
+    {
+      "round": 230,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 113656
+    },
+    {
+      "round": 231,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 124860
+    },
+    {
+      "round": 232,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 116503
+    },
+    {
+      "round": 233,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 118762
+    },
+    {
+      "round": 234,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 117999
+    },
+    {
+      "round": 235,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 120162
+    },
+    {
+      "round": 236,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 121278
+    },
+    {
+      "round": 237,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 104929
+    },
+    {
+      "round": 238,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 107197
+    },
+    {
+      "round": 239,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 109552
+    },
+    {
+      "round": 240,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 108771
+    },
+    {
+      "round": 241,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 120418
+    },
+    {
+      "round": 242,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 111051
+    },
+    {
+      "round": 243,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 112086
+    },
+    {
+      "round": 244,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 114138
+    },
+    {
+      "round": 245,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 116438
+    },
+    {
+      "round": 246,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 115770
+    },
+    {
+      "round": 247,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 117886
+    },
+    {
+      "round": 248,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 118962
+    },
+    {
+      "round": 249,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 119029
+    },
+    {
+      "round": 250,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 121057
+    },
+    {
+      "round": 251,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 133997
+    },
+    {
+      "round": 252,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 122433
+    },
+    {
+      "round": 253,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 124677
+    },
+    {
+      "round": 254,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 126168
+    },
+    {
+      "round": 255,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 125996
+    },
+    {
+      "round": 256,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 128112
+    },
+    {
+      "round": 257,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 130394
+    },
+    {
+      "round": 258,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 110814
+    },
+    {
+      "round": 259,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 113257
+    },
+    {
+      "round": 260,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 115644
+    },
+    {
+      "round": 261,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 125449
+    },
+    {
+      "round": 262,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 117107
+    },
+    {
+      "round": 263,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 119383
+    },
+    {
+      "round": 264,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 118625
+    },
+    {
+      "round": 265,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 112869
+    },
+    {
+      "round": 266,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 115310
+    },
+    {
+      "round": 267,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 115506
+    },
+    {
+      "round": 268,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 117718
+    },
+    {
+      "round": 269,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 119977
+    },
+    {
+      "round": 270,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 119802
+    },
+    {
+      "round": 271,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 132161
+    },
+    {
+      "round": 272,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 122379
+    },
+    {
+      "round": 273,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 115623
+    },
+    {
+      "round": 274,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 117963
+    },
+    {
+      "round": 275,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 120222
+    },
+    {
+      "round": 276,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 119411
+    },
+    {
+      "round": 277,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 116231
+    },
+    {
+      "round": 278,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 118387
+    },
+    {
+      "round": 279,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 118503
+    },
+    {
+      "round": 280,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 120850
+    },
+    {
+      "round": 281,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 134031
+    },
+    {
+      "round": 282,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 122406
+    },
+    {
+      "round": 283,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 123514
+    },
+    {
+      "round": 284,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 125773
+    },
+    {
+      "round": 285,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 125753
+    },
+    {
+      "round": 286,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 127869
+    },
+    {
+      "round": 287,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 130152
+    },
+    {
+      "round": 288,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 129404
+    },
+    {
+      "round": 289,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 131552
+    },
+    {
+      "round": 290,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 133700
+    },
+    {
+      "round": 291,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 143682
+    },
+    {
+      "round": 292,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 135141
+    },
+    {
+      "round": 293,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 120496
+    },
+    {
+      "round": 294,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 120948
+    },
+    {
+      "round": 295,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 123320
+    },
+    {
+      "round": 296,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 125532
+    },
+    {
+      "round": 297,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 124783
+    },
+    {
+      "round": 298,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 126995
+    },
+    {
+      "round": 299,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 128428
+    },
+    {
+      "round": 300,
+      "files": 3,
+      "disk_bytes": 16384,
+      "open_descriptors": 9,
+      "python_bytes": 123360
+    }
+  ],
+  "recorded_at": "2026-10-21T21:49:42.652783+00:00"
+}

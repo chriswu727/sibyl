@@ -2,6 +2,31 @@
 
 ## 0.4.0 — Unreleased
 
+### Extraction, report presentation, and runtime recovery
+
+- Fall back from placeholder HTML titles to metadata/headings; normalize prose
+  and excessive preformatted whitespace before applying bounded extraction.
+- Disclose HTML truncation and preformatted whitespace normalization; preserve
+  ordinary code spacing and keep HTML comments out of extracted evidence.
+- Separate cited sources from uncited background in Markdown, PDF, and plain
+  text without renumbering citations or mutating persisted JSON evidence.
+- Preserve partial reports in plain-text output instead of labeling them failed.
+- Add a bounded resource-soak harness for concurrent retrieval failures, timeouts,
+  cancellation, artifact cleanup, real monitoring/PDF-worker lifecycles, and
+  stopped-store backup/restore. Run a 100-round profile in Python 3.12 CI.
+
+### Search failure isolation
+
+- Reserve a bounded share of the general-web deadline for each fallback engine,
+  including provider pacing, so one slow request cannot consume the entire chain.
+- Bound the configured Tavily attempt before keyless fallback; preserve the
+  overall search budget without assuming a provider request will finish on time.
+- Cancel and await every search-provider task when the parent search is cancelled.
+- Preserve explicit search operators instead of stripping them in query variants.
+- Add regressions for stalled providers, fallback budgets, parent cancellation,
+  zero-budget requests, and constrained query handling. Live quality gates remain
+  independent of these engineering checks.
+
 ### Engineering readiness
 
 - Standardize Python formatting and import/error linting; check typed research
@@ -14,7 +39,7 @@
   transaction aborts, repeated capacity/cancellation, and artifact cleanup.
 - Validate core, PDF/monitoring, and report/finance/extraction wheels in isolated
   temporary environments; require dated changelog notes before publication.
-- Keep live research-quality and external beta gates unchanged; no release implied.
+- Retain live research-quality gates; engineering checks do not imply a release.
 - Return an MCP tool error when a PDF-only export fails; combined exports retain
   successful Markdown output and explicitly disclose the PDF failure.
 

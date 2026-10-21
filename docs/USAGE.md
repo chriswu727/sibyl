@@ -263,6 +263,18 @@ steps. Markdown includes reviews and compact source references instead of dumpin
 large source excerpts. PDF retains the narrative and limitations; use JSON for the
 complete machine-readable evidence package.
 
+Markdown, PDF, and plain-text reports separate **Cited Sources** from **Uncited
+Background** using citation markers in the report. Source numbers stay unchanged,
+including gaps between numbers; JSON retains the original source inventory and
+evidence. Being cited is not a verdict that a source supports a claim.
+
+HTML reads fall back from placeholder document titles to metadata or headings.
+Prose whitespace is normalized before the character limit is applied. Excessive
+horizontal whitespace runs (80 or more characters) in preformatted text are
+normalized with a warning; ordinary code spacing remains. Extracted text is not
+a verbatim code copy. HTML truncation is explicitly reported, just like PDF
+truncation; later sections may still be missing from a bounded read.
+
 ### Multi-round retrieval
 
 Queries with explicit years or current/latest intent prioritize matching title,

@@ -26,6 +26,10 @@ is preserved in Git history, not a source of current defaults or quality claims.
   PDF/monitoring, and report/finance/extraction verification.
 - Bounded fault tests for abrupt process termination, failed writes before/after
   retrieval dispatch, transaction rollback, repeated cancellation, and export cleanup.
+- HTML title fallback, whitespace normalization and truncation warnings; stable
+  cited-source/background grouping across report renderers.
+- A bounded runtime soak with real SQLite, optional monitoring/PDF workers,
+  injected upstream failures, resource sampling, and stopped-store backup/restore.
 
 ## Before release
 
@@ -59,10 +63,11 @@ baseline supplements that gate; it does not replace or waive it.
 
 ### 3. Validate sustained operation and faults
 
-Extend the existing bounded cancellation, oversize, process termination,
-write-failure, and authentication tests with sustained concurrency, resource
-pressure, and repeated upstream failure. Measure child-process, socket, task,
-and file growth over longer runs. Test backup/restore with the runtime stopped.
+Keep the bounded runtime soak passing, then extend it to longer-duration
+concurrency and resource-pressure scenarios. The current fixture covers repeated
+upstream failure, cancellation, timeouts, descriptor/task/file growth, worker
+cleanup, and backup/restore with the runtime stopped. It is not an RSS benchmark
+or a long-running public-provider availability test.
 
 Add bounded retrieval-stage metrics where needed: fetch outcomes, parser
 failures, investigation rounds, and insufficient-evidence rates. Keep questions,
@@ -84,17 +89,15 @@ immunity or treating a parser process as a security sandbox.
 Acceptance: supported Python matrices, clean-wheel checks, audit results, and
 documented upgrade behavior. No release/version changes merely to clear a queue.
 
-### 5. Complete beta validation and publish
+### 5. Complete release validation and publish
 
-At least three external beta users must independently install the product,
-complete a representative investigation, and explain its evidence/citation states.
-Convert friction into fixes or documentation. Satisfy every release gate before
+Retain the test method, results, and limitations. Satisfy every release gate before
 dating the changelog, tagging, publishing PyPI/Registry metadata, or expanding
 directory promotion. Follow [Releasing](RELEASING.md).
 
-Acceptance: recorded beta feedback, all required checks, and consistent GitHub,
-PyPI, Registry, and product-page descriptions. External participation is a real
-dependency; automated local tests do not substitute for it.
+Acceptance: recorded evaluation, all required checks, and consistent GitHub,
+PyPI, Registry, Glama, and product-page descriptions. Local engineering checks
+do not establish live research accuracy.
 
 ## Subsequent enhancements
 

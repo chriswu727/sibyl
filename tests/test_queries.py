@@ -54,6 +54,17 @@ class TestSearchQueryVariants(unittest.TestCase):
 
         self.assertEqual(search_query_variants(query), [query])
 
+    def test_preserves_explicit_search_constraints(self):
+        for query in (
+            "What are idempotency limits site:docs.stripe.com?",
+            'What explains "safe API retries" -site:wikipedia.org?',
+            "Which papers discuss retries filetype:pdf?",
+            "What is the protocol -obsolete?",
+            'What is supported (site:first.example OR site:"second.example")?',
+        ):
+            with self.subTest(query=query):
+                self.assertEqual(search_query_variants(query), [query])
+
     def test_rewrites_prepositional_question(self):
         query = "In what year was the company that created CUDA founded?"
 

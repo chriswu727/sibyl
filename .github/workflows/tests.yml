@@ -40,6 +40,9 @@ jobs:
         run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
       - name: Smoke-test authenticated monitoring and MCP shutdown
         run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
+      - name: Check bounded runtime resource recovery
+        if: matrix.python-version == '3.12'
+        run: python scripts/check_runtime_soak.py --rounds 100 --monitor --pdf
       - name: Check lexical retrieval regression floor
         run: python scripts/eval_retrieval.py --ranker lexical
       - name: Check end-to-end retrieval pipeline regression floor
