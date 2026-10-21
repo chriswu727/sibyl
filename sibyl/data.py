@@ -1,14 +1,12 @@
 """Data collection and analysis — financial data, trends, charts."""
+
 from __future__ import annotations
 
 import asyncio
-import io
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
-
-import pandas as pd
+from typing import List, Optional
 
 
 @dataclass
@@ -24,8 +22,8 @@ class DataSeries:
     symbol: str
     points: List[DataPoint]
     current: float = 0.0
-    change_pct: float = 0.0       # period change %
-    trend: str = ""                # "up", "down", "flat"
+    change_pct: float = 0.0  # period change %
+    trend: str = ""  # "up", "down", "flat"
     moving_avg_50: float = 0.0
     moving_avg_200: float = 0.0
     high_52w: float = 0.0
@@ -57,10 +55,12 @@ def _fetch_stock_data_sync(symbol: str, period: str = "1y") -> Optional[DataSeri
 
         points = []
         for date, row in hist.iterrows():
-            points.append(DataPoint(
-                date=date.strftime("%Y-%m-%d"),
-                value=round(row["Close"], 2),
-            ))
+            points.append(
+                DataPoint(
+                    date=date.strftime("%Y-%m-%d"),
+                    value=round(row["Close"], 2),
+                )
+            )
 
         current = points[-1].value if points else 0
         first = points[0].value if points else 0
@@ -69,7 +69,9 @@ def _fetch_stock_data_sync(symbol: str, period: str = "1y") -> Optional[DataSeri
         # Moving averages
         closes = hist["Close"]
         ma50 = round(closes.rolling(50).mean().iloc[-1], 2) if len(closes) >= 50 else 0
-        ma200 = round(closes.rolling(200).mean().iloc[-1], 2) if len(closes) >= 200 else 0
+        ma200 = (
+            round(closes.rolling(200).mean().iloc[-1], 2) if len(closes) >= 200 else 0
+        )
 
         # 52-week high/low
         high_52w = round(closes.max(), 2)
@@ -78,7 +80,11 @@ def _fetch_stock_data_sync(symbol: str, period: str = "1y") -> Optional[DataSeri
         # Trend
         if len(closes) >= 20:
             recent = closes.iloc[-20:].mean()
-            earlier = closes.iloc[-40:-20].mean() if len(closes) >= 40 else closes.iloc[:20].mean()
+            earlier = (
+                closes.iloc[-40:-20].mean()
+                if len(closes) >= 40
+                else closes.iloc[:20].mean()
+            )
             if recent > earlier * 1.02:
                 trend = "up"
             elif recent < earlier * 0.98:
@@ -113,7 +119,7 @@ def _fetch_stock_data_sync(symbol: str, period: str = "1y") -> Optional[DataSeri
             low_52w=low_52w,
             summary=summary,
         )
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -133,9 +139,10 @@ def generate_chart(
 ) -> str:
     """Generate a chart PNG from one or more DataSeries."""
     import matplotlib
+
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(10, 5))
 
@@ -171,6 +178,7 @@ def generate_comparison_chart(
 ) -> str:
     """Generate a bar chart comparing % change across symbols."""
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -184,9 +192,15 @@ def generate_comparison_chart(
     # Add value labels on bars
     for bar, val in zip(bars, changes):
         y = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width() / 2, y + (0.5 if y >= 0 else -1.5),
-                f"{val:+.1f}%", ha="center", va="bottom" if y >= 0 else "top",
-                fontsize=11, fontweight="bold")
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            y + (0.5 if y >= 0 else -1.5),
+            f"{val:+.1f}%",
+            ha="center",
+            va="bottom" if y >= 0 else "top",
+            fontsize=11,
+            fontweight="bold",
+        )
 
     ax.set_title(title, fontsize=14, fontweight="bold")
     ax.set_ylabel("Change (%)")
@@ -211,7 +225,9 @@ def format_data_summary(series_list: List[DataSeries]) -> str:
     for ds in series_list:
         lines.append(f"\n**{ds.name} ({ds.symbol})**")
         lines.append(f"- Current: ${ds.current:.2f}")
-        lines.append(f"- Period change: {'+' if ds.change_pct > 0 else ''}{ds.change_pct}%")
+        lines.append(
+            f"- Period change: {'+' if ds.change_pct > 0 else ''}{ds.change_pct}%"
+        )
         lines.append(f"- Trend: {ds.trend}")
         lines.append(f"- 52-week range: ${ds.low_52w} - ${ds.high_52w}")
         if ds.moving_avg_50:

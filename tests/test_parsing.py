@@ -2,74 +2,108 @@
 
 Run: python -m unittest discover tests
 """
+
 import unittest
 
+from sibyl.analyzer import CrossAnalysis, format_cross_analysis
 from sibyl.scraper import _extract_content, scrape_url
 from sibyl.search import _extract_ddg_url
-from sibyl.analyzer import CrossAnalysis, format_cross_analysis
 
 
 class TestExtractContent(unittest.TestCase):
     def test_article_survives_navigation_wrapper(self):
-        html = '<body><nav><a>Menu</a><main><p>' + ('Real financial disclosure. ' * 20) + '</p></main></nav><footer>Contact only</footer></body>'
+        html = (
+            "<body><nav><a>Menu</a><main><p>"
+            + ("Real financial disclosure. " * 20)
+            + "</p></main></nav><footer>Contact only</footer></body>"
+        )
         page = _extract_content(html, "https://example.com", 6000)
         self.assertIn("Real financial disclosure", page.text)
         self.assertNotIn("Contact only", page.text)
         self.assertNotIn("Menu", page.text)
 
     def test_page_wide_form_keeps_article_but_not_controls(self):
-        html = '<body><form><input value="hidden-token"><main><p>' + ('Quarterly earnings disclosure. ' * 20) + '</p><form><label>Email</label><input></form></main></form></body>'
+        html = (
+            '<body><form><input value="hidden-token"><main><p>'
+            + ("Quarterly earnings disclosure. " * 20)
+            + "</p><form><label>Email</label><input></form></main></form></body>"
+        )
         page = _extract_content(html, "https://example.com", 6000)
         self.assertIn("Quarterly earnings disclosure", page.text)
         self.assertNotIn("hidden-token", page.text)
         self.assertNotIn("Email", page.text)
 
     def test_empty_main_does_not_hide_substantive_article(self):
-        html = '<body><main>Loading</main><article>' + ('Full disclosure. ' * 30) + '</article></body>'
+        html = (
+            "<body><main>Loading</main><article>"
+            + ("Full disclosure. " * 30)
+            + "</article></body>"
+        )
         page = _extract_content(html, "https://example.com", 6000)
         self.assertIn("Full disclosure", page.text)
 
     def test_empty_content_widget_does_not_hide_later_content(self):
-        html = '<body><div class="content">Stock quote</div><div class="news-content">' + ('Real news. ' * 40) + '</div></body>'
+        html = (
+            '<body><div class="content">Stock quote</div><div class="news-content">'
+            + ("Real news. " * 40)
+            + "</div></body>"
+        )
         page = _extract_content(html, "https://example.com", 6000)
         self.assertIn("Real news", page.text)
         self.assertNotIn("Stock quote", page.text)
 
     def test_epoch_placeholder_falls_back_to_explicit_issue_date(self):
-        html = '''<html><head><script type="application/ld+json">
+        html = """<html><head><script type="application/ld+json">
         {"datePublished":"1970-01-01T08:00:00+08:00"}</script></head>
-        <body><main><div>Issued on: <time><div><time datetime="2026-10-15T12:00:00Z">2026/10/15</time></div></time></div></main></body></html>'''
+        <body><main><div>Issued on: <time><div><time datetime="2026-10-15T12:00:00Z">2026/10/15</time></div></time></div></main></body></html>"""
         page = _extract_content(html, "https://example.com", 6000)
         self.assertEqual(page.published_at, "2026-10-15T12:00:00+00:00")
         self.assertEqual(page.published_at_method, "time_date_published")
 
     def test_does_not_guess_publication_date_from_unlabelled_or_modified_time(self):
         for label in ("", "Last modified: "):
-            page = _extract_content(f'<main>{label}<time datetime="2026-10-15">2026-10-15</time></main>',
-                                    "https://example.com", 6000)
+            page = _extract_content(
+                f'<main>{label}<time datetime="2026-10-15">2026-10-15</time></main>',
+                "https://example.com",
+                6000,
+            )
             self.assertIsNone(page.published_at)
 
     def test_genuine_historical_publication_date_is_preserved(self):
-        page = _extract_content('<meta name="date" content="1970-04-15"><body>Historical paper</body>',
-                                "https://example.com", 6000)
+        page = _extract_content(
+            '<meta name="date" content="1970-04-15"><body>Historical paper</body>',
+            "https://example.com",
+            6000,
+        )
         self.assertEqual(page.published_at, "1970-04-15")
 
     def test_nearby_publication_label_does_not_relabel_modified_time(self):
-        page = _extract_content('''<main><div>Last modified: <time datetime="2026-10-20">October 20</time></div>
-        <div>Issued on: <time datetime="2026-10-15">October 15</time></div></main>''',
-                                "https://example.com", 6000)
+        page = _extract_content(
+            """<main><div>Last modified: <time datetime="2026-10-20">October 20</time></div>
+        <div>Issued on: <time datetime="2026-10-15">October 15</time></div></main>""",
+            "https://example.com",
+            6000,
+        )
         self.assertEqual(page.published_at, "2026-10-15")
 
     def test_explicit_article_date_text_is_not_a_related_story_date(self):
-        page = _extract_content('''<div class="article-date">August 26, 2026</div>
+        page = _extract_content(
+            """<div class="article-date">August 26, 2026</div>
         <aside><span class="article-date">October 20, 2026</span></aside>
-        <span class="index-item-text-info-date">October 19, 2026</span>''', "https://example.com", 6000)
+        <span class="index-item-text-info-date">October 19, 2026</span>""",
+            "https://example.com",
+            6000,
+        )
         self.assertEqual(page.published_at, "2026-08-26")
         self.assertEqual(page.published_at_method, "article_date_text")
 
     def test_ambiguous_article_dates_remain_unknown(self):
-        page = _extract_content('''<div class="article-date">August 26, 2026</div>
-        <div class="article-date">October 20, 2026</div>''', "https://example.com", 6000)
+        page = _extract_content(
+            """<div class="article-date">August 26, 2026</div>
+        <div class="article-date">October 20, 2026</div>""",
+            "https://example.com",
+            6000,
+        )
         self.assertIsNone(page.published_at)
 
     def test_strips_noise_and_extracts_article(self):
@@ -88,11 +122,15 @@ class TestExtractContent(unittest.TestCase):
         page = _extract_content(html, "https://ex.com/a", max_chars=6000)
         self.assertEqual(page.title, "My Title")
         self.assertIn("real article body", page.text)
-        self.assertNotIn("var x", page.text)          # script dropped
+        self.assertNotIn("var x", page.text)  # script dropped
         self.assertNotIn("copyright 2026", page.text)  # footer dropped
 
     def test_respects_max_chars(self):
-        html = "<html><body><article>" + ("word longenough " * 500) + "</article></body></html>"
+        html = (
+            "<html><body><article>"
+            + ("word longenough " * 500)
+            + "</article></body></html>"
+        )
         page = _extract_content(html, "https://ex.com/b", max_chars=200)
         self.assertLessEqual(len(page.text), 200)
 
@@ -162,7 +200,9 @@ class TestExtractorChoice(unittest.TestCase):
     def test_trafilatura_length_compare_never_shrinks(self):
         # A page where BS4 would extract more than a thin trafilatura result:
         # the length-comparison fallback must keep the longer (bs4) text.
-        body = " ".join(f"sentence number {i} with enough words to count" for i in range(40))
+        body = " ".join(
+            f"sentence number {i} with enough words to count" for i in range(40)
+        )
         html = f"<html><head><title>T</title></head><body><article><p>{body}</p></article></body></html>"
         traf = _extract_content(html, "https://ex.com/b", 6000, extractor="trafilatura")
         bs4 = _extract_content(html, "https://ex.com/b", 6000, extractor="bs4")

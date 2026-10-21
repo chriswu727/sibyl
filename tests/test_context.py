@@ -2,6 +2,7 @@
 
 Run: python -m unittest discover tests
 """
+
 import unittest
 
 from sibyl.context import (
@@ -16,7 +17,7 @@ from sibyl.scraper import WebPage
 class TestRelevantWindow(unittest.TestCase):
     def test_returns_tail_region_with_the_answer(self):
         # answer buried far past the head; window must surface it
-        head = "intro paragraph about the game. " * 300           # ~9600 chars of filler
+        head = "intro paragraph about the game. " * 300  # ~9600 chars of filler
         tail = "History: Desktop 1.4.1 reduced titanium ore from 5 to 4."
         text = head + tail + (" more trailing notes." * 50)
         win = relevant_window("titanium ore 1.4.1 patch history", text, width=2000)
@@ -47,7 +48,10 @@ class TestRelevantWindow(unittest.TestCase):
 
 class TestBuildSourceContext(unittest.TestCase):
     def test_numbering_and_limit(self):
-        pages = [WebPage(url=f"u{i}", title=f"T{i}", text=f"body {i} " * 10) for i in range(5)]
+        pages = [
+            WebPage(url=f"u{i}", title=f"T{i}", text=f"body {i} " * 10)
+            for i in range(5)
+        ]
         ctx = build_source_context(pages, limit=3)
         self.assertIn("[Source 1: T0]", ctx)
         self.assertIn("[Source 3: T2]", ctx)
@@ -62,8 +66,10 @@ class TestBuildSourceContext(unittest.TestCase):
 
 class TestBestSnippet(unittest.TestCase):
     def test_picks_overlapping_sentence(self):
-        text = ("The weather was nice today. NVIDIA reported record data center revenue of "
-                "40 billion dollars. Cats are mammals.")
+        text = (
+            "The weather was nice today. NVIDIA reported record data center revenue of "
+            "40 billion dollars. Cats are mammals."
+        )
         snip = best_snippet("NVIDIA data center revenue", text)
         self.assertIn("NVIDIA", snip)
         self.assertIn("revenue", snip)

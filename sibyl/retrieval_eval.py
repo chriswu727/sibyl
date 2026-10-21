@@ -1,4 +1,5 @@
 """Offline evaluation helpers for retrieval rankers."""
+
 from __future__ import annotations
 
 import json
@@ -6,7 +7,6 @@ import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Sequence, Tuple
-
 
 ScoreFunction = Callable[[str, Sequence[Tuple[str, str]]], List[float]]
 
@@ -59,7 +59,9 @@ def _parse_case(data: object, line_number: int) -> RetrievalCase:
     query = _nonempty_string(data.get("query"), "query", line_number)
     raw_documents = data.get("documents")
     if not isinstance(raw_documents, list) or len(raw_documents) < 2:
-        raise ValueError(f"Line {line_number}: documents must contain at least two items.")
+        raise ValueError(
+            f"Line {line_number}: documents must contain at least two items."
+        )
 
     documents = []
     document_ids = set()
@@ -111,7 +113,9 @@ def _parse_case(data: object, line_number: int) -> RetrievalCase:
 def load_retrieval_cases(path: Path) -> List[RetrievalCase]:
     cases = []
     case_ids = set()
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), 1
+    ):
         if not line.strip():
             continue
         try:

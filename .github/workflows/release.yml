@@ -21,15 +21,19 @@ jobs:
       - name: Install release tooling
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 -e '.[report,finance,extract]'
+          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 ruff==0.17.1 mypy==2.4.0 -e '.[report,finance,extract,pdf,monitor]'
       - name: Audit release environment
         run: python -m pip_audit --vulnerability-service osv --skip-editable --progress-spinner off
       - name: Validate tag and package version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: python scripts/check_release.py "$RELEASE_TAG"
+        run: python scripts/check_release.py "$RELEASE_TAG" --require-release-note
       - name: Run release tests and offline evaluations
         run: |
+          ruff check sibyl tests scripts
+          ruff format --check sibyl tests scripts
+          mypy
+          python scripts/check_docs.py
           python -m unittest discover tests -v
           python scripts/eval_retrieval.py --ranker lexical
           python scripts/eval_retrieval_pipeline.py --ranker lexical
@@ -38,17 +42,11 @@ jobs:
         run: python -m build
       - name: Validate distribution metadata
         run: python -m twine check dist/*
-      - name: Smoke-test the wheel in a clean environment
+      - name: Smoke-test core and optional wheel profiles in clean environments
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          python -m venv /tmp/sibyl-release-smoke
-          /tmp/sibyl-release-smoke/bin/python -m pip install dist/*.whl
-          /tmp/sibyl-release-smoke/bin/python -m pip check
-          /tmp/sibyl-release-smoke/bin/python scripts/check_installed_distribution.py "${RELEASE_TAG#v}"
-          /tmp/sibyl-release-smoke/bin/sibyl-mcp --version
-          /tmp/sibyl-release-smoke/bin/sibyl-mcp --list-tools
-          /tmp/sibyl-release-smoke/bin/python scripts/check_mcp_stdio.py /tmp/sibyl-release-smoke/bin/sibyl-mcp
+          python scripts/check_wheel.py dist/*.whl "${RELEASE_TAG#v}"
       - name: Store release distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -4,16 +4,33 @@ Two URLs that differ only in scheme, a leading www, tracking params, fragment,
 or a trailing slash point at the same document — feeding both to synthesis wastes
 context and skews consensus. Pure-Python, keyless, can only ever remove sources.
 """
+
 from __future__ import annotations
 
 from typing import List
-from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from .scraper import WebPage
 
-_TRACKING = {"utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
-             "utm_id", "gclid", "fbclid", "mc_cid", "mc_eid", "ref", "ref_src",
-             "igshid", "s", "spm", "_hsenc", "_hsmi"}
+_TRACKING = {
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "utm_id",
+    "gclid",
+    "fbclid",
+    "mc_cid",
+    "mc_eid",
+    "ref",
+    "ref_src",
+    "igshid",
+    "s",
+    "spm",
+    "_hsenc",
+    "_hsmi",
+}
 
 
 def canonical_url(url: str) -> str:
@@ -26,10 +43,13 @@ def canonical_url(url: str) -> str:
         if host.startswith("www."):
             host = host[4:]
         path = parts.path.rstrip("/") or "/"
-        query = urlencode(sorted(
-            (k, v) for k, v in parse_qsl(parts.query, keep_blank_values=False)
-            if k.lower() not in _TRACKING
-        ))
+        query = urlencode(
+            sorted(
+                (k, v)
+                for k, v in parse_qsl(parts.query, keep_blank_values=False)
+                if k.lower() not in _TRACKING
+            )
+        )
         # scheme dropped from the key (http vs https = same doc)
         return urlunsplit(("", host, path, query, ""))
     except Exception:

@@ -16,8 +16,14 @@ async def _watch_memory(process):
     # macOS does not enforce RLIMIT_AS; sampled RSS is a kill threshold, not a hard allocation cap.
     while process.returncode is None:
         probe = await asyncio.create_subprocess_exec(
-            "/bin/ps", "-o", "rss=", "-p", str(process.pid),
-            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL, env={},
+            "/bin/ps",
+            "-o",
+            "rss=",
+            "-p",
+            str(process.pid),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+            env={},
         )
         try:
             output, _ = await probe.communicate()
@@ -42,16 +48,30 @@ async def read_pdf(data: bytes, max_chars: int) -> dict:
     gate = _gates.setdefault(loop, asyncio.Semaphore(2))
     async with gate:
         process = await asyncio.create_subprocess_exec(
-            sys.executable, "-I", str(Path(__file__).with_name("pdf_worker.py")),
+            sys.executable,
+            "-I",
+            str(Path(__file__).with_name("pdf_worker.py")),
             str(max(200, min(max_chars, 60000))),
-            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL, env={},
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+            env={},
         )
-        watcher = asyncio.create_task(_watch_memory(process)) if sys.platform == "darwin" else None
+        watcher = (
+            asyncio.create_task(_watch_memory(process))
+            if sys.platform == "darwin"
+            else None
+        )
         if watcher is not None:
+
             def checked(task):
-                if not task.cancelled() and task.exception() is not None and process.returncode is None:
+                if (
+                    not task.cancelled()
+                    and task.exception() is not None
+                    and process.returncode is None
+                ):
                     process.kill()
+
             watcher.add_done_callback(checked)
         try:
             output, _ = await asyncio.wait_for(process.communicate(data), timeout=6)

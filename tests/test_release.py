@@ -1,4 +1,5 @@
 """Release guard tests. No network."""
+
 import json
 import tempfile
 import tomllib
@@ -11,7 +12,9 @@ from scripts.check_release import validate_release
 class TestRuntimeCompatibility(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.project = tomllib.loads((Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())["project"]
+        cls.project = tomllib.loads(
+            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+        )["project"]
 
     def test_minimum_python_excludes_unsupported_runtime(self):
         self.assertEqual(self.project["requires-python"], ">=3.11")
@@ -19,10 +22,17 @@ class TestRuntimeCompatibility(unittest.TestCase):
     def test_image_using_extras_enforce_pillow_security_floor(self):
         for extra in ("report", "finance", "all"):
             with self.subTest(extra=extra):
-                self.assertIn("pillow>=13.0.0", self.project["optional-dependencies"][extra])
+                self.assertIn(
+                    "pillow>=13.0.0", self.project["optional-dependencies"][extra]
+                )
 
     def test_core_does_not_pull_in_pillow(self):
-        self.assertFalse(any(item.lower().startswith("pillow") for item in self.project["dependencies"]))
+        self.assertFalse(
+            any(
+                item.lower().startswith("pillow")
+                for item in self.project["dependencies"]
+            )
+        )
 
 
 class TestReleaseValidation(unittest.TestCase):
@@ -61,6 +71,28 @@ class TestReleaseValidation(unittest.TestCase):
         temporary, root = self._release_tree()
         with temporary, self.assertRaisesRegex(ValueError, "must equal"):
             validate_release("v0.3.1", root)
+
+    def test_publication_rejects_undated_development_changelog(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            (root / "CHANGELOG.md").write_text("# Changelog\n\n## 0.3.0 — Unreleased\n")
+            self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
+            with self.assertRaisesRegex(ValueError, "dated changelog"):
+                validate_release("v0.3.0", root, require_release_note=True)
+
+    def test_publication_accepts_dated_changelog(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            self.assertEqual(
+                validate_release("v0.3.0", root, require_release_note=True), "0.3.0"
+            )
+
+    def test_publication_rejects_invalid_calendar_date(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            (root / "CHANGELOG.md").write_text("## 0.3.0 — 2026-02-30\n")
+            with self.assertRaises(ValueError):
+                validate_release("v0.3.0", root, require_release_note=True)
 
     def test_rejects_missing_changelog_section(self):
         temporary, root = self._release_tree()

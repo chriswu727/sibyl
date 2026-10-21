@@ -1,10 +1,11 @@
 """Advanced analysis — sentiment, cross-referencing, source evaluation."""
+
 from __future__ import annotations
 
 import asyncio
 import json
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import litellm
 
@@ -18,18 +19,18 @@ litellm.suppress_debug_info = True
 class SourceAnalysis:
     url: str
     title: str
-    sentiment: str      # positive, negative, neutral, mixed
+    sentiment: str  # positive, negative, neutral, mixed
     key_claims: List[str]
-    credibility: str    # high, medium, low
-    bias: str           # none, slight, strong + direction
+    credibility: str  # high, medium, low
+    bias: str  # none, slight, strong + direction
 
 
 @dataclass
 class CrossAnalysis:
-    consensus_points: List[str]     # what sources agree on
+    consensus_points: List[str]  # what sources agree on
     disagreement_points: List[str]  # where sources conflict
-    unique_insights: List[str]      # points only one source makes
-    overall_sentiment: str          # positive, negative, mixed, neutral
+    unique_insights: List[str]  # points only one source makes
+    overall_sentiment: str  # positive, negative, mixed, neutral
     sentiment_breakdown: Dict[str, int]  # {"positive": 3, "negative": 2, ...}
 
 
@@ -117,11 +118,17 @@ Cite source numbers. Be specific."""
                     sentiment_breakdown[k] = int(raw.get(k, 0))
                 except (ValueError, TypeError):
                     pass
+
         # Guard the list shape: JSON mode guarantees valid JSON, not schema
         # conformance. A scalar here (e.g. "consensus": 5, or a bare string) must
         # degrade to [] — not crash the run or iterate a string into per-char items.
         def _as_list(v):
-            return [str(x).strip() for x in v if str(x).strip()] if isinstance(v, list) else []
+            return (
+                [str(x).strip() for x in v if str(x).strip()]
+                if isinstance(v, list)
+                else []
+            )
+
         consensus = _as_list(data.get("consensus"))
         disagreements = _as_list(data.get("disagreements"))
         unique = _as_list(data.get("unique"))

@@ -74,6 +74,11 @@ The [release readiness record](docs/LAUNCH_READINESS.md) separates current
 engineering evidence from dated experiments. The [roadmap](docs/QUALITY_BUILD_PLAN.md)
 tracks remaining work; it is not a list of already available features.
 
+See a [complete, reproducible research example](docs/examples/sqlite-wal/README.md):
+two rounds of official-source evidence, a documented gap, counterevidence,
+citation review, and an exported report. The example is an offline replay with
+host-authored conclusions, not a live accuracy benchmark.
+
 ## Quick start
 
 Requires Python 3.11+. **The current evidence API and runtime/security upgrade

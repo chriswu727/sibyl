@@ -2,16 +2,17 @@
 
 Run: python -m unittest discover tests
 """
+
 import os
-import tempfile
-import unittest
 import shutil
 import subprocess
+import tempfile
+import unittest
 from pathlib import Path
 from unittest import mock
 
+from sibyl.reporter import _report_to_markdown, generate_pdf
 from sibyl.researcher import ResearchReport, Source
-from sibyl.reporter import generate_pdf, _report_to_markdown
 
 
 def _report():
@@ -39,12 +40,14 @@ class TestMarkdownReport(unittest.TestCase):
 
     def test_markdown_preserves_formatting(self):
         md = _report_to_markdown(_report())
-        self.assertIn("**bold claim**", md)   # markdown text keeps the syntax
+        self.assertIn("**bold claim**", md)  # markdown text keeps the syntax
         self.assertIn("## Summary", md)
         self.assertIn("Example", md)
 
     def test_failed_report_is_not_rendered_as_completed_research(self):
-        rep = ResearchReport("q", "", [], [], status="failed", error="provider unavailable")
+        rep = ResearchReport(
+            "q", "", [], [], status="failed", error="provider unavailable"
+        )
         md = _report_to_markdown(rep)
         self.assertIn("Research failed", md)
         self.assertIn("provider unavailable", md)
@@ -54,6 +57,7 @@ class TestMarkdownReport(unittest.TestCase):
 class TestVerificationRendering(unittest.TestCase):
     def test_unverified_marker_in_markdown(self):
         from sibyl.verifier import FindingVerification
+
         rep = _report()
         rep.finding_verifications = [
             FindingVerification(1, True, "high", [1], ""),
@@ -72,27 +76,39 @@ class TestVerificationRendering(unittest.TestCase):
 
     def test_length_mismatch_no_crash(self):
         from sibyl.verifier import FindingVerification
+
         rep = _report()  # 2 findings
-        rep.finding_verifications = [FindingVerification(1, True, "high", [1], "")]  # only 1
+        rep.finding_verifications = [
+            FindingVerification(1, True, "high", [1], "")
+        ]  # only 1
         md = _report_to_markdown(rep)  # must not IndexError
         self.assertIn("confidence: high", md)
 
 
 class TestPdfGeneration(unittest.TestCase):
-    @unittest.skipUnless(shutil.which("pdftotext"), "Poppler text extractor is optional")
+    @unittest.skipUnless(
+        shutil.which("pdftotext"), "Poppler text extractor is optional"
+    )
     def test_partial_pdf_keeps_warning_and_findings(self):
         report = _report()
         report.status = "partial"
         with tempfile.TemporaryDirectory() as directory:
             path = generate_pdf(report, directory)
-            text = subprocess.run(["pdftotext", path, "-"], capture_output=True, text=True, check=True).stdout
+            text = subprocess.run(
+                ["pdftotext", path, "-"], capture_output=True, text=True, check=True
+            ).stdout
         self.assertIn("Partial report: unresolved research gaps remain.", text)
         self.assertIn("Finding one", text)
 
-    @unittest.skipUnless(shutil.which("pdftotext"), "Poppler text extractor is optional")
+    @unittest.skipUnless(
+        shutil.which("pdftotext"), "Poppler text extractor is optional"
+    )
     def test_consecutive_bullets_and_limitations_are_not_silently_lost(self):
         report = _report()
-        report.limitations = ["First limitation retained.", "Second limitation retained."]
+        report.limitations = [
+            "First limitation retained.",
+            "Second limitation retained.",
+        ]
         with tempfile.TemporaryDirectory() as directory:
             path = generate_pdf(report, directory)
             extracted = subprocess.run(
@@ -115,8 +131,9 @@ class TestPdfGeneration(unittest.TestCase):
             self.assert_valid_pdf(path)
 
     def test_pdf_falls_back_when_system_font_is_unavailable(self):
-        with tempfile.TemporaryDirectory() as d, mock.patch(
-            "fpdf.FPDF.add_font", side_effect=OSError("font unavailable")
+        with (
+            tempfile.TemporaryDirectory() as d,
+            mock.patch("fpdf.FPDF.add_font", side_effect=OSError("font unavailable")),
         ):
             path = generate_pdf(_report(), d)
             self.assert_valid_pdf(path)

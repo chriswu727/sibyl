@@ -1,4 +1,5 @@
 """Live, model-free evaluation for keyless retrieval."""
+
 from __future__ import annotations
 
 import asyncio
@@ -102,9 +103,7 @@ def _contains_candidate(evidence: str, candidate: str) -> bool:
 
 def _bundle_evidence(bundle: SourceBundle) -> str:
     return "\n".join(
-        passage.text
-        for source in bundle.sources
-        for passage in source.evidence
+        passage.text for source in bundle.sources for passage in source.evidence
     )
 
 
@@ -117,12 +116,13 @@ def evaluate_bundle(
     answer_in_evidence = any(
         _contains_candidate(evidence, candidate) for candidate in answer_candidates
     )
-    refutation_in_evidence = any(
-        _contains_candidate(evidence, alias) for alias in case.aliases
-    ) if not case.expects_answer else False
-    safe_trap_outcome = (
-        not case.expects_answer
-        and (bundle.status != "ok" or refutation_in_evidence)
+    refutation_in_evidence = (
+        any(_contains_candidate(evidence, alias) for alias in case.aliases)
+        if not case.expects_answer
+        else False
+    )
+    safe_trap_outcome = not case.expects_answer and (
+        bundle.status != "ok" or refutation_in_evidence
     )
     return LiveRetrievalRun(
         status=bundle.status,
@@ -199,8 +199,7 @@ async def evaluate_live_retrieval(
                     continue
             runs.append(evaluate_bundle(case, bundle))
         outcomes = {
-            (run.status, run.answer_in_evidence, run.safe_trap_outcome)
-            for run in runs
+            (run.status, run.answer_in_evidence, run.safe_trap_outcome) for run in runs
         }
         result = LiveRetrievalCaseResult(
             case_id=case.case_id,
@@ -225,15 +224,9 @@ async def evaluate_live_retrieval(
     )
     all_runs = [run for result in results for run in result.runs]
     status_ok_runs = sum(run.status == "ok" for run in all_runs)
-    answerable_runs = [
-        run for result in answerable for run in result.runs
-    ]
-    answerable_ok_runs = [
-        run for run in answerable_runs if run.status == "ok"
-    ]
-    answerable_ready_runs = sum(
-        run.answer_in_evidence for run in answerable_ok_runs
-    )
+    answerable_runs = [run for result in answerable for run in result.runs]
+    answerable_ok_runs = [run for run in answerable_runs if run.status == "ok"]
+    answerable_ready_runs = sum(run.answer_in_evidence for run in answerable_ok_runs)
     latencies = [run.latency_ms for run in all_runs]
     return LiveRetrievalEvalResult(
         total_cases=len(results),
@@ -245,12 +238,12 @@ async def evaluate_live_retrieval(
             sum(result.stable for result in results) / len(results), 6
         ),
         status_ok_rate=round(status_ok_runs / len(all_runs), 6),
-        answerable_ready_rate=round(
-            answerable_ready_runs / len(answerable_runs), 6
-        ) if answerable_runs else 1.0,
-        ready_answer_precision=round(
-            answerable_ready_runs / len(answerable_ok_runs), 6
-        ) if answerable_ok_runs else 1.0,
+        answerable_ready_rate=round(answerable_ready_runs / len(answerable_runs), 6)
+        if answerable_runs
+        else 1.0,
+        ready_answer_precision=round(answerable_ready_runs / len(answerable_ok_runs), 6)
+        if answerable_ok_runs
+        else 1.0,
         p50_latency_ms=_percentile(latencies, 0.5),
         p95_latency_ms=_percentile(latencies, 0.95),
         cases=results,

@@ -1,7 +1,6 @@
 """Evidence retrieval for AI agents with auditable source provenance."""
 
 from .api import gather_bundle, gather_sources
-
 from .evidence import (
     BundleDiagnostics,
     BundleStatus,
@@ -12,8 +11,8 @@ from .evidence import (
     EvidenceLoopStep,
     EvidenceLoopStepSummary,
     EvidencePassage,
-    EvidenceSufficiency,
     EvidenceSource,
+    EvidenceSufficiency,
     SourceBundle,
 )
 

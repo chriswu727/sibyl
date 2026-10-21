@@ -1,18 +1,17 @@
 """Smoke-check the built MCP server over a real stdio client session."""
+
 from __future__ import annotations
 
-import asyncio
 import argparse
+import asyncio
 import secrets
 import socket
 import sys
 import tempfile
 
 import httpx
-
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-
 
 QUESTION = "In what year was the company that created CUDA founded?"
 EXPECTED_KEYLESS_TOOLS = {
@@ -36,7 +35,9 @@ async def check(command: str, monitor: bool = False) -> None:
         await check_in_directory(command, directory, monitor)
 
 
-async def check_in_directory(command: str, directory: str, monitor: bool = False) -> None:
+async def check_in_directory(
+    command: str, directory: str, monitor: bool = False
+) -> None:
     args = ["--profile", "keyless"]
     env = {"SIBYL_OUTPUT_ROOT": directory}
     token = secrets.token_urlsafe(32)
@@ -48,7 +49,9 @@ async def check_in_directory(command: str, directory: str, monitor: bool = False
         env["SIBYL_MONITOR_TOKEN"] = token
         url = f"http://127.0.0.1:{port}"
     server = StdioServerParameters(
-        command=command, args=args, env=env,
+        command=command,
+        args=args,
+        env=env,
     )
     async with stdio_client(server) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -56,9 +59,7 @@ async def check_in_directory(command: str, directory: str, monitor: bool = False
             tools = await session.list_tools()
             names = {tool.name for tool in tools.tools}
             if names != EXPECTED_KEYLESS_TOOLS:
-                raise RuntimeError(
-                    f"unexpected keyless tools: {sorted(names)!r}"
-                )
+                raise RuntimeError(f"unexpected keyless tools: {sorted(names)!r}")
             result = await session.call_tool(
                 "gather_evidence",
                 {"question": QUESTION, "max_steps": 2},
@@ -67,13 +68,17 @@ async def check_in_directory(command: str, directory: str, monitor: bool = False
             if result.isError:
                 raise RuntimeError("gather_evidence returned a tool error")
             if structured.get("status") != "active":
-                raise RuntimeError(f"unexpected loop status: {structured.get('status')!r}")
+                raise RuntimeError(
+                    f"unexpected loop status: {structured.get('status')!r}"
+                )
             if structured.get("next_action") != "decompose_query":
                 raise RuntimeError(
                     f"unexpected loop action: {structured.get('next_action')!r}"
                 )
             if structured.get("current_step") is not None:
-                raise RuntimeError("dependent question triggered an unnecessary retrieval")
+                raise RuntimeError(
+                    "dependent question triggered an unnecessary retrieval"
+                )
             diagnostics = structured.get("diagnostics", {})
             if diagnostics.get("remaining_steps") != 2:
                 raise RuntimeError(f"unexpected loop diagnostics: {diagnostics!r}")
@@ -82,24 +87,45 @@ async def check_in_directory(command: str, directory: str, monitor: bool = False
             if created.isError or job.get("status") != "awaiting_input":
                 raise RuntimeError("Could not create a keyless research job")
             loaded = await session.call_tool("get_research", {"job_id": job["job_id"]})
-            if loaded.isError or (loaded.structuredContent or {}).get("job_id") != job["job_id"]:
+            if (
+                loaded.isError
+                or (loaded.structuredContent or {}).get("job_id") != job["job_id"]
+            ):
                 raise RuntimeError("Research job was not readable")
             deleted = await session.call_tool(
                 "cancel_research", {"job_id": job["job_id"], "delete": True}
             )
-            if deleted.isError or (deleted.structuredContent or {}).get("status") != "deleted":
+            if (
+                deleted.isError
+                or (deleted.structuredContent or {}).get("status") != "deleted"
+            ):
                 raise RuntimeError("Research checkpoint cleanup failed")
             if monitor:
                 async with httpx.AsyncClient(trust_env=False, base_url=url) as client:
                     denied = await client.get("/status")
                     if denied.status_code != 401:
-                        raise RuntimeError("Monitoring allowed an unauthenticated request")
+                        raise RuntimeError(
+                            "Monitoring allowed an unauthenticated request"
+                        )
                     headers = {"Authorization": f"Bearer {token}"}
                     status = await client.get("/status", headers=headers)
-                    if status.status_code != 200 or QUESTION in status.text or token in status.text:
-                        raise RuntimeError("Monitoring status failed or disclosed content")
-                    if status.json()["tools"]["start_research"]["outcomes"]["completed"] != 1:
-                        raise RuntimeError("MCP tool invocation did not reach monitoring")
+                    if (
+                        status.status_code != 200
+                        or QUESTION in status.text
+                        or token in status.text
+                    ):
+                        raise RuntimeError(
+                            "Monitoring status failed or disclosed content"
+                        )
+                    if (
+                        status.json()["tools"]["start_research"]["outcomes"][
+                            "completed"
+                        ]
+                        != 1
+                    ):
+                        raise RuntimeError(
+                            "MCP tool invocation did not reach monitoring"
+                        )
                     metrics = await client.get("/metrics", headers=headers)
                     if "sibyl_store_healthy 1" not in metrics.text:
                         raise RuntimeError("Monitoring metrics unavailable")

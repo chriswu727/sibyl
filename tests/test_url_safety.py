@@ -1,4 +1,5 @@
 """URL safety and redirect tests. No network."""
+
 import unittest
 from unittest import mock
 
@@ -47,7 +48,9 @@ class TestUnsafeUrlReason(unittest.TestCase):
                 self.assertNotEqual(unsafe_url_reason(url), "")
 
     def test_rejects_credentials_and_non_web_ports(self):
-        self.assertIn("credentials", unsafe_url_reason("https://user:pass@example.com/"))
+        self.assertIn(
+            "credentials", unsafe_url_reason("https://user:pass@example.com/")
+        )
         self.assertIn("ports 80 and 443", unsafe_url_reason("https://example.com:22/"))
 
 

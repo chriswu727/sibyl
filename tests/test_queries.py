@@ -1,4 +1,5 @@
 """Search-query variant tests."""
+
 import unittest
 
 from sibyl.queries import (
@@ -12,20 +13,33 @@ from sibyl.queries import (
 
 class TestSearchQueryVariants(unittest.TestCase):
     def test_focused_site_query_removes_union_operators(self):
-        self.assertEqual(focused_site_query('2026 results (site:first.example OR site:"second.example")', "second.example"),
-                         "2026 results site:second.example")
+        self.assertEqual(
+            focused_site_query(
+                '2026 results (site:first.example OR site:"second.example")',
+                "second.example",
+            ),
+            "2026 results site:second.example",
+        )
 
     def test_site_hosts_strip_syntax_not_domain_boundaries(self):
-        self.assertEqual(query_site_hosts('(site:First.example OR site:second.example)'),
-                         ["first.example", "second.example"])
-        self.assertEqual(query_site_hosts('site:"docs.example.com/path" -site:excluded.com'),
-                         ["docs.example.com"])
-        self.assertEqual(query_site_hosts("[site:https://example.com/path], site:example.com."),
-                         ["example.com"])
+        self.assertEqual(
+            query_site_hosts("(site:First.example OR site:second.example)"),
+            ["first.example", "second.example"],
+        )
+        self.assertEqual(
+            query_site_hosts('site:"docs.example.com/path" -site:excluded.com'),
+            ["docs.example.com"],
+        )
+        self.assertEqual(
+            query_site_hosts("[site:https://example.com/path], site:example.com."),
+            ["example.com"],
+        )
         self.assertEqual(query_site_hosts("website:ignored.com -site:excluded.com"), [])
 
     def test_keeps_original_and_adds_focused_question_variant(self):
-        query = "Who was the Serbian quarterfinalist in the 2018 Madrid Open men's singles?"
+        query = (
+            "Who was the Serbian quarterfinalist in the 2018 Madrid Open men's singles?"
+        )
 
         self.assertEqual(
             search_query_variants(query),

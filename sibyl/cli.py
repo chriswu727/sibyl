@@ -1,4 +1,5 @@
 """CLI interface for Sibyl retrieval and optional report generation."""
+
 import asyncio
 import json
 import sys
@@ -12,8 +13,15 @@ from .config import Config
 
 @click.command(name="research")
 @click.argument("query")
-@click.option("--depth", "-d", default=2, help="Research depth: 1=focused, 2=standard, 3=deep with uncertainty analysis")
-@click.option("--model", default="", help="LLM model (e.g. deepseek/deepseek-v4-flash, gpt-4o)")
+@click.option(
+    "--depth",
+    "-d",
+    default=2,
+    help="Research depth: 1=focused, 2=standard, 3=deep with uncertainty analysis",
+)
+@click.option(
+    "--model", default="", help="LLM model (e.g. deepseek/deepseek-v4-flash, gpt-4o)"
+)
 @click.option("--api-key", default="", help="API key (overrides env var)")
 @click.option("--api-base", default="", help="Custom API base URL")
 @click.option("--config", "-c", "config_file", default="", help="YAML config file")
@@ -21,18 +29,90 @@ from .config import Config
 @click.option("--output", "-o", default=".", help="Output directory for reports")
 @click.option("--pdf", is_flag=True, help="Generate PDF report")
 @click.option("--md", is_flag=True, help="Generate Markdown report")
-@click.option("--symbols", "-s", default="", help="Fetch market data for these symbols (e.g. NVDA,GOOGL,SPY)")
-@click.option("--language", "-l", default="auto", help="Output language: auto, en, zh (Chinese), etc.")
-@click.option("--fast", is_flag=True, help="Skip the review/refine pass (~20% faster, slightly less polished)")
-@click.option("--extractor", type=click.Choice(["bs4", "trafilatura"]), default="bs4", help="HTML content extractor")
-@click.option("--jina-fallback", is_flag=True, help="On a blocked scrape, retry via r.jina.ai (set JINA_API_KEY)")
-@click.option("--js-render/--no-js-render", default=False, help="Send thin/JS page URLs to r.jina.ai for rendering")
-@click.option("--effort", "-e", type=click.Choice(["quick", "standard", "deep"]), default=None, help="Effort tier (overrides --depth)")
-@click.option("--compact", is_flag=True, help="Compact each source before synthesis to weigh more sources")
-@click.option("--reflect-rounds", type=click.IntRange(0, 2), default=1, help="Coverage-review and follow-up cycles (0=off)")
-@click.option("--perspectives/--no-perspectives", default=True, help="Perspective-guided query generation")
-@click.option("--verify/--no-verify", default=True, help="Check report blocks and findings against source evidence")
-def research_cli(query, depth, model, api_key, api_base, config_file, max_sources, output, pdf, md, symbols, language, fast, extractor, jina_fallback, js_render, effort, compact, reflect_rounds, perspectives, verify):
+@click.option(
+    "--symbols",
+    "-s",
+    default="",
+    help="Fetch market data for these symbols (e.g. NVDA,GOOGL,SPY)",
+)
+@click.option(
+    "--language",
+    "-l",
+    default="auto",
+    help="Output language: auto, en, zh (Chinese), etc.",
+)
+@click.option(
+    "--fast",
+    is_flag=True,
+    help="Skip the review/refine pass (~20% faster, slightly less polished)",
+)
+@click.option(
+    "--extractor",
+    type=click.Choice(["bs4", "trafilatura"]),
+    default="bs4",
+    help="HTML content extractor",
+)
+@click.option(
+    "--jina-fallback",
+    is_flag=True,
+    help="On a blocked scrape, retry via r.jina.ai (set JINA_API_KEY)",
+)
+@click.option(
+    "--js-render/--no-js-render",
+    default=False,
+    help="Send thin/JS page URLs to r.jina.ai for rendering",
+)
+@click.option(
+    "--effort",
+    "-e",
+    type=click.Choice(["quick", "standard", "deep"]),
+    default=None,
+    help="Effort tier (overrides --depth)",
+)
+@click.option(
+    "--compact",
+    is_flag=True,
+    help="Compact each source before synthesis to weigh more sources",
+)
+@click.option(
+    "--reflect-rounds",
+    type=click.IntRange(0, 2),
+    default=1,
+    help="Coverage-review and follow-up cycles (0=off)",
+)
+@click.option(
+    "--perspectives/--no-perspectives",
+    default=True,
+    help="Perspective-guided query generation",
+)
+@click.option(
+    "--verify/--no-verify",
+    default=True,
+    help="Check report blocks and findings against source evidence",
+)
+def research_cli(
+    query,
+    depth,
+    model,
+    api_key,
+    api_base,
+    config_file,
+    max_sources,
+    output,
+    pdf,
+    md,
+    symbols,
+    language,
+    fast,
+    extractor,
+    jina_fallback,
+    js_render,
+    effort,
+    compact,
+    reflect_rounds,
+    perspectives,
+    verify,
+):
     """Generate a cited research report with a configured LLM.
 
     Research any topic with web search + LLM analysis + market data.
@@ -66,6 +146,7 @@ def research_cli(query, depth, model, api_key, api_base, config_file, max_source
 
     if effort:
         from .config import TIERS
+
         depth = TIERS[effort].depth  # effort tier wins over --depth
     cfg.max_depth = depth
     cfg.max_sources = max_sources
@@ -87,7 +168,9 @@ def research_cli(query, depth, model, api_key, api_base, config_file, max_source
         )
 
     click.echo(f"Sibyl researching: {query}")
-    click.echo(f"Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}")
+    click.echo(
+        f"Depth: {depth} | Model: {cfg.providers[0].model if cfg.providers else 'auto'}"
+    )
     if symbols:
         click.echo(f"Market data: {symbols}")
     click.echo()
@@ -96,6 +179,7 @@ def research_cli(query, depth, model, api_key, api_base, config_file, max_source
 
     # Terminal output
     from .mcp_server import _format_report
+
     report_text = _format_report(result)
     click.echo(report_text)
     if result.status != "ok":
@@ -104,17 +188,22 @@ def research_cli(query, depth, model, api_key, api_base, config_file, max_source
     # PDF output
     if pdf:
         from .reporter import generate_pdf
+
         path = generate_pdf(result, output)
         click.echo(f"\nPDF saved: {path}")
 
     # Markdown output
     if md:
-        from .reporter import _report_to_markdown
-        from pathlib import Path
         from datetime import datetime
+        from pathlib import Path
+
+        from .reporter import _report_to_markdown
+
         out = Path(output)
         out.mkdir(parents=True, exist_ok=True)
-        safe_q = "".join(c if c.isalnum() or c in " -_" else "" for c in query)[:50].strip()
+        safe_q = "".join(c if c.isalnum() or c in " -_" else "" for c in query)[
+            :50
+        ].strip()
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         md_path = out / f"sibyl_{safe_q}_{ts}.md"
         md_path.write_text(_report_to_markdown(result), encoding="utf-8")
@@ -134,17 +223,27 @@ async def _run(cfg, query, depth, symbols="", language="auto"):
 
     # Fetch market data if symbols provided
     if symbols and result.status == "ok":
-        from .data import fetch_multiple, format_data_summary, generate_chart, generate_comparison_chart
+        from .data import (
+            fetch_multiple,
+            format_data_summary,
+            generate_chart,
+            generate_comparison_chart,
+        )
+
         symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
         click.echo(f"  Fetching market data for {', '.join(symbol_list)}...")
         series = await fetch_multiple(symbol_list, "1y")
         if series:
             result.market_data_summary = format_data_summary(series)
-            chart_path = generate_chart(series, f"{', '.join(s.name for s in series)} — 1 Year")
+            chart_path = generate_chart(
+                series, f"{', '.join(s.name for s in series)} — 1 Year"
+            )
             result.charts.append(chart_path)
             # Also generate comparison bar chart if multiple symbols
             if len(series) > 1:
-                comp_path = generate_comparison_chart(series, f"Performance Comparison — 1 Year")
+                comp_path = generate_comparison_chart(
+                    series, "Performance Comparison — 1 Year"
+                )
                 result.charts.append(comp_path)
             click.echo(f"  Chart generated: {chart_path}")
 
@@ -173,7 +272,9 @@ async def _run(cfg, query, depth, symbols="", language="auto"):
     default="text",
     show_default=True,
 )
-def gather_cli(query, max_sources, chars_per_source, ranker, render_thin_pages, output_format):
+def gather_cli(
+    query, max_sources, chars_per_source, ranker, render_thin_pages, output_format
+):
     """Gather keyless web evidence without generating an answer."""
     bundle = asyncio.run(
         gather_bundle(

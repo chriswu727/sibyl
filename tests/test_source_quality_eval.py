@@ -1,4 +1,5 @@
 """Offline contextual source-quality evaluation tests."""
+
 import json
 import math
 import subprocess
@@ -14,7 +15,6 @@ from sibyl.source_quality_eval import (
     load_source_quality_cases,
     source_type_prior_scores,
 )
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DATASET = ROOT / "evals" / "source_quality_cases.jsonl"

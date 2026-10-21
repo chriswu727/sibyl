@@ -1,4 +1,5 @@
 """Deterministic source-content clustering tests."""
+
 import unittest
 
 from sibyl.content_clusters import cluster_content

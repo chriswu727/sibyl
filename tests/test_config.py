@@ -2,11 +2,12 @@
 
 Run: python -m unittest discover tests    (no external deps)
 """
+
 import os
 import unittest
 from unittest import mock
 
-from sibyl.config import Config, Provider, TIERS
+from sibyl.config import TIERS, Config, Provider
 
 
 class TestTiersAndRoles(unittest.TestCase):
@@ -37,20 +38,31 @@ class TestTiersAndRoles(unittest.TestCase):
 
     def test_role_fallback_chain(self):
         # verify/synthesis/compaction all degrade to an existing provider
-        c = Config(providers=[Provider(model="m-analysis", role="analysis"),
-                              Provider(model="m-general", role="general")])
-        self.assertEqual(c.get_provider("verify").model, "m-analysis")     # verify->synthesis->analysis
-        self.assertEqual(c.get_provider("synthesis").model, "m-analysis")  # synthesis->analysis
-        self.assertEqual(c.get_provider("compaction").model, "m-general")  # compaction->fast->general
+        c = Config(
+            providers=[
+                Provider(model="m-analysis", role="analysis"),
+                Provider(model="m-general", role="general"),
+            ]
+        )
+        self.assertEqual(
+            c.get_provider("verify").model, "m-analysis"
+        )  # verify->synthesis->analysis
+        self.assertEqual(
+            c.get_provider("synthesis").model, "m-analysis"
+        )  # synthesis->analysis
+        self.assertEqual(
+            c.get_provider("compaction").model, "m-general"
+        )  # compaction->fast->general
 
     def test_synthesis_uses_strong_provider_when_present(self):
-        c = Config(providers=[Provider(model="strong", role="synthesis"),
-                              Provider(model="cheap", role="general")])
+        c = Config(
+            providers=[
+                Provider(model="strong", role="synthesis"),
+                Provider(model="cheap", role="general"),
+            ]
+        )
         self.assertEqual(c.get_provider("synthesis").model, "strong")
         self.assertEqual(c.get_provider("compaction").model, "cheap")
-
-
-from sibyl.config import Config, Provider
 
 
 class TestFromEnv(unittest.TestCase):
@@ -72,16 +84,22 @@ class TestFromEnv(unittest.TestCase):
         self.assertEqual(cfg.providers[0].model, "gpt-4o-mini")
 
     def test_deepseek_model_override(self):
-        with mock.patch.dict(os.environ,
-                             {"DEEPSEEK_API_KEY": "sk-test", "DEEPSEEK_MODEL": "deepseek-v5-flash"},
-                             clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {"DEEPSEEK_API_KEY": "sk-test", "DEEPSEEK_MODEL": "deepseek-v5-flash"},
+            clear=True,
+        ):
             cfg = Config.from_env()
-        self.assertTrue(all(p.model == "deepseek/deepseek-v5-flash" for p in cfg.providers))
+        self.assertTrue(
+            all(p.model == "deepseek/deepseek-v5-flash" for p in cfg.providers)
+        )
 
     def test_deepseek_model_override_keeps_explicit_prefix(self):
-        with mock.patch.dict(os.environ,
-                             {"DEEPSEEK_API_KEY": "sk-test", "DEEPSEEK_MODEL": "deepseek/custom-x"},
-                             clear=True):
+        with mock.patch.dict(
+            os.environ,
+            {"DEEPSEEK_API_KEY": "sk-test", "DEEPSEEK_MODEL": "deepseek/custom-x"},
+            clear=True,
+        ):
             cfg = Config.from_env()
         self.assertEqual(cfg.providers[0].model, "deepseek/custom-x")
 
@@ -93,10 +111,12 @@ class TestFromEnv(unittest.TestCase):
 
 class TestGetProvider(unittest.TestCase):
     def test_role_lookup_and_fallback(self):
-        cfg = Config(providers=[
-            Provider(model="m-general", role="general"),
-            Provider(model="m-analysis", role="analysis"),
-        ])
+        cfg = Config(
+            providers=[
+                Provider(model="m-general", role="general"),
+                Provider(model="m-analysis", role="analysis"),
+            ]
+        )
         self.assertEqual(cfg.get_provider("analysis").model, "m-analysis")
         # Unknown role falls back to the first provider
         self.assertEqual(cfg.get_provider("nonexistent").model, "m-general")
@@ -109,8 +129,14 @@ class TestLlmCredentials(unittest.TestCase):
             self.assertFalse(cfg.has_llm_credentials())
 
     def test_explicit_key_or_api_base(self):
-        self.assertTrue(Config(providers=[Provider(model="x", api_key="k")]).has_llm_credentials())
-        self.assertTrue(Config(providers=[Provider(model="x", api_base="http://localhost:8000")]).has_llm_credentials())
+        self.assertTrue(
+            Config(providers=[Provider(model="x", api_key="k")]).has_llm_credentials()
+        )
+        self.assertTrue(
+            Config(
+                providers=[Provider(model="x", api_base="http://localhost:8000")]
+            ).has_llm_credentials()
+        )
 
     def test_provider_environment_key(self):
         cfg = Config(providers=[Provider(model="gpt-4o-mini")])
@@ -123,14 +149,18 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(Config().extractor, "bs4")
 
     def test_from_yaml_reads_extractor(self):
-        import tempfile, textwrap
+        import tempfile
+        import textwrap
+
         with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
-            f.write(textwrap.dedent("""
+            f.write(
+                textwrap.dedent("""
                 providers:
                   - model: deepseek/deepseek-v4-flash
                     api_key: sk-x
                 extractor: trafilatura
-            """))
+            """)
+            )
             path = f.name
         cfg = Config.from_yaml(path)
         self.assertEqual(cfg.extractor, "trafilatura")
@@ -142,14 +172,18 @@ class TestFastFlag(unittest.TestCase):
         self.assertFalse(Config().fast)
 
     def test_from_yaml_reads_fast(self):
-        import tempfile, textwrap
+        import tempfile
+        import textwrap
+
         with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
-            f.write(textwrap.dedent("""
+            f.write(
+                textwrap.dedent("""
                 providers:
                   - model: deepseek/deepseek-v4-flash
                     api_key: sk-x
                 fast: true
-            """))
+            """)
+            )
             path = f.name
         cfg = Config.from_yaml(path)
         self.assertTrue(cfg.fast)

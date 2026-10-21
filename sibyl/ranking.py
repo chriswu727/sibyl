@@ -1,4 +1,5 @@
 """Dependency-free lexical relevance scoring for keyless retrieval."""
+
 from __future__ import annotations
 
 import math
@@ -8,14 +9,40 @@ import unicodedata
 from dataclasses import dataclass
 from typing import List, Literal, Sequence, Set, Tuple
 
-
 _WORD_RE = re.compile(r"[^\W_]+", re.UNICODE)
 _CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+")
 _STOP_WORDS = {
-    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
-    "how", "in", "is", "it", "of", "on", "or", "that", "the", "this",
-    "to", "was", "were", "what", "when", "where", "which", "who", "why",
-    "will", "with",
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "for",
+    "from",
+    "how",
+    "in",
+    "is",
+    "it",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "this",
+    "to",
+    "was",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "why",
+    "will",
+    "with",
 }
 _FLASHRANK_LOAD_LOCK = threading.Lock()
 _flashrank_ranker = None
@@ -33,15 +60,15 @@ class LexicalCoverage:
 def _normalize(value: str) -> str:
     decomposed = unicodedata.normalize("NFKD", value or "")
     return "".join(
-        character for character in decomposed
-        if not unicodedata.combining(character)
+        character for character in decomposed if not unicodedata.combining(character)
     ).casefold()
 
 
 def _tokens(value: str) -> Set[str]:
     normalized = _normalize(value)
     tokens = {
-        token for token in _WORD_RE.findall(normalized)
+        token
+        for token in _WORD_RE.findall(normalized)
         if len(token) >= 2 and token not in _STOP_WORDS
     }
     for segment in _CJK_RE.findall(normalized):
@@ -49,7 +76,9 @@ def _tokens(value: str) -> Set[str]:
         if len(segment) == 1:
             tokens.add(segment)
         else:
-            tokens.update(segment[index:index + 2] for index in range(len(segment) - 1))
+            tokens.update(
+                segment[index : index + 2] for index in range(len(segment) - 1)
+            )
     return tokens
 
 
@@ -93,12 +122,14 @@ def lexical_relevance_scores(
 
     scores = []
     for (title, text), (title_tokens, body_tokens) in zip(documents, tokenized):
-        body_coverage = sum(
-            weight for token, weight in weights.items() if token in body_tokens
-        ) / total_weight
-        title_coverage = sum(
-            weight for token, weight in weights.items() if token in title_tokens
-        ) / total_weight
+        body_coverage = (
+            sum(weight for token, weight in weights.items() if token in body_tokens)
+            / total_weight
+        )
+        title_coverage = (
+            sum(weight for token, weight in weights.items() if token in title_tokens)
+            / total_weight
+        )
         coverage = (
             0.5 * body_coverage
             + 0.4 * title_coverage
@@ -156,7 +187,9 @@ def flashrank_relevance_scores(
     return [float(score) for score in scores]
 
 
-def lexical_query_coverage(query: str, evidence_texts: Sequence[str]) -> LexicalCoverage:
+def lexical_query_coverage(
+    query: str, evidence_texts: Sequence[str]
+) -> LexicalCoverage:
     query_tokens = _tokens(query)
     if not query_tokens:
         return LexicalCoverage(0, 0, 0.0)

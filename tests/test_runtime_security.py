@@ -72,6 +72,46 @@ class TestCompressedBodies(unittest.IsolatedAsyncioTestCase):
 
 
 class TestRuntime(unittest.IsolatedAsyncioTestCase):
+    async def test_pdf_only_export_failure_is_a_tool_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("token=SECRET"),
+                ):
+                    with self.assertRaisesRegex(
+                        ToolError, "PDF export failed"
+                    ) as raised:
+                        await create_server(runtime).call_tool(
+                            "save_report", {"format": "pdf"}
+                        )
+                self.assertNotIn("SECRET", str(raised.exception))
+                self.assertFalse(list(Path(directory).glob("*.pdf")))
+                self.assertEqual(runtime.failed, 1)
+            finally:
+                await runtime.aclose()
+
+    async def test_combined_export_keeps_markdown_and_discloses_pdf_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("token=SECRET"),
+                ):
+                    result = await create_server(runtime).call_tool(
+                        "save_report", {"format": "both"}
+                    )
+                self.assertIn("PDF failed", str(result))
+                self.assertIn("Markdown saved", str(result))
+                self.assertNotIn("SECRET", str(result))
+                self.assertEqual(len(list(Path(directory).glob("*.md"))), 1)
+            finally:
+                await runtime.aclose()
+
     async def test_export_uses_runtime_root_and_rejects_escape(self):
         with tempfile.TemporaryDirectory() as directory:
             runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
@@ -254,7 +294,9 @@ class TestArtifacts(unittest.TestCase):
             self.assertEqual(stat.S_IMODE(first.stat().st_mode), 0o600)
             self.assertEqual(len(list(Path(directory).glob("sibyl_*"))), 2)
             self.assertFalse(list(Path(directory).glob(".sibyl-*")))
-            self.assertEqual(stat.S_IMODE((Path(directory) / ".artifact.lock").stat().st_mode), 0o600)
+            self.assertEqual(
+                stat.S_IMODE((Path(directory) / ".artifact.lock").stat().st_mode), 0o600
+            )
 
     def test_escape_and_symlink_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

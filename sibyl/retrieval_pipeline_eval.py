@@ -1,4 +1,5 @@
 """Offline end-to-end evaluation for the structured retrieval pipeline."""
+
 from __future__ import annotations
 
 import hashlib
@@ -60,7 +61,9 @@ def _slug(value: str) -> str:
 
 
 def _substantive_text(document: RetrievalDocument) -> str:
-    base = ". ".join(part.strip() for part in [document.title, document.text] if part.strip())
+    base = ". ".join(
+        part.strip() for part in [document.title, document.text] if part.strip()
+    )
     padding = "Full source context preserved for offline pipeline evaluation."
     repetitions = max(0, math.ceil((320 - len(base)) / len(padding)))
     return " ".join([base, *([padding] * repetitions)])
@@ -88,11 +91,12 @@ def _bundle_structure_is_valid(bundle, page_text_by_url: Dict[str, str]) -> bool
                 f"{bundle.bundle_id}/{source.source_id}/{passage.passage_id}"
             ):
                 return False
-            if page_text[passage.start_char:passage.end_char] != passage.text:
+            if page_text[passage.start_char : passage.end_char] != passage.text:
                 return False
-            if passage.content_hash != hashlib.sha256(
-                passage.text.encode("utf-8")
-            ).hexdigest():
+            if (
+                passage.content_hash
+                != hashlib.sha256(passage.text.encode("utf-8")).hexdigest()
+            ):
                 return False
     return True
 
@@ -109,27 +113,27 @@ async def evaluate_pipeline_case(
             f"https://{_slug(document.document_id)}."
             f"{_slug(case.case_id)}.eval.invalid/source"
         )
-        results.append(
-            SearchResult(document.title, url, document.text[:200], "web")
-        )
-        pages.append(
-            WebPage(url, document.title, _substantive_text(document))
-        )
+        results.append(SearchResult(document.title, url, document.text[:200], "web"))
+        pages.append(WebPage(url, document.title, _substantive_text(document)))
         document_id_by_url[url] = document.document_id
     page_by_url = {page.url: page for page in pages}
 
     async def scrape_fixture(urls, **kwargs):
         return [page_by_url[url] for url in urls]
 
-    with mock.patch(
-        "sibyl.retrieval.search_web",
-        new=mock.AsyncMock(return_value=results),
-    ), mock.patch(
-        "sibyl.retrieval.scrape_urls",
-        new=scrape_fixture,
-    ), mock.patch(
-        "sibyl.retrieval.wikipedia_lookup",
-        new=mock.AsyncMock(return_value=[]),
+    with (
+        mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(return_value=results),
+        ),
+        mock.patch(
+            "sibyl.retrieval.scrape_urls",
+            new=scrape_fixture,
+        ),
+        mock.patch(
+            "sibyl.retrieval.wikipedia_lookup",
+            new=mock.AsyncMock(return_value=[]),
+        ),
     ):
         bundle = await gather_source_bundle(
             case.query,
@@ -140,9 +144,7 @@ async def evaluate_pipeline_case(
         )
 
     top_document_id = (
-        document_id_by_url.get(bundle.sources[0].url, "")
-        if bundle.sources
-        else ""
+        document_id_by_url.get(bundle.sources[0].url, "") if bundle.sources else ""
     )
     return RetrievalPipelineCaseResult(
         case_id=case.case_id,
@@ -163,15 +165,11 @@ async def evaluate_pipeline_cases(
 ) -> RetrievalPipelineEvalResult:
     if not cases:
         raise ValueError("At least one retrieval case is required.")
-    results = [
-        await evaluate_pipeline_case(case, ranker=ranker)
-        for case in cases
-    ]
+    results = [await evaluate_pipeline_case(case, ranker=ranker) for case in cases]
     total = len(results)
     top_hits = sum(result.top_source_hit for result in results)
     usable = sum(
-        result.status == "ok"
-        and result.evidence_sufficiency == "sufficient"
+        result.status == "ok" and result.evidence_sufficiency == "sufficient"
         for result in results
     )
     valid = sum(result.structure_valid for result in results)

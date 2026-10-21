@@ -9,7 +9,12 @@ from .report_models import ResearchReport
 
 def citation_errors(report: ResearchReport) -> list[str]:
     errors = []
-    for text in [report.summary, *report.key_findings, report.analysis, report.predictions]:
+    for text in [
+        report.summary,
+        *report.key_findings,
+        report.analysis,
+        report.predictions,
+    ]:
         for number in re.findall(r"\[Source\s+(\d+)\]", text, re.IGNORECASE):
             if not 1 <= int(number) <= len(report.sources):
                 errors.append(f"Unknown source citation: {number}")
@@ -22,15 +27,19 @@ async def audit_report(report, pages, provider, completion=None):
     blocks = []
     sections = {}
     for name in ("summary", "analysis", "predictions"):
-        parts = [part for part in re.split(r"\n\s*\n", getattr(report, name)) if part.strip()]
+        parts = [
+            part for part in re.split(r"\n\s*\n", getattr(report, name)) if part.strip()
+        ]
         sections[name] = parts
         blocks.extend((name, index, part) for index, part in enumerate(parts))
-    blocks.extend(("key_findings", index, text) for index, text in enumerate(report.key_findings))
+    blocks.extend(
+        ("key_findings", index, text) for index, text in enumerate(report.key_findings)
+    )
     findings = list(report.key_findings)
     report.finding_verifications = []
     checked = []
     for offset in range(0, min(len(blocks), 64), 8):
-        batch = blocks[offset:offset + 8]
+        batch = blocks[offset : offset + 8]
         verdicts = await verify_findings(
             [text for _, _, text in batch], pages, provider, completion=completion
         )
@@ -55,4 +64,6 @@ async def audit_report(report, pages, provider, completion=None):
         "Unverified blocks are marked inline."
     )
     if len(blocks) > 64:
-        report.limitations.append("Verification block budget reached; remaining blocks are unverified.")
+        report.limitations.append(
+            "Verification block budget reached; remaining blocks are unverified."
+        )

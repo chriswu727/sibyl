@@ -1,4 +1,5 @@
 """MCP report safety and request-isolation tests. No network."""
+
 import asyncio
 import os
 import unittest
@@ -7,7 +8,6 @@ from unittest import mock
 from mcp.server.fastmcp.exceptions import ToolError
 
 import sibyl.mcp_server as mcp_server
-from sibyl.runtime import get_runtime
 from sibyl.config import Config, Provider
 from sibyl.evidence import BundleDiagnostics, SourceBundle
 from sibyl.mcp_server import (
@@ -18,13 +18,17 @@ from sibyl.mcp_server import (
     research,
 )
 from sibyl.researcher import ResearchReport
+from sibyl.runtime import get_runtime
 from sibyl.verifier import FindingVerification
 
 
 class TestMcpFormatting(unittest.TestCase):
     def test_verification_verdicts_are_visible(self):
         report = ResearchReport(
-            "q", "summary", ["Supported [Source 1]", "Unsupported [Source 1]"], [],
+            "q",
+            "summary",
+            ["Supported [Source 1]", "Unsupported [Source 1]"],
+            [],
             finding_verifications=[
                 FindingVerification(1, True, "high", [1], ""),
                 FindingVerification(2, False, "low", [1], "not found"),
@@ -52,8 +56,10 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
     async def test_missing_credentials_fails_before_network(self):
         cfg = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
         get_runtime().last_report = ResearchReport("old", "stale", [], [])
-        with mock.patch.dict(os.environ, {}, clear=True), \
-             mock.patch("sibyl.mcp_tools._get_config", return_value=cfg):
+        with (
+            mock.patch.dict(os.environ, {}, clear=True),
+            mock.patch("sibyl.mcp_tools._get_config", return_value=cfg),
+        ):
             with self.assertRaisesRegex(ToolError, "requires an LLM provider key"):
                 await research("question")
         self.assertIsNone(get_runtime().last_report)
@@ -73,8 +79,10 @@ class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
             async def research(self, query, **kwargs):
                 return ResearchReport(query, "summary", [], [])
 
-        with mock.patch("sibyl.mcp_tools._get_config", return_value=cfg), \
-             mock.patch("sibyl.researcher.Researcher", FakeResearcher):
+        with (
+            mock.patch("sibyl.mcp_tools._get_config", return_value=cfg),
+            mock.patch("sibyl.researcher.Researcher", FakeResearcher),
+        ):
             await research("question", fast=True, verify=False)
 
         self.assertFalse(cfg.fast)
@@ -151,9 +159,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             structured = asyncio.create_task(gather_bundle("question"))
             await asyncio.sleep(0)
             release.set()
-            legacy_result, structured_result = await asyncio.gather(
-                legacy, structured
-            )
+            legacy_result, structured_result = await asyncio.gather(legacy, structured)
 
         self.assertEqual(legacy_result, self.bundle.error)
         self.assertIs(structured_result, self.bundle)
@@ -197,8 +203,16 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
         self.assertEqual(len(tools), 20)
-        self.assertTrue({"start_research", "get_research", "continue_research",
-                         "complete_research", "cancel_research"} <= names)
+        self.assertTrue(
+            {
+                "start_research",
+                "get_research",
+                "continue_research",
+                "complete_research",
+                "cancel_research",
+            }
+            <= names
+        )
         self.assertIn("gather_evidence", names)
         self.assertIn("gather_bundle", names)
         self.assertIn("gather_sources", names)
@@ -217,8 +231,9 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             set(
-                structured_tool.outputSchema["$defs"]["EvidenceSource"]
-                ["properties"]["content_origin"]["enum"]
+                structured_tool.outputSchema["$defs"]["EvidenceSource"]["properties"][
+                    "content_origin"
+                ]["enum"]
             ),
             {
                 "direct_fetch",

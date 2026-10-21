@@ -41,17 +41,30 @@ class ArtifactStore:
             temporary.unlink(missing_ok=True)
 
     def publish(self, temporary: Path, label: str, suffix: str) -> Path:
-        if temporary.parent != self.root or temporary.is_symlink() or not temporary.is_file():
+        if (
+            temporary.parent != self.root
+            or temporary.is_symlink()
+            or not temporary.is_file()
+        ):
             raise ValueError("Artifact staging file is outside the store.")
         if not label.isalnum() or suffix not in {".md", ".pdf", ".png", ".json"}:
             raise ValueError("Invalid artifact name.")
         with self._publication_lock():
             size = temporary.stat().st_size
             paths = list(self.root.glob("sibyl_*"))
-            total = sum(path.stat().st_size for path in paths if path.is_file() and not path.is_symlink())
-            if (size > self.MAX_ARTIFACT_BYTES or total + size > self.MAX_DIRECTORY_BYTES
-                    or len(paths) >= self.MAX_ARTIFACTS):
-                raise CapacityError("Artifact storage limit reached; archive or remove existing exports explicitly.")
+            total = sum(
+                path.stat().st_size
+                for path in paths
+                if path.is_file() and not path.is_symlink()
+            )
+            if (
+                size > self.MAX_ARTIFACT_BYTES
+                or total + size > self.MAX_DIRECTORY_BYTES
+                or len(paths) >= self.MAX_ARTIFACTS
+            ):
+                raise CapacityError(
+                    "Artifact storage limit reached; archive or remove existing exports explicitly."
+                )
             os.chmod(temporary, 0o600)
             destination = self.root / f"sibyl_{label}_{uuid4().hex}{suffix}"
             os.replace(temporary, destination)
@@ -66,11 +79,13 @@ class ArtifactStore:
         try:
             if os.name == "nt":
                 import msvcrt
+
                 os.write(fd, b"0")
                 os.lseek(fd, 0, os.SEEK_SET)
                 msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
             else:
                 import fcntl
+
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             yield
         finally:

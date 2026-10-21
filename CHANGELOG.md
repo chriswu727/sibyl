@@ -2,6 +2,22 @@
 
 ## 0.4.0 — Unreleased
 
+### Engineering readiness
+
+- Standardize Python formatting and import/error linting; check typed research
+  job records, attempts, reviews, persistence, and orchestration in CI.
+- Separate persistent MCP handlers, deterministic retrieval policy, and plain-text
+  report presentation while retaining existing public tool exports.
+- Add a complete recorded-source MCP research replay with gap review,
+  counterevidence, citation checks, exports, process restart, and immutability.
+- Exercise abrupt process termination, persistence failures around dispatch,
+  transaction aborts, repeated capacity/cancellation, and artifact cleanup.
+- Validate core, PDF/monitoring, and report/finance/extraction wheels in isolated
+  temporary environments; require dated changelog notes before publication.
+- Keep live research-quality and external beta gates unchanged; no release implied.
+- Return an MCP tool error when a PDF-only export fails; combined exports retain
+  successful Markdown output and explicitly disclose the PDF failure.
+
 ### Documentation and discoverability
 
 - Reconcile the GitHub landing page, installation/configuration examples, evidence

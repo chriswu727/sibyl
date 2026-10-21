@@ -7,45 +7,82 @@ density directive present).
 
 Run: python -m unittest discover tests
 """
+
 import unittest
 from unittest import mock
 
-from sibyl.config import Config, Provider
-from sibyl.researcher import LLMCallError, ResearchReport, Researcher
-from sibyl.search import SearchResult
-from sibyl.scraper import WebPage
 from sibyl.analyzer import CrossAnalysis
-from sibyl.evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, SourceBundle
+from sibyl.config import Config, Provider
+from sibyl.evidence import (
+    BundleDiagnostics,
+    EvidencePassage,
+    EvidenceSource,
+    SourceBundle,
+)
+from sibyl.researcher import LLMCallError, Researcher, ResearchReport
+from sibyl.scraper import WebPage
 
 
 def evidence_bundle(query="question", count=6, origin="direct_fetch"):
     sources = []
     for index in range(count):
         text = f"Evidence {query} {index}. " * 40
-        sources.append(EvidenceSource(
-            f"{query}-{index}", f"https://example.com/{query}/{index}", f"Title {index}",
-            "2026-10-20T00:00:00Z", f"hash-{query}-{index}", "web", len(text),
-            [EvidencePassage("P1", f"{query}/{index}/P1", text, f"passage-{query}-{index}")],
-            content_origin=origin,
-        ))
+        sources.append(
+            EvidenceSource(
+                f"{query}-{index}",
+                f"https://example.com/{query}/{index}",
+                f"Title {index}",
+                "2026-10-20T00:00:00Z",
+                f"hash-{query}-{index}",
+                "web",
+                len(text),
+                [
+                    EvidencePassage(
+                        "P1", f"{query}/{index}/P1", text, f"passage-{query}-{index}"
+                    )
+                ],
+                content_origin=origin,
+            )
+        )
     return SourceBundle(
-        "1.6", f"bundle-{query}", query, "ok" if count else "insufficient_evidence", sources,
-        BundleDiagnostics(count, count, count, count, 0, 0, 0, count, 8, 8, 4000, 4000, 1,
-                          evidence_sufficiency="sufficient" if count else "insufficient",
-                          recommended_action="synthesize" if count else "refine_query"),
+        "1.6",
+        f"bundle-{query}",
+        query,
+        "ok" if count else "insufficient_evidence",
+        sources,
+        BundleDiagnostics(
+            count,
+            count,
+            count,
+            count,
+            0,
+            0,
+            0,
+            count,
+            8,
+            8,
+            4000,
+            4000,
+            1,
+            evidence_sufficiency="sufficient" if count else "insufficient",
+            recommended_action="synthesize" if count else "refine_query",
+        ),
     )
 
 
 def _cfg(fast=False):
     return Config(
-        providers=[Provider(model="deepseek/deepseek-v4-flash", api_key="sk", role="general"),
-                   Provider(model="deepseek/deepseek-v4-flash", api_key="sk", role="analysis")],
+        providers=[
+            Provider(model="deepseek/deepseek-v4-flash", api_key="sk", role="general"),
+            Provider(model="deepseek/deepseek-v4-flash", api_key="sk", role="analysis"),
+        ],
         fast=fast,
     )
 
 
 def _canned_llm(prompts_seen):
     """A stand-in for _llm_call that records prompts and returns parseable text."""
+
     async def fake(provider, prompt, max_tokens=1500, thinking=False, json_mode=False):
         prompts_seen.append(prompt)
         p = prompt.lower()
@@ -57,44 +94,60 @@ def _canned_llm(prompts_seen):
             return "gap query one here\ngap query two here"
         if "relevance" in p:
             import json as _json
-            return _json.dumps({"scores": [{"id": i, "score": 21 - i} for i in range(1, 21)]})
+
+            return _json.dumps(
+                {"scores": [{"id": i, "score": 21 - i} for i in range(1, 21)]}
+            )
         if "key findings" in p:
             # findings now run in json_mode — return the JSON object shape
             import json as _json
-            return _json.dumps({"findings": [f"Finding {i} with datum {i}0% [Source {i}]." for i in range(1, 11)]})
+
+            return _json.dumps(
+                {
+                    "findings": [
+                        f"Finding {i} with datum {i}0% [Source {i}]."
+                        for i in range(1, 11)
+                    ]
+                }
+            )
         # summary / analysis / predictions / review → substantial prose
-        return ("This is a substantial analytical paragraph with [Source 1] data. " * 20)
+        return "This is a substantial analytical paragraph with [Source 1] data. " * 20
+
     return fake
 
 
 def _patch_io():
     """Patch network + cross-analysis + warm-cache so research() runs offline."""
-    async def fake_search(*a, **k):
-        return [SearchResult(title=f"T{i}", url=f"https://ex.com/{i}", snippet="snippet text " * 10, source="web")
-                for i in range(6)]
-
-    async def fake_scrape(urls, *a, **k):
-        return [WebPage(url=u, title=f"Title {u}", text="Full page content. " * 60) for u in urls]
 
     async def fake_cross(pages, query, provider):
-        return CrossAnalysis(["agree A", "agree B"], ["disagree X"], ["unique Y"], "positive", {"positive": 2})
+        return CrossAnalysis(
+            ["agree A", "agree B"],
+            ["disagree X"],
+            ["unique Y"],
+            "positive",
+            {"positive": 2},
+        )
 
     async def fake_acompletion(**kwargs):  # _warm_cache
         return mock.Mock()
 
     async def fake_verify(findings, pages, provider, **kwargs):
         from sibyl.verifier import FindingVerification
-        return [FindingVerification(i + 1, True, "high", [1], "") for i in range(len(findings))]
+
+        return [
+            FindingVerification(i + 1, True, "high", [1], "")
+            for i in range(len(findings))
+        ]
 
     async def fake_bundle(query, **kwargs):
         return evidence_bundle(query)
 
-    return (mock.patch("sibyl.retrieval.gather_source_bundle", fake_bundle),
-            mock.patch("sibyl.researcher.search_web", fake_search),
-            mock.patch("sibyl.researcher.scrape_urls", fake_scrape),
-            mock.patch("sibyl.analyzer.analyze_sources", fake_cross),
-            mock.patch("sibyl.verifier.verify_findings", fake_verify),
-            mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion))
+    return (
+        mock.patch("sibyl.retrieval.gather_source_bundle", fake_bundle),
+        mock.patch("sibyl.analyzer.analyze_sources", fake_cross),
+        mock.patch("sibyl.verifier.verify_findings", fake_verify),
+        mock.patch("sibyl.researcher.litellm.acompletion", fake_acompletion),
+    )
 
 
 class TestLlmCallThinking(unittest.IsolatedAsyncioTestCase):
@@ -145,15 +198,22 @@ class TestLlmCallThinking(unittest.IsolatedAsyncioTestCase):
 
     async def test_repeated_failure_raises_instead_of_returning_report_text(self):
         r = Researcher(_cfg())
-        with mock.patch("sibyl.researcher.litellm.acompletion", mock.AsyncMock(side_effect=RuntimeError("down"))), \
-             mock.patch("sibyl.researcher.asyncio.sleep", mock.AsyncMock()):
+        with (
+            mock.patch(
+                "sibyl.researcher.litellm.acompletion",
+                mock.AsyncMock(side_effect=RuntimeError("down")),
+            ),
+            mock.patch("sibyl.researcher.asyncio.sleep", mock.AsyncMock()),
+        ):
             with self.assertRaises(LLMCallError):
                 await r._llm_call(_cfg().providers[0], "hello")
 
 
 class TestParseFindings(unittest.TestCase):
     def test_parses_json_object(self):
-        out = Researcher._parse_findings('{"findings": ["A [Source 1]", "B [Source 2]"]}')
+        out = Researcher._parse_findings(
+            '{"findings": ["A [Source 1]", "B [Source 2]"]}'
+        )
         self.assertEqual(out, ["A [Source 1]", "B [Source 2]"])
 
     def test_parses_bare_json_array(self):
@@ -172,13 +232,17 @@ class TestParseFindings(unittest.TestCase):
 
     def test_strips_leading_enumerator(self):
         # A pre-numbered finding must not survive as "1. ..." (renderer adds its own)
-        out = Researcher._parse_findings('{"findings": ["1. Revenue grew 40% [Source 1]", "2) Margins fell"]}')
+        out = Researcher._parse_findings(
+            '{"findings": ["1. Revenue grew 40% [Source 1]", "2) Margins fell"]}'
+        )
         self.assertEqual(out[0], "Revenue grew 40% [Source 1]")
         self.assertEqual(out[1], "Margins fell")
 
     def test_malformed_json_falls_back(self):
         # truncated JSON → fall back to line parse of whatever is there
-        out = Researcher._parse_findings('{"findings": ["good finding that is long enough to survive"')
+        out = Researcher._parse_findings(
+            '{"findings": ["good finding that is long enough to survive"'
+        )
         self.assertTrue(any("good finding" in x for x in out) or out == [])
 
 
@@ -219,7 +283,9 @@ class TestPipelineStructure(unittest.IsolatedAsyncioTestCase):
         r = Researcher(_cfg(fast=fast))
         prompts = []
         r._llm_call = _canned_llm(prompts)
-        review_spy = mock.AsyncMock(side_effect=lambda report, pages, language="auto": report)
+        review_spy = mock.AsyncMock(
+            side_effect=lambda report, pages, language="auto": report
+        )
         r._review_and_refine = review_spy
         subq_spy = mock.AsyncMock(return_value="sub answer [Source 1]")
         r._analyze_sub_question = subq_spy
@@ -278,20 +344,39 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
         config.verify_claims = False
         researcher = Researcher(config)
         researcher._decompose_question = mock.AsyncMock(return_value=[])
-        researcher._reflect = mock.AsyncMock(side_effect=[(["replication limits"], False), ([], True)])
-        researcher._synthesize = mock.AsyncMock(side_effect=[
-            ResearchReport("question", "Initial [Source 1]", ["Initial [Source 1]"], []),
-            ResearchReport("question", "Revised [Source 1]", ["Revised [Source 1]"], []),
-        ])
-        researcher._review_and_refine = mock.AsyncMock(side_effect=lambda report, *args: report)
-        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(
-                side_effect=lambda query, **kwargs: evidence_bundle(query, 1))) as retrieve:
+        researcher._reflect = mock.AsyncMock(
+            side_effect=[(["replication limits"], False), ([], True)]
+        )
+        researcher._synthesize = mock.AsyncMock(
+            side_effect=[
+                ResearchReport(
+                    "question", "Initial [Source 1]", ["Initial [Source 1]"], []
+                ),
+                ResearchReport(
+                    "question", "Revised [Source 1]", ["Revised [Source 1]"], []
+                ),
+            ]
+        )
+        researcher._review_and_refine = mock.AsyncMock(
+            side_effect=lambda report, *args: report
+        )
+        with mock.patch(
+            "sibyl.retrieval.gather_source_bundle",
+            mock.AsyncMock(
+                side_effect=lambda query, **kwargs: evidence_bundle(query, 1)
+            ),
+        ) as retrieve:
             report = await researcher.research("question", depth=2)
-        self.assertEqual([call.args[0] for call in retrieve.call_args_list], ["question", "replication limits"])
+        self.assertEqual(
+            [call.args[0] for call in retrieve.call_args_list],
+            ["question", "replication limits"],
+        )
         self.assertEqual(researcher._synthesize.await_count, 2)
         self.assertEqual(report.summary, "Revised [Source 1]")
         self.assertEqual(report.research_stats["reflection_rounds"], 2)
-        self.assertEqual([step["round"] for step in report.research_stats["steps"]], [1, 2])
+        self.assertEqual(
+            [step["round"] for step in report.research_stats["steps"]], [1, 2]
+        )
 
     async def test_reflection_stops_when_search_adds_no_usable_evidence(self):
         config = _cfg()
@@ -299,17 +384,29 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
         config.verify_claims = False
         researcher = Researcher(config)
         researcher._decompose_question = mock.AsyncMock(return_value=[])
-        researcher._reflect = mock.AsyncMock(return_value=(["replication limits"], False))
-        researcher._synthesize = mock.AsyncMock(return_value=ResearchReport("q", "S [Source 1]", ["F [Source 1]"], []))
-        researcher._review_and_refine = mock.AsyncMock(side_effect=lambda report, *args: report)
-        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(return_value=evidence_bundle("same", 1))):
+        researcher._reflect = mock.AsyncMock(
+            return_value=(["replication limits"], False)
+        )
+        researcher._synthesize = mock.AsyncMock(
+            return_value=ResearchReport("q", "S [Source 1]", ["F [Source 1]"], [])
+        )
+        researcher._review_and_refine = mock.AsyncMock(
+            side_effect=lambda report, *args: report
+        )
+        with mock.patch(
+            "sibyl.retrieval.gather_source_bundle",
+            mock.AsyncMock(return_value=evidence_bundle("same", 1)),
+        ):
             report = await researcher.research("q", depth=2)
         self.assertEqual(researcher._reflect.await_count, 1)
         self.assertEqual(researcher._synthesize.await_count, 1)
-        self.assertIn("Follow-up research did not add usable evidence.", report.limitations)
+        self.assertIn(
+            "Follow-up research did not add usable evidence.", report.limitations
+        )
 
     async def test_failed_parallel_model_work_cancels_siblings(self):
         import asyncio
+
         from sibyl.async_utils import gather_owned
 
         started = asyncio.Event()
@@ -332,11 +429,17 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
 
     async def test_short_supported_report_is_not_regenerated_to_fill_a_template(self):
         r = Researcher(_cfg())
-        r._llm_call = mock.AsyncMock(side_effect=[
-            "A short answer [Source 1].", '{"findings": ["One finding [Source 1]."]}',
-        ])
+        r._llm_call = mock.AsyncMock(
+            side_effect=[
+                "A short answer [Source 1].",
+                '{"findings": ["One finding [Source 1]."]}',
+            ]
+        )
         report = await r._synthesize(
-            "q", [], [WebPage("https://example.com", "Evidence", "Substantive evidence. " * 40)], 1
+            "q",
+            [],
+            [WebPage("https://example.com", "Evidence", "Substantive evidence. " * 40)],
+            1,
         )
         self.assertEqual(r._llm_call.await_count, 2)
         self.assertEqual(len(report.key_findings), 1)
@@ -349,30 +452,45 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
 
         notebook = ResearchNotebook("q", max_model_calls=1)
         r = Researcher(_cfg(), notebook=notebook)
-        with mock.patch("sibyl.researcher.litellm.acompletion", mock.AsyncMock(side_effect=RuntimeError("failed"))) as provider, \
-             mock.patch("sibyl.researcher.asyncio.sleep", mock.AsyncMock()):
+        with (
+            mock.patch(
+                "sibyl.researcher.litellm.acompletion",
+                mock.AsyncMock(side_effect=RuntimeError("failed")),
+            ) as provider,
+            mock.patch("sibyl.researcher.asyncio.sleep", mock.AsyncMock()),
+        ):
             with self.assertRaises(ResearchBudgetExceeded):
                 await r._llm_call(_cfg().providers[0], "q")
         self.assertEqual(provider.await_count, 1)
         self.assertEqual(notebook.model_calls, 1)
 
-    async def test_compaction_preserves_source_numbering_when_a_source_is_irrelevant(self):
+    async def test_compaction_preserves_source_numbering_when_a_source_is_irrelevant(
+        self,
+    ):
         r = Researcher(_cfg())
         r._llm_call = mock.AsyncMock(side_effect=["IRRELEVANT", "A compacted passage"])
-        pages = [WebPage("https://one.example", "one", "first original"),
-                 WebPage("https://two.example", "two", "second original")]
+        pages = [
+            WebPage("https://one.example", "one", "first original"),
+            WebPage("https://two.example", "two", "second original"),
+        ]
         compacted = await r._compact_sources("q", pages)
         self.assertEqual([page.url for page in compacted], [page.url for page in pages])
         self.assertEqual(compacted[0].text, "first original")
 
     async def test_insufficient_diagnostics_block_synthesis_even_with_long_pages(self):
         from dataclasses import replace
+
         bundle = evidence_bundle()
-        bundle = replace(bundle, status="insufficient_evidence",
-                         diagnostics=replace(bundle.diagnostics, recommended_action="refine_query"))
+        bundle = replace(
+            bundle,
+            status="insufficient_evidence",
+            diagnostics=replace(bundle.diagnostics, recommended_action="refine_query"),
+        )
         r = Researcher(_cfg())
         r._synthesize = mock.AsyncMock()
-        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(return_value=bundle)):
+        with mock.patch(
+            "sibyl.retrieval.gather_source_bundle", mock.AsyncMock(return_value=bundle)
+        ):
             report = await r.research("q", depth=1)
         self.assertEqual(report.status, "insufficient_evidence")
         r._synthesize.assert_not_awaited()
@@ -382,12 +500,12 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
         r._llm_call = _canned_llm([])
         r._synthesize = mock.AsyncMock()
 
-        async def no_results(*args, **kwargs):
-            return []
-
-        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(return_value=evidence_bundle(count=0))), \
-             mock.patch("sibyl.researcher.search_web", no_results), \
-             mock.patch("sibyl.researcher.scrape_urls", no_results):
+        with (
+            mock.patch(
+                "sibyl.retrieval.gather_source_bundle",
+                mock.AsyncMock(return_value=evidence_bundle(count=0)),
+            ),
+        ):
             report = await r.research("obscure question", depth=1)
 
         self.assertEqual(report.status, "insufficient_evidence")
@@ -400,15 +518,12 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
         r._llm_call = _canned_llm([])
         r._synthesize = mock.AsyncMock()
 
-        async def thin_results(*args, **kwargs):
-            return [SearchResult("Thin", "https://ex.com/thin", "brief snippet " * 5)]
-
-        async def failed_scrape(*args, **kwargs):
-            return []
-
-        with mock.patch("sibyl.retrieval.gather_source_bundle", mock.AsyncMock(return_value=evidence_bundle(origin="search_snippet"))), \
-             mock.patch("sibyl.researcher.search_web", thin_results), \
-             mock.patch("sibyl.researcher.scrape_urls", failed_scrape):
+        with (
+            mock.patch(
+                "sibyl.retrieval.gather_source_bundle",
+                mock.AsyncMock(return_value=evidence_bundle(origin="search_snippet")),
+            ),
+        ):
             report = await r.research("question", depth=1)
 
         self.assertEqual(report.status, "insufficient_evidence")
@@ -416,7 +531,9 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
 
     async def test_llm_failure_becomes_failed_report(self):
         r = Researcher(_cfg())
-        r._decompose_question = mock.AsyncMock(side_effect=LLMCallError("backend unavailable"))
+        r._decompose_question = mock.AsyncMock(
+            side_effect=LLMCallError("backend unavailable")
+        )
         report = await r.research("question", depth=2)
         self.assertEqual(report.status, "failed")
         self.assertIn("backend unavailable", report.error)
@@ -426,7 +543,9 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
         r = Researcher(_cfg())
         prompts = []
 
-        async def fake(provider, prompt, max_tokens=1500, thinking=False, json_mode=False):
+        async def fake(
+            provider, prompt, max_tokens=1500, thinking=False, json_mode=False
+        ):
             prompts.append(prompt)
             if json_mode:
                 return '{"findings": ["Revenue was $4B [Source 1]"]}'
@@ -434,7 +553,9 @@ class TestEvidenceSafety(unittest.IsolatedAsyncioTestCase):
 
         r._llm_call = fake
         report = ResearchReport("q", "draft", ["draft finding"], [])
-        pages = [WebPage("https://ex.com", "Evidence", "Audited revenue was $4B in 2025.")]
+        pages = [
+            WebPage("https://ex.com", "Evidence", "Audited revenue was $4B in 2025.")
+        ]
         await r._review_and_refine(report, pages)
 
         self.assertEqual(len(prompts), 2)

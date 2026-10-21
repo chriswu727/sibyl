@@ -21,6 +21,11 @@ is preserved in Git history, not a source of current defaults or quality claims.
 - Authenticated loopback monitoring, content-free metrics, structured stderr
   events, and documented recovery procedures. Monitoring is opt-in; an alert
   service and dashboard are not installed automatically.
+- Consistent formatting/import checks and typed core job/state/review contracts.
+- Recorded-source full MCP workflow replay and clean-wheel core,
+  PDF/monitoring, and report/finance/extraction verification.
+- Bounded fault tests for abrupt process termination, failed writes before/after
+  retrieval dispatch, transaction rollback, repeated cancellation, and export cleanup.
 
 ## Before release
 
@@ -54,10 +59,10 @@ baseline supplements that gate; it does not replace or waive it.
 
 ### 3. Validate sustained operation and faults
 
-Extend the current cancellation, oversize, restart, and authentication tests with
-sustained concurrency, process termination, write failures, resource pressure,
-and repeated upstream failure. Check for child-process, socket, task, and file
-leaks. Test backup/restore with the runtime stopped.
+Extend the existing bounded cancellation, oversize, process termination,
+write-failure, and authentication tests with sustained concurrency, resource
+pressure, and repeated upstream failure. Measure child-process, socket, task,
+and file growth over longer runs. Test backup/restore with the runtime stopped.
 
 Add bounded retrieval-stage metrics where needed: fetch outcomes, parser
 failures, investigation rounds, and insufficient-evidence rates. Keep questions,
@@ -72,8 +77,8 @@ deployed monitoring service.
 
 Review dependency proposals individually. Major MCP SDK and data-library updates
 need dedicated compatibility tests; a green dependency audit alone is insufficient.
-Exercise core, PDF/monitoring, report, and finance installation paths from the
-built wheel. Extend adversarial input tests without claiming prompt-injection
+Keep the implemented core, PDF/monitoring, and report/finance/extraction clean-wheel
+checks passing for each release candidate. Extend adversarial input tests without claiming prompt-injection
 immunity or treating a parser process as a security sandbox.
 
 Acceptance: supported Python matrices, clean-wheel checks, audit results, and

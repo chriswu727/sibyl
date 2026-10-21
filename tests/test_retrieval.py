@@ -1,4 +1,5 @@
 """Structured keyless retrieval tests. No network."""
+
 import hashlib
 import unittest
 from unittest import mock
@@ -12,51 +13,120 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_missing_site_gets_one_focused_followup(self):
         first = SearchResult("First", "https://first.example/results", "", "web")
         second = SearchResult("Second", "https://second.example/results", "", "web")
-        initial = [first, *[SearchResult("First", f"https://first.example/{i}", "", "web") for i in range(13)]]
-        pages = [WebPage(r.url, r.title, (r.title + " evidence. ") * 40) for r in (first, second)]
-        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(side_effect=[initial, [second]])) as search, \
-             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)) as scrape:
-            bundle = await gather_source_bundle("2026 results (site:first.example OR site:second.example)", client=object())
+        initial = [
+            first,
+            *[
+                SearchResult("First", f"https://first.example/{i}", "", "web")
+                for i in range(13)
+            ],
+        ]
+        pages = [
+            WebPage(r.url, r.title, (r.title + " evidence. ") * 40)
+            for r in (first, second)
+        ]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(side_effect=[initial, [second]]),
+            ) as search,
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ) as scrape,
+        ):
+            bundle = await gather_source_bundle(
+                "2026 results (site:first.example OR site:second.example)",
+                client=object(),
+            )
         self.assertEqual(search.await_count, 2)
         self.assertEqual(search.call_args.args[0], "2026 results site:second.example")
         self.assertEqual(scrape.call_args.args[0][:2], [first.url, second.url])
         self.assertEqual(len(scrape.call_args.args[0]), 12)
-        self.assertIn("2026 results site:second.example", bundle.diagnostics.search_queries)
+        self.assertIn(
+            "2026 results site:second.example", bundle.diagnostics.search_queries
+        )
 
     async def test_site_followups_are_bounded_and_failure_keeps_initial_results(self):
         first = SearchResult("First", "https://first.example/results", "", "web")
         page = WebPage(first.url, first.title, "Market research evidence. " * 40)
-        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(side_effect=[[first], RuntimeError("failure"), []])) as search, \
-             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[page])):
-            bundle = await gather_source_bundle("market (site:first.example OR site:second.example OR site:third.example OR site:fourth.example)", client=object())
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(side_effect=[[first], RuntimeError("failure"), []]),
+            ) as search,
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[page])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "market (site:first.example OR site:second.example OR site:third.example OR site:fourth.example)",
+                client=object(),
+            )
         self.assertEqual(search.await_count, 3)
         self.assertEqual(bundle.sources[0].url, first.url)
         self.assertEqual(bundle.diagnostics.refinement_failures, 1)
 
-    async def test_parenthesized_site_union_keeps_both_hosts_and_rejects_lookalikes(self):
-        results = [SearchResult("Research", url, "", "web") for url in (
-            "https://first.example/results", "https://ir.second.example/results",
-            "https://second.example.evil.org/results")]
-        pages = [WebPage(r.url, r.title, "Research evidence methods. " * 30) for r in results[:2]]
-        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)) as scrape, \
-             mock.patch("sibyl.retrieval.search_wikipedia", mock.AsyncMock()) as wiki:
-            await gather_source_bundle("research (site:first.example OR site:second.example)", client=object())
+    async def test_parenthesized_site_union_keeps_both_hosts_and_rejects_lookalikes(
+        self,
+    ):
+        results = [
+            SearchResult("Research", url, "", "web")
+            for url in (
+                "https://first.example/results",
+                "https://ir.second.example/results",
+                "https://second.example.evil.org/results",
+            )
+        ]
+        pages = [
+            WebPage(r.url, r.title, "Research evidence methods. " * 30)
+            for r in results[:2]
+        ]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ) as scrape,
+            mock.patch("sibyl.retrieval.search_wikipedia", mock.AsyncMock()) as wiki,
+        ):
+            await gather_source_bundle(
+                "research (site:first.example OR site:second.example)", client=object()
+            )
         self.assertEqual(scrape.call_args.args[0], [r.url for r in results[:2]])
         wiki.assert_not_called()
 
-    async def test_period_match_precedes_domain_diversity_and_preserves_unranked_mode(self):
-        results = [SearchResult(title, url, "", "web") for title, url in (
-            ("2025 market results", "https://old.example/release"),
-            ("2026 market results", "https://current.example/one"),
-            ("2026 market capacity", "https://current.example/two"))]
-        pages = [WebPage(r.url, r.title, (f"{r.title} market evidence {i} " * 40))
-                 for i, r in enumerate(results)]
-        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])):
-            ranked = await gather_source_bundle("2026 market", max_sources=2, client=object())
-            unranked = await gather_source_bundle("2026 market", max_sources=2, ranker="none", client=object())
+    async def test_period_match_precedes_domain_diversity_and_preserves_unranked_mode(
+        self,
+    ):
+        results = [
+            SearchResult(title, url, "", "web")
+            for title, url in (
+                ("2025 market results", "https://old.example/release"),
+                ("2026 market results", "https://current.example/one"),
+                ("2026 market capacity", "https://current.example/two"),
+            )
+        ]
+        pages = [
+            WebPage(r.url, r.title, (f"{r.title} market evidence {i} " * 40))
+            for i, r in enumerate(results)
+        ]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            ranked = await gather_source_bundle(
+                "2026 market", max_sources=2, client=object()
+            )
+            unranked = await gather_source_bundle(
+                "2026 market", max_sources=2, ranker="none", client=object()
+            )
         self.assertEqual({s.url for s in ranked.sources}, {r.url for r in results[1:]})
         self.assertEqual(unranked.sources[0].url, results[0].url)
 
@@ -75,9 +145,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         pages[1].title = ""
         client = object()
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])) as wiki:
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ) as wiki,
+        ):
             first = await gather_source_bundle(" alpha ", max_sources=2, client=client)
             second = await gather_source_bundle("alpha", max_sources=2, client=client)
 
@@ -154,9 +232,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "alpha evidence", max_sources=2, client=object()
             )
@@ -173,15 +259,21 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_prefers_independent_content_over_syndicated_copy(self):
         results = [
             SearchResult("Alpha investigation", "https://a.example/report", "", "news"),
-            SearchResult("Alpha investigation copy", "https://b.example/copy", "", "news"),
-            SearchResult("Independent alpha review", "https://c.example/review", "", "web"),
+            SearchResult(
+                "Alpha investigation copy", "https://b.example/copy", "", "news"
+            ),
+            SearchResult(
+                "Independent alpha review", "https://c.example/review", "", "web"
+            ),
         ]
         shared = " ".join(
             f"alpha investigation evidence interview {index} measured result {index * 7}"
             for index in range(35)
         )
         pages = [
-            WebPage(results[0].url, results[0].title, f"original header {shared} footer"),
+            WebPage(
+                results[0].url, results[0].title, f"original header {shared} footer"
+            ),
             WebPage(results[1].url, results[1].title, f"partner header {shared} legal"),
             WebPage(
                 results[2].url,
@@ -193,15 +285,19 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(return_value=results),
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls",
-            new=mock.AsyncMock(return_value=pages),
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup",
-            new=mock.AsyncMock(return_value=[]),
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=results),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
         ):
             bundle = await gather_source_bundle(
                 "alpha investigation evidence",
@@ -232,12 +328,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             for index, result in enumerate(results)
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(
                 "alpha evidence", max_sources=2, client=object()
@@ -271,17 +371,15 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             refinement_result.title,
             "alpha evidence independent review " + "replicated finding " * 30,
         )
-        search = mock.AsyncMock(
-            side_effect=[initial_results, [refinement_result]]
-        )
-        scrape = mock.AsyncMock(
-            side_effect=[initial_pages, [refinement_page]]
-        )
+        search = mock.AsyncMock(side_effect=[initial_results, [refinement_result]])
+        scrape = mock.AsyncMock(side_effect=[initial_pages, [refinement_page]])
 
-        with mock.patch("sibyl.retrieval.search_web", new=search), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=scrape
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch("sibyl.retrieval.search_web", new=search),
+            mock.patch("sibyl.retrieval.scrape_urls", new=scrape),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(
                 "alpha evidence", max_sources=2, client=object()
@@ -319,10 +417,14 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             side_effect=[results, RuntimeError("refinement unavailable")]
         )
 
-        with mock.patch("sibyl.retrieval.search_web", new=search), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch("sibyl.retrieval.search_web", new=search),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle("alpha evidence", client=object())
 
@@ -346,15 +448,19 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             WebPage(results[1].url, results[1].title, f"republished {shared} legal"),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(return_value=results),
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls",
-            new=mock.AsyncMock(return_value=pages),
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup",
-            new=mock.AsyncMock(return_value=[]),
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=results),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
         ):
             bundle = await gather_source_bundle(
                 "alpha evidence report",
@@ -386,9 +492,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             WebPage(results[1].url, results[1].title, "hotel travel guide " * 30),
         ]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "quantum battery breakthrough", max_sources=2, client=object()
             )
@@ -410,7 +524,9 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_missing_query_entity_is_not_synthesis_ready(self):
         results = [
             SearchResult("France population", "https://a.example/france", "", "web"),
-            SearchResult("Eastern France cities", "https://b.example/cities", "", "web"),
+            SearchResult(
+                "Eastern France cities", "https://b.example/cities", "", "web"
+            ),
         ]
         pages = [
             WebPage(
@@ -425,12 +541,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(
                 "What is the current population of the city of Zylathia in eastern France?",
@@ -458,12 +578,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(
                 "Who will win the 2999 Nobel Prize in Literature?",
@@ -484,9 +608,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ("alpha evidence " * 20)[:180],
         )
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[result])), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[page])), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[result])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[page])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle("alpha evidence", client=object())
 
         self.assertEqual(bundle.status, "insufficient_evidence")
@@ -516,12 +648,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(query, client=object())
 
@@ -533,12 +669,8 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_historical_role_requires_local_tenure_support(self):
         query = "Who was the rector of Example University in 2006?"
         results = [
-            SearchResult(
-                "Department history", "https://a.example/history", "", "web"
-            ),
-            SearchResult(
-                "University profile", "https://b.example/profile", "", "web"
-            ),
+            SearchResult("Department history", "https://a.example/history", "", "web"),
+            SearchResult("University profile", "https://b.example/profile", "", "web"),
         ]
         pages = [
             WebPage(
@@ -557,12 +689,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(query, client=object())
 
@@ -576,18 +712,15 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_historical_role_accepts_covering_tenure_range(self):
         query = "Who was the rector of Example University in 2006?"
         results = [
-            SearchResult(
-                "Official history", "https://a.example/rectors", "", "web"
-            ),
-            SearchResult(
-                "Archived profile", "https://b.example/archive", "", "web"
-            ),
+            SearchResult("Official history", "https://a.example/rectors", "", "web"),
+            SearchResult("Archived profile", "https://b.example/archive", "", "web"),
         ]
         texts = [
             "Alice Example was rector of Example University from 2003 to 2008. "
             + "The official archive records her term and administrative work. " * 15,
             "Example University named Alice Example as rector for the 2004-2007 term. "
-            + "The preserved profile documents leadership and institutional history. " * 15,
+            + "The preserved profile documents leadership and institutional history. "
+            * 15,
         ]
         pages = [
             WebPage(
@@ -598,12 +731,16 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             for result, text in zip(results, texts)
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
         ):
             bundle = await gather_source_bundle(query, client=object())
 
@@ -628,15 +765,19 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             error="HTTP 403",
         )
 
-        with mock.patch(
-            "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(return_value=[result]),
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls",
-            new=mock.AsyncMock(return_value=[failed_page]),
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup",
-            new=mock.AsyncMock(return_value=[]),
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=[result]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=[failed_page]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
         ):
             bundle = await gather_source_bundle("alpha evidence", client=object())
 
@@ -668,15 +809,19 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ],
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(return_value=[target, *noise]),
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls",
-            new=mock.AsyncMock(return_value=pages),
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup",
-            new=mock.AsyncMock(return_value=[]),
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=[target, *noise]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
         ):
             bundle = await gather_source_bundle(
                 "Target paper DOI 10.1/target",
@@ -724,15 +869,19 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ],
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(return_value=[target, *noise]),
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls",
-            new=mock.AsyncMock(return_value=pages),
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup",
-            new=mock.AsyncMock(return_value=[]),
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=[target, *noise]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
         ):
             bundle = await gather_source_bundle(
                 query,
@@ -772,15 +921,19 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             ),
         ]
 
-        with mock.patch(
-            "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(return_value=results),
-        ), mock.patch(
-            "sibyl.retrieval.scrape_urls",
-            new=mock.AsyncMock(return_value=pages),
-        ), mock.patch(
-            "sibyl.retrieval.wikipedia_lookup",
-            new=mock.AsyncMock(return_value=[]),
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=results),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
         ):
             bundle = await gather_source_bundle(query, client=object())
 
@@ -804,13 +957,22 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             WebPage(
                 results[2].url,
                 results[2].title,
-                "Dušan Lajović was the Serbian quarterfinalist at the 2018 Madrid Open. " * 8,
+                "Dušan Lajović was the Serbian quarterfinalist at the 2018 Madrid Open. "
+                * 8,
             ),
         ]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "Serbian quarterfinalist 2018 Madrid Open",
                 max_sources=1,
@@ -835,10 +997,20 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         def fake_scores(query, documents):
             return [0.95 if title == "Target" else 0.05 for title, _ in documents]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.flashrank_relevance_scores", side_effect=fake_scores):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.flashrank_relevance_scores", side_effect=fake_scores
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "target", max_sources=1, client=object(), ranker="flashrank"
             )
@@ -859,13 +1031,21 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             for result in results
         ]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])), \
-             mock.patch(
-                 "sibyl.retrieval.flashrank_relevance_scores",
-                 side_effect=ImportError("optional dependency missing"),
-             ):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.flashrank_relevance_scores",
+                side_effect=ImportError("optional dependency missing"),
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "alpha beta", max_sources=1, client=object(), ranker="flashrank"
             )
@@ -886,9 +1066,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             for result in results
         ]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "target", max_sources=2, client=object(), ranker="none"
             )
@@ -897,7 +1085,9 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             [source.url for source in bundle.sources],
             ["https://example.com/first", "https://example.com/target"],
         )
-        self.assertTrue(all(source.relevance_score is None for source in bundle.sources))
+        self.assertTrue(
+            all(source.relevance_score is None for source in bundle.sources)
+        )
         self.assertTrue(
             all(
                 passage.score is None
@@ -927,9 +1117,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
             WebPage(results[2].url, results[2].title, "gamma material " * 200),
         ]
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "alpha evidence", max_sources=1, chars_per_source=3000, client=object()
             )
@@ -947,16 +1145,26 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         )
         for passage in source.evidence:
             self.assertEqual(
-                target_text[passage.start_char:passage.end_char], passage.text
+                target_text[passage.start_char : passage.end_char], passage.text
             )
-            self.assertIn(f"/{source.source_id}/{passage.passage_id}", passage.citation_id)
+            self.assertIn(
+                f"/{source.source_id}/{passage.passage_id}", passage.citation_id
+            )
         self.assertEqual(bundle.diagnostics.passages_returned, len(source.evidence))
         self.assertEqual(bundle.diagnostics.chunks_ranked, len(source.evidence))
 
     async def test_bounds_request_parameters(self):
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle(
                 "query", max_sources=50, chars_per_source=100, client=object()
             )
@@ -988,9 +1196,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         search.assert_not_awaited()
 
     async def test_no_sources_is_explicit_insufficient_evidence(self):
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             bundle = await gather_source_bundle("missing", client=object())
 
         self.assertEqual(bundle.status, "insufficient_evidence")
@@ -1011,7 +1227,9 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
     async def test_retrieval_failure_is_returned_as_failure(self):
         with mock.patch(
             "sibyl.retrieval.search_web",
-            new=mock.AsyncMock(side_effect=RuntimeError("engine unavailable: token=SECRET")),
+            new=mock.AsyncMock(
+                side_effect=RuntimeError("engine unavailable: token=SECRET")
+            ),
         ):
             bundle = await gather_source_bundle("query", client=object())
 
@@ -1020,9 +1238,17 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("SECRET", bundle.error)
         self.assertEqual(render_source_bundle(bundle), bundle.error)
 
-        with mock.patch("sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])), \
-             mock.patch("sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
             insufficient = await gather_source_bundle("query", client=object())
         self.assertNotEqual(bundle.bundle_id, insufficient.bundle_id)
 
@@ -1032,7 +1258,9 @@ class TestRenderSourceBundle(unittest.TestCase):
         diagnostics = mock.Mock(recommended_action="synthesize")
         passage = mock.Mock(text="Evidence text")
         source = mock.Mock(title="Title", url="https://example.com", evidence=[passage])
-        bundle = mock.Mock(status="ok", sources=[source], query="question", diagnostics=diagnostics)
+        bundle = mock.Mock(
+            status="ok", sources=[source], query="question", diagnostics=diagnostics
+        )
 
         text = render_source_bundle(bundle)
 

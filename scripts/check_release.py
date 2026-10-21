@@ -1,13 +1,18 @@
 """Validate that a release tag matches the package and changelog versions."""
+
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 
-def validate_release(tag: str, root: Path) -> str:
+def validate_release(
+    tag: str, root: Path, *, require_release_note: bool = False
+) -> str:
     init_text = (root / "sibyl" / "__init__.py").read_text(encoding="utf-8")
     match = re.search(
         r'^__version__\s*=\s*["\']([^"\']+)["\']\s*$',
@@ -25,6 +30,17 @@ def validate_release(tag: str, root: Path) -> str:
     changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
     if re.search(rf"^## {re.escape(version)}(?:\s|$)", changelog, re.MULTILINE) is None:
         raise ValueError(f"CHANGELOG.md has no section for {version}")
+    if require_release_note:
+        heading = re.search(
+            rf"^## {re.escape(version)} — (\d{{4}}-\d{{2}}-\d{{2}})\s*$",
+            changelog,
+            re.MULTILINE,
+        )
+        if heading is None:
+            raise ValueError(
+                "Publication requires a dated changelog section, not Unreleased"
+            )
+        date.fromisoformat(heading[1])
 
     server = json.loads((root / "server.json").read_text(encoding="utf-8"))
     if server.get("version") != version:
@@ -40,11 +56,16 @@ def validate_release(tag: str, root: Path) -> str:
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print("usage: check_release.py v<package-version>", file=sys.stderr)
-        return 2
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("tag")
+    parser.add_argument("--require-release-note", action="store_true")
+    args = parser.parse_args()
     try:
-        version = validate_release(sys.argv[1], Path(__file__).resolve().parents[1])
+        version = validate_release(
+            args.tag,
+            Path(__file__).resolve().parents[1],
+            require_release_note=args.require_release_note,
+        )
     except (OSError, ValueError) as exc:
         print(f"release validation failed: {exc}", file=sys.stderr)
         return 1

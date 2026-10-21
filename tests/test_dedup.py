@@ -2,6 +2,7 @@
 
 Run: python -m unittest discover tests
 """
+
 import unittest
 
 from sibyl.dedup import canonical_url, dedup_pages
@@ -20,7 +21,9 @@ class TestCanonicalUrl(unittest.TestCase):
         self.assertEqual(a, b)
 
     def test_distinct_paths_differ(self):
-        self.assertNotEqual(canonical_url("https://ex.com/a"), canonical_url("https://ex.com/b"))
+        self.assertNotEqual(
+            canonical_url("https://ex.com/a"), canonical_url("https://ex.com/b")
+        )
 
 
 class TestDedupPages(unittest.TestCase):
@@ -36,13 +39,19 @@ class TestDedupPages(unittest.TestCase):
             ),
         ]
         out = dedup_pages(pages)
-        self.assertEqual(len(out), 2)                      # a-variants collapsed
-        self.assertEqual(out[0].url, "https://www.ex.com/a/")  # first position preserved
-        self.assertEqual(out[0].text, "a much longer body of text here")  # longer text won
+        self.assertEqual(len(out), 2)  # a-variants collapsed
+        self.assertEqual(
+            out[0].url, "https://www.ex.com/a/"
+        )  # first position preserved
+        self.assertEqual(
+            out[0].text, "a much longer body of text here"
+        )  # longer text won
         self.assertEqual(out[0].content_origin, "jina_reader")
 
     def test_no_duplicates_unchanged(self):
-        pages = [WebPage(url=f"https://ex.com/{i}", title=str(i), text="t") for i in range(4)]
+        pages = [
+            WebPage(url=f"https://ex.com/{i}", title=str(i), text="t") for i in range(4)
+        ]
         self.assertEqual(len(dedup_pages(pages)), 4)
 
 

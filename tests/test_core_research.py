@@ -55,5 +55,7 @@ async def main():
 
 asyncio.run(main())
 """
-        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=20)
+        result = subprocess.run(
+            [sys.executable, "-c", script], capture_output=True, text=True, timeout=20
+        )
         self.assertEqual(result.returncode, 0, result.stderr)

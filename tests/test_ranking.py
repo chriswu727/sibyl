@@ -1,4 +1,5 @@
 """Dependency-free lexical relevance tests."""
+
 import sys
 import types
 import unittest
@@ -75,7 +76,9 @@ class TestLexicalRelevance(unittest.TestCase):
         self.assertGreater(relevant, 0.5)
 
     def test_stopword_only_query_and_empty_documents_score_zero(self):
-        self.assertEqual(lexical_relevance_scores("the and of", [("title", "body")]), [0.0])
+        self.assertEqual(
+            lexical_relevance_scores("the and of", [("title", "body")]), [0.0]
+        )
         self.assertEqual(lexical_relevance_scores("query", []), [])
 
     def test_scores_are_deterministic(self):
@@ -137,8 +140,10 @@ class TestFlashRankRelevance(unittest.TestCase):
         fake_module.RerankRequest = FakeRequest
         documents = [("First", "noise"), ("Second", "target")]
 
-        with mock.patch.dict(sys.modules, {"flashrank": fake_module}), \
-             mock.patch.object(ranking, "_flashrank_ranker", None):
+        with (
+            mock.patch.dict(sys.modules, {"flashrank": fake_module}),
+            mock.patch.object(ranking, "_flashrank_ranker", None),
+        ):
             first = flashrank_relevance_scores("target", documents)
             second = flashrank_relevance_scores("target", documents)
 
@@ -152,8 +157,10 @@ class TestFlashRankRelevance(unittest.TestCase):
         ranker = mock.Mock()
         ranker.rerank.return_value = [{"id": 0, "score": 0.5}]
 
-        with mock.patch.dict(sys.modules, {"flashrank": fake_module}), \
-             mock.patch("sibyl.ranking._get_flashrank_ranker", return_value=ranker):
+        with (
+            mock.patch.dict(sys.modules, {"flashrank": fake_module}),
+            mock.patch("sibyl.ranking._get_flashrank_ranker", return_value=ranker),
+        ):
             with self.assertRaisesRegex(ValueError, "every document"):
                 flashrank_relevance_scores("query", [("A", "a"), ("B", "b")])
 

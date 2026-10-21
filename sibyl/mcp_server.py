@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import os
 import logging
-from pathlib import Path
+import os
 from importlib.util import find_spec
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
@@ -17,11 +17,11 @@ from .mcp_tools import _format_report as _format_report
 from .mcp_tools import (
     analyze,
     assess_research,
-    chart,
     cancel_research,
+    chart,
+    compare,
     complete_research,
     continue_research,
-    compare,
     fetch_market_data,
     gather_bundle,
     gather_evidence,
@@ -120,7 +120,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Sibyl MCP server")
     parser.add_argument("--version", action="store_true")
     parser.add_argument("--list-tools", action="store_true")
-    parser.add_argument("--monitor-port", type=int, help="Authenticated loopback monitoring port (0 selects a free port)")
+    parser.add_argument(
+        "--monitor-port",
+        type=int,
+        help="Authenticated loopback monitoring port (0 selects a free port)",
+    )
     parser.add_argument("--log-level", choices=["WARNING", "INFO"], default="WARNING")
     parser.add_argument(
         "--profile", choices=["auto", "keyless", "report", "finance", "full"]
@@ -137,10 +141,12 @@ def main() -> None:
     operational_logger.setLevel(args.log_level)
     operational_logger.addHandler(logging.StreamHandler())
     operational_logger.propagate = False
-    runtime = SibylRuntime(RuntimePolicy(
-        output_root=Path(os.environ.get("SIBYL_OUTPUT_ROOT", "reports")).absolute(),
-        monitor_port=args.monitor_port,
-    ))
+    runtime = SibylRuntime(
+        RuntimePolicy(
+            output_root=Path(os.environ.get("SIBYL_OUTPUT_ROOT", "reports")).absolute(),
+            monitor_port=args.monitor_port,
+        )
+    )
     server = create_server(runtime)
     profile = asyncio.run(configure_tool_profile(server, runtime))
     if args.list_tools:
