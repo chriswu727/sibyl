@@ -28,6 +28,8 @@ jobs:
           python -m pip install ruff==0.17.1 -e '.[report,finance,extract,pdf,monitor]'
       - name: Check Python correctness
         run: ruff check sibyl tests scripts
+      - name: Check documentation links and anchors
+        run: python scripts/check_docs.py
       - name: Run tests
         run: python -m unittest discover tests -v
       - name: Smoke-test the keyless MCP stdio surface

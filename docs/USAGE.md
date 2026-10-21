@@ -14,7 +14,7 @@ Sibyl is a local MCP server for public-web research and cited reports. Its CLI a
 
 [![Tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
-[![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-0f766e)](../pyproject.toml)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/chriswu727/sibyl/blob/main/LICENSE)
 
 [Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Evidence-loop contract](https://github.com/chriswu727/sibyl/blob/main/docs/evidence-loop-1.0.md) · [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md) · [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
@@ -86,9 +86,10 @@ For clients that accept an MCP server configuration, replace the absolute path:
 }
 ```
 
-No search or model key is required for `gather_evidence`, `gather_bundle`, `gather_sources`, `quick_search`, or `read_url`.
+No search or model key is required for the twelve keyless tools, including host
+research jobs, evidence primitives, and Markdown/JSON export.
 
-For repeatable production retrieval, opt into Tavily explicitly:
+For an optional configured search-provider path, opt into Tavily explicitly:
 
 ```bash
 export SIBYL_SEARCH_PROVIDER=tavily
@@ -159,7 +160,7 @@ Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface direct
 | Retrieval | `gather_bundle(query)` | Structured SourceBundle 1.6 | No |
 | Retrieval | `gather_sources(query)` | Readable `[Source N]` evidence blocks | No |
 | Retrieval | `quick_search(query)` | Titles, URLs, and search snippets | No |
-| Retrieval | `read_url(url)` | Clean text from one public URL | No |
+| Retrieval | `read_url(url)` | Public HTML or optional text PDF, with extraction warnings | No |
 | Research | `research(query, depth)` | Synthesized and cited report | Yes |
 | Research | `analyze(text, question)` | Analysis of supplied text | Yes |
 | Analysis | `compare(items, query)` | Researched comparison | Yes |
@@ -545,15 +546,13 @@ that those models are current or optimal. Measure a candidate model on the same
 research tasks and budget before changing defaults.
 
 ```bash
-claude mcp add sibyl -e DEEPSEEK_API_KEY=sk-... -- \
+claude mcp add sibyl -- \
   /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile report
 ```
 
 Or use the CLI:
 
 ```bash
-export DEEPSEEK_API_KEY=sk-...
-
 sibyl research "Canadian housing market outlook" --depth 2
 sibyl research "Changes to Canadian immigration policy" --language en --md --output reports/
 ```
@@ -588,7 +587,12 @@ max_depth: 2
 reranker: lexical
 ```
 
-Do not commit real API keys. The keyless retrieval tools remain available when no LLM provider is configured.
+Supply credentials through the host's secret/environment mechanism; do not put
+real keys in command arguments or committed files. Model IDs above illustrate
+role routing, not a recommendation or current availability guarantee. For YAML,
+use provider-supported environment credentials or a private configuration file;
+`${VARIABLE}` substitution is not performed by Sibyl's YAML loader.
+The keyless tools remain available when no LLM provider is configured.
 
 ## Evaluation and reproducibility
 
@@ -603,7 +607,13 @@ python scripts/eval_live_retrieval.py --repeats 3 \
   --output evals/results/live-retrieval-YYYY-MM-DD.json
 ```
 
-The first three checks are deterministic and network-free. `eval_live_retrieval.py` runs 66 natural-language and adversarial questions against the public web without an LLM. Metric version 2 measures answer coverage, safe trap handling, run-to-run stability, the fraction of answerable runs that are both `ok` and contain the expected answer, the precision of `ok` states on answerable questions, and p50/p95 latency. It also records the configured and actual search-provider paths. Live results vary with public search and publisher availability and must be saved with their date when used as launch evidence.
+The first four commands check offline contracts without public-web or model calls;
+transport tests use local loopback only. `eval_live_retrieval.py` runs 66
+natural-language and adversarial questions against the public web without an LLM.
+Metric version 2 measures answer coverage, safe trap handling, run-to-run stability,
+answerable runs containing both `ok` and expected evidence, ready-state precision,
+and p50/p95 latency. It records configured and actual provider paths. Save dated
+results; public search and publisher availability vary between runs.
 
 The latest formal keyless three-repeat run is retained in [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). Answer coverage improved from 75.9% in the [original baseline](../evals/results/live-retrieval-2026-07-21.json) to 85.2%, trap safety remained 100%, and p95 latency was 11.0 seconds. A subsequent [105-request Tavily pilot](../evals/results/live-retrieval-tavily-pilot-2026-07-21.json) reached 88.9% answer coverage and 10.7-second p95 latency. Recomputed under metric version 2, Tavily produced synthesis-ready answer evidence on 70.4% of answerable cases with 92.7% ready-state precision; the gates are 75% and 95%. Sibyl therefore remains a public beta until a dated three-repeat run clears every threshold; offline checks or a single-repeat pilot are not release evidence.
 
@@ -614,9 +624,9 @@ The bounded evidence loop also has a [four-case keyless retrieval run](../evals/
 ## Known limitations
 
 - Keyless search engines and public websites can throttle, block, or change behavior.
-- Tavily improves the operational search path but is optional, credentialed, and usage-billed by Tavily; it does not make publisher pages or the wider web deterministic.
+- Tavily is an optional, credentialed, usage-billed search path; it does not guarantee readiness or make publisher pages deterministic.
 - Retrieval relevance does not establish factual truth or source credibility.
-- `quality_score` is intentionally unpopulated while the production credibility model is still under evaluation.
+- `quality_score` is intentionally unpopulated; no production credibility score is provided.
 - Publication dates are extracted from explicit page metadata and may be wrong at the publisher.
 - Near-duplicate clustering is content-based and can miss heavily rewritten syndication.
 - Autonomous reports are only as capable and reliable as their configured model and retrieved evidence. Offline workflow tests do not measure live report accuracy.
@@ -629,16 +639,20 @@ git clone https://github.com/chriswu727/sibyl.git
 cd sibyl
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e '.[all]'
+python -m pip install -e '.[report,finance,extract,pdf,monitor]'
+python scripts/check_docs.py
 python -m unittest discover tests -v
 ```
 
 Useful project documents:
 
+- [Documentation index](README.md)
+- [Operations and monitoring](OPERATIONS.md)
+- [Active roadmap](QUALITY_BUILD_PLAN.md)
 - [SourceBundle 1.6 consumer contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md)
 - [Performance notes](https://github.com/chriswu727/sibyl/blob/main/docs/PERFORMANCE.md)
 - [MCP architecture notes](https://github.com/chriswu727/sibyl/blob/main/docs/MCP_ARCHITECTURE.md)
-- [Launch readiness and competitive position](https://github.com/chriswu727/sibyl/blob/main/docs/LAUNCH_READINESS.md)
+- [Launch readiness and release gates](https://github.com/chriswu727/sibyl/blob/main/docs/LAUNCH_READINESS.md)
 - [MCP installation reference](https://github.com/chriswu727/sibyl/blob/main/llms-install.md)
 - [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md)
 - [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md)

@@ -204,11 +204,14 @@ without a task broker, cloud deployment, or tenant identity system.
 Predictable resource limits matter more than accepting work that cannot finish.
 
 **Compatible contracts, explicit policy changes.** SourceBundle 1.6,
-EvidenceLoop 1.0, and the fourteen existing tool names remain intact; six job
-operations are additive. MCP output-directory
+EvidenceLoop 1.0, and the current 20-tool catalog have explicit consumer contracts.
+The keyless profile exposes 12 tools. MCP output-directory
 confinement and final-consumer cancellation are intentional behavioral changes.
 
 **Tests are evidence, not a guarantee.** Unit tests and real stdio smoke tests
 cover runtime and transport contracts. Offline retrieval fixtures prevent known
 regressions. Dependency audits check known advisories in resolved installations.
 Live accuracy claims still require a new dated live evaluation.
+
+See the [documentation index](README.md), [operations runbook](OPERATIONS.md),
+and [roadmap](QUALITY_BUILD_PLAN.md) for current usage and planned extensions.

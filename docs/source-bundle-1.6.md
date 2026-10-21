@@ -1,12 +1,12 @@
 # SourceBundle 1.6 consumer contract
 
-Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a contract fixture in Loop Agent, Argus, and other consumers. Sibyl's tests validate the fixture against the same typed model used by the MCP response and verify that MCP serialization produces the fixture unchanged.
+Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a contract fixture for consuming agents and applications. Sibyl's tests validate it against the typed MCP model and check serialization. This describes unreleased `main`; see the [documentation index](README.md) for installation and release status.
 
 ## Compatibility rules
 
 - Require schema major version `1`; accept additive fields within the same major version instead of comparing the entire version string or exact key set.
-- Check `status` before reading evidence. Only `ok` is synthesis-ready; `insufficient_evidence` may contain leads but must retain its warning.
-- `limited` evidence also maps to `insufficient_evidence`; consumers should refine the query instead of treating a thin or single-cluster result as complete.
+- Check both `status` and `diagnostics.recommended_action` before synthesis. An `ok` status alone is not sufficient; `insufficient_evidence` may contain leads but must retain its warning.
+- In the search-bundle pipeline, `limited` evidence maps to `insufficient_evidence`. A direct source read inside a research job can have `status="ok"` for usable extraction while remaining `limited` with `refine_query`; it is not a research-completeness verdict.
 - Read `diagnostics.recommended_action` before continuing: `synthesize` permits evidence-based synthesis, `refine_query` asks for a narrower retrieval, `decompose_query` requires separately verifiable subquestions, `retry` means the retrieval path failed, and `revise_request` means the request itself was invalid.
 - `diagnostics.query_complexity` is `multi_step` only for high-confidence dependent fact chains. Sibyl fails those broad calls closed with `multi_step_query`; gather each atomic fact separately instead of assuming one result set proves the chain.
 - For an atomic query with only one relevant domain, Sibyl may issue one bounded exclusion search for another domain. `refinement_searches` and `refinement_failures` expose that attempt; failure of this supplemental search retains the initial evidence instead of failing the whole bundle.
@@ -24,8 +24,8 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 
 `content_origin` is an enum with five values:
 
-- `direct_fetch`: full text extracted from the destination response.
-- `jina_reader`: full text returned by Jina Reader after a blocked or thin direct response.
+- `direct_fetch`: bounded text extracted from the destination response.
+- `jina_reader`: bounded text returned by Jina Reader after a blocked or thin direct response.
 - `wikipedia_api`: article text returned by the Wikipedia API.
 - `search_snippet`: partial search-result text used only when full text was unavailable.
 - `crossref_api`: structured bibliographic metadata returned directly by Crossref.
@@ -39,6 +39,19 @@ Search snippets still participate in relevance ranking when full pages are avail
 `substantive_sources` counts retrieved full-text sources that also contain every detected key query anchor. A long page about the general topic does not count as corroboration for a quoted paper, named entity, or other anchored target when that target is absent.
 
 Historical role questions with an explicit year require one local statement that connects the requested role to that year or to a tenure range covering it. Mentions of the role and year in unrelated sections do not satisfy this check, and modified roles such as `honorary`, `acting`, or `vice` do not substitute for the requested role.
+
+## PDF evidence and offsets
+
+Optional PDF input uses `source_type="pdf"` and `content_origin="direct_fetch"`.
+These labels describe format and retrieval route, not peer review or credibility.
+Extracted text includes `[PDF page N]` markers where page text is emitted. Passage
+hashes and character offsets refer to that extracted text, not raw PDF byte offsets
+or page coordinates; a passage can span page boundaries.
+
+Preserve `diagnostics.sufficiency_reasons`, including character/page-limit and
+unreadable-page warnings. Research-job limitations retain PDF warnings through
+report export. A text PDF may be partially read; image-only input is not OCR'd.
+The contract does not claim layout/table/formula fidelity or complete-paper coverage.
 
 ## Publication time
 

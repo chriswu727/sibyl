@@ -110,6 +110,9 @@ Recovery has a separate 64 KiB metadata reserve. Exports are limited to 16 MiB
 per file and 256 files / 128 MiB per selected output directory.
 
 See docs/USAGE.md for all limits and SECURITY.md / PRIVACY.md for trust boundaries.
+The documentation index is docs/README.md. Track future work in
+docs/QUALITY_BUILD_PLAN.md and release evidence in docs/LAUNCH_READINESS.md;
+historical experiment notes are not current-model quality guarantees.
 
 ## Development
 

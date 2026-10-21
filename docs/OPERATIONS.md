@@ -4,6 +4,9 @@ Run Sibyl as one trusted local stdio MCP process. Monitoring is an optional,
 read-only view of that same runtime, not a remote MCP API. This runbook covers
 startup, health interpretation, alerts, recovery, and local retention.
 
+This describes unreleased `main`; start with [Installation](../llms-install.md).
+For unimplemented monitoring extensions, see the [roadmap](QUALITY_BUILD_PLAN.md).
+
 ## Start with monitoring
 
 Install from the current source checkout:

@@ -1,7 +1,7 @@
 [project]
 name = "sibyl-research"
 dynamic = ["version"]
-description = "Deep-research MCP with persistent investigations, traceable evidence, and cited reports"
+description = "Deep Research MCP for multi-round investigations, traceable evidence, and cited reports"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
