@@ -20,7 +20,8 @@ Persistent research is separate: `start_research` stores questions, plans,
 retrieval attempts, selected public evidence, progress events, counters, and
 reports in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`. These records survive
 restart and have no automatic time-based expiry. At most 64 jobs are retained,
-with a 1 MiB payload limit per job; new jobs are rejected when history is full.
+with a 1 MiB payload limit per job plus 64 KiB reserved for recovery metadata;
+new jobs are rejected when history is full.
 `cancel_research(job_id=..., delete=true)` removes a checkpoint but does not
 delete exported reports, backups, host conversation history, or provider records.
 SQLite deletion is not a guarantee of forensic erasure. The database uses
@@ -37,6 +38,14 @@ server shutdown clears transient runtime state but retains explicit research
 checkpoints. Diagnostic runtime logs contain
 tool names and aggregate completion/failure/cancellation counts, not tool arguments,
 page bodies, or provider exception details. They are local logs, not telemetry.
+
+Optional local monitoring exposes only operational counters and the last 64
+content-free tool events through authenticated loopback endpoints. It does not
+send telemetry anywhere. An operator-configured Prometheus scraper can persist
+those metrics under its own retention policy. Logs at `--log-level INFO` include
+tool name, outcome, duration, and active-call count; they go to stderr, not MCP stdout.
+PDF input bytes are passed in memory to a resource-limited child without inherited
+environment credentials. No raw PDF files or OCR models are saved automatically.
 
 ## Where data can go
 

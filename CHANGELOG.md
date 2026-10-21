@@ -2,6 +2,18 @@
 
 ## 0.4.0 — Unreleased
 
+### Operational hardening
+
+- Added optional resource-bounded text-PDF ingestion with page markers, explicit
+  extraction limitations, killable workers, and no inherited environment secrets.
+- Added opt-in authenticated loopback health/readiness/status/Prometheus endpoints,
+  bounded content-free metrics, structured stderr events, and shutdown cleanup.
+- Recover oversized evidence checkpoints without losing prior evidence or refunding
+  consumed budgets; classify interrupted attempts explicitly on restart.
+- Bound export file size and per-directory count/bytes without deleting user files.
+- Extend CI and dependency audits to PDF input and monitoring, with real stdio/HTTP
+  lifecycle tests and an operations runbook.
+
 ### Retrieval reliability
 
 - Preserve main/article content inside navigation and page-wide form wrappers;
@@ -44,7 +56,7 @@
   Markdown references are compact. Keyless/full catalogs contain 12/20 tools.
 - Existing checkpoints remain readable. New host jobs require review unless
   `allow_incomplete=true` is explicitly supplied. Controlled model-quality A/B testing
-  and full PDF-paper ingestion remain outstanding.
+  and OCR/layout-aware full-paper ingestion remain outstanding.
 
 ### Persistent research workflows
 
@@ -65,7 +77,7 @@
   Model operations have a 600-second default deadline. Research jobs additionally
   bound retrieval attempts, model-call count, reserved output tokens, and storage.
 - Repositioned the product around deep research and traceable reports, without a
-  new live-quality claim. PDF ingestion and incremental refresh remain future work.
+  new live-quality claim. Incremental refresh remains future work.
 
 ### Runtime and security hardening
 

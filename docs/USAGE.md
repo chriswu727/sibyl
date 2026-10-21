@@ -61,6 +61,7 @@ Sibyl requires Python 3.11 or newer. The default installation is the lightweight
 python -m pip install -e '.[report]'   # experimental LLM report + PDF
 python -m pip install -e '.[finance]'  # market data, trends, charts
 python -m pip install -e '.[rerank]'   # local cross-encoder ranking
+python -m pip install -e '.[pdf,monitor]'  # text-PDF reads and local operational endpoints
 python -m pip install -e '.[all]'      # every optional capability
 ```
 
@@ -206,8 +207,9 @@ continue_research(job_id="...", question_id="Q1", query="Inspect the original ex
 
 URL reads use the same safe-network boundary, timeout, worker, and retrieval budgets
 as search. Extracted text is bounded to 16,000 characters and split into hashed
-passages with offsets. Thin/unsupported pages add no evidence. Use HTML papers:
-PDF parsing and automatic reference-link crawling are not implemented. Parent links
+passages with offsets. Thin/unsupported pages add no evidence. Text PDFs require
+the `[pdf]` extra and a POSIX host; page markers and truncation warnings are retained.
+Automatic reference-link crawling is not implemented. Parent links
 are host-declared; the server does not prove that a hyperlink existed in the parent.
 The source catalog retains passage IDs even when a source falls out of the selected
 report window. Inspect one with `get_research(job_id="...", passage_id="...")`.
@@ -278,7 +280,8 @@ does not guarantee balanced coverage when the search provider has no matching re
 
 Direct source-read failures retain the fetch reason (such as `HTTP 403` or an
 unsupported content type) in the attempt's `error`. No third-party rendering is
-silently enabled, and PDF ingestion remains unsupported.
+silently enabled. PDF failures (missing extra, encryption, no readable text,
+malformed input, or a resource limit) are explicit rather than inferred evidence.
 
 Multi-round research is an evidence-feedback loop, not a fixed list of searches.
 In host mode the calling agent supplies the reasoning; Sibyl retains its state,
@@ -348,9 +351,13 @@ guarantee. Source pages remain untrusted data, including during resume.
 | Autonomous model calls | 40 attempts, including retries and verification |
 | Reserved completion tokens | 60,000 across attempts; not an exact charge or input-token limit |
 | Checkpoint records | 64; explicit deletion required when full |
-| Checkpoint payload | 1 MiB per job |
+| Checkpoint payload | 1 MiB per job, plus 64 KiB reserved for failure recovery metadata |
 | SQLite database | 16,384 pages; approximately 64 MiB with default page size |
 | Progress history | Last 80 events per job |
+| PDF fetch / parsing | 2 MiB; first 40 pages; at most 60,000 characters; 6-second worker deadline |
+| PDF workers | 2 per event loop; 512 MiB memory threshold; see platform details in SECURITY.md |
+| Export file | 16 MiB |
+| Exports per output directory | 256 files / 128 MiB; explicit retention required |
 
 A retrieval attempt can itself issue multiple search-provider requests. These
 limits do not promise an exact dollar budget; external search/model pricing,
@@ -365,7 +372,13 @@ guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
 
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
 source passage IDs, timestamps, limitations, verification scope, and model-call
-counters. PDF is an export format, not currently a supported research input.
+counters. PDF export requires `[report]`; text-PDF input separately requires `[pdf]`.
+Input is extracted in an isolated child process without inherited credentials,
+then split into the same hashed passages as HTML. Scanned pages have no OCR;
+text order, columns, tables, and formulas still need source inspection.
+The 40-page and character limits are visible limitations, not full-document claims.
+
+Monitoring setup and recovery procedures are in [Operations](OPERATIONS.md).
 
 ## Recommended agent workflow
 

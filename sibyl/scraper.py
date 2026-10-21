@@ -33,6 +33,8 @@ class WebPage:
     content_origin: str = "direct_fetch"
     published_at: Optional[str] = None
     published_at_method: str = ""
+    source_type: str = "web"
+    extraction_warnings: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -40,6 +42,7 @@ class _ResponseSnapshot:
     status_code: int
     headers: Mapping[str, str]
     text: str
+    content: bytes = b""
 
 
 class ResponseTooLargeError(Exception):
@@ -124,10 +127,13 @@ async def _bounded_get(
         if decoder and decoder.unused_data:
             raise ValueError("Trailing compressed response data")
         encoding = response.encoding or "utf-8"
+        raw = bytes(content)
+        is_pdf = raw.startswith(b"%PDF-") or "application/pdf" in response.headers.get("content-type", "").lower()
         return _ResponseSnapshot(
             status_code=response.status_code,
             headers=dict(response.headers),
-            text=bytes(content).decode(encoding, errors="replace"),
+            text="" if is_pdf else raw.decode(encoding, errors="replace"),
+            content=raw,
         )
 
 
@@ -500,6 +506,16 @@ async def scrape_url(
                     return WebPage(url=url, title="", text="", error=redirect_error)
 
                 if resp.status_code == 200:
+                    raw = getattr(resp, "content", b"")
+                    is_pdf = "application/pdf" in resp.headers.get("content-type", "").lower()
+                    if is_pdf or (isinstance(raw, bytes) and raw.startswith(b"%PDF-")):
+                        from .pdf_reader import read_pdf
+                        result = await read_pdf(raw if isinstance(raw, bytes) else b"", max_chars)
+                        return WebPage(
+                            url=final_url, title=result.get("title", ""),
+                            text=result.get("text", ""), error=result.get("error"),
+                            source_type="pdf", extraction_warnings=tuple(result.get("warnings", [])),
+                        )
                     if not _is_html_ish(resp):
                         content_type = str(
                             resp.headers.get("content-type", "unknown")

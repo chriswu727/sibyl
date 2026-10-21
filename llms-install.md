@@ -49,6 +49,11 @@ The default output should identify the `keyless` profile and list
 
 ## Optional production search
 
+For text-PDF input and local monitoring, install `.[pdf,monitor]`. PDF ingestion
+needs a POSIX host and does not perform OCR. Monitoring is disabled by default;
+see [Operations](docs/OPERATIONS.md) before enabling `--monitor-port` with a
+host-supplied `SIBYL_MONITOR_TOKEN`. It is not a remote MCP endpoint.
+
 Tavily can replace the anonymous general-web path while the other public
 sources remain available:
 

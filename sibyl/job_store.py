@@ -17,6 +17,7 @@ from .storage import ArtifactStore
 class JobStore:
     MAX_JOBS = 64
     MAX_PAYLOAD_BYTES = 1024 * 1024
+    RECOVERY_RESERVE_BYTES = 64 * 1024
     MAX_PAGES = 16384
 
     def __init__(self, root: Path):
@@ -47,8 +48,11 @@ class JobStore:
             for job in self.list_jobs():
                 if job["status"] == "running":
                     job["status"] = "interrupted"
-                    job["events"].append({"message": "Runtime stopped; explicit continuation required.", "time": time.time()})
-                    self.save(job)
+                    for attempt in job.get("notebook", {}).get("attempts", []):
+                        if attempt["status"] == "running":
+                            attempt["status"] = "failed"
+                    job["events"] = [*job["events"][-79:], {"message": "Runtime stopped; explicit continuation required.", "time": time.time()}]
+                    self.save(job, recovery=True)
         except BaseException:
             self.close()
             raise
@@ -101,10 +105,19 @@ class JobStore:
             return [json.loads(row[0]) for row in
                     connection.execute("SELECT payload FROM jobs ORDER BY updated DESC")]
 
-    def save(self, job: dict) -> None:
+    def summary(self) -> dict:
+        states = {"awaiting_input", "running", "interrupted", "completed", "cancelled", "failed", "budget_exhausted"}
+        with self.connection() as connection:
+            rows = connection.execute("SELECT json_extract(payload, '$.status'), count(*) FROM jobs GROUP BY 1")
+            counts = {state if state in states else "unknown": count for state, count in rows}
+            partial = connection.execute("SELECT count(*) FROM jobs WHERE json_extract(payload, '$.report.status')='partial'").fetchone()[0]
+        return {"states": counts, "partial_reports": partial, "limit": self.MAX_JOBS,
+                "database_bytes": self.path.stat().st_size}
+
+    def save(self, job: dict, *, recovery: bool = False) -> None:
         previous = job["revision"]
         updated = dict(job, revision=previous + 1)
-        encoded = self._encode(updated)
+        encoded = self._encode(updated, recovery=recovery)
         with self.connection() as connection:
             cursor = connection.execute(
                 "UPDATE jobs SET payload=?, revision=?, updated=? WHERE id=? AND revision=?",
@@ -121,9 +134,10 @@ class JobStore:
         with self.connection() as connection:
             connection.execute("DELETE FROM jobs WHERE id=?", (job_id,))
 
-    def _encode(self, job):
+    def _encode(self, job, *, recovery=False):
         encoded = json.dumps(job, ensure_ascii=False, allow_nan=False)
-        if len(encoded.encode("utf-8")) > self.MAX_PAYLOAD_BYTES:
+        limit = self.MAX_PAYLOAD_BYTES + (self.RECOVERY_RESERVE_BYTES if recovery else 0)
+        if len(encoded.encode("utf-8")) > limit:
             raise CapacityError("Research checkpoint exceeds the 1 MiB storage limit.")
         return encoded
 

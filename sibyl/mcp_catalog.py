@@ -79,6 +79,7 @@ class ToolCatalog:
         @asynccontextmanager
         async def lifespan(server):
             try:
+                await runtime.start()
                 yield runtime
             finally:
                 await runtime.aclose()

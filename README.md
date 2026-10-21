@@ -135,8 +135,10 @@ New host jobs also check research-plan readiness. If gaps cannot be resolved,
 `report.status="partial"`; the job's `status="completed"` means it is finalized,
 not that research coverage is complete. Markdown/PDF exports display a partial-report warning.
 Source-type labels and coverage checks are heuristics, not an independent reviewer.
-Full PDF-paper ingestion and automatic citation-graph crawling are not implemented;
-use accessible HTML papers, and explicitly follow selected references.
+Install `.[pdf]` to read text PDFs through the same safe fetch path. Page markers
+and extraction limitations remain inspectable; scans, encrypted files, and
+oversized documents fail explicitly. Automatic citation-graph crawling is not
+implemented; explicitly follow selected references.
 
 For autonomous execution, install `.[report]`, configure a model, and call
 `start_research(question="...", mode="autonomous")`. Poll `get_research`;
@@ -218,12 +220,26 @@ Keep the default install small; opt into integrations you actually need.
 | `[report]` | Autonomous model-assisted research and PDF export |
 | `[finance]` | Market data, trends, and charts |
 | `[extract]` | Alternative full-text extraction with Trafilatura |
+| `[pdf]` | Resource-bounded text-PDF ingestion on POSIX hosts; no OCR |
+| `[monitor]` | Authenticated, loopback-only health, status, and Prometheus metrics |
 | `[rerank]` | Local FlashRank reranking, with explicit lexical fallback |
 
 Report tools require configured credentials or a local/API-compatible model
 backend. Finance tools require an explicit `finance` or `full` MCP profile.
 Tavily search and Jina rendering are opt-in and disclose queries or URLs to those
 providers. See [configuration, profiles, and all 20 tools](docs/USAGE.md).
+
+## Local monitoring and operations
+
+Monitoring is disabled by default. Install `.[monitor]`, supply a random
+`SIBYL_MONITOR_TOKEN` of at least 32 characters through your host's secret settings,
+and add `--monitor-port 8766` to the MCP command. The read-only listener binds to
+`127.0.0.1` only. `/healthz`, `/readyz`, `/status`, and `/metrics` all require bearer
+authentication. Metrics include tool outcomes/latency, active calls, cache counts,
+job states, and checkpoint health—not research text, URLs, or keys.
+
+See the [operations runbook](docs/OPERATIONS.md) for setup, Prometheus configuration,
+alert examples, recovery, retention, and the precise readiness boundary.
 
 ## Quality and limitations
 
@@ -236,7 +252,8 @@ This upgrade adds a research workflow; it does **not** establish a new live
 report-quality result or prove superiority over a strong model with search.
 Keyless providers can throttle, passages can be wrong, and sufficiency checks
 cannot prove a claim true. Model checks can be wrong too; unverified blocks stay
-marked inline. PDF ingestion and incremental report refresh are not yet supported.
+marked inline. PDF reading does not recover scanned text or guarantee correct
+table/formula layout. Incremental report refresh is not yet supported.
 
 [Launch gates](docs/LAUNCH_READINESS.md) ·
 [Historical evaluation details](docs/USAGE.md#evaluation-and-reproducibility) ·
@@ -245,9 +262,10 @@ marked inline. PDF ingestion and incremental report refresh are not yet supporte
 ## Contributing
 
 ```bash
-python -m pip install -e '.[report,finance,extract]'
+python -m pip install -e '.[report,finance,extract,pdf,monitor]'
 python -m unittest discover tests -v
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
+python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
 python scripts/eval_retrieval.py --ranker lexical
 python scripts/eval_retrieval_pipeline.py --ranker lexical
 python scripts/eval_source_quality.py

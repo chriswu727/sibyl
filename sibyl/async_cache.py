@@ -104,6 +104,11 @@ class AsyncSingleFlightTTL(Generic[K, V]):
         await asyncio.gather(*tasks, return_exceptions=True)
         state.entries.clear()
 
+    def snapshot(self) -> dict:
+        state = self._state()
+        return {"entries": sum(expires > self.clock() for expires, _ in state.entries.values()),
+                "inflight": len(state.inflight), "waiters": sum(state.waiters.values())}
+
     @staticmethod
     def _observe_completion(task: asyncio.Task[V]) -> None:
         if not task.cancelled():

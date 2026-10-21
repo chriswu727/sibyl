@@ -560,7 +560,8 @@ async def read_url(url: str) -> str:
     """Read and extract clean text content from a URL.
 
     Fetches the page, strips navigation/scripts/ads, and returns the main
-    article or body text. Useful for reading a specific source in detail
+    article or body text; optional text-PDF input preserves page markers and
+    extraction limitations. Useful for reading a specific source in detail
     before or after running research().
 
     Returns the page title, URL, and up to 8000 characters of clean text.
@@ -574,6 +575,8 @@ async def read_url(url: str) -> str:
     page = await scrape_url(url, max_chars=8000)
 
     if page.error:
+        if page.source_type == "pdf":
+            return f"Error reading {display_url(url)}: {page.error}"
         return f"Error reading {display_url(url)}: could not retrieve this page."
     if len(page.text.strip()) < 200:
         return f"Insufficient text from {display_url(url)}; no substantive evidence extracted."
@@ -581,6 +584,7 @@ async def read_url(url: str) -> str:
     lines = [
         f"# {page.title}",
         f"URL: {display_url(page.url)}",
+        *[f"Extraction limitation: {warning}" for warning in page.extraction_warnings],
         "",
         page.text,
     ]
