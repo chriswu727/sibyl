@@ -67,7 +67,8 @@ boundary. Install only the extras you need and review their policies separately.
   interruption. Checkpoints reserve attempts before dispatch. These are not exact
   provider billing limits; input tokens and already-dispatched work can be billed.
 - Research state uses an owner-locked private SQLite database below the output
-  root, with 64 records, a 1 MiB payload ceiling per job, 80 progress events per
+  root, with 64 records, a 1 MiB payload ceiling per job (plus 64 KiB reserved
+  for failure recovery metadata), 80 progress events per
   job, and a 16,384-page database limit. A stale revision cannot finalize a host
   report against different citation numbering. Finished reports are immutable.
 - Host report validation checks citation targets, not semantic entailment.
@@ -80,6 +81,11 @@ boundary. Install only the extras you need and review their policies separately.
   rejected. The root is resolved at startup/use from trusted operator settings.
   Do not place it in a directory writable by an untrusted local user: filesystem
   checks are not a defense against a hostile process racing directory changes.
+- Exports are capped at 16 MiB per file, 256 files and 128 MiB per selected output
+  directory. A private publication lock serializes quota checks and renames.
+  These are not a filesystem-wide disk quota: different subdirectories, temporary
+  rendering files, checkpoints, and files written by other programs are separate.
+  No automatic deletion of user reports occurs.
 - Provider exceptions are not returned verbatim at the MCP request boundary.
   Common credential query parameters and fragments are removed/redacted in
   displayed URL metadata; source text and structured evidence remain unchanged
@@ -88,8 +94,38 @@ boundary. Install only the extras you need and review their policies separately.
 - Docker uses an allowlisted build context and a non-root runtime user. Never
   mount credentials or host directories that the selected tools do not need.
 
+## PDF input and monitoring
+
+Text-PDF input is optional (`[pdf]`) and uses the same DNS-pinned, size-bounded
+fetch path as HTML. Parsing runs under `python -I` in a separate process with an
+empty environment, discarded stderr, at most two workers per event loop, a
+6-second wall deadline, and CPU limits (5-second soft / 6-second hard). Cancellation
+kills and reaps the child. Linux limits address space to 512 MiB. macOS cannot
+enforce that address-space limit; a parent samples resident memory every 100 ms
+and kills above 512 MiB. Sampling can overshoot and is not a hard allocation cap.
+Other POSIX hosts require working resource limits; non-POSIX hosts reject PDF reads.
+Parsing reads at most 40 pages and emits at most 60,000 characters, often fewer
+under the caller's extraction limit. Encrypted, malformed, and image-only PDFs
+return explicit failures; mixed text/image documents disclose unreadable pages.
+
+The worker does not execute PDF actions or provide OCR. Process separation is
+resource containment, **not an OS security sandbox**: it still has the launching
+user's filesystem/network permissions. Use an unprivileged account/container and
+OS-level isolation for adversarial inputs. Keep the optional parser up to date.
+
+Monitoring is off unless `--monitor-port` is supplied. It binds only to IPv4
+loopback, requires a 32–256 printable-character bearer token on every route, and
+rejects foreign Host headers, browser Origin headers, query strings, request
+bodies, duplicate headers, and non-GET methods. There is no CORS or state mutation.
+The HTTP parser is h11 with an 8 KiB incomplete-event limit, 16-connection/task
+admission, and a two-second keepalive timeout. This is not comprehensive local
+DoS protection. Do not forward or reverse-proxy this port onto a public interface.
+Anyone holding the token can read operational state. The status and metrics
+surfaces omit questions, source URLs, passage text, job IDs, paths, and credentials.
+See [Operations](docs/OPERATIONS.md) for lifecycle and readiness semantics.
+
 Async deadlines are cooperative. Cancellation cannot forcibly stop an already
-running native library or thread. Optional PDF/chart work can briefly block the
+running native library or thread. Optional PDF export/chart work can briefly block the
 event loop, and third-party provider SDKs have their own resource behavior. Use
 OS/container resource limits for stronger memory, CPU, disk, and network isolation.
 The direct Python API does not inherit MCP admission limits; embedding applications
@@ -97,7 +133,7 @@ must bound their own concurrency and whole-operation deadlines.
 
 ## Dependency maintenance
 
-CI audits clean core and report/finance/extract installations on Python 3.11,
+CI audits clean core and report/finance/extract/pdf/monitor installations on Python 3.11,
 3.12, and 3.13 against OSV, on pull requests and weekly. Audit failures block a
 green workflow. Dependabot tracks
 Python requirements and GitHub Actions. Release validation audits its environment.

@@ -55,6 +55,8 @@ def dedup_pages(pages: List[WebPage]) -> List[WebPage]:
                 text=p.text,
                 error=kept.error,
                 content_origin=p.content_origin,
+                source_type=p.source_type,
+                extraction_warnings=p.extraction_warnings,
                 published_at=p.published_at or kept.published_at,
                 published_at_method=(
                     p.published_at_method

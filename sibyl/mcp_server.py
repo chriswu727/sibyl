@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import logging
+from pathlib import Path
 from importlib.util import find_spec
 
 from mcp.server.fastmcp import FastMCP
@@ -34,7 +36,7 @@ from .mcp_tools import (
     timeline,
     trends,
 )
-from .runtime import SibylRuntime, default_runtime
+from .runtime import RuntimePolicy, SibylRuntime, default_runtime
 
 __all__ = [
     "create_server",
@@ -118,6 +120,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Sibyl MCP server")
     parser.add_argument("--version", action="store_true")
     parser.add_argument("--list-tools", action="store_true")
+    parser.add_argument("--monitor-port", type=int, help="Authenticated loopback monitoring port (0 selects a free port)")
+    parser.add_argument("--log-level", choices=["WARNING", "INFO"], default="WARNING")
     parser.add_argument(
         "--profile", choices=["auto", "keyless", "report", "finance", "full"]
     )
@@ -129,7 +133,14 @@ def main() -> None:
         return
     if args.profile:
         os.environ["SIBYL_MCP_PROFILE"] = args.profile
-    runtime = SibylRuntime()
+    operational_logger = logging.getLogger("sibyl.runtime")
+    operational_logger.setLevel(args.log_level)
+    operational_logger.addHandler(logging.StreamHandler())
+    operational_logger.propagate = False
+    runtime = SibylRuntime(RuntimePolicy(
+        output_root=Path(os.environ.get("SIBYL_OUTPUT_ROOT", "reports")).absolute(),
+        monitor_port=args.monitor_port,
+    ))
     server = create_server(runtime)
     profile = asyncio.run(configure_tool_profile(server, runtime))
     if args.list_tools:

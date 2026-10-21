@@ -138,6 +138,39 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.jobs.tasks)
         self.assertEqual(result["attempts"][0]["status"], "failed")
 
+    async def test_oversized_checkpoint_retains_evidence_and_consumed_budget(self):
+        initial = await self.retrieve(self.start())
+        bundle = evidence_bundle("oversized")
+        bundle.sources[0].evidence[0] = replace(bundle.sources[0].evidence[0], text="x" * (JobStore.MAX_PAYLOAD_BYTES + 1))
+        with mock.patch("sibyl.research_jobs.gather_source_bundle", mock.AsyncMock(return_value=bundle)):
+            with self.assertRaisesRegex(CapacityError, "prior evidence"):
+                await self.jobs.continue_job(initial["job_id"], "oversized")
+        restored = self.jobs.get(initial["job_id"])
+        self.assertEqual(restored["status"], "awaiting_input")
+        self.assertEqual(restored["evidence"], initial["evidence"])
+        self.assertEqual(restored["remaining_steps"], initial["remaining_steps"] - 1)
+        self.assertEqual(restored["attempts"][-1]["status"], "failed")
+        self.assertFalse(self.jobs.tasks)
+        await self.runtime.aclose()
+        self.runtime = SibylRuntime(self.policy, Config())
+        self.jobs = self.runtime.research_jobs
+        self.assertEqual(self.jobs.get(initial["job_id"])["status"], "awaiting_input")
+
+    async def test_restart_marks_unfinished_attempt_failed_without_refunding_budget(self):
+        initial = self.start()
+        job = self.jobs.store.get(initial["job_id"])
+        notebook = ResearchNotebook.from_dict(job["notebook"])
+        notebook.begin_search("interrupted query")
+        job.update(status="running", notebook=notebook.to_dict())
+        self.jobs.store.save(job)
+        await self.runtime.aclose()
+        self.runtime = SibylRuntime(self.policy, Config())
+        self.jobs = self.runtime.research_jobs
+        restored = self.jobs.get(initial["job_id"])
+        self.assertEqual(restored["status"], "interrupted")
+        self.assertEqual(restored["attempts"][0]["status"], "failed")
+        self.assertEqual(restored["remaining_steps"], 2)
+
     async def test_autonomous_resume_preserves_checkpoints(self):
         self.runtime._config = Config(providers=[Provider(model="test", api_key="not-real")])
         entered = asyncio.Event()
@@ -164,6 +197,29 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
             await asyncio.gather(*list(self.jobs.tasks.values()))
         self.assertEqual(checkpointed, [1])
         self.assertEqual(self.jobs.get(job["job_id"])["status"], "completed")
+
+    async def test_autonomous_oversize_recovery_preserves_model_reservations(self):
+        self.runtime._config = Config(providers=[Provider(model="test", api_key="not-real")])
+
+        async def oversized(researcher, query, **kwargs):
+            researcher.notebook.begin_search("large")
+            researcher.notebook.reserve_model_call(100)
+            researcher.checkpoint()
+            bundle = evidence_bundle("large")
+            bundle.sources[0].evidence[0] = replace(bundle.sources[0].evidence[0], text="x" * (JobStore.MAX_PAYLOAD_BYTES + 1))
+            researcher.notebook.finish_search("large", bundle)
+            researcher.checkpoint()
+
+        with mock.patch("sibyl.researcher.Researcher.research", oversized):
+            job = self.jobs.start("q", [], "autonomous", 1, "en", 2)
+            await asyncio.gather(*list(self.jobs.tasks.values()), return_exceptions=True)
+        restored = self.jobs.get(job["job_id"])
+        self.assertEqual(restored["status"], "failed")
+        self.assertEqual(restored["model_calls"], 1)
+        self.assertEqual(restored["reserved_output_tokens"], 100)
+        self.assertEqual(restored["remaining_steps"], 1)
+        self.assertEqual(restored["attempts"][0]["status"], "failed")
+        self.assertFalse(self.jobs.tasks)
 
     async def test_immediate_autonomous_cancel_does_not_leave_busy_job(self):
         self.runtime._config = Config(providers=[Provider(model="test", api_key="not-real")])

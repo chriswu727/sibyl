@@ -521,6 +521,8 @@ Keep specific numbers, dates, and names; omit boilerplate/ads/navigation. If not
                 title=p.title,
                 text=out.strip()[:1200],
                 content_origin=p.content_origin,
+                source_type=p.source_type,
+                extraction_warnings=p.extraction_warnings,
                 published_at=p.published_at,
                 published_at_method=p.published_at_method,
             )

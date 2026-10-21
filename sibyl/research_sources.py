@@ -22,7 +22,7 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
     ) for index, chunk in enumerate(split_passages(text, overlap_chars=0), 1)] if usable else []
     sources = [EvidenceSource(
         "S1", page.url, page.title, datetime.now(timezone.utc).isoformat(),
-        digest, "web", len(text), passages, content_origin=page.content_origin,
+        digest, page.source_type, len(text), passages, content_origin=page.content_origin,
         published_at=page.published_at, published_at_method=page.published_at_method,
     )] if usable else []
     return SourceBundle(
@@ -34,7 +34,7 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
             sufficiency_reasons=[
                 "Direct source read; host must assess support, freshness and completeness."
                 if usable else (page.error or "No substantive text extracted; use an accessible HTML/full-text source.")
-            ],
+            ] + list(page.extraction_warnings),
         ),
         error="" if usable else (page.error or "Source text unavailable or too thin; no evidence inferred."),
     )

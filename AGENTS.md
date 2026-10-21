@@ -47,6 +47,11 @@ the report is finalized. Inspect report status and the review ledger before reus
 Legacy checkpoints retain their previous completion behavior. The autonomous
 pipeline does not populate the new host review ledger.
 
+Text-PDF reads require `[pdf]` on POSIX. Preserve page markers and extraction
+warnings; a bounded extraction is not the complete paper. No OCR or automatic
+reference-link crawling is performed. Monitoring is optional (`[monitor]`),
+authenticated, read-only, and loopback-only; see docs/OPERATIONS.md.
+
 The host plans and writes. Sibyl persists the investigation and checks citation
 targets, not semantic entailment. Do not describe host reports as independently
 verified. Citation numbering can change after retrieval: always use the current
@@ -101,6 +106,8 @@ retrieval attempts, two active job workers, 600 seconds of active execution,
 40 model attempts, and 60,000 reserved completion tokens. The token counter is
 not a complete monetary budget. Storage holds at most 64 jobs with a 1 MiB
 payload limit each. Explicit deletion reclaims history capacity.
+Recovery has a separate 64 KiB metadata reserve. Exports are limited to 16 MiB
+per file and 256 files / 128 MiB per selected output directory.
 
 See docs/USAGE.md for all limits and SECURITY.md / PRIVACY.md for trust boundaries.
 

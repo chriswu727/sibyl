@@ -12,9 +12,13 @@ flowchart TD
     MCP[mcp_server: composition + profiles] --> CAT[mcp_catalog: request boundary]
     CAT --> RT[runtime: admission + lifecycle + state]
     RT --> TOOLS[mcp_tools: application operations]
+    RT --> MON[monitoring: authenticated loopback HTTP]
+    MON --> MET[observability: bounded content-free metrics]
     CLI[cli / api] --> RET[retrieval: evidence pipeline]
     TOOLS --> RET
     RET --> NET[search / scraper / safe_http / url_safety]
+    NET --> PDF[pdf_reader: bounded subprocess lifecycle]
+    PDF --> PARSER[pdf_worker: optional PDF parser]
     RET --> PURE[dedup / passages / ranking / evidence]
     TOOLS --> OPT[researcher: optional model workflow]
     TOOLS --> JOB[research_jobs: lifecycle]
@@ -32,6 +36,8 @@ flowchart TD
 | `mcp_catalog.py` | Tool registration, runtime binding, public error boundary |
 | `mcp_tools.py` | Tool schemas and application-level orchestration |
 | `runtime.py` | Policy, lazy configuration, per-server state, execution lifecycle |
+| `monitoring.py`, `observability.py` | Read-only authenticated HTTP lifecycle and bounded operational metrics |
+| `pdf_reader.py`, `pdf_worker.py` | Parser process supervision and isolated optional text-PDF extraction |
 | `async_cache.py` | Event-loop-local single-flight, TTL, capacity, waiter cancellation |
 | `evidence_loop.py` | Bounded evidence workflow state machine |
 | `retrieval.py` | Search/extraction/ranking coordination and evidence sufficiency |
@@ -73,9 +79,11 @@ new code should import their provider-independent definitions from `report_model
    clears evidence loops, and releases the last report. Persistent jobs are
    interrupted and retained; startup never silently restarts model work.
 
-Runtime logs expose aggregate completion/failure/cancellation counts and tool
-names through Python logging. They do not record arguments or page contents.
-Logging defaults to `WARNING` so stdio protocol output remains clean.
+Runtime events expose tool name, outcome, duration, and active-call count as JSON
+on stderr at `--log-level INFO`; the default is `WARNING`. Invocation completion
+is not a research-quality verdict. Monitoring starts in MCP lifespan and stops
+before runtime tasks and stores close. It does not start another server runtime,
+initialize the lazy job store, or expose tool invocation over HTTP.
 
 The library API deliberately remains a direct async operation: it does not hide
 an ambient server runtime inside an embedding application. Library callers own
@@ -115,7 +123,14 @@ reuses completed evidence and consumed budgets; unfinished model work may repeat
 This is checkpoint recovery, not exactly-once external execution. A process crash
 can leave an in-flight attempt without a result; it remains budgeted.
 
-Storage holds at most 64 jobs, 1 MiB per serialized job, and 16,384 SQLite pages.
+Storage holds at most 64 jobs, 1 MiB per serialized job (plus 64 KiB reserved for
+recovery metadata), and 16,384 SQLite pages. An oversized evidence checkpoint
+retains the previous evidence and current consumed budgets, marks the discarded
+attempt failed, and records an actionable event. Host jobs return to awaiting
+input; autonomous jobs fail without automatically retrying. Startup converts
+unfinished attempts to failed without refunding their budgets. Physical disk or
+database corruption failures are still surfaced; recovery cannot manufacture
+durability when the underlying store cannot write.
 Full history requires explicit checkpoint deletion. Progress retains 80 events.
 Retrieval and model budgets are reserved before dispatch. The 600-second execution
 budget accumulates across continuations; a crash can lose time since the last
@@ -141,6 +156,8 @@ MCP exports are confined to an operator-selected root. Agents can request a
 relative subdirectory, not an arbitrary absolute destination. Staging files are
 private, output names are collision-resistant, and publication is an atomic
 rename. The filesystem root must not be writable by untrusted local processes.
+Exports have per-file and per-output-directory quotas checked under an OS-held
+publication lock. Directory quotas are not a global filesystem resource boundary.
 
 URL display redaction never mutates hashed passage text or offsets. Structured
 evidence can contain sensitive material present in a public page; redaction is

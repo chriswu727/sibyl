@@ -109,6 +109,7 @@ class ResearchNotebook:
             content_origin=source.content_origin,
             published_at=source.published_at,
             published_at_method=source.published_at_method,
+            source_type=source.source_type,
         ) for source in self.selected_sources()]
 
     def has_ready_evidence(self) -> bool:
@@ -141,6 +142,7 @@ class ResearchNotebook:
             if self.sub_questions and not investigated and not any(bundle.query == question for bundle in self.bundles):
                 notes.append(f"Not separately searched: {question}")
         for bundle in self.bundles:
+            notes.extend(note for note in bundle.diagnostics.sufficiency_reasons if note.startswith("PDF "))
             if bundle.diagnostics.evidence_sufficiency != "sufficient":
                 notes.append(f"Retrieval coverage needs review for: {bundle.query}")
         if len(self.attempts) >= self.max_steps:

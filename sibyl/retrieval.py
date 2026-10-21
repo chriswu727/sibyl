@@ -1008,6 +1008,9 @@ async def gather_source_bundle(
             ],
         ),
     )
+    sufficiency_reasons.extend(dict.fromkeys(
+        warning for page, *_ in prepared for warning in page.extraction_warnings
+    ))
     recommended_action: RecommendedAction
     if multi_step_query:
         recommended_action = "decompose_query"
@@ -1048,7 +1051,7 @@ async def gather_source_bundle(
                 title=title,
                 retrieved_at=retrieved_at,
                 content_hash=source_hash,
-                source_type=_source_type(page.url, result_types),
+                source_type="pdf" if page.source_type == "pdf" else _source_type(page.url, result_types),
                 char_count=len(page.text),
                 evidence=evidence,
                 content_origin=page.content_origin,

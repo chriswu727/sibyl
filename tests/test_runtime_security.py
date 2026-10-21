@@ -213,6 +213,37 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
 
 
 class TestArtifacts(unittest.TestCase):
+    def test_quotas_reject_without_removing_existing_exports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(directory)
+            store.MAX_ARTIFACT_BYTES = 4
+            with self.assertRaises(CapacityError):
+                store.write(b"large", "report", ".md")
+            first = store.write(b"one", "report", ".md")
+            store.MAX_DIRECTORY_BYTES = 4
+            with self.assertRaises(CapacityError):
+                store.write(b"two", "report", ".md")
+            store.MAX_DIRECTORY_BYTES = 100
+            store.MAX_ARTIFACTS = 1
+            with self.assertRaises(CapacityError):
+                store.write(b"two", "report", ".md")
+            self.assertEqual(first.read_bytes(), b"one")
+            self.assertFalse(list(Path(directory).glob(".sibyl-*")))
+
+    def test_symlinked_staging_and_lock_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(directory)
+            target = Path(directory) / "original"
+            target.write_bytes(b"original")
+            link = Path(directory) / "link"
+            link.symlink_to(target)
+            with self.assertRaises(ValueError):
+                store.publish(link, "report", ".md")
+            (Path(directory) / ".artifact.lock").symlink_to(target)
+            with self.assertRaises(ValueError):
+                store.write(b"new", "report", ".md")
+            self.assertEqual(target.read_bytes(), b"original")
+
     def test_private_unique_files_and_no_temporary_leftovers(self):
         with tempfile.TemporaryDirectory() as directory:
             store = ArtifactStore(directory)
@@ -221,7 +252,9 @@ class TestArtifacts(unittest.TestCase):
             self.assertNotEqual(first, second)
             self.assertEqual(first.read_bytes(), b"one")
             self.assertEqual(stat.S_IMODE(first.stat().st_mode), 0o600)
-            self.assertEqual(len(list(Path(directory).iterdir())), 2)
+            self.assertEqual(len(list(Path(directory).glob("sibyl_*"))), 2)
+            self.assertFalse(list(Path(directory).glob(".sibyl-*")))
+            self.assertEqual(stat.S_IMODE((Path(directory) / ".artifact.lock").stat().st_mode), 0o600)
 
     def test_escape_and_symlink_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

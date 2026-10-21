@@ -2,8 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+import argparse
+import secrets
+import socket
 import sys
 import tempfile
+
+import httpx
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -26,15 +31,24 @@ EXPECTED_KEYLESS_TOOLS = {
 }
 
 
-async def check(command: str) -> None:
+async def check(command: str, monitor: bool = False) -> None:
     with tempfile.TemporaryDirectory(prefix="sibyl-stdio-") as directory:
-        await check_in_directory(command, directory)
+        await check_in_directory(command, directory, monitor)
 
 
-async def check_in_directory(command: str, directory: str) -> None:
+async def check_in_directory(command: str, directory: str, monitor: bool = False) -> None:
+    args = ["--profile", "keyless"]
+    env = {"SIBYL_OUTPUT_ROOT": directory}
+    token = secrets.token_urlsafe(32)
+    if monitor:
+        with socket.socket() as reservation:
+            reservation.bind(("127.0.0.1", 0))
+            port = reservation.getsockname()[1]
+        args += ["--monitor-port", str(port), "--log-level", "INFO"]
+        env["SIBYL_MONITOR_TOKEN"] = token
+        url = f"http://127.0.0.1:{port}"
     server = StdioServerParameters(
-        command=command, args=["--profile", "keyless"],
-        env={"SIBYL_OUTPUT_ROOT": directory},
+        command=command, args=args, env=env,
     )
     async with stdio_client(server) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -75,12 +89,37 @@ async def check_in_directory(command: str, directory: str) -> None:
             )
             if deleted.isError or (deleted.structuredContent or {}).get("status") != "deleted":
                 raise RuntimeError("Research checkpoint cleanup failed")
+            if monitor:
+                async with httpx.AsyncClient(trust_env=False, base_url=url) as client:
+                    denied = await client.get("/status")
+                    if denied.status_code != 401:
+                        raise RuntimeError("Monitoring allowed an unauthenticated request")
+                    headers = {"Authorization": f"Bearer {token}"}
+                    status = await client.get("/status", headers=headers)
+                    if status.status_code != 200 or QUESTION in status.text or token in status.text:
+                        raise RuntimeError("Monitoring status failed or disclosed content")
+                    if status.json()["tools"]["start_research"]["outcomes"]["completed"] != 1:
+                        raise RuntimeError("MCP tool invocation did not reach monitoring")
+                    metrics = await client.get("/metrics", headers=headers)
+                    if "sibyl_store_healthy 1" not in metrics.text:
+                        raise RuntimeError("Monitoring metrics unavailable")
+    if monitor:
+        async with httpx.AsyncClient(trust_env=False) as client:
+            try:
+                await client.get(url + "/healthz", timeout=1)
+            except httpx.ConnectError:
+                pass
+            else:
+                raise RuntimeError("Monitoring listener survived MCP shutdown")
 
 
 def main() -> int:
-    command = sys.argv[1] if len(sys.argv) > 1 else "sibyl-mcp"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", nargs="?", default="sibyl-mcp")
+    parser.add_argument("--monitor", action="store_true")
+    args = parser.parse_args()
     try:
-        asyncio.run(check(command))
+        asyncio.run(check(args.command, args.monitor))
     except Exception as exc:
         print(f"MCP stdio smoke check failed: {exc}", file=sys.stderr)
         return 1

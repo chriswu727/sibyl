@@ -29,6 +29,31 @@ class ResearchJobs:
     def _event(self, job, message):
         job["events"] = [*job["events"][-79:], {"message": message[:240], "time": time.time()}]
 
+    def _checkpoint(self, job):
+        try:
+            self.store.save(job)
+        except CapacityError:
+            retained = self.store.get(job["job_id"])
+            previous = retained["notebook"]
+            current = job["notebook"]
+            previous["model_calls"] = current["model_calls"]
+            previous["reserved_output_tokens"] = current["reserved_output_tokens"]
+            previous["attempts"] = current["attempts"]
+            retained_ids = {bundle["bundle_id"] for bundle in previous["bundles"]}
+            for attempt in previous["attempts"]:
+                if attempt["status"] == "running" or attempt.get("bundle_id", "") not in retained_ids:
+                    attempt.update(status="failed", bundle_id="", substantive_sources=0)
+                    attempt.pop("error", None)
+            retained["elapsed_seconds"] = job["elapsed_seconds"]
+            retained["status"] = "awaiting_input" if job["mode"] == "host" else "failed"
+            if job["status"] in {"interrupted", "budget_exhausted"}:
+                retained["status"] = job["status"]
+            self._event(retained, "Checkpoint size limit reached; new evidence/report not saved. Prior evidence and consumed budgets retained.")
+            self.store.save(retained, recovery=True)
+            job.clear()
+            job.update(retained)
+            raise CapacityError("Checkpoint size limit reached; prior evidence and consumed budgets retained.") from None
+
     def _idle(self, job):
         if self.closed:
             raise ValueError("Research runtime is closed.")
@@ -149,7 +174,7 @@ class ResearchJobs:
         def checkpoint(state):
             job["notebook"] = state.to_dict()
             job["elapsed_seconds"] = elapsed + time.monotonic() - started
-            self.store.save(job)
+            self._checkpoint(job)
 
         def progress(message):
             self._event(job, message)
@@ -257,7 +282,7 @@ class ResearchJobs:
             job["notebook"] = notebook.to_dict()
             job["elapsed_seconds"] += time.monotonic() - started
             try:
-                self.store.save(job)
+                self._checkpoint(job)
             finally:
                 self.tasks.pop(job_id, None)
         return self.get(job_id)
