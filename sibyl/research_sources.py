@@ -33,8 +33,8 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
             evidence_sufficiency="limited", recommended_action="refine_query",
             sufficiency_reasons=[
                 "Direct source read; host must assess support, freshness and completeness."
-                if usable else "No substantive text extracted; use an accessible HTML/full-text source."
+                if usable else (page.error or "No substantive text extracted; use an accessible HTML/full-text source.")
             ],
         ),
-        error="" if usable else "Source text unavailable or too thin; no evidence inferred.",
+        error="" if usable else (page.error or "Source text unavailable or too thin; no evidence inferred."),
     )

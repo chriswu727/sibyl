@@ -92,6 +92,8 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         await server.call_tool("save_report", {"job_id": job["job_id"], "format": "json"})
         path = next(Path(self.directory.name).glob("*.json"))
         report = ResearchReport.from_dict(json.loads(path.read_text()))
+        self.assertEqual(report.status, "partial")
+        self.assertFalse(report.research_plan["ready_to_complete"])
         self.assertEqual(report.sources[0].passage_ids, completed["sources"][0]["passage_ids"])
         self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
         with self.assertRaises(ValueError):

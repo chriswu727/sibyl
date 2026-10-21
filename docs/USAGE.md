@@ -251,7 +251,9 @@ validation is not entailment checking. Host reports state
 Completed reports are immutable. Start another job for a new edition.
 New host jobs reject completion when required reviews or counterevidence checks are
 missing. `allow_incomplete=true` explicitly permits delivery with every remaining
-gap recorded in report limitations; it is not a quality pass. Existing pre-upgrade
+gap recorded in report limitations and `report.status="partial"`; it is not a quality
+pass. The job remains `status="completed"` because its report is finalized and immutable.
+Markdown/PDF exports visibly label partial reports. Existing pre-upgrade
 checkpoints remain readable and retain their former completion behavior. JSON exports
 preserve exact selected passages, hashes, offsets, the review ledger, and investigation
 steps. Markdown includes reviews and compact source references instead of dumping
@@ -259,6 +261,24 @@ large source excerpts. PDF retains the narrative and limitations; use JSON for t
 complete machine-readable evidence package.
 
 ### Multi-round retrieval
+
+Queries with explicit years or current/latest intent prioritize matching title,
+publication-date, or URL-path periods over undated and mismatched candidates.
+This period hint applies to ranked retrieval and the unpinned report window;
+`ranker="none"` preserves retrieval order, and reviewed evidence stays pinned.
+Calendar-year queries use the publication year for fiscal-year titles; explicit
+fiscal-year queries match the title instead. These are routing
+hints, not guarantees of relevance or recency; inspect the source and reporting
+period. Undated sources are not assigned invented publication dates.
+
+For multi-domain `site:` queries, up to two focused searches fill missing requested
+domains. Their queries and failure counts are recorded, and one result per present
+domain is placed ahead of repeated hits before applying the URL fetch limit. This
+does not guarantee balanced coverage when the search provider has no matching results.
+
+Direct source-read failures retain the fetch reason (such as `HTTP 403` or an
+unsupported content type) in the attempt's `error`. No third-party rendering is
+silently enabled, and PDF ingestion remains unsupported.
 
 Multi-round research is an evidence-feedback loop, not a fixed list of searches.
 In host mode the calling agent supplies the reasoning; Sibyl retains its state,

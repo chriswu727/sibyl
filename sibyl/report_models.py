@@ -52,7 +52,7 @@ class ResearchReport:
     finding_verifications: List = field(
         default_factory=list
     )  # verifier.FindingVerification per finding
-    status: str = "ok"  # ok | insufficient_evidence | failed
+    status: str = "ok"  # ok | partial | insufficient_evidence | failed
     error: str = ""
     schema_version: str = "1.0"
     limitations: List[str] = field(default_factory=list)

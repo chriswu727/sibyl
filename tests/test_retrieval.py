@@ -9,6 +9,57 @@ from sibyl.search import SearchResult
 
 
 class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
+    async def test_missing_site_gets_one_focused_followup(self):
+        first = SearchResult("First", "https://first.example/results", "", "web")
+        second = SearchResult("Second", "https://second.example/results", "", "web")
+        initial = [first, *[SearchResult("First", f"https://first.example/{i}", "", "web") for i in range(13)]]
+        pages = [WebPage(r.url, r.title, (r.title + " evidence. ") * 40) for r in (first, second)]
+        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(side_effect=[initial, [second]])) as search, \
+             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)) as scrape:
+            bundle = await gather_source_bundle("2026 results (site:first.example OR site:second.example)", client=object())
+        self.assertEqual(search.await_count, 2)
+        self.assertEqual(search.call_args.args[0], "2026 results site:second.example")
+        self.assertEqual(scrape.call_args.args[0][:2], [first.url, second.url])
+        self.assertEqual(len(scrape.call_args.args[0]), 12)
+        self.assertIn("2026 results site:second.example", bundle.diagnostics.search_queries)
+
+    async def test_site_followups_are_bounded_and_failure_keeps_initial_results(self):
+        first = SearchResult("First", "https://first.example/results", "", "web")
+        page = WebPage(first.url, first.title, "Market research evidence. " * 40)
+        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(side_effect=[[first], RuntimeError("failure"), []])) as search, \
+             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[page])):
+            bundle = await gather_source_bundle("market (site:first.example OR site:second.example OR site:third.example OR site:fourth.example)", client=object())
+        self.assertEqual(search.await_count, 3)
+        self.assertEqual(bundle.sources[0].url, first.url)
+        self.assertEqual(bundle.diagnostics.refinement_failures, 1)
+
+    async def test_parenthesized_site_union_keeps_both_hosts_and_rejects_lookalikes(self):
+        results = [SearchResult("Research", url, "", "web") for url in (
+            "https://first.example/results", "https://ir.second.example/results",
+            "https://second.example.evil.org/results")]
+        pages = [WebPage(r.url, r.title, "Research evidence methods. " * 30) for r in results[:2]]
+        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)) as scrape, \
+             mock.patch("sibyl.retrieval.search_wikipedia", mock.AsyncMock()) as wiki:
+            await gather_source_bundle("research (site:first.example OR site:second.example)", client=object())
+        self.assertEqual(scrape.call_args.args[0], [r.url for r in results[:2]])
+        wiki.assert_not_called()
+
+    async def test_period_match_precedes_domain_diversity_and_preserves_unranked_mode(self):
+        results = [SearchResult(title, url, "", "web") for title, url in (
+            ("2025 market results", "https://old.example/release"),
+            ("2026 market results", "https://current.example/one"),
+            ("2026 market capacity", "https://current.example/two"))]
+        pages = [WebPage(r.url, r.title, (f"{r.title} market evidence {i} " * 40))
+                 for i, r in enumerate(results)]
+        with mock.patch("sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)), \
+             mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)), \
+             mock.patch("sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])):
+            ranked = await gather_source_bundle("2026 market", max_sources=2, client=object())
+            unranked = await gather_source_bundle("2026 market", max_sources=2, ranker="none", client=object())
+        self.assertEqual({s.url for s in ranked.sources}, {r.url for r in results[1:]})
+        self.assertEqual(unranked.sources[0].url, results[0].url)
+
     async def test_builds_stable_structured_evidence(self):
         results = [
             SearchResult("Alpha", "https://example.com/a", "", "web"),

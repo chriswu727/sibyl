@@ -9,6 +9,7 @@ from .evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, Source
 from .report_models import Source
 from .scraper import WebPage
 from .source_policy import source_kind, source_priority
+from .temporal import period_match
 
 
 class ResearchBudgetExceeded(RuntimeError):
@@ -49,6 +50,8 @@ class ResearchNotebook:
             for s in bundle.sources
         ) if bundle else 0
         attempt["bundle_id"] = bundle.bundle_id if bundle else ""
+        if bundle and bundle.error:
+            attempt["error"] = bundle.error
         if bundle is not None:
             self.bundles.append(bundle)
 
@@ -88,13 +91,15 @@ class ResearchNotebook:
                     add(source)
         # Background material must not win a round-robin slot ahead of primary leads.
         for background in (False, True):
-            filtered = [[s for s in group if (source_kind(s, self.preferred_domains) in {
-                "encyclopedia", "community", "scholarly_metadata"
-            }) == background] for group in groups]
-            for position in range(max((len(g) for g in filtered), default=0)):
-                for group in filtered:
-                    if position < len(group):
-                        add(group[position])
+            for period in (1, 0, -1):
+                filtered = [[s for s in group if (source_kind(s, self.preferred_domains) in {
+                    "encyclopedia", "community", "scholarly_metadata"
+                }) == background and period_match(self.question, s.title, s.url, s.published_at) == period]
+                            for group in groups]
+                for position in range(max((len(g) for g in filtered), default=0)):
+                    for group in filtered:
+                        if position < len(group):
+                            add(group[position])
         return selected
 
     def pages(self) -> list[WebPage]:

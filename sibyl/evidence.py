@@ -48,6 +48,7 @@ PublishedAtMethod = Literal[
     "meta_date",
     "json_ld_date_published",
     "time_date_published",
+    "article_date_text",
     "jina_published_time",
 ]
 

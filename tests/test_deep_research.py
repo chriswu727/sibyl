@@ -27,6 +27,16 @@ from test_researcher import evidence_bundle
 
 
 class TestSourceSelection(unittest.TestCase):
+    def test_period_matching_sources_survive_full_window_across_rounds(self):
+        bundle = evidence_bundle(count=3)
+        old, new, unknown = [replace(s, title=t) for s, t in zip(bundle.sources,
+                             ["2025 results", "2026 results", "Undated research"])]
+        notebook = ResearchNotebook("2026 market", synthesis_limit=1,
+                                    bundles=[replace(bundle, sources=[new]), replace(bundle, sources=[old, unknown])])
+        self.assertEqual(notebook.selected_sources(), [new])
+        review_question(notebook, "Q0", "supported", [old.evidence[0].citation_id], [], "Historical comparison", "Reviewed.")
+        self.assertEqual(notebook.selected_sources(), [old])
+
     def test_primary_sources_displace_background_across_questions(self):
         notebook = ResearchNotebook("market", synthesis_limit=5)
         for index in range(5):
@@ -108,6 +118,17 @@ class TestExtraction(unittest.TestCase):
 
 
 class TestDirectEvidence(unittest.IsolatedAsyncioTestCase):
+    async def test_failed_read_exposes_bounded_fetch_reason_without_evidence(self):
+        page = WebPage("https://example.com", "", "", error="HTTP 403")
+        with mock.patch("sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=page)):
+            bundle = await read_source_bundle(page.url, "q")
+        notebook = ResearchNotebook("q")
+        notebook.begin_search("q")
+        notebook.finish_search("q", bundle)
+        self.assertFalse(bundle.sources)
+        self.assertEqual(bundle.error, "HTTP 403")
+        self.assertEqual(notebook.attempts[0]["error"], "HTTP 403")
+
     async def test_read_preserves_hashes_offsets_and_does_not_declare_truth(self):
         text = "Methods and limitations. " * 200
         with mock.patch("sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=WebPage("https://arxiv.org/html/test", "Paper", text))):
@@ -180,6 +201,7 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         job = self.jobs.complete(job["job_id"], job["revision"], "Conflicting results [Source 1] [Source 2]",
                                  ["Disagreement [Source 1] [Source 2]"], "", [])
         report = ResearchReport.from_dict(job["report"])
+        self.assertEqual(report.status, "ok")
         self.assertEqual(report.research_plan["questions"][0]["review"]["status"], "disputed")
         self.assertTrue(all(source.evidence and source.content_hash for source in report.sources))
         md = _report_to_markdown(report)
@@ -193,6 +215,11 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ValueError, "gaps"):
             self.jobs.complete(*args)
         result = self.jobs.complete(*args, allow_incomplete=True)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["report"]["status"], "partial")
+        md = _report_to_markdown(ResearchReport.from_dict(result["report"]))
+        self.assertIn("Partial report", md)
+        self.assertIn("S [Source 1]", md)
         self.assertFalse(result["report"]["research_plan"]["ready_to_complete"])
         self.assertTrue(any("counterevidence" in s for s in result["report"]["limitations"]))
 

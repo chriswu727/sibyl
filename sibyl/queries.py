@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import re
 from typing import List
+from urllib.parse import urlsplit
 
 
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
+_SITE_RE = re.compile(r'''(?<![-\w])site:["']?([^\s"'()\[\]{},;]+)''', re.IGNORECASE)
 _QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
 _RELATIVE_CHAIN_RE = re.compile(
@@ -56,6 +58,24 @@ _SEARCH_STOP_WORDS = _QUESTION_WORDS | {
     "will",
     "with",
 }
+
+
+def query_site_hosts(query: str) -> list[str]:
+    hosts = []
+    for value in _SITE_RE.findall(query):
+        try:
+            host = urlsplit(value if "://" in value else "https://" + value).hostname
+        except ValueError:
+            continue
+        if host:
+            hosts.append(host.rstrip(".").lower())
+    return list(dict.fromkeys(hosts))
+
+
+def focused_site_query(query: str, host: str) -> str:
+    focused = _SITE_RE.sub(" ", query)
+    focused = re.sub(r"\b(?:OR|AND)\b|[()\[\]{}\"']", " ", focused)
+    return f"{' '.join(focused.split())} site:{host}".strip()
 
 
 def search_query_variants(query: str) -> List[str]:

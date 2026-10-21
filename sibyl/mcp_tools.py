@@ -181,7 +181,8 @@ async def complete_research(
     Distinguish facts from inferences; disclose unresolved questions. This checks
     citation targets, NOT semantic support. Completion makes the report immutable.
     New host jobs require per-question reviews and counterevidence investigation.
-    allow_incomplete explicitly preserves unmet gates as limitations.
+    allow_incomplete preserves unmet gates as limitations and report.status=partial;
+    the completed job is finalized, not necessarily complete in research coverage.
     """
     return get_runtime().research_jobs.complete(
         job_id, revision, summary, key_findings, analysis, limitations or [], allow_incomplete

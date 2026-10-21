@@ -42,6 +42,8 @@ Excluded source passages remain accessible through the source catalog and
 `get_research(passage_id=...)`. Reviewed sources are pinned for report export.
 New host jobs require per-question reviews and a substantive counterevidence
 investigation; use `allow_incomplete=true` only to deliver explicit gaps.
+Such reports have `report.status="partial"`; job `status="completed"` only means
+the report is finalized. Inspect report status and the review ledger before reuse.
 Legacy checkpoints retain their previous completion behavior. The autonomous
 pipeline does not populate the new host review ledger.
 

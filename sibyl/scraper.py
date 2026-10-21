@@ -140,20 +140,23 @@ def _clean_lines(text: str, max_chars: int) -> str:
     return "\n".join(lines)[:max_chars]
 
 
+_CONTENT_SELECTOR = ".model-card, .markdown-body, main, [role=main], article, [itemprop=articleBody]"
+
+
 def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
-    """Legacy BeautifulSoup body extraction (noise-stripped soup)."""
-    main = (
-        soup.select_one(".model-card")
-        or soup.select_one(".markdown-body")
-        or soup.find("main")
-        or soup.find("div", {"role": "main"})
-        or soup.find("article")
-        or soup.find("div", class_=lambda c: c and any(
-            x in (c if isinstance(c, str) else " ".join(c))
-            for x in ["content", "article", "post", "entry", "body"]
-        ))
-        or soup.find("body")
-    )
+    candidates = []
+    for selector in (".model-card, .markdown-body", "main, [role=main]",
+                     "article, [itemprop=articleBody]",
+                     "div[class*=content], div[class*=article], div[class*=post], div[class*=entry], div[class*=body]",
+                     "body"):
+        group = soup.select(selector, limit=128)
+        if not group:
+            continue
+        largest = max(group, key=lambda tag: len(tag.get_text(" ", strip=True)))
+        candidates.append(largest)
+        if len(largest.get_text(" ", strip=True)) >= 200:
+            break
+    main = max(candidates, key=lambda tag: len(tag.get_text(" ", strip=True))) if candidates else None
     if main:
         for table in reversed(list(main.find_all("table"))):
             rows = []
@@ -215,6 +218,13 @@ def _normalize_published_at(value: object) -> Optional[str]:
     except ValueError:
         return None
 
+    for pattern in ("%B %d, %Y", "%b %d, %Y"):
+        try:
+            parsed_date = datetime.strptime(raw, pattern).date()
+        except ValueError:
+            continue
+        return parsed_date.isoformat() if _valid_publication_year(parsed_date.year) else None
+
     iso_value = f"{raw[:-1]}+00:00" if raw.endswith(("Z", "z")) else raw
     try:
         parsed_datetime = datetime.fromisoformat(iso_value)
@@ -224,6 +234,10 @@ def _normalize_published_at(value: object) -> Optional[str]:
         except (TypeError, ValueError, OverflowError):
             return None
     if not _valid_publication_year(parsed_datetime.year):
+        return None
+    if parsed_datetime.tzinfo is not None and parsed_datetime.timestamp() == 0:
+        return None
+    if parsed_datetime.tzinfo is None and parsed_datetime == datetime(1970, 1, 1):
         return None
     return parsed_datetime.isoformat()
 
@@ -284,12 +298,30 @@ def _extract_published_at(soup: BeautifulSoup) -> tuple[Optional[str], str]:
             else:
                 markers.append(str(marker))
         marker_text = " ".join(markers).casefold()
-        if "datepublished" not in marker_text and "publish" not in marker_text:
+        if "modified" in marker_text or "updated" in marker_text:
+            continue
+        contexts = []
+        for parent in list(tag.parents)[:3]:
+            if len(parent.find_all("time", attrs={"datetime": True}, limit=2)) > 1:
+                break
+            contexts.append(parent.get_text(" ", strip=True)[:160])
+        context = " ".join(contexts)
+        issued = re.search(r"\b(?:issued on|published on|publication date)\s*:", context, re.IGNORECASE)
+        if "datepublished" not in marker_text and "publish" not in marker_text and not issued:
             continue
         normalized = _normalize_published_at(tag.get("datetime"))
         if normalized:
             return normalized, "time_date_published"
 
+    article_dates = set()
+    for tag in soup.select(".article-date, .published-date, [itemprop=datePublished]")[:50]:
+        if tag.find_parent(["aside", "footer"]):
+            continue
+        normalized = _normalize_published_at(tag.get_text(" ", strip=True))
+        if normalized:
+            article_dates.add(normalized)
+    if len(article_dates) == 1:
+        return article_dates.pop(), "article_date_text"
     return None, ""
 
 
@@ -304,9 +336,14 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
     """
     soup = BeautifulSoup(html, "lxml")
     published_at, published_at_method = _extract_published_at(soup)
-    for tag in soup(["script", "style", "nav", "footer", "header", "aside",
-                      "noscript", "iframe", "form"]):
+    for tag in reversed(soup(["script", "style", "noscript", "iframe", "input", "select", "textarea"])):
         tag.decompose()
+    # Malformed navigation and page-wide ASP.NET forms can contain the article.
+    for tag in reversed(soup(["nav", "footer", "header", "aside", "form"])):
+        if tag.select_one(_CONTENT_SELECTOR):
+            tag.unwrap()
+        else:
+            tag.decompose()
     for button in soup.find_all("button"):
         if button.find_parent("table"):
             button.unwrap()
