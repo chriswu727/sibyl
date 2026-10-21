@@ -13,7 +13,9 @@ from sibyl.research_state import ResearchNotebook
 from sibyl.scraper import WebPage, _ResponseSnapshot, scrape_url
 
 
-def document(pages=1, text="Evidence from an original publication. " * 20, encrypted=False):
+def document(
+    pages=1, text="Evidence from an original publication. " * 20, encrypted=False
+):
     from pypdf import PdfWriter
     from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
@@ -21,10 +23,16 @@ def document(pages=1, text="Evidence from an original publication. " * 20, encry
     for _ in range(pages):
         page = writer.add_blank_page(width=600, height=800)
         if text:
-            font = DictionaryObject({NameObject("/Type"): NameObject("/Font"),
-                                     NameObject("/Subtype"): NameObject("/Type1"),
-                                     NameObject("/BaseFont"): NameObject("/Helvetica")})
-            page[NameObject("/Resources")] = DictionaryObject({NameObject("/Font"): DictionaryObject({NameObject("/F1"): font})})
+            font = DictionaryObject(
+                {
+                    NameObject("/Type"): NameObject("/Font"),
+                    NameObject("/Subtype"): NameObject("/Type1"),
+                    NameObject("/BaseFont"): NameObject("/Helvetica"),
+                }
+            )
+            page[NameObject("/Resources")] = DictionaryObject(
+                {NameObject("/Font"): DictionaryObject({NameObject("/F1"): font})}
+            )
             stream = DecodedStreamObject()
             stream.set_data(f"BT /F1 12 Tf 20 700 Td ({text}) Tj ET".encode())
             page[NameObject("/Contents")] = writer._add_object(stream)
@@ -36,7 +44,9 @@ def document(pages=1, text="Evidence from an original publication. " * 20, encry
     return output.getvalue()
 
 
-@unittest.skipUnless(find_spec("pypdf") and os.name == "posix", "PDF extra and POSIX required")
+@unittest.skipUnless(
+    find_spec("pypdf") and os.name == "posix", "PDF extra and POSIX required"
+)
 class TestPDF(unittest.IsolatedAsyncioTestCase):
     async def test_real_worker_text_title_and_page_markers(self):
         result = await read_pdf(document(pages=2), 4000)
@@ -53,7 +63,9 @@ class TestPDF(unittest.IsolatedAsyncioTestCase):
         self.assertIn("[PDF page 40]", result["text"])
         self.assertNotIn("[PDF page 41]", result["text"])
         self.assertTrue(any("first 40" in item for item in result["warnings"]))
-        self.assertIn("Encrypted", (await read_pdf(document(encrypted=True), 4000))["error"])
+        self.assertIn(
+            "Encrypted", (await read_pdf(document(encrypted=True), 4000))["error"]
+        )
         self.assertIn("OCR", (await read_pdf(document(text=""), 4000))["error"])
 
     async def test_invalid_and_oversized_inputs(self):
@@ -61,9 +73,18 @@ class TestPDF(unittest.IsolatedAsyncioTestCase):
             self.assertIn("error", await read_pdf(data, 1000))
 
     async def test_fetch_routes_pdf_magic_without_binary_html(self):
-        response = _ResponseSnapshot(200, {"content-type": "application/octet-stream"}, "", document())
-        with mock.patch("sibyl.scraper.resolve_public_url", mock.AsyncMock(return_value=(None, ["8.8.8.8"]))), \
-                mock.patch("sibyl.scraper._bounded_get", mock.AsyncMock(return_value=response)):
+        response = _ResponseSnapshot(
+            200, {"content-type": "application/octet-stream"}, "", document()
+        )
+        with (
+            mock.patch(
+                "sibyl.scraper.resolve_public_url",
+                mock.AsyncMock(return_value=(None, ["8.8.8.8"])),
+            ),
+            mock.patch(
+                "sibyl.scraper._bounded_get", mock.AsyncMock(return_value=response)
+            ),
+        ):
             page = await scrape_url("https://example.com/document", max_chars=200)
         self.assertEqual(page.source_type, "pdf")
         self.assertIsNone(page.error)
@@ -75,9 +96,14 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
         process = mock.Mock(returncode=None)
         process.communicate = mock.AsyncMock(side_effect=asyncio.TimeoutError)
         process.wait = mock.AsyncMock(return_value=-9)
-        with mock.patch("sibyl.pdf_reader.os.name", "posix"), \
-                mock.patch("sibyl.pdf_reader.sys.platform", "linux"), \
-                mock.patch("sibyl.pdf_reader.asyncio.create_subprocess_exec", mock.AsyncMock(return_value=process)):
+        with (
+            mock.patch("sibyl.pdf_reader.os.name", "posix"),
+            mock.patch("sibyl.pdf_reader.sys.platform", "linux"),
+            mock.patch(
+                "sibyl.pdf_reader.asyncio.create_subprocess_exec",
+                mock.AsyncMock(return_value=process),
+            ),
+        ):
             self.assertIn("timed out", (await read_pdf(b"%PDF-test", 1000))["error"])
         process.kill.assert_called_once()
         process.wait.assert_awaited_once()
@@ -90,13 +116,22 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
         runtime = SibylRuntime(config=Config())
         server = create_server(runtime)
         try:
-            page = WebPage("https://example.com/paper.pdf", "Paper", "evidence " * 100,
-                           source_type="pdf", extraction_warnings=("PDF text was truncated.",))
-            with mock.patch("sibyl.scraper.scrape_url", mock.AsyncMock(return_value=page)):
+            page = WebPage(
+                "https://example.com/paper.pdf",
+                "Paper",
+                "evidence " * 100,
+                source_type="pdf",
+                extraction_warnings=("PDF text was truncated.",),
+            )
+            with mock.patch(
+                "sibyl.scraper.scrape_url", mock.AsyncMock(return_value=page)
+            ):
                 result = await server.call_tool("read_url", {"url": page.url})
             self.assertIn("PDF text was truncated", str(result))
             page.error = "Encrypted PDF is not supported."
-            with mock.patch("sibyl.scraper.scrape_url", mock.AsyncMock(return_value=page)):
+            with mock.patch(
+                "sibyl.scraper.scrape_url", mock.AsyncMock(return_value=page)
+            ):
                 result = await server.call_tool("read_url", {"url": page.url})
             self.assertIn("Encrypted PDF", str(result))
         finally:
@@ -112,9 +147,14 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
 
         process.communicate = blocked
         process.wait = mock.AsyncMock(return_value=-9)
-        with mock.patch("sibyl.pdf_reader.os.name", "posix"), \
-                mock.patch("sibyl.pdf_reader.sys.platform", "linux"), \
-                mock.patch("sibyl.pdf_reader.asyncio.create_subprocess_exec", mock.AsyncMock(return_value=process)) as spawn:
+        with (
+            mock.patch("sibyl.pdf_reader.os.name", "posix"),
+            mock.patch("sibyl.pdf_reader.sys.platform", "linux"),
+            mock.patch(
+                "sibyl.pdf_reader.asyncio.create_subprocess_exec",
+                mock.AsyncMock(return_value=process),
+            ) as spawn,
+        ):
             task = asyncio.create_task(read_pdf(b"%PDF-test", 1000))
             await entered.wait()
             task.cancel()
@@ -127,9 +167,16 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
 
     async def test_warnings_and_pdf_type_survive_evidence_and_report_limits(self):
         warning = "PDF text was truncated at the extraction character limit."
-        page = WebPage("https://example.com/a.pdf", "Paper", "[PDF page 1]\n" + "evidence " * 100,
-                       source_type="pdf", extraction_warnings=(warning,))
-        with mock.patch("sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=page)):
+        page = WebPage(
+            "https://example.com/a.pdf",
+            "Paper",
+            "[PDF page 1]\n" + "evidence " * 100,
+            source_type="pdf",
+            extraction_warnings=(warning,),
+        )
+        with mock.patch(
+            "sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=page)
+        ):
             bundle = await read_source_bundle(page.url, "question")
         self.assertEqual(bundle.sources[0].source_type, "pdf")
         self.assertIn("[PDF page 1]", bundle.sources[0].evidence[0].text)

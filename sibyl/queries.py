@@ -1,14 +1,14 @@
 """Deterministic search-query variants."""
+
 from __future__ import annotations
 
 import re
 from typing import List
 from urllib.parse import urlsplit
 
-
 _TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
-_SITE_RE = re.compile(r'''(?<![-\w])site:["']?([^\s"'()\[\]{},;]+)''', re.IGNORECASE)
-_QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
+_SITE_RE = re.compile(r"""(?<![-\w])site:["']?([^\s"'()\[\]{},;]+)""", re.IGNORECASE)
+_QUOTED_RE = re.compile(r"""["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)""")
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
 _RELATIVE_CHAIN_RE = re.compile(
     r"\b(?:company|country|institution|organization|person)\s+"
@@ -84,9 +84,7 @@ def search_query_variants(query: str) -> List[str]:
         return []
 
     terms = _TERM_RE.findall(clean)
-    if not terms or not any(
-        term.casefold() in _QUESTION_WORDS for term in terms
-    ):
+    if not terms or not any(term.casefold() in _QUESTION_WORDS for term in terms):
         return [clean]
 
     quoted_match = _QUOTED_RE.search(clean)
@@ -96,9 +94,7 @@ def search_query_variants(query: str) -> List[str]:
             return [clean, quoted]
 
     focused_terms = [
-        term
-        for term in terms[1:]
-        if term.casefold() not in _SEARCH_STOP_WORDS
+        term for term in terms[1:] if term.casefold() not in _SEARCH_STOP_WORDS
     ]
     focused = " ".join(focused_terms)
     if len(focused_terms) < 3 or focused.casefold() == clean.casefold():
@@ -111,8 +107,7 @@ def query_requires_decomposition(query: str) -> bool:
     if not clean:
         return False
     return bool(
-        _RELATIVE_CHAIN_RE.search(clean)
-        or _CONTEXTUAL_QUESTION_RE.search(clean)
+        _RELATIVE_CHAIN_RE.search(clean) or _CONTEXTUAL_QUESTION_RE.search(clean)
     )
 
 

@@ -11,9 +11,9 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 
 from .async_cache import CapacityError
-from .runtime import SibylRuntime, current_runtime, get_runtime
-from .research_state import ResearchBudgetExceeded
 from .research_errors import ResearchRequestError
+from .research_state import ResearchBudgetExceeded
+from .runtime import SibylRuntime, current_runtime, get_runtime
 
 
 def _validate_payload(values):
@@ -30,7 +30,7 @@ def _validate_payload(values):
         elif isinstance(value, (list, tuple, dict)):
             if len(value) > 128:
                 raise ToolError("Tool input contains too many items.")
-            for item in (value.values() if isinstance(value, dict) else value):
+            for item in value.values() if isinstance(value, dict) else value:
                 visit(item, depth + 1)
         if size > 64000:
             raise ToolError("Combined tool text must be at most 64000 characters.")
@@ -51,7 +51,11 @@ class ToolCatalog:
                     return await get_runtime().execute(
                         function.__name__, lambda: function(*args, **kwargs)
                     )
-                except (CapacityError, ResearchBudgetExceeded, ResearchRequestError) as exc:
+                except (
+                    CapacityError,
+                    ResearchBudgetExceeded,
+                    ResearchRequestError,
+                ) as exc:
                     raise ToolError(str(exc)) from None
                 except ValueError:
                     raise ToolError(
@@ -102,3 +106,6 @@ class ToolCatalog:
 
             server.tool(**options)(bind(function))
         return server
+
+
+catalog = ToolCatalog()

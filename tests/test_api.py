@@ -1,4 +1,5 @@
 """Public Python API tests. No network."""
+
 import unittest
 from unittest import mock
 

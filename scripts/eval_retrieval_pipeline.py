@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Run the fixed offline end-to-end retrieval pipeline regression set."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,7 +10,6 @@ from pathlib import Path
 
 from sibyl.retrieval_eval import load_retrieval_cases
 from sibyl.retrieval_pipeline_eval import evaluate_pipeline_cases
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = ROOT / "evals" / "retrieval_ranker_cases.jsonl"
@@ -29,7 +29,9 @@ def main() -> int:
         cases = load_retrieval_cases(args.dataset)
         result = asyncio.run(evaluate_pipeline_cases(cases, ranker=args.ranker))
     except Exception as exc:
-        print(json.dumps({"ranker": args.ranker, "error": str(exc)}, ensure_ascii=False))
+        print(
+            json.dumps({"ranker": args.ranker, "error": str(exc)}, ensure_ascii=False)
+        )
         return 2
 
     passed = (

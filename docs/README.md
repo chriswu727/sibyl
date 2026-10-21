@@ -13,6 +13,7 @@ reports; its current maturity is public beta.
 | [MCP installation](../llms-install.md) | Source installation, host configuration, optional extras |
 | [Usage reference](USAGE.md) | All 20 tools, profiles, research jobs, configuration, and export |
 | [Agent guide](../AGENTS.md) | Evidence-handling rules and the host research procedure |
+| [Complete workflow example](examples/sqlite-wal/README.md) | Recorded-source MCP replay, gap investigation, and exported report |
 | [Configuration example](../sibyl.yaml.example) | Optional model workflow settings; no embedded credentials |
 
 ## Operate and extend

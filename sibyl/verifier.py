@@ -6,6 +6,7 @@ findings (including confident claims about fictional/nonexistent entities that n
 real source backs) get flagged. Keyless: one cheap DeepSeek JSON call, with a
 pure-stdlib lexical fallback so it degrades offline and never crashes the run.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -17,9 +18,9 @@ import litellm
 
 from .config import Provider
 from .context import build_source_context
-from .scraper import WebPage
 from .report_models import FindingVerification
 from .research_state import ResearchBudgetExceeded
+from .scraper import WebPage
 
 litellm.suppress_debug_info = True
 
@@ -34,7 +35,9 @@ def _tokens(s: str):
     return set(re.findall(r"[a-z0-9]{4,}", (s or "").lower()))
 
 
-def _lexical_verdict(index: int, finding: str, pages: List[WebPage]) -> FindingVerification:
+def _lexical_verdict(
+    index: int, finding: str, pages: List[WebPage]
+) -> FindingVerification:
     """Fallback grounding check: does the cited source text share enough
     distinctive tokens with the finding? Used to fill LLM omissions or when the
     JSON parse fails entirely."""
@@ -43,19 +46,26 @@ def _lexical_verdict(index: int, finding: str, pages: List[WebPage]) -> FindingV
         return FindingVerification(index, False, "low", [], "no citation")
     f_tok = _tokens(finding)
     if not f_tok:
-        return FindingVerification(index, False, "low", cited, "semantic verification unavailable")
+        return FindingVerification(
+            index, False, "low", cited, "semantic verification unavailable"
+        )
     best = 0.0
     for n in cited:
         if 1 <= n <= len(pages):
             s_tok = _tokens(pages[n - 1].text)
             if f_tok:
                 best = max(best, len(f_tok & s_tok) / len(f_tok))
-    note = "lexical overlap only; semantic verification unavailable" if best >= 0.35 else "low source overlap"
+    note = (
+        "lexical overlap only; semantic verification unavailable"
+        if best >= 0.35
+        else "low source overlap"
+    )
     return FindingVerification(index, False, "low", cited, note)
 
 
-async def verify_findings(findings: List[str], pages: List[WebPage],
-                          provider: Provider, completion=None) -> List[FindingVerification]:
+async def verify_findings(
+    findings: List[str], pages: List[WebPage], provider: Provider, completion=None
+) -> List[FindingVerification]:
     """Return a FindingVerification per finding (same order/length)."""
     if not findings:
         return []
@@ -116,13 +126,21 @@ Return json: {{"verdicts": [{{"index": <1-based>, "supported": <bool>, "confiden
                     except (ValueError, TypeError):
                         continue
                     cited = v.get("cited")
-                    cited = [int(c) for c in cited if str(c).strip().isdigit()] if isinstance(cited, list) else []
+                    cited = (
+                        [int(c) for c in cited if str(c).strip().isdigit()]
+                        if isinstance(cited, list)
+                        else []
+                    )
                     conf = str(v.get("confidence", "low")).lower()
                     if conf not in ("high", "medium", "low"):
                         conf = "low"
                     by_index[idx] = FindingVerification(
-                        idx, v.get("supported") is True, conf, cited,
-                        str(v.get("note", ""))[:80])
+                        idx,
+                        v.get("supported") is True,
+                        conf,
+                        cited,
+                        str(v.get("note", ""))[:80],
+                    )
             break
         except ResearchBudgetExceeded:
             raise
@@ -140,7 +158,9 @@ Return json: {{"verdicts": [{{"index": <1-based>, "supported": <bool>, "confiden
         cited = _extract_citations(f)
         verdict = by_index.get(i) or _lexical_verdict(i, f, pages)
         if not cited or any(n < 1 or n > len(pages) for n in cited):
-            verdict = FindingVerification(i, False, "low", cited, "missing or invalid citation")
+            verdict = FindingVerification(
+                i, False, "low", cited, "missing or invalid citation"
+            )
         else:
             verdict.cited = cited
         out.append(verdict)

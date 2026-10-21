@@ -2,11 +2,12 @@
 
 Run: python -m unittest discover tests
 """
+
 import os
 import unittest
 from unittest import mock
 
-from sibyl.scraper import scrape_url, _try_jina
+from sibyl.scraper import _try_jina, scrape_url
 
 
 def _resp(status, text=""):
@@ -52,11 +53,11 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         )
 
         with mock.patch("sibyl.scraper._get_jina_gate", return_value=gate):
-            page = await scrape_url("https://legal-block.com/x", client=client, jina_fallback=True)
+            page = await scrape_url(
+                "https://legal-block.com/x", client=client, jina_fallback=True
+            )
         self.assertEqual(page.title, "Recovered")
-        gate.render.assert_awaited_once_with(
-            "https://legal-block.com/x", 6000, client
-        )
+        gate.render.assert_awaited_once_with("https://legal-block.com/x", 6000, client)
 
     async def test_triggered_on_block_when_enabled(self):
         client = mock.Mock()
@@ -64,10 +65,14 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         from sibyl.scraper import WebPage
 
         async def fake_jina(url, max_chars, c=None):
-            return WebPage(url=url, title="Recovered", text="clean markdown content " * 20)
+            return WebPage(
+                url=url, title="Recovered", text="clean markdown content " * 20
+            )
 
         with mock.patch("sibyl.scraper._try_jina", fake_jina):
-            page = await scrape_url("https://blocked.com/x", client=client, jina_fallback=True)
+            page = await scrape_url(
+                "https://blocked.com/x", client=client, jina_fallback=True
+            )
         self.assertEqual(page.title, "Recovered")
         self.assertIn("clean markdown", page.text)
 
@@ -77,12 +82,9 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         async def fake_get(client, url, headers=None, timeout=None):
             captured["url"] = url
             captured["headers"] = headers
-            body = (
-                "Title: My Page\nPublished Time: 2026-07-12T08:45:00Z\n\n"
-                + (
-                    "This is the clean body content returned by Jina reader "
-                    "for the page. " * 4
-                )
+            body = "Title: My Page\nPublished Time: 2026-07-12T08:45:00Z\n\n" + (
+                "This is the clean body content returned by Jina reader "
+                "for the page. " * 4
             )
             return _resp(200, body)
 
@@ -96,7 +98,9 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(page.content_origin, "jina_reader")
         self.assertEqual(page.published_at, "2026-07-12T08:45:00+00:00")
         self.assertEqual(page.published_at_method, "jina_published_time")
-        self.assertTrue(captured["url"].startswith("https://r.jina.ai/https://ex.com/a"))
+        self.assertTrue(
+            captured["url"].startswith("https://r.jina.ai/https://ex.com/a")
+        )
         self.assertEqual(captured["headers"]["X-Return-Format"], "markdown")
         self.assertEqual(captured["headers"]["Authorization"], "Bearer jina-key")
 

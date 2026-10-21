@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-import logging
-import os
-import math
-import time
 import json
+import logging
+import math
+import os
+import time
 from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,8 +17,8 @@ from .async_cache import AsyncSingleFlightTTL, CapacityError
 from .config import Config
 from .evidence import SourceBundle
 from .evidence_loop import EvidenceLoopManager
-from .report_models import ResearchReport
 from .observability import RuntimeMetrics
+from .report_models import ResearchReport
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -34,9 +34,15 @@ class RuntimePolicy:
     monitor_port: int | None = None
 
     def __post_init__(self) -> None:
-        if not all(math.isfinite(value) for value in (
-            self.max_active, self.tool_timeout, self.report_timeout, self.max_query_chars
-        )) or (
+        if not all(
+            math.isfinite(value)
+            for value in (
+                self.max_active,
+                self.tool_timeout,
+                self.report_timeout,
+                self.max_query_chars,
+            )
+        ) or (
             min(
                 self.max_active,
                 self.tool_timeout,
@@ -83,21 +89,44 @@ class SibylRuntime:
                 raise RuntimeError("Server runtime is closed.")
             if self.policy.monitor_port is not None and self.monitor is None:
                 from .monitoring import MonitorServer
-                monitor = MonitorServer(self, self.policy.monitor_port, os.environ.get("SIBYL_MONITOR_TOKEN", ""))
+
+                monitor = MonitorServer(
+                    self,
+                    self.policy.monitor_port,
+                    os.environ.get("SIBYL_MONITOR_TOKEN", ""),
+                )
                 await monitor.start()
                 self.monitor = monitor
-                logger.info(json.dumps({"event": "monitor_started", "host": "127.0.0.1", "port": monitor.port}))
+                logger.info(
+                    json.dumps(
+                        {
+                            "event": "monitor_started",
+                            "host": "127.0.0.1",
+                            "port": monitor.port,
+                        }
+                    )
+                )
 
     def snapshot(self) -> dict:
-        jobs = {"healthy": True, "initialized": self._research_jobs is not None, "states": {}}
+        jobs = {
+            "healthy": True,
+            "initialized": self._research_jobs is not None,
+            "states": {},
+        }
         if self._research_jobs is not None:
             try:
                 jobs.update(self._research_jobs.store.summary())
             except Exception:
                 jobs["healthy"] = False
-        return {"schema_version": "1.0", "closed": self.closed,
-                "active_calls": len(self._tasks), "capacity": self.policy.max_active,
-                "cache": self.bundle_cache.snapshot(), "jobs": jobs, **self.metrics.snapshot()}
+        return {
+            "schema_version": "1.0",
+            "closed": self.closed,
+            "active_calls": len(self._tasks),
+            "capacity": self.policy.max_active,
+            "cache": self.bundle_cache.snapshot(),
+            "jobs": jobs,
+            **self.metrics.snapshot(),
+        }
 
     @property
     def research_jobs(self):
@@ -105,6 +134,7 @@ class SibylRuntime:
             raise RuntimeError("Server runtime is closed.")
         if self._research_jobs is None:
             from .research_jobs import ResearchJobs
+
             self._research_jobs = ResearchJobs(self)
         return self._research_jobs
 
@@ -176,9 +206,17 @@ class SibylRuntime:
             self._tasks.discard(task)
             elapsed = time.monotonic() - started
             self.metrics.record(name, outcome, elapsed)
-            logger.info(json.dumps({"event": "tool_finished", "tool": name,
-                                    "outcome": outcome, "duration_seconds": round(elapsed, 6),
-                                    "active": len(self._tasks)}))
+            logger.info(
+                json.dumps(
+                    {
+                        "event": "tool_finished",
+                        "tool": name,
+                        "outcome": outcome,
+                        "duration_seconds": round(elapsed, 6),
+                        "active": len(self._tasks),
+                    }
+                )
+            )
 
     async def aclose(self) -> None:
         async with self._lifecycle_lock:

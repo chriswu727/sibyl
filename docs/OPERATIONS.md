@@ -142,8 +142,11 @@ Use filesystem/container quotas if an absolute disk or memory ceiling is require
 ```bash
 python -m unittest discover tests -v
 ruff check sibyl tests scripts
+ruff format --check sibyl tests scripts
+mypy
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
+python scripts/check_research_workflow.py
 ```
 
 The smoke checks use real stdio and loopback HTTP, create/delete a temporary
@@ -151,3 +154,9 @@ checkpoint, and verify the listener closes. They do not make paid model calls or
 establish research-report quality. CI additionally runs offline retrieval gates
 and clean-install dependency audits. Review [Security](../SECURITY.md) for parser
 resource limits, platform differences, and non-sandboxed boundaries.
+
+Fault regression tests additionally terminate a real checkpoint-owning process,
+inject writes failing before/after retrieval dispatch, abort SQLite updates, cycle
+worker capacity/cancellation, and fail atomic artifact publication. They check
+budget retention, revision consistency, lock release, and staging cleanup. These
+bounded tests do not simulate physical disk damage or establish a sustained-load SLA.

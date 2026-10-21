@@ -16,12 +16,12 @@ Usage:
 Results (raw report + extracted answer) are cached under evals/cache/ so
 --score-only re-grades without re-running research.
 """
+
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
-import os
 from pathlib import Path
 
 import litellm
@@ -36,6 +36,7 @@ CACHE = ROOT / "evals" / "cache"
 def _provider():
     """Grader provider from env — independent of the product config."""
     from sibyl.config import Config
+
     cfg = Config.from_env()
     return cfg.get_provider("general")
 
@@ -87,7 +88,11 @@ async def judge(provider, question: str, gold: str, aliases, predicted: str) -> 
     if gold.strip().upper() == "NO_ANSWER":
         if not predicted or predicted.strip().upper() == "NO_ANSWER":
             return "CORRECT"  # proper abstention
-        hint = ", ".join(aliases) if aliases else "abstains / says unknown / says the premise is false"
+        hint = (
+            ", ".join(aliases)
+            if aliases
+            else "abstains / says unknown / says the premise is false"
+        )
         prompt = (
             f"A research agent was asked a question whose premise is false or whose answer is "
             f"unknowable. The CORRECT behavior is to abstain, say it's unknown, or point out the "
@@ -102,7 +107,9 @@ async def judge(provider, question: str, gold: str, aliases, predicted: str) -> 
 
     if not predicted or predicted.strip().upper() == "NO_ANSWER":
         return "NOT_ATTEMPTED"
-    gold_str = gold + ((" (also accept: " + ", ".join(aliases) + ")") if aliases else "")
+    gold_str = gold + (
+        (" (also accept: " + ", ".join(aliases) + ")") if aliases else ""
+    )
     prompt = (
         f"You are grading a predicted answer against the gold answer for a factual question, "
         f"using the SimpleQA rubric.\n\nQUESTION: {question}\nGOLD ANSWER: {gold_str}\n"
@@ -128,6 +135,7 @@ async def run_one(item, depth: int, provider, drop_unsupported: bool = False):
         return json.loads(cache_file.read_text())
     from sibyl.config import Config
     from sibyl.researcher import Researcher
+
     cfg = Config.from_env()
     if drop_unsupported:
         cfg.verify_drop_unsupported = True
@@ -137,9 +145,13 @@ async def run_one(item, depth: int, provider, drop_unsupported: bool = False):
     answer = await extract_answer(provider, item["question"], report_text)
     fv = rep.finding_verifications or []
     supported = sum(1 for v in fv if getattr(v, "supported", False))
-    data = {"id": item["id"], "question": item["question"], "answer": answer,
-            "report_text": report_text[:8000],
-            "grounding": {"supported": supported, "total": len(fv)}}
+    data = {
+        "id": item["id"],
+        "question": item["question"],
+        "answer": answer,
+        "report_text": report_text[:8000],
+        "grounding": {"supported": supported, "total": len(fv)},
+    }
     cache_file.write_text(json.dumps(data, ensure_ascii=False))
     return data
 
@@ -150,8 +162,14 @@ async def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--dataset", default=str(GOLD))
-    ap.add_argument("--score-only", action="store_true", help="re-grade cached reports, no research")
-    ap.add_argument("--drop-unsupported", action="store_true", help="drop unsupported findings (verify_drop_unsupported)")
+    ap.add_argument(
+        "--score-only", action="store_true", help="re-grade cached reports, no research"
+    )
+    ap.add_argument(
+        "--drop-unsupported",
+        action="store_true",
+        help="drop unsupported findings (verify_drop_unsupported)",
+    )
     ap.add_argument("--write-badge", action="store_true")
     args = ap.parse_args()
 
@@ -169,8 +187,13 @@ async def main():
                 data = json.loads(cache_file.read_text())
             else:
                 data = await run_one(item, args.depth, provider, args.drop_unsupported)
-            grade = await judge(provider, item["question"], item["gold"],
-                                item.get("aliases", []), data.get("answer", ""))
+            grade = await judge(
+                provider,
+                item["question"],
+                item["gold"],
+                item.get("aliases", []),
+                data.get("answer", ""),
+            )
             return item, data, grade
 
     results = await asyncio.gather(*[_do(it) for it in items])
@@ -181,7 +204,7 @@ async def main():
     for item, data, grade in results:
         counts[grade] = counts.get(grade, 0) + 1
         ans = (data.get("answer", "") if data else "")[:34]
-        print(f"{item['id']:7} {item.get('type',''):8} {grade:13} {ans}")
+        print(f"{item['id']:7} {item.get('type', ''):8} {grade:13} {ans}")
 
     total = len(results)
     correct = counts["CORRECT"]
@@ -189,8 +212,10 @@ async def main():
     acc = 100 * correct / total if total else 0
     cga = 100 * correct / attempted if attempted else 0
     print("-" * 70)
-    print(f"CORRECT {correct}/{total} = {acc:.1f}%  |  attempted {attempted}/{total}  |  "
-          f"correct-given-attempted {cga:.1f}%  |  not_attempted {counts['NOT_ATTEMPTED']}")
+    print(
+        f"CORRECT {correct}/{total} = {acc:.1f}%  |  attempted {attempted}/{total}  |  "
+        f"correct-given-attempted {cga:.1f}%  |  not_attempted {counts['NOT_ATTEMPTED']}"
+    )
     by_type = {}
     for item, _, grade in results:
         t = item.get("type", "?")
@@ -199,7 +224,7 @@ async def main():
         if grade == "CORRECT":
             by_type[t][0] += 1
     for t, (c, n) in sorted(by_type.items()):
-        print(f"  {t}: {c}/{n} = {100*c/n:.0f}%")
+        print(f"  {t}: {c}/{n} = {100 * c / n:.0f}%")
 
     # Grounding rate: % of findings verified-supported (the verification metric).
     g_sup = g_tot = 0
@@ -208,7 +233,9 @@ async def main():
         g_sup += g.get("supported", 0)
         g_tot += g.get("total", 0)
     if g_tot:
-        print(f"grounding: {g_sup}/{g_tot} findings verified-supported = {100*g_sup/g_tot:.1f}%")
+        print(
+            f"grounding: {g_sup}/{g_tot} findings verified-supported = {100 * g_sup / g_tot:.1f}%"
+        )
 
     if args.write_badge:
         badge = f"Research-quality eval: **{acc:.0f}%** correct ({correct}/{total}) on a 20-question SimpleQA/FRAMES set, depth {args.depth}."

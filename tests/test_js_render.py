@@ -2,11 +2,12 @@
 
 Run: python -m unittest discover tests
 """
+
 import asyncio
 import unittest
 from unittest import mock
 
-from sibyl.scraper import _get_jina_gate, _JinaGate, scrape_url, WebPage
+from sibyl.scraper import WebPage, _get_jina_gate, _JinaGate, scrape_url
 
 
 def _resp(status=200, text="", ct="text/html"):
@@ -39,21 +40,37 @@ class TestJsRenderTrigger(unittest.IsolatedAsyncioTestCase):
         )
 
         async def fake_jina(url, max_chars, c=None):
-            return WebPage(url=url, title="Rendered", text="full rendered article content " * 30)
+            return WebPage(
+                url=url, title="Rendered", text="full rendered article content " * 30
+            )
 
         with mock.patch("sibyl.scraper._try_jina", fake_jina):
-            page = await scrape_url("https://spa.com/x", client=client, js_render=True, js_render_threshold=500)
+            page = await scrape_url(
+                "https://spa.com/x",
+                client=client,
+                js_render=True,
+                js_render_threshold=500,
+            )
         self.assertEqual(page.title, "Rendered")
         self.assertIn("rendered article", page.text)
         self.assertEqual(page.published_at, "2026-07-10")
         self.assertEqual(page.published_at_method, "meta_article_published_time")
 
     async def test_thick_page_does_not_render(self):
-        big = "<html><body><article>" + ("real content sentence here. " * 100) + "</article></body></html>"
+        big = (
+            "<html><body><article>"
+            + ("real content sentence here. " * 100)
+            + "</article></body></html>"
+        )
         client = mock.Mock()
         self.fetch.return_value = _resp(200, big)
         with mock.patch("sibyl.scraper._try_jina") as jina:
-            page = await scrape_url("https://ok.com/x", client=client, js_render=True, js_render_threshold=500)
+            page = await scrape_url(
+                "https://ok.com/x",
+                client=client,
+                js_render=True,
+                js_render_threshold=500,
+            )
         jina.assert_not_called()
         self.assertIn("real content", page.text)
 
@@ -85,11 +102,14 @@ class TestJinaGate(unittest.IsolatedAsyncioTestCase):
             await release.wait()
             active -= 1
 
-        with mock.patch.dict("os.environ", {"JINA_API_KEY": "test"}), mock.patch(
-            "sibyl.scraper._try_jina", fake_jina
+        with (
+            mock.patch.dict("os.environ", {"JINA_API_KEY": "test"}),
+            mock.patch("sibyl.scraper._try_jina", fake_jina),
         ):
             tasks = [
-                asyncio.create_task(gate.render(f"https://example.com/{i}", 100, object()))
+                asyncio.create_task(
+                    gate.render(f"https://example.com/{i}", 100, object())
+                )
                 for i in range(4)
             ]
             await asyncio.wait_for(two_started.wait(), timeout=1.0)
@@ -103,10 +123,13 @@ class TestJinaGate(unittest.IsolatedAsyncioTestCase):
         gate = _JinaGate()
         sleep = mock.AsyncMock()
 
-        with mock.patch.dict("os.environ", {}, clear=True), mock.patch(
-            "sibyl.scraper._try_jina", new=mock.AsyncMock(return_value=None)
-        ), mock.patch("sibyl.scraper.time.monotonic", side_effect=[10.0, 11.0, 13.0]), mock.patch(
-            "sibyl.scraper.asyncio.sleep", sleep
+        with (
+            mock.patch.dict("os.environ", {}, clear=True),
+            mock.patch(
+                "sibyl.scraper._try_jina", new=mock.AsyncMock(return_value=None)
+            ),
+            mock.patch("sibyl.scraper.time.monotonic", side_effect=[10.0, 11.0, 13.0]),
+            mock.patch("sibyl.scraper.asyncio.sleep", sleep),
         ):
             await gate.render("https://example.com/1", 100, object())
             await gate.render("https://example.com/2", 100, object())

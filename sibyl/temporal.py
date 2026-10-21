@@ -6,13 +6,16 @@ import re
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
-
 _YEAR_RE = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
-_CURRENT_RE = re.compile(r"\b(?:latest|current|currently|today|now)\b|当前|目前|最新|现在", re.IGNORECASE)
+_CURRENT_RE = re.compile(
+    r"\b(?:latest|current|currently|today|now)\b|当前|目前|最新|现在", re.IGNORECASE
+)
 _FISCAL_RE = re.compile(r"\bfiscal\b|\bfy\s*\d", re.IGNORECASE)
 
 
-def period_match(query: str, title: str, url: str, published_at: str | None = None) -> int:
+def period_match(
+    query: str, title: str, url: str, published_at: str | None = None
+) -> int:
     years = set(_YEAR_RE.findall(query))
     if not years and _CURRENT_RE.search(query):
         years = {str(datetime.now(timezone.utc).year)}

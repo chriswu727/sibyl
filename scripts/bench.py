@@ -8,6 +8,7 @@ Usage:
 Prints per-run wall time and per-phase timing so you can see where the time
 goes. See docs/PERFORMANCE.md for the optimization history and current floor.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,7 +27,9 @@ async def _one(query: str, depth: int, fast: bool):
     r = Researcher(cfg)
     steps: list[tuple[float, str]] = []
     t0 = time.time()
-    rep = await r.research(query, depth=depth, on_progress=lambda m: steps.append((time.time() - t0, m)))
+    rep = await r.research(
+        query, depth=depth, on_progress=lambda m: steps.append((time.time() - t0, m))
+    )
     return time.time() - t0, rep, steps
 
 
@@ -43,11 +46,17 @@ async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--query", default=DEFAULT_QUERY)
     ap.add_argument("--trials", type=int, default=1)
-    ap.add_argument("--phases", action="store_true", help="print per-phase timing for depth-2")
+    ap.add_argument(
+        "--phases", action="store_true", help="print per-phase timing for depth-2"
+    )
     args = ap.parse_args()
 
-    configs = [("depth-1", 1, False), ("depth-2", 2, False),
-               ("depth-2 fast", 2, True), ("depth-3", 3, False)]
+    configs = [
+        ("depth-1", 1, False),
+        ("depth-2", 2, False),
+        ("depth-2 fast", 2, True),
+        ("depth-3", 3, False),
+    ]
 
     for label, depth, fast in configs:
         times = []
@@ -59,7 +68,9 @@ async def main():
             ok = len(rep.summary) > 200 and len(rep.key_findings) >= 3
             status = "OK" if ok else "FAIL"
         avg = sum(times) / len(times)
-        spread = f" (min {min(times):.1f} max {max(times):.1f})" if len(times) > 1 else ""
+        spread = (
+            f" (min {min(times):.1f} max {max(times):.1f})" if len(times) > 1 else ""
+        )
         print(f"{label:14s} avg={avg:5.1f}s{spread}  [{status}]")
         if args.phases and label == "depth-2" and last_steps:
             for dur, msg in _phase_table(last_steps):

@@ -118,10 +118,16 @@ historical experiment notes are not current-model quality guarantees.
 
 Keep evidence contracts and report models independent of optional LLM imports.
 Implement job lifecycle changes in research_jobs.py, persistence in job_store.py,
-and evidence selection/checkpoints in research_state.py. New fetch behavior must
+and evidence selection/checkpoints in research_state.py. Persistent MCP handlers
+belong in research_tools.py, typed records in job_models.py, deterministic
+readiness rules in retrieval_policy.py, and plain-text presentation in report_text.py.
+New fetch behavior must
 use the existing safe network boundary.
 
 Run `python -m unittest discover tests -v`, `ruff check sibyl tests scripts`,
+`ruff format --check sibyl tests scripts`, `mypy`,
 the real stdio smoke test, and the offline retrieval regression gates.
+Run `python scripts/check_research_workflow.py` for the complete offline MCP
+research replay; distribution changes also require `scripts/check_wheel.py`.
 Never use paid model or subscription-backed evaluations without explicit user
 approval. Offline tests establish contracts, not live research quality.

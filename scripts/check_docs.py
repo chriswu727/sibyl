@@ -48,14 +48,16 @@ def check_document(path: Path, root: Path) -> list[str]:
             prefix = "/chriswu727/sibyl/blob/main/"
             if url.netloc != "github.com" or not url.path.startswith(prefix):
                 continue
-            destination = root / unquote(url.path[len(prefix):])
+            destination = root / unquote(url.path[len(prefix) :])
         else:
             destination = path.parent / unquote(url.path) if url.path else path
         destination = destination.resolve()
         if not destination.is_relative_to(root.resolve()) or not destination.exists():
             errors.append(f"{path.relative_to(root)}: missing local target {target}")
         elif url.fragment and destination.suffix == ".md":
-            if unquote(url.fragment) not in anchors(destination.read_text(encoding="utf-8")):
+            if unquote(url.fragment) not in anchors(
+                destination.read_text(encoding="utf-8")
+            ):
                 errors.append(f"{path.relative_to(root)}: missing anchor {target}")
     return errors
 

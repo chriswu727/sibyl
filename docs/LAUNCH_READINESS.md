@@ -40,6 +40,23 @@ research. Host completion checks citation targets and workflow structure, not
 semantic entailment. Autonomous model audits are fallible. Monitoring is read-only
 and local; no external collector, dashboard, or notifications are deployed by default.
 
+### Engineering follow-up, 2026-10-21
+
+The engineering-readiness follow-up adds a repository-wide format/import/error
+gate, static checking for five core job/state/review modules, and a complete
+[recorded-source MCP replay](examples/sqlite-wal/README.md). Local verification
+passed 424 tests on Python 3.12, including real process-kill recovery, write-failure
+injection, revision rollback, repeated capacity/cancellation, and artifact cleanup.
+Three isolated wheel profiles passed on macOS/Python 3.12: core, PDF/monitoring,
+and report/finance/extraction. Checks include real stdio, authenticated monitoring,
+PDF input/output, report export and restart. Each temporary environment is removed.
+
+The publication workflow now uses the same wheel checks and rejects an undated
+changelog. The source test matrix remains Python 3.11–3.13; clean-wheel execution
+in CI runs on Python 3.12. This does not establish all-platform compatibility,
+full-repository strict typing, sustained-load reliability, or new research accuracy.
+The original live-quality gates and external beta requirement remain unmet.
+
 ## Historical live evidence
 
 The retained formal runs are from July 2026 and do not measure the current

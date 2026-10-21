@@ -1,20 +1,29 @@
 """Report generator — creates PDF and Markdown reports from research results."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
+from .privacy import display_url
 from .report_models import ResearchReport
 from .storage import ArtifactStore
-from .privacy import display_url
 
 
 def _report_to_markdown(report: ResearchReport) -> str:
     """Convert a ResearchReport to markdown text."""
     if report.status not in {"ok", "partial"}:
-        heading = "Insufficient evidence" if report.status == "insufficient_evidence" else "Research failed"
+        heading = (
+            "Insufficient evidence"
+            if report.status == "insufficient_evidence"
+            else "Research failed"
+        )
         return f"# {heading}: {report.query}\n\n{report.error or 'No report was produced.'}\n"
 
-    notice = ["> Partial report: unresolved research gaps remain.", ""] if report.status == "partial" else []
+    notice = (
+        ["> Partial report: unresolved research gaps remain.", ""]
+        if report.status == "partial"
+        else []
+    )
     lines = [
         f"# {report.query}",
         "",
@@ -38,7 +47,11 @@ def _report_to_markdown(report: ResearchReport) -> str:
         v = fv[i - 1] if i - 1 < len(fv) else None
         tag = ""
         if v is not None:
-            tag = f"  _[confidence: {v.confidence}]_" if v.supported else "  _(unverified)_"
+            tag = (
+                f"  _[confidence: {v.confidence}]_"
+                if v.supported
+                else "  _(unverified)_"
+            )
         lines.append(f"{i}. {finding}{tag}")
     lines.append("")
 
@@ -55,21 +68,49 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append("")
 
     if report.research_plan:
-        lines.extend(["## Evidence Review", "",
-                      "Host-declared assessments; passage links do not establish semantic truth.", ""])
+        lines.extend(
+            [
+                "## Evidence Review",
+                "",
+                "Host-declared assessments; passage links do not establish semantic truth.",
+                "",
+            ]
+        )
         for item in report.research_plan.get("questions", []):
             lines.extend([f"### {item['question_id']}: {item['question']}", ""])
             review = item.get("review")
             if review:
-                lines.extend([f"Status: {review['status']}", "", review["conclusion"], "",
-                              "Counterevidence investigation: " + review["counterevidence_note"], ""])
-                for key, label in (("supporting_passage_ids", "Supporting"), ("challenging_passage_ids", "Challenging")):
-                    lines.append(f"{label} passages: " + (", ".join(review[key]) or "none recorded"))
+                lines.extend(
+                    [
+                        f"Status: {review['status']}",
+                        "",
+                        review["conclusion"],
+                        "",
+                        "Counterevidence investigation: "
+                        + review["counterevidence_note"],
+                        "",
+                    ]
+                )
+                for key, label in (
+                    ("supporting_passage_ids", "Supporting"),
+                    ("challenging_passage_ids", "Challenging"),
+                ):
+                    lines.append(
+                        f"{label} passages: "
+                        + (", ".join(review[key]) or "none recorded")
+                    )
                 lines.append("")
             lines.extend(f"- Gap: {gap}" for gap in item["gaps"])
             lines.append("")
 
-    lines.extend(["## Research Limitations", "", f"Verification scope: {report.verification_scope}", ""])
+    lines.extend(
+        [
+            "## Research Limitations",
+            "",
+            f"Verification scope: {report.verification_scope}",
+            "",
+        ]
+    )
     lines.extend(f"- {note}" for note in report.limitations)
     lines.append("")
 
@@ -79,7 +120,9 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append(f"{i}. **{src.title}**  ")
         lines.append(f"   {display_url(src.url)}")
         if src.retrieved_at:
-            lines.append(f"   Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}")
+            lines.append(
+                f"   Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}"
+            )
         if src.source_kind:
             lines.append(f"   Source-type hint: {src.source_kind}")
         if src.passage_ids:
@@ -103,7 +146,9 @@ def _safe_filename(query: str) -> str:
 def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     """Generate a PDF report using fpdf2 (pure Python, no system deps)."""
     if report.status not in {"ok", "partial"}:
-        raise ValueError(report.error or "Cannot generate a PDF without a completed report")
+        raise ValueError(
+            report.error or "Cannot generate a PDF without a completed report"
+        )
     from fpdf import FPDF
 
     pdf = FPDF()
@@ -112,8 +157,12 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
 
     # Try to use a Unicode font, fall back to Helvetica
     try:
-        pdf.add_font("NotoSans", "", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")
-        pdf.add_font("NotoSans", "B", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")
+        pdf.add_font(
+            "NotoSans", "", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+        )
+        pdf.add_font(
+            "NotoSans", "B", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+        )
         font_name = "NotoSans"
     except Exception:
         font_name = "Helvetica"
@@ -129,8 +178,9 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     def _plain(line, size):
         # Last-resort render if markdown parsing raises: strip the syntax.
         import re
-        clean = re.sub(r'\*\*(.+?)\*\*', r'\1', line)
-        clean = re.sub(r'^#{1,6}\s*', '', clean)
+
+        clean = re.sub(r"\*\*(.+?)\*\*", r"\1", line)
+        clean = re.sub(r"^#{1,6}\s*", "", clean)
         try:
             pdf.set_font(font_name, "", size)
             pdf.multi_cell(0, 6, clean, new_x="LMARGIN", new_y="NEXT")
@@ -142,6 +192,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         headings, bullets keep their marker, and **bold** renders inline (the LLM
         emits real markdown — the old renderer flattened all of it to plain text)."""
         import re
+
         if not text:
             return
         for raw in text.splitlines():
@@ -150,21 +201,30 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
                 pdf.ln(2)
                 continue
             stripped = line.strip()
-            hm = re.match(r'^(#{1,6})\s+(.*)$', stripped)
+            hm = re.match(r"^(#{1,6})\s+(.*)$", stripped)
             if hm:
                 hsize = {1: 15, 2: 13, 3: 12}.get(len(hm.group(1)), 11)
                 try:
                     pdf.set_font(font_name, "B", hsize)
-                    pdf.multi_cell(0, 6, hm.group(2), markdown=True, new_x="LMARGIN", new_y="NEXT")
+                    pdf.multi_cell(
+                        0, 6, hm.group(2), markdown=True, new_x="LMARGIN", new_y="NEXT"
+                    )
                     pdf.ln(1)
                 except Exception:
                     _plain(stripped, size)
                 continue
-            bm = re.match(r'^[-*•]\s+(.*)$', stripped)
+            bm = re.match(r"^[-*•]\s+(.*)$", stripped)
             if bm:
                 try:
                     pdf.set_font(font_name, "", size)
-                    pdf.multi_cell(0, 6, "   -  " + bm.group(1), markdown=True, new_x="LMARGIN", new_y="NEXT")
+                    pdf.multi_cell(
+                        0,
+                        6,
+                        "   -  " + bm.group(1),
+                        markdown=True,
+                        new_x="LMARGIN",
+                        new_y="NEXT",
+                    )
                 except Exception:
                     _plain(stripped, size)
                 continue
@@ -186,7 +246,11 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         body("Partial report: unresolved research gaps remain.")
     pdf.set_font(font_name, "", 8)
     pdf.set_text_color(128, 128, 128)
-    pdf.cell(0, 5, f"Generated {report.timestamp.strftime('%Y-%m-%d %H:%M')} | Model: {report.model_used} | Sources: {len(report.sources)}")
+    pdf.cell(
+        0,
+        5,
+        f"Generated {report.timestamp.strftime('%Y-%m-%d %H:%M')} | Model: {report.model_used} | Sources: {len(report.sources)}",
+    )
     pdf.ln(8)
     pdf.set_text_color(0, 0, 0)
     separator()
@@ -197,13 +261,13 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     if report.analysis:
         toc_items.append("3. Analysis")
     if report.cross_analysis:
-        toc_items.append(f"{len(toc_items)+1}. Source Cross-Analysis")
+        toc_items.append(f"{len(toc_items) + 1}. Source Cross-Analysis")
     if report.predictions:
-        toc_items.append(f"{len(toc_items)+1}. Uncertainties and Outlook")
-    toc_items.append(f"{len(toc_items)+1}. Research Limitations")
+        toc_items.append(f"{len(toc_items) + 1}. Uncertainties and Outlook")
+    toc_items.append(f"{len(toc_items) + 1}. Research Limitations")
     if report.market_data_summary or report.charts:
-        toc_items.append(f"{len(toc_items)+1}. Market Data")
-    toc_items.append(f"{len(toc_items)+1}. Sources ({len(report.sources)})")
+        toc_items.append(f"{len(toc_items) + 1}. Market Data")
+    toc_items.append(f"{len(toc_items) + 1}. Sources ({len(report.sources)})")
     for item in toc_items:
         pdf.set_font(font_name, "", 10)
         try:
@@ -241,8 +305,9 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     if report.cross_analysis:
         heading("Source Cross-Analysis", 14)
         import re
+
         for line in report.cross_analysis.splitlines():
-            clean = re.sub(r'[#]', '', line).strip()
+            clean = re.sub(r"[#]", "", line).strip()
             # Skip duplicate heading
             if clean.lower().replace("*", "").strip().startswith("source cross"):
                 continue
@@ -269,7 +334,8 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         heading("Market Data", 14)
         if report.market_data_summary:
             import re
-            clean_data = re.sub(r'[#*]', '', report.market_data_summary)
+
+            clean_data = re.sub(r"[#*]", "", report.market_data_summary)
             for line in clean_data.strip().splitlines():
                 line = line.strip()
                 if line:

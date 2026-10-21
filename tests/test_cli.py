@@ -1,4 +1,5 @@
 """CLI validation tests. No network."""
+
 import os
 import unittest
 from unittest import mock
@@ -34,7 +35,9 @@ class TestCliValidation(unittest.TestCase):
             BundleDiagnostics(0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 7000, 7000, 1),
             "No sources found.",
         )
-        with mock.patch("sibyl.cli.gather_bundle", new=mock.AsyncMock(return_value=bundle)):
+        with mock.patch(
+            "sibyl.cli.gather_bundle", new=mock.AsyncMock(return_value=bundle)
+        ):
             result = CliRunner().invoke(cli, ["gather", "question", "--format", "json"])
 
         self.assertEqual(result.exit_code, 0)

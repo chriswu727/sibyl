@@ -1,13 +1,12 @@
 """Keyless retrieval pipeline producing structured source bundles."""
+
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import json
 import re
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple, cast
+from typing import List, Optional, Tuple, cast
 from urllib.parse import urlsplit
 
 import httpx
@@ -18,9 +17,9 @@ from .dedup import canonical_url, dedup_pages
 from .evidence import (
     BundleDiagnostics,
     BundleStatus,
-    EvidenceSufficiency,
     EvidencePassage,
     EvidenceSource,
+    EvidenceSufficiency,
     QueryComplexity,
     RecommendedAction,
     SourceBundle,
@@ -28,7 +27,6 @@ from .evidence import (
 from .passages import TextPassage, split_passages
 from .queries import (
     focused_site_query,
-    historical_role_requirement,
     query_requires_decomposition,
     query_site_hosts,
     search_query_variants,
@@ -40,217 +38,31 @@ from .ranking import (
     lexical_query_terms,
     lexical_relevance_scores,
 )
+from .retrieval_policy import (
+    _QUOTED_TEXT_RE,
+    _assess_evidence_sufficiency,
+    _bundle_id,
+    _entity_lookup_queries,
+    _future_outcome_is_unobservable,
+    _has_historical_role_support,
+    _insufficient_evidence_error,
+    _query_anchor_terms,
+    _sha256,
+    _source_type,
+)
 from .scraper import WebPage, scrape_urls
-from .temporal import period_match
 from .search import (
     fetch_wikipedia_extract,
     search_web,
     search_wikipedia,
     wikipedia_lookup,
 )
-
+from .temporal import period_match
 
 _ACADEMIC_QUERY_RE = re.compile(
     r"\b(?:abstract|citation|doi|journal|paper|preprint|publication|study)\b",
     re.IGNORECASE,
 )
-_QUERY_WORD_RE = re.compile(r"[^\W_]+", re.UNICODE)
-_QUOTED_TEXT_RE = re.compile(
-    r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)'''
-)
-_QUESTION_OPENERS = {
-    "after", "at", "how", "in", "on", "the", "what", "when", "where", "which", "who",
-}
-_FUTURE_YEAR_RE = re.compile(r"\b[2-9]\d{3}\b")
-_TENURE_RANGE_RE = re.compile(
-    r"\b([12]\d{3})\s*(?:-|–|—|to|through|until)\s*([12]\d{3})\b",
-    re.IGNORECASE,
-)
-_ROLE_MODIFIERS = {
-    "acting", "assistant", "deputy", "former", "honorary", "interim", "vice",
-}
-
-
-def _query_anchor_terms(query: str) -> set[str]:
-    anchors = set()
-    words = _QUERY_WORD_RE.findall(query)
-    for index, word in enumerate(words):
-        if len(word) < 4 or not word[0].isupper():
-            continue
-        if index == 0 and word.casefold() in _QUESTION_OPENERS:
-            continue
-        anchors.update(lexical_query_terms(word))
-    for match in _QUOTED_TEXT_RE.finditer(query):
-        anchors.update(lexical_query_terms(match.group(1) or match.group(2)))
-    return anchors
-
-
-def _entity_lookup_queries(query: str) -> List[str]:
-    quoted = []
-    for match in _QUOTED_TEXT_RE.finditer(query):
-        value = " ".join((match.group(1) or match.group(2)).split())
-        if value:
-            quoted.append(value)
-    if quoted:
-        return quoted[:2]
-
-    sequences = []
-    current = []
-    for index, word in enumerate(_QUERY_WORD_RE.findall(query)):
-        capitalized = len(word) >= 2 and word[0].isupper()
-        is_opener = index == 0 and word.casefold() in _QUESTION_OPENERS
-        if capitalized and not is_opener:
-            current.append(word)
-        elif current:
-            sequences.append(" ".join(current))
-            current = []
-    if current:
-        sequences.append(" ".join(current))
-    return sequences[:2]
-
-
-def _future_outcome_is_unobservable(query: str) -> bool:
-    if " will " not in f" {query.casefold()} ":
-        return False
-    current_year = datetime.now(timezone.utc).year
-    return any(int(year) > current_year for year in _FUTURE_YEAR_RE.findall(query))
-
-
-def _has_historical_role_support(query: str, evidence_units: List[str]) -> bool:
-    requirement = historical_role_requirement(query)
-    if requirement is None:
-        return True
-    role, target_year = requirement
-    role_pattern = re.compile(rf"\b{re.escape(role)}\b", re.IGNORECASE)
-    target_pattern = re.compile(rf"\b{target_year}\b")
-    for unit in evidence_units:
-        for statement in re.split(r"(?<=[.!?])\s+", unit):
-            for role_match in role_pattern.finditer(statement):
-                prefix = statement[
-                    max(0, role_match.start() - 20):role_match.start()
-                ]
-                prefix_terms = _QUERY_WORD_RE.findall(prefix.casefold())
-                if prefix_terms and prefix_terms[-1] in _ROLE_MODIFIERS:
-                    continue
-                if any(
-                    abs(year_match.start() - role_match.start()) <= 180
-                    for year_match in target_pattern.finditer(statement)
-                ):
-                    return True
-                for range_match in _TENURE_RANGE_RE.finditer(statement):
-                    if abs(range_match.start() - role_match.start()) > 180:
-                        continue
-                    start_year, end_year = map(int, range_match.groups())
-                    if start_year <= target_year <= end_year:
-                        return True
-    return False
-
-
-def _sha256(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
-
-
-def _bundle_id(
-    query: str, status: str, source_fingerprints: List[Tuple[str, str, str]]
-) -> str:
-    payload = json.dumps(
-        {"query": query.strip(), "status": status, "sources": source_fingerprints},
-        ensure_ascii=False,
-        separators=(",", ":"),
-    )
-    return f"sb_{_sha256(payload)[:16]}"
-
-
-def _source_type(url: str, result_types: Dict[str, str]) -> str:
-    if "wikipedia.org/wiki/" in url:
-        return "wikipedia"
-    return result_types.get(canonical_url(url), "web")
-
-
-def _assess_evidence_sufficiency(
-    *,
-    source_count: int,
-    substantive_sources: int,
-    evidence_chars: int,
-    query_terms: int,
-    query_term_coverage: float,
-    unique_domains: int,
-    independent_content_clusters: int,
-    missing_anchor_terms: List[str],
-    future_outcome_unobservable: bool,
-    fragmented_query_support: bool,
-    multi_step_query: bool,
-    historical_role_support_missing: bool,
-) -> Tuple[EvidenceSufficiency, List[str]]:
-    if source_count == 0:
-        return "insufficient", ["no_sources"]
-
-    blockers = []
-    if substantive_sources == 0:
-        blockers.append("no_substantive_sources")
-    if evidence_chars < 200:
-        blockers.append("too_little_evidence_text")
-    if query_terms > 0 and query_term_coverage < 0.25:
-        blockers.append("low_query_term_coverage")
-    if missing_anchor_terms:
-        blockers.append("missing_query_anchor")
-    if future_outcome_unobservable:
-        blockers.append("future_outcome_not_observable")
-    if fragmented_query_support:
-        blockers.append("fragmented_query_support")
-    if multi_step_query:
-        blockers.append("multi_step_query")
-    if historical_role_support_missing:
-        blockers.append("missing_historical_role_tenure")
-    if blockers:
-        return "insufficient", blockers
-
-    limitations = []
-    if substantive_sources < 2:
-        limitations.append("fewer_than_two_substantive_sources")
-    elif independent_content_clusters < 2:
-        limitations.append("fewer_than_two_independent_contents")
-    if unique_domains < 2:
-        limitations.append("single_domain")
-    if query_terms == 0:
-        limitations.append("query_has_no_lexical_terms")
-    if limitations:
-        return "limited", limitations
-    return "sufficient", []
-
-
-_SUFFICIENCY_REASON_LABELS = {
-    "no_sources": "no sources",
-    "no_substantive_sources": "no substantive full-text sources",
-    "too_little_evidence_text": "too little evidence text",
-    "low_query_term_coverage": "low query-term coverage",
-    "missing_query_anchor": "one or more key query entities are absent",
-    "future_outcome_not_observable": "the requested future outcome is not yet observable",
-    "fragmented_query_support": (
-        "no single source sufficiently covers the quoted target and requested fact"
-    ),
-    "multi_step_query": "the question contains a dependent fact chain",
-    "missing_historical_role_tenure": (
-        "no local statement connects the requested role to the target year"
-    ),
-}
-
-
-def _insufficient_evidence_error(
-    query: str,
-    source_count: int,
-    reasons: List[str],
-) -> str:
-    if source_count == 0:
-        return f"No sources found for query: {query!r}. Try a different phrasing."
-    details = ", ".join(
-        _SUFFICIENCY_REASON_LABELS.get(reason, reason.replace("_", " "))
-        for reason in reasons
-    )
-    return (
-        f"Found {source_count} source(s), but the evidence is insufficient for "
-        f"synthesis ({details}). Treat these as leads and gather more evidence."
-    )
 
 
 def _diagnostics(
@@ -357,9 +169,7 @@ async def _score_documents(
         return lexical_relevance_scores(query, documents), "lexical_v1", ""
 
     try:
-        scores = await asyncio.to_thread(
-            flashrank_relevance_scores, query, documents
-        )
+        scores = await asyncio.to_thread(flashrank_relevance_scores, query, documents)
         return scores, "flashrank", ""
     except Exception as exc:
         reason = type(exc).__name__
@@ -455,7 +265,9 @@ async def gather_source_bundle(
             status="invalid_request",
             sources=[],
             diagnostics=diagnostics,
-            error="query must not be empty." if not clean_query else "query must be at most 1000 characters.",
+            error="query must not be empty."
+            if not clean_query
+            else "query must be at most 1000 characters.",
         )
 
     own_client = client is None
@@ -477,7 +289,11 @@ async def gather_source_bundle(
     candidates: List[WebPage] = []
     try:
         search_batches = []
-        include_academic = bool(_ACADEMIC_QUERY_RE.search(clean_query)) if include_academic is None else include_academic
+        include_academic = (
+            bool(_ACADEMIC_QUERY_RE.search(clean_query))
+            if include_academic is None
+            else include_academic
+        )
         for search_query in search_queries:
             search_batches.append(
                 await search_web(
@@ -489,26 +305,41 @@ async def gather_source_bundle(
                 )
             )
         if len(site_hosts) > 1:
-            result_hosts = {(urlsplit(result.url).hostname or "").lower()
-                            for batch in search_batches for result in batch}
-            missing_hosts = [domain for domain in site_hosts
-                             if not any(host == domain or host.endswith("." + domain) for host in result_hosts)]
+            result_hosts = {
+                (urlsplit(result.url).hostname or "").lower()
+                for batch in search_batches
+                for result in batch
+            }
+            missing_hosts = [
+                domain
+                for domain in site_hosts
+                if not any(
+                    host == domain or host.endswith("." + domain)
+                    for host in result_hosts
+                )
+            ]
             for domain in missing_hosts[:2]:
                 focused_query = focused_site_query(clean_query, domain)
                 search_queries.append(focused_query)
                 refinement_searches += 1
                 try:
-                    search_batches.append(await search_web(
-                        focused_query, search_engine, max_results=6, client=client,
-                        include_academic=include_academic,
-                    ))
+                    search_batches.append(
+                        await search_web(
+                            focused_query,
+                            search_engine,
+                            max_results=6,
+                            client=client,
+                            include_academic=include_academic,
+                        )
+                    )
                 except Exception:
                     refinement_failures += 1
         entity_batches = await asyncio.gather(
             *[
                 search_wikipedia(entity_query, 2, client=client)
                 for entity_query in _entity_lookup_queries(clean_query)
-                if not site_hosts and entity_query.casefold()
+                if not site_hosts
+                and entity_query.casefold()
                 not in {query.casefold() for query in search_queries}
             ]
         )
@@ -518,7 +349,10 @@ async def gather_source_bundle(
             for result in batch:
                 if site_hosts:
                     host = (urlsplit(result.url).hostname or "").lower()
-                    if not any(domain and (host == domain or host.endswith("." + domain)) for domain in site_hosts):
+                    if not any(
+                        domain and (host == domain or host.endswith("." + domain))
+                        for domain in site_hosts
+                    ):
                         continue
                 result_key = canonical_url(result.url)
                 if result_key not in seen_results:
@@ -527,12 +361,22 @@ async def gather_source_bundle(
         if len(site_hosts) > 1:
             representatives = []
             for domain in site_hosts:
-                match = next((result for result in results
-                              if (urlsplit(result.url).hostname or "").lower() == domain
-                              or (urlsplit(result.url).hostname or "").lower().endswith("." + domain)), None)
+                match = next(
+                    (
+                        result
+                        for result in results
+                        if (urlsplit(result.url).hostname or "").lower() == domain
+                        or (urlsplit(result.url).hostname or "")
+                        .lower()
+                        .endswith("." + domain)
+                    ),
+                    None,
+                )
                 if match and match not in representatives:
                     representatives.append(match)
-            results = representatives + [result for result in results if result not in representatives]
+            results = representatives + [
+                result for result in results if result not in representatives
+            ]
         seen = set()
         for result in results:
             if result.url.startswith("http") and result.url not in seen:
@@ -571,7 +415,11 @@ async def gather_source_bundle(
             ),
         )
         pages = direct_pages
-        good = [page for page in pages if page.text and len(page.text) > 150 and not page.error]
+        good = [
+            page
+            for page in pages
+            if page.text and len(page.text) > 150 and not page.error
+        ]
         for result, extract in zip(wikipedia_results, wikipedia_extracts):
             if isinstance(extract, str) and extract:
                 good.append(
@@ -585,7 +433,11 @@ async def gather_source_bundle(
                 wikipedia_fallbacks += 1
         scraped = {page.url for page in good}
         for result in results:
-            if result.url not in scraped and result.snippet and len(result.snippet) > 120:
+            if (
+                result.url not in scraped
+                and result.snippet
+                and len(result.snippet) > 120
+            ):
                 content_origin = (
                     "crossref_api"
                     if result.provider == "crossref"
@@ -670,9 +522,7 @@ async def gather_source_bundle(
                     if page.text and len(page.text) > 150 and not page.error
                 }
                 good.extend(
-                    page
-                    for page in refinement_pages
-                    if page.url in retrieved_urls
+                    page for page in refinement_pages if page.url in retrieved_urls
                 )
                 for result in new_results:
                     if (
@@ -710,7 +560,7 @@ async def gather_source_bundle(
                 substantive = [page for page in good if len(page.text) > 200]
         candidates = good
 
-    except Exception as exc:
+    except Exception:
         diagnostics = _diagnostics(
             search_results=len(results),
             unique_urls=len(urls),
@@ -774,16 +624,24 @@ async def gather_source_bundle(
         )
         ranking_documents.append((title, representative))
 
-    relevance_scores, source_ranking_method, source_ranking_warning = (
-        await _score_documents(clean_query, ranking_documents, selected_ranker)
-    )
+    (
+        relevance_scores,
+        source_ranking_method,
+        source_ranking_warning,
+    ) = await _score_documents(clean_query, ranking_documents, selected_ranker)
     ranked_indices = sorted(
         range(len(source_candidates)),
         key=lambda index: (
-            -period_match(clean_query, source_candidates[index][1],
-                          source_candidates[index][0].url, source_candidates[index][0].published_at)
-            if selected_ranker != "none" else 0,
-            -(relevance_scores[index] or 0.0), index,
+            -period_match(
+                clean_query,
+                source_candidates[index][1],
+                source_candidates[index][0].url,
+                source_candidates[index][0].published_at,
+            )
+            if selected_ranker != "none"
+            else 0,
+            -(relevance_scores[index] or 0.0),
+            index,
         ),
     )
     if selected_ranker == "none":
@@ -809,9 +667,14 @@ async def gather_source_bundle(
                 same_domain_indices.append(index)
         selected_indices = sorted(
             domain_diverse_indices + same_domain_indices + duplicate_indices,
-            key=lambda index: -period_match(clean_query, source_candidates[index][1],
-                                            source_candidates[index][0].url,
-                                            source_candidates[index][0].published_at),
+            key=lambda index: (
+                -period_match(
+                    clean_query,
+                    source_candidates[index][1],
+                    source_candidates[index][0].url,
+                    source_candidates[index][0].published_at,
+                )
+            ),
         )[:effective_max_sources]
     selected_sources = [
         (*source_candidates[index], relevance_scores[index])
@@ -819,20 +682,21 @@ async def gather_source_bundle(
     ]
 
     passage_size = min(2500, max(500, effective_chars_per_source // 3))
-    max_passages_per_source = min(
-        3, max(1, effective_chars_per_source // passage_size)
-    )
+    max_passages_per_source = min(3, max(1, effective_chars_per_source // passage_size))
     chunk_groups = []
     chunk_documents = []
     for (
-        page, title, source_hash, representative_start, representative, relevance_score
+        page,
+        title,
+        source_hash,
+        representative_start,
+        representative,
+        relevance_score,
     ) in selected_sources:
-        chunks = split_passages(
-            representative, max_chars=passage_size, overlap_chars=0
-        )
+        chunks = split_passages(representative, max_chars=passage_size, overlap_chars=0)
         if len(chunks) > max_passages_per_source:
             tail_start = chunks[max_passages_per_source - 1].start_char
-            chunks = chunks[:max_passages_per_source - 1] + [
+            chunks = chunks[: max_passages_per_source - 1] + [
                 TextPassage(
                     representative[tail_start:],
                     tail_start,
@@ -858,9 +722,11 @@ async def gather_source_bundle(
     )
     if source_ranking_method == "lexical_v1":
         passage_ranker = "lexical"
-    passage_scores, passage_ranking_method, passage_ranking_warning = (
-        await _score_documents(clean_query, chunk_documents, passage_ranker)
-    )
+    (
+        passage_scores,
+        passage_ranking_method,
+        passage_ranking_warning,
+    ) = await _score_documents(clean_query, chunk_documents, passage_ranker)
     if source_ranking_method == passage_ranking_method:
         ranking_method = source_ranking_method
     else:
@@ -886,7 +752,7 @@ async def gather_source_bundle(
         chunks,
         score_start,
     ) in chunk_groups:
-        chunk_scores = passage_scores[score_start:score_start + len(chunks)]
+        chunk_scores = passage_scores[score_start : score_start + len(chunks)]
         chunk_indices = sorted(
             range(len(chunks)),
             key=lambda index: (-(chunk_scores[index] or 0.0), index),
@@ -910,9 +776,7 @@ async def gather_source_bundle(
                 )
             )
             seen_hashes.add(content_hash)
-        prepared.append(
-            (page, title, source_hash, relevance_score, selected_passages)
-        )
+        prepared.append((page, title, source_hash, relevance_score, selected_passages))
 
     fingerprints = []
     for page, _, source_hash, _, selected_passages in prepared:
@@ -948,9 +812,11 @@ async def gather_source_bundle(
         for _, title, _, _, selected_passages in prepared
     ]
     max_source_query_term_coverage = max(source_coverages, default=0.0)
-    evidence_terms = set().union(
-        *(lexical_query_terms(text) for text in evidence_texts)
-    ) if evidence_texts else set()
+    evidence_terms = (
+        set().union(*(lexical_query_terms(text) for text in evidence_texts))
+        if evidence_texts
+        else set()
+    )
     missing_anchor_terms = sorted(query_anchor_terms - evidence_terms)
     domains = {
         urlsplit(page.url).netloc.lower().removeprefix("www.")
@@ -970,8 +836,7 @@ async def gather_source_bundle(
     ]
     substantive_sources = len(substantive_prepared)
     selected_cluster_ids = {
-        cluster_id_by_source_hash[source_hash]
-        for _, _, source_hash, _, _ in prepared
+        cluster_id_by_source_hash[source_hash] for _, _, source_hash, _, _ in prepared
     }
     independent_content_cluster_ids = {
         cluster_id_by_source_hash[source_hash]
@@ -1008,9 +873,11 @@ async def gather_source_bundle(
             ],
         ),
     )
-    sufficiency_reasons.extend(dict.fromkeys(
-        warning for page, *_ in prepared for warning in page.extraction_warnings
-    ))
+    sufficiency_reasons.extend(
+        dict.fromkeys(
+            warning for page, *_ in prepared for warning in page.extraction_warnings
+        )
+    )
     recommended_action: RecommendedAction
     if multi_step_query:
         recommended_action = "decompose_query"
@@ -1025,7 +892,11 @@ async def gather_source_bundle(
     retrieved_at = datetime.now(timezone.utc).isoformat()
     sources = []
     for index, (
-        page, title, source_hash, relevance_score, selected_passages
+        page,
+        title,
+        source_hash,
+        relevance_score,
+        selected_passages,
     ) in enumerate(prepared, 1):
         source_id = f"S{index}"
         evidence = []
@@ -1051,7 +922,9 @@ async def gather_source_bundle(
                 title=title,
                 retrieved_at=retrieved_at,
                 content_hash=source_hash,
-                source_type="pdf" if page.source_type == "pdf" else _source_type(page.url, result_types),
+                source_type="pdf"
+                if page.source_type == "pdf"
+                else _source_type(page.url, result_types),
                 char_count=len(page.text),
                 evidence=evidence,
                 content_origin=page.content_origin,
@@ -1081,9 +954,7 @@ async def gather_source_bundle(
         requested_ranking_method=requested_ranker,
         ranking_method=ranking_method if source_candidates else "not_run",
         ranking_warning=ranking_warning,
-        candidates_ranked=(
-            len(source_candidates) if selected_ranker != "none" else 0
-        ),
+        candidates_ranked=(len(source_candidates) if selected_ranker != "none" else 0),
         chunks_ranked=len(chunk_documents) if selected_ranker != "none" else 0,
         passages_returned=sum(len(source.evidence) for source in sources),
         passage_size=passage_size if source_candidates else 0,

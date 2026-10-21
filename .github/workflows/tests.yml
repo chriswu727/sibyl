@@ -25,9 +25,13 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install ruff==0.17.1 -e '.[report,finance,extract,pdf,monitor]'
+          python -m pip install ruff==0.17.1 mypy==2.4.0 -e '.[report,finance,extract,pdf,monitor]'
       - name: Check Python correctness
         run: ruff check sibyl tests scripts
+      - name: Check consistent formatting
+        run: ruff format --check sibyl tests scripts
+      - name: Check core research state types
+        run: mypy
       - name: Check documentation links and anchors
         run: python scripts/check_docs.py
       - name: Run tests
@@ -44,6 +48,9 @@ jobs:
         run: python scripts/eval_source_quality.py
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
+      - name: Verify clean-wheel installation profiles
+        if: matrix.python-version == '3.12'
+        run: python scripts/check_wheel.py dist/*.whl "$(python -c 'import sibyl; print(sibyl.__version__)')"
 
   security:
     runs-on: ubuntu-latest

@@ -1,4 +1,5 @@
 """Event-loop-local async single-flight cache."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,6 @@ import weakref
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Awaitable, Callable, Dict, Generic, Hashable, Tuple, TypeVar
-
 
 K = TypeVar("K", bound=Hashable)
 V = TypeVar("V")
@@ -106,8 +106,13 @@ class AsyncSingleFlightTTL(Generic[K, V]):
 
     def snapshot(self) -> dict:
         state = self._state()
-        return {"entries": sum(expires > self.clock() for expires, _ in state.entries.values()),
-                "inflight": len(state.inflight), "waiters": sum(state.waiters.values())}
+        return {
+            "entries": sum(
+                expires > self.clock() for expires, _ in state.entries.values()
+            ),
+            "inflight": len(state.inflight),
+            "waiters": sum(state.waiters.values()),
+        }
 
     @staticmethod
     def _observe_completion(task: asyncio.Task[V]) -> None:

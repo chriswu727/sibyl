@@ -1,4 +1,5 @@
 """Deterministic passage splitting tests."""
+
 import unittest
 
 from sibyl.passages import split_passages
@@ -35,7 +36,7 @@ class TestSplitPassages(unittest.TestCase):
 
         self.assertEqual(passages[1].start_char, 80)
         for passage in passages:
-            self.assertEqual(text[passage.start_char:passage.end_char], passage.text)
+            self.assertEqual(text[passage.start_char : passage.end_char], passage.text)
 
     def test_empty_text_or_non_positive_limit_returns_empty(self):
         self.assertEqual(split_passages("", max_chars=100), [])

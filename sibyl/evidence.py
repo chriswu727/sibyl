@@ -1,9 +1,9 @@
 """Structured evidence protocol shared by Sibyl retrieval consumers."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional
-
 
 BundleStatus = Literal["ok", "insufficient_evidence", "invalid_request", "failed"]
 EvidenceSufficiency = Literal["not_assessed", "sufficient", "limited", "insufficient"]

@@ -1,18 +1,25 @@
 """Smoke-check an installed Sibyl wheel without importing optional tool modules."""
+
 from __future__ import annotations
 
 import sys
 from importlib.metadata import distribution
+from pathlib import Path
 
 import sibyl
 
 
 def main() -> int:
     if len(sys.argv) != 2:
-        print("usage: check_installed_distribution.py <expected-version>", file=sys.stderr)
+        print(
+            "usage: check_installed_distribution.py <expected-version>", file=sys.stderr
+        )
         return 2
 
     expected_version = sys.argv[1]
+    if not Path(sibyl.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()):
+        print("sibyl was imported outside the isolated installation", file=sys.stderr)
+        return 1
     installed = distribution("sibyl-research")
     if sibyl.__version__ != expected_version or installed.version != expected_version:
         print(
@@ -34,7 +41,10 @@ def main() -> int:
         "sibyl-research": "sibyl.mcp_server:main",
     }
     if not expected_scripts.items() <= console_scripts.items():
-        print(f"missing console scripts: {expected_scripts!r} not in {console_scripts!r}", file=sys.stderr)
+        print(
+            f"missing console scripts: {expected_scripts!r} not in {console_scripts!r}",
+            file=sys.stderr,
+        )
         return 1
     if not callable(sibyl.gather_bundle) or not callable(sibyl.gather_sources):
         print("missing top-level keyless retrieval API", file=sys.stderr)

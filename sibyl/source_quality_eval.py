@@ -1,4 +1,5 @@
 """Offline evaluation helpers for contextual source-quality scorers."""
+
 from __future__ import annotations
 
 import json
@@ -119,9 +120,7 @@ def _parse_case(data: object, line_number: int) -> SourceQualityCase:
         for value in raw_preferred
     ]
     if len(preferred_candidate_ids) != len(set(preferred_candidate_ids)):
-        raise ValueError(
-            f"Line {line_number}: preferred candidate ids must be unique."
-        )
+        raise ValueError(f"Line {line_number}: preferred candidate ids must be unique.")
     unknown = set(preferred_candidate_ids) - candidate_ids
     if unknown:
         raise ValueError(
@@ -140,7 +139,9 @@ def _parse_case(data: object, line_number: int) -> SourceQualityCase:
 def load_source_quality_cases(path: Path) -> List[SourceQualityCase]:
     cases = []
     case_ids = set()
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), 1
+    ):
         if not line.strip():
             continue
         try:

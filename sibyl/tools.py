@@ -1,7 +1,8 @@
 """Advanced analysis tools — comparison tables, SWOT, trends, timeline."""
+
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import litellm
 
@@ -26,19 +27,20 @@ async def _llm(provider: Provider, prompt: str, max_tokens: int = 2000) -> str:
 
 # ── 1. Structured Comparison ─────────────────────────────────────
 
+
 async def generate_comparison(
     items: List[str],
     context: str,
     provider: Provider,
 ) -> str:
     """Generate a structured comparison table from research data."""
-    prompt = f"""Create a detailed structured comparison of: {', '.join(items)}
+    prompt = f"""Create a detailed structured comparison of: {", ".join(items)}
 
 Use the following research data as context:
 {context[:4000]}
 
 Output a MARKDOWN TABLE with these columns:
-| Aspect | {' | '.join(items)} |
+| Aspect | {" | ".join(items)} |
 
 Include rows for:
 - Current status/price/position
@@ -59,6 +61,7 @@ Use specific data from the sources where available. Mark estimates with ~."""
 
 # ── 2. Google Trends ─────────────────────────────────────────────
 
+
 async def fetch_google_trends(
     keywords: List[str],
     timeframe: str = "today 12-m",
@@ -66,6 +69,7 @@ async def fetch_google_trends(
     """Fetch Google Trends data for keywords."""
     try:
         from pytrends.request import TrendReq
+
         pytrends = TrendReq(hl="en-US", tz=360)
         pytrends.build_payload(keywords[:5], timeframe=timeframe)
 
@@ -108,7 +112,9 @@ async def fetch_google_trends(
                 if kw in related and related[kw].get("rising") is not None:
                     rising = related[kw]["rising"]
                     if rising is not None and not rising.empty:
-                        result["keywords"][kw]["rising_queries"] = rising["query"].tolist()[:5]
+                        result["keywords"][kw]["rising_queries"] = rising[
+                            "query"
+                        ].tolist()[:5]
         except Exception:
             pass
 
@@ -122,20 +128,31 @@ def format_trends(data: Dict) -> str:
     if "error" in data:
         return f"Google Trends error: {data['error']}"
 
-    lines = ["## Google Trends Data", f"*Timeframe: {data.get('timeframe', 'unknown')}*", ""]
+    lines = [
+        "## Google Trends Data",
+        f"*Timeframe: {data.get('timeframe', 'unknown')}*",
+        "",
+    ]
 
     for kw, info in data.get("keywords", {}).items():
-        trend_emoji = {"rising": "^", "declining": "v", "stable": "~"}.get(info["trend"], "?")
+        trend_emoji = {"rising": "^", "declining": "v", "stable": "~"}.get(
+            info["trend"], "?"
+        )
         lines.append(f"**{kw}** [{trend_emoji} {info['trend']}]")
-        lines.append(f"- Current interest: {info['current']}/100 (avg: {info['average']}, peak: {info['peak']})")
+        lines.append(
+            f"- Current interest: {info['current']}/100 (avg: {info['average']}, peak: {info['peak']})"
+        )
         if "rising_queries" in info:
-            lines.append(f"- Rising related searches: {', '.join(info['rising_queries'][:3])}")
+            lines.append(
+                f"- Rising related searches: {', '.join(info['rising_queries'][:3])}"
+            )
         lines.append("")
 
     return "\n".join(lines)
 
 
 # ── 3. SWOT Analysis ─────────────────────────────────────────────
+
 
 async def generate_swot(
     subject: str,
@@ -181,6 +198,7 @@ Be specific. Use real data from the sources. Avoid generic statements."""
 
 
 # ── 4. Timeline Analysis ─────────────────────────────────────────
+
 
 async def generate_timeline(
     topic: str,

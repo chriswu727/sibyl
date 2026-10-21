@@ -5,6 +5,7 @@ without an import cycle. The [Source N] numbering is defined here: whatever page
 order build_source_context receives IS the citation order the synthesis prompt,
 the verifier, and the rendered reference list must all key off.
 """
+
 from __future__ import annotations
 
 import re
@@ -13,12 +14,16 @@ from typing import List
 from .scraper import WebPage
 
 
-def build_source_context(pages: List[WebPage], limit: int = 12, per_char: int = 4000) -> str:
+def build_source_context(
+    pages: List[WebPage], limit: int = 12, per_char: int = 4000
+) -> str:
     """Render pages into the numbered [Source N] context block used by synthesis
     and verification. Page i (1-based) becomes [Source i]."""
     parts = []
     for i, page in enumerate(pages[:limit], 1):
-        parts.append(f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:per_char]}\n")
+        parts.append(
+            f"[Source {i}: {page.title}]\nURL: {page.url}\n{page.text[:per_char]}\n"
+        )
     return "\n---\n".join(parts)
 
 
@@ -38,7 +43,7 @@ def relevant_window_span(query: str, text: str, width: int = 6000) -> tuple[int,
     if starts[-1] != last_start:
         starts.append(last_start)
     for start in starts:
-        chunk = text[start:start + width].lower()
+        chunk = text[start : start + width].lower()
         score = sum(1 for w in q_words if w in chunk)
         if score > best_score:
             best_score, best_start = score, start
@@ -56,7 +61,7 @@ def relevant_window(query: str, text: str, width: int = 6000) -> str:
     text = text or ""
     best_start, end = relevant_window_span(query, text, width)
     prefix = "" if best_start == 0 else "…"
-    return prefix + text[best_start + len(prefix):end]
+    return prefix + text[best_start + len(prefix) : end]
 
 
 def best_snippet(query: str, text: str, max_len: int = 240) -> str:

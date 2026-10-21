@@ -1,4 +1,5 @@
 """Offline retrieval-ranker regression tests."""
+
 import json
 import subprocess
 import sys
@@ -13,7 +14,6 @@ from sibyl.retrieval_eval import (
     evaluate_retrieval_cases,
     load_retrieval_cases,
 )
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DATASET = ROOT / "evals" / "retrieval_ranker_cases.jsonl"
@@ -42,7 +42,9 @@ class TestRetrievalEval(unittest.TestCase):
             relevant_document_ids=["relevant"],
         )
 
-        result = evaluate_retrieval_cases([case], lambda query, documents: [0.9, 0.8, 0.1])
+        result = evaluate_retrieval_cases(
+            [case], lambda query, documents: [0.9, 0.8, 0.1]
+        )
 
         self.assertEqual(result.hits_at_1, 0)
         self.assertEqual(result.hit_at_1, 0.0)

@@ -11,7 +11,7 @@ and writing to the host; explicit autonomous mode uses a configured model.
 flowchart TD
     MCP[mcp_server: composition + profiles] --> CAT[mcp_catalog: request boundary]
     CAT --> RT[runtime: admission + lifecycle + state]
-    RT --> TOOLS[mcp_tools: application operations]
+    RT --> TOOLS[mcp_tools / research_tools: application operations]
     RT --> MON[monitoring: authenticated loopback HTTP]
     MON --> MET[observability: bounded content-free metrics]
     CLI[cli / api] --> RET[retrieval: evidence pipeline]
@@ -19,7 +19,7 @@ flowchart TD
     RET --> NET[search / scraper / safe_http / url_safety]
     NET --> PDF[pdf_reader: bounded subprocess lifecycle]
     PDF --> PARSER[pdf_worker: optional PDF parser]
-    RET --> PURE[dedup / passages / ranking / evidence]
+    RET --> PURE[retrieval_policy / dedup / passages / ranking / evidence]
     TOOLS --> OPT[researcher: optional model workflow]
     TOOLS --> JOB[research_jobs: lifecycle]
     JOB --> DB[job_store: bounded SQLite]
@@ -35,16 +35,20 @@ flowchart TD
 | `mcp_server.py` | Server construction, profile selection, console startup |
 | `mcp_catalog.py` | Tool registration, runtime binding, public error boundary |
 | `mcp_tools.py` | Tool schemas and application-level orchestration |
+| `research_tools.py` | Persistent research tool schemas and delegation to job operations |
 | `runtime.py` | Policy, lazy configuration, per-server state, execution lifecycle |
 | `monitoring.py`, `observability.py` | Read-only authenticated HTTP lifecycle and bounded operational metrics |
 | `pdf_reader.py`, `pdf_worker.py` | Parser process supervision and isolated optional text-PDF extraction |
 | `async_cache.py` | Event-loop-local single-flight, TTL, capacity, waiter cancellation |
 | `evidence_loop.py` | Bounded evidence workflow state machine |
-| `retrieval.py` | Search/extraction/ranking coordination and evidence sufficiency |
+| `retrieval.py` | Search/extraction/ranking coordination |
+| `retrieval_policy.py` | Deterministic query constraints, source identity, and evidence sufficiency rules |
 | `evidence.py` | Versioned source, passage, diagnostic, and loop contracts |
 | `url_safety.py`, `safe_http.py` | Destination validation and DNS-pinned connections |
 | `scraper.py` | Redirects, bounded decoding, extraction, optional Jina fallback |
 | `report_models.py` | Report data contracts without importing an LLM SDK |
+| `report_text.py` | Plain-text report presentation shared by CLI and MCP |
+| `job_models.py` | Typed job records, states, retrieval attempts, evidence reviews, and research plans |
 | `research_state.py` | Shared checkpoints, budgets, cross-query evidence selection |
 | `source_policy.py` | Heuristic source classification and primary/academic routing priority |
 | `research_sources.py` | Budgeted direct-page evidence with stable hashes and passage offsets |
@@ -59,6 +63,17 @@ flowchart TD
 The retained tool exports in `mcp_server` preserve Python import compatibility.
 The `Source` and `ResearchReport` names remain importable from `researcher`, but
 new code should import their provider-independent definitions from `report_models`.
+
+The catalog holds tool definitions, not per-client job or report state. Persistent
+handlers register through the same catalog as the compatibility tools; runtime
+binding remains per invocation. Existing exports in `mcp_tools` and `mcp_server`
+remain available after handler extraction.
+
+Static checking covers job models, persistence, notebook state, reviews, and job
+orchestration. Typed dictionaries preserve the existing JSON checkpoint shape;
+they are not runtime validation of arbitrary database files. Serialized source
+and report payloads remain dynamic boundaries. The full repository is formatted
+and linted; it is not fully strict-typed.
 
 ## Request lifecycle
 
@@ -169,14 +184,15 @@ cancellation, blocking optional libraries, and OS-level resource isolation.
 
 ## Where new code belongs
 
-- **New MCP operation:** implement it in `mcp_tools`, register its schema in the
+- **New MCP operation:** implement persistent-job handlers in `research_tools`
+  and other tools in `mcp_tools`, register the schema in the
   catalog, assign a profile, and add offline tool/serialization tests. Stateful
   report operations must join the runtime's exclusivity policy.
 - **New search provider:** add an adapter in `search`, preserve transparent
   provider provenance and fallback behavior, and test without external calls.
 - **New extractor or HTTP behavior:** use `scraper` and the existing network
   boundary. Do not bypass `safe_http` with a generic client for arbitrary URLs.
-- **New ranking/sufficiency rule:** keep it in deterministic retrieval helpers;
+- **New ranking/sufficiency rule:** keep it in `ranking` or `retrieval_policy`;
   run lexical, pipeline, and source-quality regression gates.
 - **New evidence field:** update the versioned contracts, schema fixture, docs,
   and serialization tests together. Preserve hash/offset consistency.

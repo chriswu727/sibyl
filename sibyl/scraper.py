@@ -1,4 +1,5 @@
 """Web scraper — extract clean text content from URLs with anti-block techniques."""
+
 from __future__ import annotations
 
 import asyncio
@@ -99,7 +100,9 @@ async def _bounded_get(
             except ValueError:
                 pass
 
-        content_encoding = response.headers.get("content-encoding", "identity").lower().strip()
+        content_encoding = (
+            response.headers.get("content-encoding", "identity").lower().strip()
+        )
         if content_encoding not in {"identity", "gzip", "deflate"}:
             raise ValueError("Unsupported content encoding")
         decoder = None
@@ -108,13 +111,19 @@ async def _bounded_get(
         content = bytearray()
         wire_size = 0
         # MockTransport may deliver an already-buffered response; real streams stay raw.
-        stream = response.aiter_bytes() if response.is_stream_consumed else response.aiter_raw()
+        stream = (
+            response.aiter_bytes()
+            if response.is_stream_consumed
+            else response.aiter_raw()
+        )
         if response.is_stream_consumed:
             decoder = None
         async for chunk in stream:
             wire_size += len(chunk)
             if wire_size > max_response_bytes:
-                raise ResponseTooLargeError(f"Response exceeds {max_response_bytes} bytes")
+                raise ResponseTooLargeError(
+                    f"Response exceeds {max_response_bytes} bytes"
+                )
             remaining = max_response_bytes - len(content)
             decoded = decoder.decompress(chunk, remaining + 1) if decoder else chunk
             if len(decoded) > remaining:
@@ -128,7 +137,10 @@ async def _bounded_get(
             raise ValueError("Trailing compressed response data")
         encoding = response.encoding or "utf-8"
         raw = bytes(content)
-        is_pdf = raw.startswith(b"%PDF-") or "application/pdf" in response.headers.get("content-type", "").lower()
+        is_pdf = (
+            raw.startswith(b"%PDF-")
+            or "application/pdf" in response.headers.get("content-type", "").lower()
+        )
         return _ResponseSnapshot(
             status_code=response.status_code,
             headers=dict(response.headers),
@@ -146,15 +158,20 @@ def _clean_lines(text: str, max_chars: int) -> str:
     return "\n".join(lines)[:max_chars]
 
 
-_CONTENT_SELECTOR = ".model-card, .markdown-body, main, [role=main], article, [itemprop=articleBody]"
+_CONTENT_SELECTOR = (
+    ".model-card, .markdown-body, main, [role=main], article, [itemprop=articleBody]"
+)
 
 
 def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
     candidates = []
-    for selector in (".model-card, .markdown-body", "main, [role=main]",
-                     "article, [itemprop=articleBody]",
-                     "div[class*=content], div[class*=article], div[class*=post], div[class*=entry], div[class*=body]",
-                     "body"):
+    for selector in (
+        ".model-card, .markdown-body",
+        "main, [role=main]",
+        "article, [itemprop=articleBody]",
+        "div[class*=content], div[class*=article], div[class*=post], div[class*=entry], div[class*=body]",
+        "body",
+    ):
         group = soup.select(selector, limit=128)
         if not group:
             continue
@@ -162,7 +179,11 @@ def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
         candidates.append(largest)
         if len(largest.get_text(" ", strip=True)) >= 200:
             break
-    main = max(candidates, key=lambda tag: len(tag.get_text(" ", strip=True))) if candidates else None
+    main = (
+        max(candidates, key=lambda tag: len(tag.get_text(" ", strip=True)))
+        if candidates
+        else None
+    )
     if main:
         for table in reversed(list(main.find_all("table"))):
             rows = []
@@ -170,8 +191,14 @@ def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
                 cells = []
                 for cell in row.find_all(["td", "th"], recursive=False):
                     value = cell.get_text(" ", strip=True).replace("|", "\\|")
-                    spans = [f"{key}={cell[key]}" for key in ("rowspan", "colspan") if cell.get(key)]
-                    cells.append(value + (" [" + ", ".join(spans) + "]" if spans else ""))
+                    spans = [
+                        f"{key}={cell[key]}"
+                        for key in ("rowspan", "colspan")
+                        if cell.get(key)
+                    ]
+                    cells.append(
+                        value + (" [" + ", ".join(spans) + "]" if spans else "")
+                    )
                 if cells:
                     rows.append("| " + " | ".join(cells) + " |")
             table.replace_with("\n" + "\n".join(rows) + "\n")
@@ -229,7 +256,11 @@ def _normalize_published_at(value: object) -> Optional[str]:
             parsed_date = datetime.strptime(raw, pattern).date()
         except ValueError:
             continue
-        return parsed_date.isoformat() if _valid_publication_year(parsed_date.year) else None
+        return (
+            parsed_date.isoformat()
+            if _valid_publication_year(parsed_date.year)
+            else None
+        )
 
     iso_value = f"{raw[:-1]}+00:00" if raw.endswith(("Z", "z")) else raw
     try:
@@ -312,15 +343,23 @@ def _extract_published_at(soup: BeautifulSoup) -> tuple[Optional[str], str]:
                 break
             contexts.append(parent.get_text(" ", strip=True)[:160])
         context = " ".join(contexts)
-        issued = re.search(r"\b(?:issued on|published on|publication date)\s*:", context, re.IGNORECASE)
-        if "datepublished" not in marker_text and "publish" not in marker_text and not issued:
+        issued = re.search(
+            r"\b(?:issued on|published on|publication date)\s*:", context, re.IGNORECASE
+        )
+        if (
+            "datepublished" not in marker_text
+            and "publish" not in marker_text
+            and not issued
+        ):
             continue
         normalized = _normalize_published_at(tag.get("datetime"))
         if normalized:
             return normalized, "time_date_published"
 
     article_dates = set()
-    for tag in soup.select(".article-date, .published-date, [itemprop=datePublished]")[:50]:
+    for tag in soup.select(".article-date, .published-date, [itemprop=datePublished]")[
+        :50
+    ]:
         if tag.find_parent(["aside", "footer"]):
             continue
         normalized = _normalize_published_at(tag.get_text(" ", strip=True))
@@ -331,7 +370,9 @@ def _extract_published_at(soup: BeautifulSoup) -> tuple[Optional[str], str]:
     return None, ""
 
 
-def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4") -> WebPage:
+def _extract_content(
+    html: str, url: str, max_chars: int, extractor: str = "bs4"
+) -> WebPage:
     """Parse HTML and extract clean text. CPU-bound — run off the event loop.
 
     ``extractor='trafilatura'`` runs trafilatura (favor_recall) and takes the
@@ -342,7 +383,9 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
     """
     soup = BeautifulSoup(html, "lxml")
     published_at, published_at_method = _extract_published_at(soup)
-    for tag in reversed(soup(["script", "style", "noscript", "iframe", "input", "select", "textarea"])):
+    for tag in reversed(
+        soup(["script", "style", "noscript", "iframe", "input", "select", "textarea"])
+    ):
         tag.decompose()
     # Malformed navigation and page-wide ASP.NET forms can contain the article.
     for tag in reversed(soup(["nav", "footer", "header", "aside", "form"])):
@@ -366,10 +409,17 @@ def _extract_content(html: str, url: str, max_chars: int, extractor: str = "bs4"
     if extractor == "trafilatura":
         try:
             import trafilatura
-            traf = trafilatura.extract(
-                html, favor_recall=True, output_format="txt",
-                include_comments=False, include_tables=True,
-            ) or ""
+
+            traf = (
+                trafilatura.extract(
+                    html,
+                    favor_recall=True,
+                    output_format="txt",
+                    include_comments=False,
+                    include_tables=True,
+                )
+                or ""
+            )
             traf_text = _clean_lines(traf, max_chars)
             if len(traf_text) > len(bs4_text):
                 text = traf_text
@@ -457,7 +507,9 @@ async def scrape_url(
     async def _render_if_thin(page: WebPage, resp) -> WebPage:
         # A 200 that extracts thin is usually a JS shell — render it via Jina and
         # keep the longer text (keyless; never returns less than we already have).
-        if not (js_render and len(page.text) < js_render_threshold and _is_html_ish(resp)):
+        if not (
+            js_render and len(page.text) < js_render_threshold and _is_html_ish(resp)
+        ):
             return page
         gate = jina_gate or _get_jina_gate()
         rendered = await gate.render(url, max_chars, client)
@@ -483,11 +535,13 @@ async def scrape_url(
                 return response, current_url, "Too many redirects"
             location = response.headers.get("location", "")
             if not location:
-                return response, current_url, "Redirect response is missing a Location header"
+                return (
+                    response,
+                    current_url,
+                    "Redirect response is missing a Location header",
+                )
             redirect_url = urljoin(current_url, location)
-            unsafe_redirect, redirect_addresses = await resolve_public_url(
-                redirect_url
-            )
+            unsafe_redirect, redirect_addresses = await resolve_public_url(redirect_url)
             if unsafe_redirect:
                 return response, current_url, f"Unsafe redirect URL: {unsafe_redirect}"
             if isinstance(client, PinnedDNSAsyncClient):
@@ -507,14 +561,23 @@ async def scrape_url(
 
                 if resp.status_code == 200:
                     raw = getattr(resp, "content", b"")
-                    is_pdf = "application/pdf" in resp.headers.get("content-type", "").lower()
+                    is_pdf = (
+                        "application/pdf"
+                        in resp.headers.get("content-type", "").lower()
+                    )
                     if is_pdf or (isinstance(raw, bytes) and raw.startswith(b"%PDF-")):
                         from .pdf_reader import read_pdf
-                        result = await read_pdf(raw if isinstance(raw, bytes) else b"", max_chars)
+
+                        result = await read_pdf(
+                            raw if isinstance(raw, bytes) else b"", max_chars
+                        )
                         return WebPage(
-                            url=final_url, title=result.get("title", ""),
-                            text=result.get("text", ""), error=result.get("error"),
-                            source_type="pdf", extraction_warnings=tuple(result.get("warnings", [])),
+                            url=final_url,
+                            title=result.get("title", ""),
+                            text=result.get("text", ""),
+                            error=result.get("error"),
+                            source_type="pdf",
+                            extraction_warnings=tuple(result.get("warnings", [])),
                         )
                     if not _is_html_ish(resp):
                         content_type = str(
@@ -548,7 +611,9 @@ async def scrape_url(
                     if jina_page and jina_page.text:
                         return jina_page
 
-                return WebPage(url=url, title="", text="", error=f"HTTP {resp.status_code}")
+                return WebPage(
+                    url=url, title="", text="", error=f"HTTP {resp.status_code}"
+                )
 
             except httpx.TimeoutException:
                 # A slow site won't get faster on a second try with the same
@@ -559,7 +624,9 @@ async def scrape_url(
             except Exception:
                 if attempt == 0:
                     continue
-                return WebPage(url=url, title="", text="", error="Page retrieval failed")
+                return WebPage(
+                    url=url, title="", text="", error="Page retrieval failed"
+                )
 
         return WebPage(url=url, title="", text="", error="All attempts failed")
     finally:
@@ -599,7 +666,9 @@ async def _try_jina(
         )
         if resp.status_code == 200:
             # Jina already returns clean markdown — no HTML parsing needed.
-            text = "\n".join(l.strip() for l in resp.text.splitlines() if len(l.strip()) > 5)[:max_chars]
+            text = "\n".join(
+                line.strip() for line in resp.text.splitlines() if len(line.strip()) > 5
+            )[:max_chars]
             if text and len(text) > 100:
                 title = url
                 published_at = None
@@ -614,9 +683,7 @@ async def _try_jina(
                     text=text,
                     content_origin="jina_reader",
                     published_at=published_at,
-                    published_at_method=(
-                        "jina_published_time" if published_at else ""
-                    ),
+                    published_at_method=("jina_published_time" if published_at else ""),
                 )
     except Exception:
         pass
