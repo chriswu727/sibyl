@@ -2,6 +2,21 @@
 
 ## 0.4.0 — Unreleased
 
+### Retrieval reliability
+
+- Preserve main/article content inside navigation and page-wide form wrappers;
+  select substantive content instead of empty widgets while retaining table structure.
+- Parse parenthesized and quoted `site:` filters without dropping the final domain.
+- Bound missing-domain follow-up searches and prioritize domain representation
+  before the fetch limit so one publisher cannot consume all initial slots.
+- Prioritize requested reporting periods in ranked retrieval and the unpinned
+  evidence window; preserve historical queries, fiscal-year context, and pinned sources.
+- Reject Unix-epoch timestamp placeholders and recover explicitly labeled issue dates.
+- Retain direct-read HTTP/content-type failure reasons without inventing evidence or
+  enabling third-party fallback by default.
+- Export incomplete host reports with `status="partial"` and visible Markdown/PDF
+  warnings. The job lifecycle still becomes `completed` when the report is finalized.
+
 ### Runtime compatibility
 
 - Raised the minimum Python version to 3.11 and test/audit coverage to 3.11–3.13.

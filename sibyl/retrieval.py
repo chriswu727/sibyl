@@ -27,8 +27,10 @@ from .evidence import (
 )
 from .passages import TextPassage, split_passages
 from .queries import (
+    focused_site_query,
     historical_role_requirement,
     query_requires_decomposition,
+    query_site_hosts,
     search_query_variants,
 )
 from .ranking import (
@@ -39,6 +41,7 @@ from .ranking import (
     lexical_relevance_scores,
 )
 from .scraper import WebPage, scrape_urls
+from .temporal import period_match
 from .search import (
     fetch_wikipedia_extract,
     search_web,
@@ -407,8 +410,7 @@ async def gather_source_bundle(
     effective_chars_per_source = max(500, min(10000, requested_chars_per_source))
     url_attempt_limit = max(effective_max_sources + 2, 12)
     clean_query = str(query or "").strip()
-    site_hosts = [urlsplit("https://" + value).hostname for value in
-                  re.findall(r"(?<![-\w])site:([^\s]+)", clean_query, re.IGNORECASE)]
+    site_hosts = query_site_hosts(clean_query)
     search_queries = search_query_variants(clean_query)
     multi_step_query = query_requires_decomposition(clean_query)
     query_complexity: QueryComplexity = (
@@ -486,6 +488,22 @@ async def gather_source_bundle(
                     include_academic=include_academic,
                 )
             )
+        if len(site_hosts) > 1:
+            result_hosts = {(urlsplit(result.url).hostname or "").lower()
+                            for batch in search_batches for result in batch}
+            missing_hosts = [domain for domain in site_hosts
+                             if not any(host == domain or host.endswith("." + domain) for host in result_hosts)]
+            for domain in missing_hosts[:2]:
+                focused_query = focused_site_query(clean_query, domain)
+                search_queries.append(focused_query)
+                refinement_searches += 1
+                try:
+                    search_batches.append(await search_web(
+                        focused_query, search_engine, max_results=6, client=client,
+                        include_academic=include_academic,
+                    ))
+                except Exception:
+                    refinement_failures += 1
         entity_batches = await asyncio.gather(
             *[
                 search_wikipedia(entity_query, 2, client=client)
@@ -506,6 +524,15 @@ async def gather_source_bundle(
                 if result_key not in seen_results:
                     seen_results.add(result_key)
                     results.append(result)
+        if len(site_hosts) > 1:
+            representatives = []
+            for domain in site_hosts:
+                match = next((result for result in results
+                              if (urlsplit(result.url).hostname or "").lower() == domain
+                              or (urlsplit(result.url).hostname or "").lower().endswith("." + domain)), None)
+                if match and match not in representatives:
+                    representatives.append(match)
+            results = representatives + [result for result in results if result not in representatives]
         seen = set()
         for result in results:
             if result.url.startswith("http") and result.url not in seen:
@@ -752,7 +779,12 @@ async def gather_source_bundle(
     )
     ranked_indices = sorted(
         range(len(source_candidates)),
-        key=lambda index: (-(relevance_scores[index] or 0.0), index),
+        key=lambda index: (
+            -period_match(clean_query, source_candidates[index][1],
+                          source_candidates[index][0].url, source_candidates[index][0].published_at)
+            if selected_ranker != "none" else 0,
+            -(relevance_scores[index] or 0.0), index,
+        ),
     )
     if selected_ranker == "none":
         selected_indices = ranked_indices[:effective_max_sources]
@@ -775,11 +807,12 @@ async def gather_source_bundle(
                 seen_domains.add(domain)
             else:
                 same_domain_indices.append(index)
-        selected_indices = (
-            domain_diverse_indices + same_domain_indices + duplicate_indices
-        )[
-            :effective_max_sources
-        ]
+        selected_indices = sorted(
+            domain_diverse_indices + same_domain_indices + duplicate_indices,
+            key=lambda index: -period_match(clean_query, source_candidates[index][1],
+                                            source_candidates[index][0].url,
+                                            source_candidates[index][0].published_at),
+        )[:effective_max_sources]
     selected_sources = [
         (*source_candidates[index], relevance_scores[index])
         for index in selected_indices

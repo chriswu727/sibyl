@@ -27,6 +27,16 @@ def _report():
 
 
 class TestMarkdownReport(unittest.TestCase):
+    def test_partial_report_displays_warning_without_losing_content(self):
+        report = _report()
+        report.status = "partial"
+        report.limitations = ["Missing supplier disclosures."]
+        restored = ResearchReport.from_dict(report.to_dict())
+        md = _report_to_markdown(restored)
+        self.assertIn("Partial report: unresolved research gaps remain.", md)
+        self.assertIn(report.summary, md)
+        self.assertIn(report.limitations[0], md)
+
     def test_markdown_preserves_formatting(self):
         md = _report_to_markdown(_report())
         self.assertIn("**bold claim**", md)   # markdown text keeps the syntax
@@ -69,6 +79,16 @@ class TestVerificationRendering(unittest.TestCase):
 
 
 class TestPdfGeneration(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("pdftotext"), "Poppler text extractor is optional")
+    def test_partial_pdf_keeps_warning_and_findings(self):
+        report = _report()
+        report.status = "partial"
+        with tempfile.TemporaryDirectory() as directory:
+            path = generate_pdf(report, directory)
+            text = subprocess.run(["pdftotext", path, "-"], capture_output=True, text=True, check=True).stdout
+        self.assertIn("Partial report: unresolved research gaps remain.", text)
+        self.assertIn("Finding one", text)
+
     @unittest.skipUnless(shutil.which("pdftotext"), "Poppler text extractor is optional")
     def test_consecutive_bullets_and_limitations_are_not_silently_lost(self):
         report = _report()

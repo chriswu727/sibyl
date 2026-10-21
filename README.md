@@ -131,7 +131,9 @@ Citation numbering can change after a search. Submit the current revision to
 prevent a stale draft from binding to different sources. Host report completion
 checks citation targets, **not semantic truth**. Reports are immutable once saved.
 New host jobs also check research-plan readiness. If gaps cannot be resolved,
-`allow_incomplete=true` saves a report with those gaps explicitly preserved.
+`allow_incomplete=true` saves a report with those gaps explicitly preserved and
+`report.status="partial"`; the job's `status="completed"` means it is finalized,
+not that research coverage is complete. Markdown/PDF exports display a partial-report warning.
 Source-type labels and coverage checks are heuristics, not an independent reviewer.
 Full PDF-paper ingestion and automatic citation-graph crawling are not implemented;
 use accessible HTML papers, and explicitly follow selected references.

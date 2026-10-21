@@ -306,6 +306,7 @@ class ResearchJobs:
             verification_scope="citation_targets_only",
             research_stats={"retrieval_attempts": len(notebook.attempts), "steps": notebook.attempts},
             research_plan=plan,
+            status="partial" if notebook.require_review and not plan["ready_to_complete"] else "ok",
         )
         if citation_errors(report):
             raise ValueError("Report refers to an unknown source citation.")

@@ -11,6 +11,8 @@ Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a cont
 - `diagnostics.query_complexity` is `multi_step` only for high-confidence dependent fact chains. Sibyl fails those broad calls closed with `multi_step_query`; gather each atomic fact separately instead of assuming one result set proves the chain.
 - For an atomic query with only one relevant domain, Sibyl may issue one bounded exclusion search for another domain. `refinement_searches` and `refinement_failures` expose that attempt; failure of this supplemental search retains the initial evidence instead of failing the whole bundle.
 - Inspect `diagnostics.search_queries` to see the original and any deterministic focused query used during retrieval.
+- Multi-domain `site:` queries may perform up to two missing-domain follow-ups;
+  these also increment `refinement_searches` and retain failures in `refinement_failures`.
 - Inspect `diagnostics.search_providers` to see which search and metadata providers contributed retained candidates. A configured provider can fail over, so do not infer the actual path from environment configuration alone.
 - Compare aggregate `query_term_coverage` with `max_source_query_term_coverage`. A large gap can mean different sources each mention disconnected pieces of the question rather than one source supporting the requested fact.
 - Treat `citation_id` as bundle-scoped. Persist `bundle_id`, `source_id`, and `passage_id` together when storing evidence.
@@ -41,6 +43,11 @@ Historical role questions with an explicit year require one local statement that
 ## Publication time
 
 `published_at` is a normalized ISO 8601 date or timestamp when Sibyl finds explicit publication metadata; it is `null` when no supported value is present. `published_at_method` identifies the exact metadata path, such as `meta_article_published_time`, `json_ld_date_published`, or `jina_published_time`. It never claims that the publisher-supplied value is true, and consumers must not substitute `retrieved_at` for a missing publication time.
+
+Explicit article-date text can supply `published_at_method="article_date_text"`
+when metadata is absent and the supported publication markers are unambiguous.
+Unix-epoch timestamp placeholders are rejected. Date parsing and period matching
+are hints, not a guarantee that a page is current or its claims are correct.
 
 ## Independent content
 
