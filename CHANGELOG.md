@@ -2,6 +2,16 @@
 
 ## 0.4.0 — Unreleased
 
+### Documentation and discoverability
+
+- Reconcile the GitHub landing page, installation/configuration examples, evidence
+  contracts, operations, architecture, release readiness, and active roadmap.
+- Separate historical experiments from current engineering evidence; remove
+  unsupported adjusted-accuracy and model-performance claims from current guidance.
+- Add a documentation index and offline checks for repository links and anchors.
+- Keep PyPI 0.3.0 distinct from the unreleased 0.4.0 source workflow; no release
+  gates are waived by the documentation refresh.
+
 ### Operational hardening
 
 - Added optional resource-bounded text-PDF ingestion with page markers, explicit
@@ -73,7 +83,7 @@
   disclose citation-target-only validation.
 - Fixed PDF cursor positioning that could silently omit consecutive list items.
 - Parallel model failures now cancel and await sibling calls before returning.
-- Keyless MCP now exposes eleven tools; the complete catalog contains nineteen.
+- The current keyless MCP profile exposes twelve tools; the full catalog contains twenty.
   Model operations have a 600-second default deadline. Research jobs additionally
   bound retrieval attempts, model-call count, reserved output tokens, and storage.
 - Repositioned the product around deep research and traceable reports, without a

@@ -4,6 +4,9 @@ Sibyl is a local command-line and stdio MCP server. The project does not run a
 Sibyl cloud service, user account system, analytics endpoint, or telemetry
 collector.
 
+This policy describes unreleased `main`. See the [documentation index](docs/README.md)
+for current installation and [Operations](docs/OPERATIONS.md) for local retention controls.
+
 ## Data Sibyl handles
 
 Sibyl may process research queries, search results, public URLs, downloaded page

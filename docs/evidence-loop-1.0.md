@@ -5,6 +5,11 @@ than one focused retrieval. It uses ordinary MCP tool calls and does not use MCP
 sampling or a hidden Sibyl model. The calling host proposes atomic queries and
 performs the final synthesis.
 
+For durable investigations, reviews, and report export, use
+[persistent research jobs](USAGE.md#persistent-research-jobs) instead. An evidence
+loop is a short-lived retrieval primitive, not a persistent job or an autonomous
+researcher. This contract describes unreleased `main`.
+
 ## Start
 
 Call the tool with an original question:
@@ -53,9 +58,10 @@ returns `status: "ready"` and `next_action: "synthesize"`.
 - Loops expire ten minutes after their most recent call.
 - One process retains at most 64 loops in memory and never writes them to disk.
 - A server restart invalidates every loop ID.
-- Search-provider usage is charged per actual retrieval step. A SourceBundle
-  can itself make one bounded exclusion refinement, so provider request count
-  can exceed the number of loop steps.
+- A retrieval step can fan out to complementary providers and issue an exclusion
+  refinement or up to two missing-domain searches. Provider request count can
+  exceed loop steps. Paid-provider usage follows the provider's own billing rules;
+  no paid provider is enabled implicitly.
 - `budget_exhausted` and `failed` are not synthesis-ready states.
 
 The host must retain the full bundle returned for each current step, including

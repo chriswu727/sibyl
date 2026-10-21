@@ -16,11 +16,21 @@ The workflow filename and environment name are part of the OIDC identity. Renami
 
 ## Release checklist
 
-1. Update `sibyl.__version__`, `server.json`, and the PyPI package version inside `server.json`; add the matching `CHANGELOG.md` section in a pull request.
+Prerequisite: every gate in [Launch readiness](LAUNCH_READINESS.md#release-gates)
+must be satisfied, including live/report-quality evaluation and external beta
+feedback. The current 0.4.0 development version is not cleared for release.
+`server.json` is the next-version manifest, not a statement that PyPI/Registry
+already contains that version. `check_release.py` validates matching version
+strings; it does not reject an Unreleased changelog or enforce quality gates.
+
+1. Update `sibyl.__version__`, `server.json`, and its package version together; date the matching `CHANGELOG.md` section and remove its Unreleased label only after the gates pass.
 2. Run the complete local verification:
 
    ```bash
    .venv/bin/python -m unittest discover tests -v
+   .venv/bin/python scripts/check_docs.py
+   .venv/bin/python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
+   .venv/bin/python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
    .venv/bin/python scripts/eval_retrieval.py --ranker lexical
    .venv/bin/python scripts/eval_retrieval_pipeline.py --ranker lexical
    .venv/bin/python scripts/eval_source_quality.py
@@ -32,15 +42,21 @@ The workflow filename and environment name are part of the OIDC identity. Renami
    the optional report pipeline changed, run its model-backed evaluation with an
    explicit provider budget and retain the model, configuration, and raw result.
 
+   Install the selected extras with `.[report,finance,extract,pdf,monitor]` first.
+   The release workflow currently installs report/finance/extract and smoke-tests
+   the core wheel. Extend it to PDF/monitoring extras and the authenticated
+   monitoring smoke check before the next release; the broader PR CI matrix
+   does not replace clean-wheel verification of those extras.
+
 3. Build and validate fresh distributions, not files left in `dist/` from an older version:
 
    ```bash
-   rm -rf dist
+   # Use a new empty output directory for this candidate.
    .venv/bin/python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1
    .venv/bin/python -m pip_audit --vulnerability-service osv --skip-editable
    .venv/bin/python scripts/check_release.py v0.4.0
-   .venv/bin/python -m build
-   .venv/bin/python -m twine check dist/*
+   .venv/bin/python -m build --outdir /tmp/sibyl-dist-0.4.0-candidate
+   .venv/bin/python -m twine check /tmp/sibyl-dist-0.4.0-candidate/*
    ```
 
 4. Merge the release pull request and verify all required checks on `main`.

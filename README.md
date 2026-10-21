@@ -6,14 +6,14 @@
 
 [![Tests & security](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=0f766e)](https://pypi.org/project/sibyl-research/)
-[![Python](https://img.shields.io/pypi/pyversions/sibyl-research)](https://pypi.org/project/sibyl-research/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-0f766e)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
 **A Deep Research MCP that turns complex questions into traceable reports through multi-round retrieval, source tracking, and evidence review.**
 
 Plan. Investigate. Check the evidence. Deliver a report—with its limitations.
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [Architecture](docs/MCP_ARCHITECTURE.md) · [Tool reference](docs/USAGE.md) · [Security](SECURITY.md)
+[Quick start](#quick-start) · [Research workflow](#research-workflow) · [Documentation](docs/README.md) · [Operations](docs/OPERATIONS.md) · [Roadmap](docs/QUALITY_BUILD_PLAN.md)
 
 </div>
 
@@ -51,10 +51,28 @@ configuration and billing; it does not inherit the host's subscription.
   cancellation, and local SQLite checkpoints; unfinished drafts may be regenerated.
 - **Portable reports:** Markdown and JSON without an LLM dependency, optional PDF,
   source provenance, and explicit verification scope.
+- **Paper reading:** optional text-PDF extraction with page markers, bounded
+  child processes, and explicit truncation or unreadable-page warnings.
+- **Local observability:** authenticated, read-only health, readiness, status,
+  and Prometheus endpoints; no research text or credentials in metrics.
 
 > **Public beta.** Engineering hardening does not imply production-grade retrieval
 > accuracy. The historical live evaluation still misses readiness and precision
 > gates. See [quality and limitations](#quality-and-limitations).
+
+### Available now
+
+| Surface | Current status |
+|---|---|
+| Source checkout | 0.4.0 development version; use the installation below |
+| Published package | PyPI 0.3.0; does not contain the workflow documented here |
+| Default MCP profile | 12 keyless tools; 20 tools in the configured full profile |
+| Engineering evidence | Python 3.11–3.13 CI, real stdio/monitoring smoke tests, dependency audits |
+| Research-quality evidence | Historical live gates remain unmet; no current same-model superiority claim |
+
+The [release readiness record](docs/LAUNCH_READINESS.md) separates current
+engineering evidence from dated experiments. The [roadmap](docs/QUALITY_BUILD_PLAN.md)
+tracks remaining work; it is not a list of already available features.
 
 ## Quick start
 
@@ -170,7 +188,7 @@ data; the host must keep it separate from its own instructions.
 | `gather_sources(query)` | The same bundle rendered as readable source blocks |
 | `gather_evidence(question)` | A bounded trace of up to four atomic retrieval steps |
 | `quick_search(query)` | Search hits without full-page extraction |
-| `read_url(url)` | Clean text from one public HTTP(S) page |
+| `read_url(url)` | Clean text from a public HTML page or optional text PDF |
 
 For multi-step questions, start `gather_evidence`, follow `next_action`, and finish
 with supporting step IDs. Only `status="ready"` permits synthesis. Loops expire
@@ -203,7 +221,9 @@ not import the LLM SDK. See the [module map and design decisions](docs/MCP_ARCHI
 - **Public-network fetches:** DNS validation and IP pinning, redirect revalidation,
   and separately bounded compressed and decompressed page bodies.
 - **Controlled artifacts:** MCP reports and charts stay under `SIBYL_OUTPUT_ROOT`,
-  use unique names, and are published atomically with owner-only file permissions.
+  use unique names and per-directory quotas, and are published atomically with
+  owner-only file permissions. Failed oversized checkpoints retain prior evidence
+  and consumed budgets.
 - **Continuous checks:** offline tests, real stdio smoke tests, retrieval
   regressions, dependency audits, and Dependabot.
 
@@ -224,8 +244,9 @@ Keep the default install small; opt into integrations you actually need.
 | `[monitor]` | Authenticated, loopback-only health, status, and Prometheus metrics |
 | `[rerank]` | Local FlashRank reranking, with explicit lexical fallback |
 
-Report tools require configured credentials or a local/API-compatible model
-backend. Finance tools require an explicit `finance` or `full` MCP profile.
+Autonomous and one-shot model tools require configured credentials or a
+local/API-compatible backend. PDF export needs the rendering extra, not a model
+call. Finance tools require an explicit `finance` or `full` MCP profile.
 Tavily search and Jina rendering are opt-in and disclose queries or URLs to those
 providers. See [configuration, profiles, and all 20 tools](docs/USAGE.md).
 
@@ -257,12 +278,13 @@ table/formula layout. Incremental report refresh is not yet supported.
 
 [Launch gates](docs/LAUNCH_READINESS.md) ·
 [Historical evaluation details](docs/USAGE.md#evaluation-and-reproducibility) ·
-[Performance notes](docs/PERFORMANCE.md)
+[Performance and measurement](docs/PERFORMANCE.md) · [Next milestones](docs/QUALITY_BUILD_PLAN.md)
 
 ## Contributing
 
 ```bash
 python -m pip install -e '.[report,finance,extract,pdf,monitor]'
+python scripts/check_docs.py
 python -m unittest discover tests -v
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor

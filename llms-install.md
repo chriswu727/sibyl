@@ -47,12 +47,14 @@ The default output should identify the `keyless` profile and list
 `read_url`, `start_research`, `get_research`, `continue_research`,
 `assess_research`, `complete_research`, `cancel_research`, and `save_report`.
 
-## Optional production search
+## Optional PDF input and monitoring
 
 For text-PDF input and local monitoring, install `.[pdf,monitor]`. PDF ingestion
 needs a POSIX host and does not perform OCR. Monitoring is disabled by default;
 see [Operations](docs/OPERATIONS.md) before enabling `--monitor-port` with a
 host-supplied `SIBYL_MONITOR_TOKEN`. It is not a remote MCP endpoint.
+
+## Optional configured search
 
 Tavily can replace the anonymous general-web path while the other public
 sources remain available:
@@ -78,6 +80,10 @@ empty Tavily search falls back to the keyless chain. Crossref is queried for
 academic and DOI-oriented questions without a key; `CROSSREF_MAILTO` is
 optional.
 
+The `${VARIABLE}` strings in these JSON examples are placeholders. Environment
+interpolation depends on the MCP host and is not performed by Sibyl. Configure
+the host's documented secret mechanism; do not pass these strings literally.
+
 ## Optional experimental report profile
 
 Install the report extra from the checkout with
@@ -99,3 +105,6 @@ Install the report extra from the checkout with
 
 Do not put a literal secret in a committed MCP configuration. Use the host's
 secret or environment-variable mechanism.
+
+Use [Usage](docs/USAGE.md) for all profiles and tools, [Operations](docs/OPERATIONS.md)
+for monitoring, and [Launch readiness](docs/LAUNCH_READINESS.md) for release status.
