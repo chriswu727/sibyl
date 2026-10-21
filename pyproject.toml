@@ -39,7 +39,7 @@ finance = [
     "yfinance>=0.2.0",
     "matplotlib>=3.8.0",
     "pandas>=2.0.0",
-    "pytrends>=4.9.0",
+    "pytrends>=4.9.2",
 ]
 extract = ["trafilatura>=2.0,<3.0"]
 pdf = ["pypdf>=6.21.2,<7"]
@@ -54,7 +54,7 @@ all = [
     "yfinance>=0.2.0",
     "matplotlib>=3.8.0",
     "pandas>=2.0.0",
-    "pytrends>=4.9.0",
+    "pytrends>=4.9.2",
     "trafilatura>=2.0,<3.0",
     "flashrank>=0.2.10,<0.3",
 ]
