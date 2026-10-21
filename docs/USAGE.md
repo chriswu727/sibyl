@@ -186,7 +186,12 @@ Search snippets are leads and are excluded from report source selection.
 
 Choose `source_policy="academic"` to enable scholarly discovery through the existing
 search/Crossref path, or `primary` (default) for general research. Supply up to
-sixteen `preferred_domains` such as a relevant official documentation host. Match
+sixteen `preferred_domains` such as a relevant official documentation host. The
+first two also receive bounded domain-focused discovery searches, unless the
+query already contains an explicit `site:` constraint. Preferences prioritize
+relevant candidates before fetching; they are not an allowlist and do not exclude
+useful sources from other domains. All preferences still apply during final
+source selection. Match
 the source type to the claim: papers for methods and experiments, current official
 docs for product capabilities and pricing. Preprints and publisher-platform entries
 are not automatically peer reviewed. Crossref metadata does not count as full text.

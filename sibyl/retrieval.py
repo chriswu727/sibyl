@@ -57,6 +57,7 @@ from .search import (
     search_wikipedia,
     wikipedia_lookup,
 )
+from .source_policy import matches_domain, normalize_domains
 from .temporal import period_match
 
 _ACADEMIC_QUERY_RE = re.compile(
@@ -188,6 +189,7 @@ async def gather_source_bundle(
     extractor: str = "bs4",
     jina_fallback: bool = False,
     include_academic: bool | None = None,
+    preferred_domains: list[str] | None = None,
 ) -> SourceBundle:
     started_at = time.monotonic()
     requested_ranker = str(ranker or "").strip().lower()
@@ -221,6 +223,7 @@ async def gather_source_bundle(
     url_attempt_limit = max(effective_max_sources + 2, 12)
     clean_query = str(query or "").strip()
     site_hosts = query_site_hosts(clean_query)
+    preferred_hosts = normalize_domains(preferred_domains or [])
     search_queries = search_query_variants(clean_query)
     multi_step_query = query_requires_decomposition(clean_query)
     query_complexity: QueryComplexity = (
@@ -304,6 +307,24 @@ async def gather_source_bundle(
                     include_academic=include_academic,
                 )
             )
+        if preferred_hosts and not site_hosts:
+            base_query = search_queries[-1]
+            for domain in preferred_hosts[:2]:
+                focused_query = f"{base_query} site:{domain}"
+                search_queries.append(focused_query)
+                refinement_searches += 1
+                try:
+                    search_batches.append(
+                        await search_web(
+                            focused_query,
+                            search_engine,
+                            max_results=4,
+                            client=client,
+                            include_academic=include_academic,
+                        )
+                    )
+                except Exception:
+                    refinement_failures += 1
         if len(site_hosts) > 1:
             result_hosts = {
                 (urlsplit(result.url).hostname or "").lower()
@@ -358,6 +379,27 @@ async def gather_source_bundle(
                 if result_key not in seen_results:
                     seen_results.add(result_key)
                     results.append(result)
+        if selected_ranker != "none":
+            scores = lexical_relevance_scores(
+                clean_query, [(result.title, result.snippet) for result in results]
+            )
+            results = [
+                result
+                for _, result in sorted(
+                    zip(scores, results),
+                    key=lambda item: (
+                        -period_match(clean_query, item[1].title, item[1].url, None),
+                        -int(
+                            item[0] > 0
+                            and matches_domain(
+                                (urlsplit(item[1].url).hostname or "").lower(),
+                                preferred_hosts,
+                            )
+                        ),
+                        -item[0],
+                    ),
+                )
+            ]
         if len(site_hosts) > 1:
             representatives = []
             for domain in site_hosts:

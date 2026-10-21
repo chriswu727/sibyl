@@ -89,6 +89,17 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         ):
             return await self.jobs.continue_job(job["job_id"], "Focused question")
 
+    async def test_preferred_domains_reach_discovery(self):
+        job = self.start(preferred_domains=["docs.example.com"])
+        with mock.patch(
+            "sibyl.research_jobs.gather_source_bundle",
+            mock.AsyncMock(return_value=evidence_bundle("Focused question")),
+        ) as gather:
+            await self.jobs.continue_job(job["job_id"], "Focused question")
+        self.assertEqual(
+            gather.call_args.kwargs["preferred_domains"], ["docs.example.com"]
+        )
+
     async def test_host_flow_survives_restart_and_exports_json(self):
         job = await self.retrieve(self.start())
         await self.runtime.aclose()

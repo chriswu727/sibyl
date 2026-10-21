@@ -2,6 +2,15 @@
 
 ## 0.4.0 — Unreleased
 
+### Research discovery
+
+- Use preferred domains during host and autonomous discovery, with at most two
+  focused searches per retrieval round while retaining general-web candidates.
+- Rank discovered candidates before spending the bounded page-fetch budget;
+  preserve explicit site constraints and the no-ranking option.
+- Add a fixed ten-case live MCP collection suite with an explicit report rubric
+  and retained per-tool traces, without invoking additional model providers.
+
 ### Extraction, report presentation, and runtime recovery
 
 - Fall back from placeholder HTML titles to metadata/headings; normalize prose

@@ -379,6 +379,7 @@ class ResearchJobs:
                     include_academic=True
                     if notebook.source_policy == "academic"
                     else None,
+                    preferred_domains=notebook.preferred_domains,
                 ),
                 min(remaining, self.runtime.policy.tool_timeout * 0.9),
             )

@@ -151,6 +151,7 @@ class Researcher:
                         include_academic=True
                         if notebook.source_policy == "academic"
                         else None,
+                        preferred_domains=notebook.preferred_domains,
                     )
                 except Exception:
                     notebook.finish_search(search_query, None)

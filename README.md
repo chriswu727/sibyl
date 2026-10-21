@@ -88,6 +88,11 @@ screenshot or a live accuracy benchmark. The host authors the reasoning and
 conclusions. Sibyl records the gap, counterevidence read, citation targets,
 exports, and restartable state. Two official pages still represent one publisher.
 
+**[Explore ten live research cases](docs/examples/host-suite/README.md):** papers,
+database documentation, security guidance, and semiconductor-market revisions.
+The record includes adaptive follow-ups, host-supplied source disclosures, cited
+findings, verified Markdown/JSON exports, and an explicit future-outcome abstention.
+
 ## Quick start
 
 Requires Python 3.11+. **The current evidence API and runtime/security upgrade
