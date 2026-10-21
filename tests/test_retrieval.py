@@ -10,6 +10,84 @@ from sibyl.search import SearchResult
 
 
 class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
+    async def test_preferred_domains_add_bounded_searches_without_excluding_others(
+        self,
+    ):
+        general = SearchResult(
+            "retry safety", "https://other.example/retries", "retry safety"
+        )
+        preferred = SearchResult(
+            "retry safety", "https://docs.example/retries", "retry safety"
+        )
+        results = [[general], [preferred], []]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(side_effect=results)
+            ) as search,
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[])
+            ) as scrape,
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "retry safety",
+                client=object(),
+                preferred_domains=["docs.example", "second.example", "third.example"],
+            )
+        self.assertEqual(
+            [call.args[0] for call in search.await_args_list],
+            [
+                "retry safety",
+                "retry safety site:docs.example",
+                "retry safety site:second.example",
+            ],
+        )
+        self.assertEqual(scrape.call_args.args[0], [preferred.url, general.url])
+        self.assertEqual(bundle.diagnostics.refinement_searches, 2)
+
+    async def test_search_candidates_are_ranked_before_fetch_budget_is_spent(self):
+        results = [
+            SearchResult("unrelated", f"https://noise.example/{i}", "")
+            for i in range(13)
+        ]
+        target = SearchResult(
+            "quantization memory accuracy",
+            "https://paper.example/research",
+            "quantization memory accuracy",
+        )
+        results.append(target)
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[])
+            ) as scrape,
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            await gather_source_bundle("quantization memory accuracy", client=object())
+        self.assertEqual(scrape.call_args.args[0][0], target.url)
+        self.assertEqual(len(scrape.call_args.args[0]), 12)
+
+    async def test_explicit_site_constraint_takes_priority_over_domain_hints(self):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=[])
+            ) as search,
+            mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[])),
+        ):
+            await gather_source_bundle(
+                "retry safety site:only.example",
+                client=object(),
+                preferred_domains=["other.example"],
+            )
+        self.assertEqual(search.await_count, 1)
+        self.assertEqual(search.call_args.args[0], "retry safety site:only.example")
+
     async def test_missing_site_gets_one_focused_followup(self):
         first = SearchResult("First", "https://first.example/results", "", "web")
         second = SearchResult("Second", "https://second.example/results", "", "web")

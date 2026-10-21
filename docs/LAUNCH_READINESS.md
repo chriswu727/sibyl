@@ -160,6 +160,53 @@ the PDF-enabled research replay. Fresh wheel/sdist builds passed metadata checks
 All three clean-wheel installation profiles passed. The local dependency audit
 found no known vulnerabilities, and dependency consistency checks passed.
 
+### Discovery follow-up, 2026-10-21
+
+Preferred domains now participate in bounded discovery searches, and candidates
+are ranked before the fetch limit rather than only after page retrieval. The
+[retained 66-case, three-repeat run](../evals/results/live-retrieval-discovery-2026-10-21.json)
+used unchanged metric-v2 thresholds, keyless search, and concurrency two.
+Its retrieval implementation SHA-256 was
+`b2d00c4e49006f1738c28e35b65483fcaf4fefd510d57ec932c4347dfa177f5b`.
+
+| Metric | Observed | Frozen gate | Result |
+|---|---:|---:|---|
+| Answer coverage | 87.0% | 80% | Pass |
+| Trap-safe outcomes | 91.7% | 80% | Pass |
+| Repeat stability | 60.6% | 90% | Fail |
+| Answerable ready rate | 60.5% | 75% | Fail |
+| Ready-state answer precision | 99.0% | 95% | Pass |
+| p95 retrieval latency | 11.1 s | 30 s | Pass |
+
+The command exited 1; publication is not cleared. These sequential live runs
+are not controlled A/B experiments. Higher answer coverage and lower readiness
+can coexist because retrieved answer text alone does not satisfy every source
+sufficiency rule. No thresholds were weakened and no cache was introduced to
+make repeat outcomes identical. The generic benchmark supplies no preferred
+domains; the separate host suite exercises that part of the discovery change.
+
+The [ten-case live host suite](examples/host-suite/README.md) completed real MCP
+investigations with inspected evidence, adaptive follow-ups, reviews, and verified
+Markdown/JSON exports. Nine reports are structurally complete and one intentionally
+partial. Seven cases needed host-supplied source URLs; this is not a discovery
+success rate or an independent semantic evaluation. The optional autonomous
+model-backed gate remains separate and unrun.
+
+Local verification passed 452 tests, scoped Ruff formatting/lint, the five-module
+mypy gate, offline evaluation gates, real MCP/monitoring checks, the PDF-enabled
+workflow replay, package metadata checks, and a clean core-wheel installation.
+The clean-wheel environment was removed after verification. The other wheel
+profiles are covered by the preceding engineering baseline and CI; they were not
+rerun locally for this discovery-only change.
+
+The initial PR CI run exposed a timing-dependent soak assertion. Non-timeout
+cycles now have a separate deadline budget; timeout cycles accept either the
+inner job's failed-attempt response or the outer runtime's `TimeoutError`.
+Cancellation and unrelated errors remain strict, with two additional regressions.
+No worker, evidence, budget, file, descriptor, or shutdown assertions were removed.
+A new 300-round local run with monitoring and 31 PDF-worker calls passed in
+28.944 seconds, retaining 146,779 traced Python bytes and seven final descriptors.
+
 ## Historical live evidence
 
 The retained formal runs are from July 2026 and do not measure the current

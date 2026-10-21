@@ -36,6 +36,7 @@ reports; its current maturity is public beta.
 | [Roadmap](QUALITY_BUILD_PLAN.md) | Implemented baseline, remaining work, acceptance criteria |
 | [Launch readiness](LAUNCH_READINESS.md) | Dated engineering evidence and unmet release gates |
 | [Live host self-evaluation](examples/idempotency-live/README.md) | Failed source discovery, successful direct reads, and an explicit partial report |
+| [Ten-case live host suite](examples/host-suite/README.md) | Adaptive investigations, cited findings, source-discovery limitations, and verified exports |
 | [Historical host experiment](EVAL_HOST_CLAUDE.md) | Exploratory results and methodological limitations |
 | [Contributing](../CONTRIBUTING.md) | Development checks and documentation requirements |
 | [Release runbook](RELEASING.md) | Gated packaging, publication, and post-release validation |

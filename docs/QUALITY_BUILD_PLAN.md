@@ -30,25 +30,25 @@ is preserved in Git history, not a source of current defaults or quality claims.
   cited-source/background grouping across report renderers.
 - A bounded runtime soak with real SQLite, optional monitoring/PDF workers,
   injected upstream failures, resource sampling, and stopped-store backup/restore.
+- Preferred-domain discovery and relevance ranking before the bounded fetch limit.
+- A ten-case live host research suite with adaptive follow-ups, inspected evidence,
+  explicit discovery failures, and verified Markdown/JSON delivery.
 
 ## Before release
 
 ### 1. Establish a current research-quality baseline
 
-Select 10–15 representative investigations covering academic synthesis, market
-research, technical comparison, multi-hop facts, conflicting sources, and missing
-evidence. Include official HTML and text PDFs. Freeze the questions, scoring
-rubric, host/model configuration, allowed sources, and budget before execution.
+The [ten-case host baseline](examples/host-suite/README.md) is complete: frozen
+questions/rubric, live production MCP, evidence inspection, gap-led follow-ups,
+reviews, and ten verified Markdown/JSON deliveries. Nine reports are structurally
+complete and one is intentionally partial. Seven investigations required
+host-supplied URLs; do not count them as successful automatic discovery. The
+record is host-authored and self-scored, not independent evaluation.
 
-Run the complete MCP workflow: plan, retrieve, inspect, identify gaps, retrieve
-again, assess, and export. Retain tool traces and reports with secrets removed.
-Score question coverage, claim-to-passage support, primary-source discovery,
-counterevidence, time/metric consistency, correct abstention, latency, and cost.
-Use human spot-checks; an LLM judge is not ground truth.
-
-Acceptance: dated, reproducible evidence of the whole workflow, including failures.
-A comparison with ordinary search must hold model, source access, and budget
-constant. Model/API/subscription consumption requires explicit budget approval.
+The remaining model-backed evaluation concerns the optional autonomous path,
+not a requirement to repeatedly rebuild the host suite. It needs an explicit
+model/configuration and authorized API budget. Any future comparison with
+ordinary search must hold model, source access, and budget constant.
 
 ### 2. Fix measured retrieval and report failures
 
@@ -61,15 +61,15 @@ Acceptance: targeted regressions pass, followed by the committed 66-case,
 three-repeat live retrieval gate with its existing thresholds. The small research
 baseline supplements that gate; it does not replace or waive it.
 
-### 3. Validate sustained operation and faults
+### 3. Retain the verified runtime boundary
 
-Keep the bounded runtime soak passing, then extend it to longer-duration
-concurrency and resource-pressure scenarios. The current fixture covers repeated
+Keep the bounded runtime soak passing. The current fixture covers repeated
 upstream failure, cancellation, timeouts, descriptor/task/file growth, worker
 cleanup, and backup/restore with the runtime stopped. It is not an RSS benchmark
 or a long-running public-provider availability test.
 
-Add bounded retrieval-stage metrics where needed: fetch outcomes, parser
+Longer-duration scenarios and additional metrics are follow-up enhancements,
+not a reason to reopen the completed runtime work. Possible metrics include fetch outcomes, parser
 failures, investigation rounds, and insufficient-evidence rates. Keep questions,
 URLs, job IDs, and evidence out of metric labels.
 
