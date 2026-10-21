@@ -23,6 +23,7 @@ reports/
 !SECURITY.md
 !llms-install.md
 !docs/*.md
+!docs/**/*.md
 !.github/dependabot.yml
 
 # eval cache
