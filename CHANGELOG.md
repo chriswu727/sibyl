@@ -10,6 +10,9 @@
   preserve explicit site constraints and the no-ranking option.
 - Add a fixed ten-case live MCP collection suite with an explicit report rubric
   and retained per-tool traces, without invoking additional model providers.
+- Isolate failure/cancellation soak cycles from the short timeout budget; check
+  both nested timeout outcomes without hiding unrelated exceptions or relaxing
+  resource-cleanup assertions.
 
 ### Extraction, report presentation, and runtime recovery
 

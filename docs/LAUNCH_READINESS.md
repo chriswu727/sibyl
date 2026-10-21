@@ -192,12 +192,20 @@ partial. Seven cases needed host-supplied source URLs; this is not a discovery
 success rate or an independent semantic evaluation. The optional autonomous
 model-backed gate remains separate and unrun.
 
-Local verification passed 450 tests, scoped Ruff formatting/lint, the five-module
+Local verification passed 452 tests, scoped Ruff formatting/lint, the five-module
 mypy gate, offline evaluation gates, real MCP/monitoring checks, the PDF-enabled
 workflow replay, package metadata checks, and a clean core-wheel installation.
 The clean-wheel environment was removed after verification. The other wheel
 profiles are covered by the preceding engineering baseline and CI; they were not
 rerun locally for this discovery-only change.
+
+The initial PR CI run exposed a timing-dependent soak assertion. Non-timeout
+cycles now have a separate deadline budget; timeout cycles accept either the
+inner job's failed-attempt response or the outer runtime's `TimeoutError`.
+Cancellation and unrelated errors remain strict, with two additional regressions.
+No worker, evidence, budget, file, descriptor, or shutdown assertions were removed.
+A new 300-round local run with monitoring and 31 PDF-worker calls passed in
+28.944 seconds, retaining 146,779 traced Python bytes and seven final descriptors.
 
 ## Historical live evidence
 

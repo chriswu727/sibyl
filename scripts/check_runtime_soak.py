@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import time
 import tracemalloc
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
@@ -28,6 +29,18 @@ from sibyl.storage import ArtifactStore
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise RuntimeError(message)
+
+
+def check_outcomes(mode: int, results: list) -> None:
+    expected = {
+        0: (dict,),
+        1: (asyncio.CancelledError,),
+        2: (dict, TimeoutError),
+    }[mode]
+    require(
+        all(isinstance(result, expected) for result in results),
+        f"Unexpected outcome in mode {mode}: {[type(result).__name__ for result in results]}",
+    )
 
 
 def descriptor_count() -> int | None:
@@ -80,6 +93,9 @@ async def check(rounds: int, monitor: bool = False, pdf: bool = False) -> dict:
                 async def cycle(index: int) -> None:
                     nonlocal pdf_calls
                     mode = index % 3
+                    runtime.policy = replace(
+                        runtime.policy, tool_timeout=0.2 if mode == 2 else 5.0
+                    )
                     entered = asyncio.Event()
                     release = asyncio.Event()
                     count = 0
@@ -129,17 +145,8 @@ async def check(rounds: int, monitor: bool = False, pdf: bool = False) -> dict:
                             results = await asyncio.gather(
                                 *tasks, return_exceptions=True
                             )
-                            require(
-                                all(
-                                    isinstance(result, asyncio.CancelledError)
-                                    for result in results
-                                )
-                                if mode == 1
-                                else all(
-                                    isinstance(result, dict) for result in results
-                                ),
-                                "Unexpected failure/cancellation outcome",
-                            )
+                            # Either nested deadline may win under scheduler/IO pressure.
+                            check_outcomes(mode, results)
                         finally:
                             for task in tasks:
                                 task.cancel()
