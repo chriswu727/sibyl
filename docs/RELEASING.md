@@ -24,6 +24,13 @@ and tool schema lag the current repository. Its listing is not evidence that
 the latest commit has built successfully. The product page describes an older
 source preview and needs to be reconciled with the release candidate.
 
+The GitHub `v0.4.0b1` prerelease and both distribution assets are available.
+Its first PyPI attempt failed before upload: the pinned publisher v1.14.0
+rejected Metadata 2.5, although the build job's Twine 7 validation passed.
+The corrected workflow uses publisher v1.14.3 and can recover the existing
+release assets without rebuilding or replacing them. PyPI and Registry
+availability still require verification after the protected publication job.
+
 `glama.json` declares the repository maintainer for directory integration. It
 does not publish a package, refresh a listing on demand, or prove a successful
 build. If directory refresh requires account access or manual review, record
@@ -121,6 +128,25 @@ changelog. This does not enforce the research-quality gates.
    the matching PyPI/`uvx` installation instructions.
 
 Never reuse a version already uploaded to PyPI. If publishing fails after PyPI accepts one distribution, diagnose the workflow and release a new patch version if any uploaded file must change.
+
+## Recover a publisher-only failure
+
+Use this only when the release assets are already built and tested, and no
+uploaded distribution needs to change. Do not move the tag or overwrite assets.
+
+After merging a publisher fix, dispatch the current `release.yml` on `main`:
+
+```bash
+gh workflow run release.yml --ref main -f release_tag=v0.4.0b1
+```
+
+The recovery path checks out the requested tag, repeats release validation,
+tests, and dependency audits, downloads its published wheel and source archive,
+and verifies both SHA-256 digests against the GitHub release metadata. It then
+runs Twine and all clean-wheel checks before the existing `pypi` environment
+approval. It does not rebuild or replace GitHub assets, disable metadata
+validation, skip existing PyPI files, or bypass approval. Registry publication
+uses the same release tag after successful PyPI publication.
 
 Prereleases are opt-in. An unpinned `pip install sibyl-research` may continue to
 select 0.3.0 as the latest stable version. Publish beta installation examples
