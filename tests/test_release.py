@@ -50,6 +50,7 @@ class TestReleaseValidation(unittest.TestCase):
             json.dumps(
                 {
                     "name": "io.github.chriswu727/sibyl",
+                    "description": "Traceable research reports.",
                     "version": version,
                     "packages": [{"version": version}],
                 }
@@ -66,6 +67,32 @@ class TestReleaseValidation(unittest.TestCase):
         temporary, root = self._release_tree()
         with temporary:
             self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
+
+    def test_rejects_invalid_registry_descriptions(self):
+        for description in (None, 123, "", "   ", "x" * 101):
+            with self.subTest(description=description):
+                temporary, root = self._release_tree()
+                with temporary:
+                    manifest = root / "server.json"
+                    server = json.loads(manifest.read_text())
+                    server["description"] = description
+                    manifest.write_text(json.dumps(server))
+                    with self.assertRaisesRegex(ValueError, "description"):
+                        validate_release("v0.3.0", root)
+
+    def test_accepts_registry_description_at_limit(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            manifest = root / "server.json"
+            server = json.loads(manifest.read_text())
+            server["description"] = "x" * 100
+            manifest.write_text(json.dumps(server))
+            self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
+
+    def test_current_repository_release_metadata(self):
+        root = Path(__file__).resolve().parents[1]
+        version = json.loads((root / "server.json").read_text())["version"]
+        self.assertEqual(validate_release(f"v{version}", root), version)
 
     def test_rejects_tag_that_does_not_match_package(self):
         temporary, root = self._release_tree()
@@ -118,6 +145,7 @@ class TestReleaseValidation(unittest.TestCase):
                 json.dumps(
                     {
                         "name": "io.github.chriswu727/sibyl",
+                        "description": "Traceable research reports.",
                         "version": "0.2.0",
                         "packages": [{"version": "0.2.0"}],
                     }

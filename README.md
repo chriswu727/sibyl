@@ -65,8 +65,8 @@ configuration and billing; it does not inherit the host's subscription.
 
 | Surface | Current status |
 |---|---|
-| Source checkout | 0.4.0b1 beta candidate; use the installation below |
-| Published package | PyPI 0.3.0 stable; beta publication status is tracked in [Releasing](docs/RELEASING.md) |
+| Published beta | [PyPI 0.4.0b1](https://pypi.org/project/sibyl-research/0.4.0b1/); install the exact version below |
+| Stable package | 0.3.0 remains the older stable version; unpinned installs may select it |
 | Default MCP profile | 12 keyless tools; 20 tools in the configured full profile |
 | Engineering evidence | Python 3.11–3.13 CI, real stdio/monitoring smoke tests, dependency audits |
 | Research-quality evidence | 2026-10-21 live run misses readiness/stability gates; no same-model superiority claim |
@@ -96,21 +96,18 @@ findings, verified Markdown/JSON exports, and an explicit future-outcome abstent
 
 ## Quick start
 
-Requires Python 3.11+. This guide targets the **0.4.0b1 beta**. PyPI 0.3.0
-predates these interfaces. The source instructions work while beta publication
-is pending; see [channel status](docs/RELEASING.md#publication-channels).
+Requires Python 3.11+. This guide targets the published **0.4.0b1 beta**.
+Use an exact version to opt in; PyPI 0.3.0 predates these interfaces.
 
 ```bash
-git clone https://github.com/chriswu727/sibyl.git
-cd sibyl
 python -m venv .venv
-.venv/bin/python -m pip install -e .
+.venv/bin/python -m pip install 'sibyl-research==0.4.0b1'
 .venv/bin/sibyl-mcp --profile keyless --list-tools
 .venv/bin/sibyl gather "Python 3.14 release date" --format json
 ```
 
 Add the installed executable to a client that supports local stdio MCP servers.
-Replace `/absolute/path/to/sibyl` with your checkout's absolute path:
+Replace `/absolute/path/to/sibyl` with the directory containing your `.venv`:
 
 ```json
 {
@@ -173,12 +170,12 @@ New host jobs also check research-plan readiness. If gaps cannot be resolved,
 `report.status="partial"`; the job's `status="completed"` means it is finalized,
 not that research coverage is complete. Markdown/PDF exports display a partial-report warning.
 Source-type labels and coverage checks are heuristics, not an independent reviewer.
-Install `.[pdf]` to read text PDFs through the same safe fetch path. Page markers
+Install `sibyl-research[pdf]==0.4.0b1` to read text PDFs through the same safe fetch path. Page markers
 and extraction limitations remain inspectable; scans, encrypted files, and
 oversized documents fail explicitly. Automatic citation-graph crawling is not
 implemented; explicitly follow selected references.
 
-For **experimental autonomous execution**, install `.[report]`, configure a model, and call
+For **experimental autonomous execution**, install `sibyl-research[report]==0.4.0b1`, configure a model, and call
 `start_research(question="...", mode="autonomous")`. Poll `get_research`;
 `continue_research(job_id="...")` explicitly resumes interrupted work and may
 incur additional model usage. `cancel_research` stops work; `delete=true` also
@@ -272,7 +269,7 @@ providers. See [configuration, profiles, and all 20 tools](docs/USAGE.md).
 
 ## Local monitoring and operations
 
-Monitoring is disabled by default. Install `.[monitor]`, supply a random
+Monitoring is disabled by default. Install `sibyl-research[monitor]==0.4.0b1`, supply a random
 `SIBYL_MONITOR_TOKEN` of at least 32 characters through your host's secret settings,
 and add `--monitor-port 8766` to the MCP command. The read-only listener binds to
 `127.0.0.1` only. `/healthz`, `/readyz`, `/status`, and `/metrics` all require bearer

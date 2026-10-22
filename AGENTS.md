@@ -8,9 +8,9 @@ investigations into reports with inspectable evidence and explicit limitations.
 Use Python 3.11 or newer. Report/finance extras require Pillow 13.0.0 or newer;
 do not restore Python 3.10 compatibility by weakening the security floor.
 
-This guide targets the 0.4.0b1 beta; PyPI 0.3.0 predates these APIs.
-Use the source-checkout installation in README.md. The core installation needs
-no search or model key. Install `.[report]` for autonomous model-backed research
+This guide targets the published 0.4.0b1 beta; PyPI 0.3.0 predates these APIs.
+Use the exact-version installation in README.md. The core installation needs
+no search or model key. Install `sibyl-research[report]==0.4.0b1` for autonomous model-backed research
 and PDF export; Markdown/JSON host reports need no optional model dependency.
 
 ## Default workflow: host-assisted research
