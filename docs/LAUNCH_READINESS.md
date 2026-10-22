@@ -8,10 +8,15 @@ order and [Releasing](RELEASING.md) for publication mechanics.
 
 ## Decision
 
-Sibyl remains a public beta. The source checkout identifies itself as 0.4.0
-development; the latest published release is 0.3.0. Do not publish 0.4.0 or present
-current development APIs as available from PyPI until the gates below are met.
-Updating documentation or passing CI does not waive those gates.
+On 2026-10-21 the maintainer approved an opt-in **0.4.0b1 prerelease**, focused
+on the keyless host-assisted MCP workflow. Configured-model autonomous research
+remains experimental. This is an explicit scope decision, not a passing result
+for the live research-quality gates. The original thresholds and failed runs
+remain unchanged. Stable 0.4.0 is not cleared by this decision.
+
+Beta publication requires the engineering, security, clean-install, and honest
+documentation checks below. See [channel status](RELEASING.md#publication-channels)
+for publication progress; version metadata alone does not prove availability.
 
 ## Current engineering evidence
 
@@ -250,8 +255,27 @@ those failures are resolved.
 
 ## Release gates
 
-Do not publish v0.4.0, update the official MCP Registry, or begin broad directory
-promotion until all five gates are satisfied:
+### Opt-in 0.4.0b1 beta
+
+1. Release-commit CI, regression, lint, typed-core, dependency-audit, offline
+   retrieval, MCP lifecycle, and authenticated monitoring checks pass.
+2. Fresh release distributions pass metadata validation and all three clean-wheel
+   profiles: core, PDF/monitoring, and report/finance/extraction.
+3. Public documentation identifies the beta and experimental autonomous mode,
+   accurately describes supported interfaces, and retains failed live metrics.
+4. Publish a GitHub prerelease and an exact-version PyPI package. Verify public
+   artifacts and the Registry manifest before reporting those channels complete.
+   Directory reindexing and the website are tracked separately.
+
+The retained ten-case host suite is evidence for the default workflow, not an
+independent quality benchmark. No new paid model evaluation is authorized or
+required for this scoped beta. Experimental status does not waive security or
+dependency checks for the optional packages.
+
+### Stable 0.4.0
+
+Do not publish stable v0.4.0 or claim the research-quality gates passed until
+all five gates below are satisfied:
 
 1. A new dated 66-case, three-repeat live retrieval run passes every committed
    threshold. Freeze thresholds before inspecting results.
@@ -276,7 +300,7 @@ not research quality.
 - Keyless host-assisted research with explicit evidence reviews and limitations.
 - Versioned passage provenance, duplicate-content signals, and bounded text-PDF reads.
 - Authenticated operational monitoring and tested local runtime controls.
-- Optional configured-model research with explicit costs and audit limitations.
+- Experimental configured-model research with explicit costs and audit limitations.
 
 Not established: exhaustive web coverage, production-grade anonymous-search
 availability, guaranteed citation truth, automatic peer-review/authority

@@ -16,7 +16,7 @@ the product page are separate surfaces, not additional package registries.
 | Glama directory | [Sibyl listing](https://glama.ai/mcp/servers/chriswu727/sibyl) | Check repository indexing, build status, README, and tool schema separately |
 | Product page | [yichenwu.dev/projects/sibyl](https://yichenwu.dev/projects/sibyl) | Update the website repository; verify the deployed version and examples |
 
-Channel inventory checked on 2026-10-21: GitHub and PyPI expose 0.3.0.
+Pre-beta channel inventory checked on 2026-10-21: GitHub and PyPI expose 0.3.0.
 The official Registry's exact-name latest endpoint returned HTTP 404; the
 next publish must be verified as a first visible registration, not assumed to
 be an update. Glama already lists Sibyl, but its publicly indexed descriptions
@@ -44,9 +44,11 @@ The workflow filename and environment name are part of the OIDC identity. Renami
 
 ## Release checklist
 
-Prerequisite: every gate in [Launch readiness](LAUNCH_READINESS.md#release-gates)
-must be satisfied, including live/report-quality evaluation. The current 0.4.0
-development version is not cleared for release.
+Prerequisite: satisfy the applicable gates in
+[Launch readiness](LAUNCH_READINESS.md#release-gates). The maintainer approved
+the host-assisted 0.4.0b1 beta scope on 2026-10-21. Engineering, security, and
+clean-install checks remain mandatory; failed live-quality results stay visible.
+Stable 0.4.0 additionally requires the retained research-quality gates.
 `server.json` is the next-version manifest, not a statement that PyPI/Registry
 already contains that version. `check_release.py` validates matching version strings.
 Publication also passes `--require-release-note`, rejecting an undated/Unreleased
@@ -71,9 +73,12 @@ changelog. This does not enforce the research-quality gates.
      --output evals/results/live-retrieval-YYYY-MM-DD.json
    ```
 
-   The live gate uses public websites and is intentionally not part of CI. If
-   the optional report pipeline changed, run its model-backed evaluation with an
-   explicit provider budget and retain the model, configuration, and raw result.
+   The live gate uses public websites and is intentionally not part of CI.
+   For 0.4.0b1, retain the 2026-10-21 run and its failed metrics; do not rerun
+   until a favorable result or weaken its thresholds. A stable release also
+   needs the model-backed evaluation with an explicitly authorized provider
+   budget and retained model, configuration, and raw result. Autonomous mode
+   remains experimental in this beta.
 
    Install the selected extras with `.[report,finance,extract,pdf,monitor]` first.
    The release workflow installs all of those extras, then separately validates
@@ -88,22 +93,22 @@ changelog. This does not enforce the research-quality gates.
    # Use a new empty output directory for this candidate.
    .venv/bin/python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1
    .venv/bin/python -m pip_audit --vulnerability-service osv --skip-editable
-   .venv/bin/python scripts/check_release.py v0.4.0
-   .venv/bin/python -m build --outdir /tmp/sibyl-dist-0.4.0-candidate
-   .venv/bin/python -m twine check /tmp/sibyl-dist-0.4.0-candidate/*
-   .venv/bin/python scripts/check_wheel.py /tmp/sibyl-dist-0.4.0-candidate/*.whl 0.4.0
+   .venv/bin/python scripts/check_release.py v0.4.0b1 --require-release-note
+   .venv/bin/python -m build --outdir /tmp/sibyl-dist-0.4.0b1-candidate
+   .venv/bin/python -m twine check /tmp/sibyl-dist-0.4.0b1-candidate/*
+   .venv/bin/python scripts/check_wheel.py /tmp/sibyl-dist-0.4.0b1-candidate/*.whl 0.4.0b1
    ```
 
 4. Merge the release pull request and verify all required checks on `main`.
-   After dating the changelog, run `python scripts/check_release.py v0.4.0 --require-release-note`.
-5. Create a draft GitHub Release for tag `v<package-version>` targeting the verified `main` commit. Use the matching changelog section as its notes.
+   After dating the changelog, run `python scripts/check_release.py v0.4.0b1 --require-release-note`.
+5. Create a draft GitHub Release for tag `v<package-version>` targeting the verified `main` commit. Use the matching changelog section as its notes. For `0.4.0b1`, select **prerelease**, not latest stable. Keep the same PEP 440 version in the package and Registry manifest; the Registry permits non-semantic versions.
 6. Publish the GitHub Release. Approve the `pypi` environment only after the build job passes. The workflow attaches the distributions to the GitHub Release, uploads them to PyPI, waits for PyPI indexing, and publishes the matching `server.json` to the MCP Registry.
 7. Verify the public package from a new environment:
 
    ```bash
    python3 -m venv /tmp/sibyl-pypi-smoke
-   /tmp/sibyl-pypi-smoke/bin/python -m pip install --no-cache-dir sibyl-research==0.4.0
-   /tmp/sibyl-pypi-smoke/bin/python -c "import importlib.metadata, sibyl; assert sibyl.__version__ == importlib.metadata.version('sibyl-research') == '0.4.0'"
+   /tmp/sibyl-pypi-smoke/bin/python -m pip install --no-cache-dir sibyl-research==0.4.0b1
+   /tmp/sibyl-pypi-smoke/bin/python -c "import importlib.metadata, sibyl; assert sibyl.__version__ == importlib.metadata.version('sibyl-research') == '0.4.0b1'"
    /tmp/sibyl-pypi-smoke/bin/sibyl-mcp --version
    /tmp/sibyl-pypi-smoke/bin/sibyl-mcp --list-tools
    ```
@@ -116,3 +121,7 @@ changelog. This does not enforce the research-quality gates.
    the matching PyPI/`uvx` installation instructions.
 
 Never reuse a version already uploaded to PyPI. If publishing fails after PyPI accepts one distribution, diagnose the workflow and release a new patch version if any uploaded file must change.
+
+Prereleases are opt-in. An unpinned `pip install sibyl-research` may continue to
+select 0.3.0 as the latest stable version. Publish beta installation examples
+with `sibyl-research==0.4.0b1`; do not imply that the stable package moved forward.

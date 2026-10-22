@@ -72,6 +72,16 @@ class TestReleaseValidation(unittest.TestCase):
         with temporary, self.assertRaisesRegex(ValueError, "must equal"):
             validate_release("v0.3.1", root)
 
+    def test_publication_accepts_matching_pep440_beta(self):
+        temporary, root = self._release_tree("0.4.0b1")
+        with temporary:
+            self.assertEqual(
+                validate_release("v0.4.0b1", root, require_release_note=True),
+                "0.4.0b1",
+            )
+            with self.assertRaisesRegex(ValueError, "must equal"):
+                validate_release("v0.4.0", root, require_release_note=True)
+
     def test_publication_rejects_undated_development_changelog(self):
         temporary, root = self._release_tree()
         with temporary:

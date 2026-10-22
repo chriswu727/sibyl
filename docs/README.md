@@ -1,7 +1,7 @@
 # Sibyl documentation
 
-These documents describe unreleased `main` (0.4.0 development), not the published
-PyPI 0.3.0 package. Start with the source-checkout installation. Sibyl is a local
+These documents describe the 0.4.0b1 beta, not the older PyPI 0.3.0 package.
+See [installation](../llms-install.md) and [channel status](RELEASING.md). Sibyl is a local
 Deep Research MCP for multi-round investigations, traceable evidence, and cited
 reports; its current maturity is public beta.
 
