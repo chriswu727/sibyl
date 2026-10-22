@@ -37,14 +37,14 @@ Persistent jobs are the report-oriented workflow. The existing `research()` tool
 | Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
 | Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
 | Host-assisted report | `start_research(mode="host")` | No | Your agent | Persistent research and Markdown/JSON delivery |
-| Autonomous report | `start_research(mode="autonomous")` | Configured backend | Sibyl's model | Background research, progress, explicit resume |
+| Experimental autonomous report | `start_research(mode="autonomous")` | Configured backend | Sibyl's model | Background research, progress, explicit resume |
 | Blocking report | `research()` | Configured backend | Sibyl's model | Existing one-call integrations |
 
 ## Quick start
 
 ### 1. Install the current source checkout
 
-This guide describes unreleased `main`. The published 0.3.0 package does not
+This guide describes the 0.4.0b1 beta. The older 0.3.0 package does not
 provide the current CLI subcommands, capability profiles, or evidence-loop API.
 
 ```bash
@@ -347,7 +347,7 @@ contracts only. No controlled same-model report-quality A/B has yet established 
 Sibyl advantage over ordinary web search. Model-backed evaluations require explicit
 operator approval; do not spend a subscription/API budget implicitly.
 
-For `mode="autonomous"`, the optional report installation and configured model
+For experimental `mode="autonomous"`, the optional report installation and configured model
 are required. The server runs research asynchronously; poll `get_research`.
 It decomposes the question, retrieves shared source bundles, drafts, performs
 one bounded coverage-review round by default, and checks report blocks against

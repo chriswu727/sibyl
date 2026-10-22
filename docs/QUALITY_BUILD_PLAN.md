@@ -1,7 +1,7 @@
 # Sibyl roadmap
 
-Reviewed 2026-10-21. This is the active roadmap for the unreleased 0.4.0
-development line. Implemented features are documented in [Usage](USAGE.md);
+Reviewed 2026-10-21. This is the active roadmap for the 0.4.0 beta line
+and future stable release. Implemented features are documented in [Usage](USAGE.md);
 release blockers are governed by [Launch readiness](LAUNCH_READINESS.md).
 The [earlier implementation plan](https://github.com/chriswu727/sibyl/blob/d343267/docs/QUALITY_BUILD_PLAN.md)
 is preserved in Git history, not a source of current defaults or quality claims.
@@ -34,7 +34,11 @@ is preserved in Git history, not a source of current defaults or quality claims.
 - A ten-case live host research suite with adaptive follow-ups, inspected evidence,
   explicit discovery failures, and verified Markdown/JSON delivery.
 
-## Before release
+## Before stable 0.4.0
+
+The opt-in 0.4.0b1 beta ships the host-assisted workflow under the separate
+[beta release policy](LAUNCH_READINESS.md#release-gates). The goals below remain
+open; they are not claims that the beta has passed the research-quality gates.
 
 ### 1. Establish a current research-quality baseline
 

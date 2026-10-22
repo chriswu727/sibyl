@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.4.0 — Unreleased
+## 0.4.0b1 — 2026-10-21
+
+### Beta release scope
+
+- Release the keyless host-assisted MCP workflow as an opt-in prerelease.
+- Keep configured-model autonomous research experimental; no new model-backed
+  quality claim is made by this release.
+- Retain the live retrieval failures and frozen thresholds. Beta publication
+  requires engineering, security, installation, and documentation checks;
+  stable 0.4.0 retains the additional research-quality gates.
 
 ### Research discovery
 
@@ -51,7 +60,8 @@
   transaction aborts, repeated capacity/cancellation, and artifact cleanup.
 - Validate core, PDF/monitoring, and report/finance/extraction wheels in isolated
   temporary environments; require dated changelog notes before publication.
-- Retain live research-quality gates; engineering checks do not imply a release.
+- Retain live research-quality gates for stable release; engineering checks do
+  not establish research accuracy.
 - Return an MCP tool error when a PDF-only export fails; combined exports retain
   successful Markdown output and explicitly disclose the PDF failure.
 

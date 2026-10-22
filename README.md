@@ -24,7 +24,7 @@ Plan. Investigate. Check the evidence. Deliver a report—with its limitations.
 A search result is not yet a research report. Sibyl keeps the plan, searches,
 evidence, progress, and final report together in a bounded local research job.
 Your existing agent can plan and write using the **keyless host-assisted mode**.
-An optional configured model can run the research in the background, including
+An experimental configured-model mode can run research in the background, including
 a bounded follow-up search and report-wide source-support checks.
 
 Both modes use the same inspectable evidence pipeline. Host mode needs **no
@@ -65,11 +65,12 @@ configuration and billing; it does not inherit the host's subscription.
 
 | Surface | Current status |
 |---|---|
-| Source checkout | 0.4.0 development version; use the installation below |
-| Published package | PyPI 0.3.0; does not contain the workflow documented here |
+| Source checkout | 0.4.0b1 beta candidate; use the installation below |
+| Published package | PyPI 0.3.0 stable; beta publication status is tracked in [Releasing](docs/RELEASING.md) |
 | Default MCP profile | 12 keyless tools; 20 tools in the configured full profile |
 | Engineering evidence | Python 3.11–3.13 CI, real stdio/monitoring smoke tests, dependency audits |
 | Research-quality evidence | 2026-10-21 live run misses readiness/stability gates; no same-model superiority claim |
+| Autonomous research | Experimental opt-in; separately configured model and usage charges |
 
 The [release readiness record](docs/LAUNCH_READINESS.md) separates current
 engineering evidence from dated experiments. The [roadmap](docs/QUALITY_BUILD_PLAN.md)
@@ -95,9 +96,9 @@ findings, verified Markdown/JSON exports, and an explicit future-outcome abstent
 
 ## Quick start
 
-Requires Python 3.11+. **The current evidence API and runtime/security upgrade
-are on `main`, pending release. PyPI 0.3.0 predates these interfaces.**
-Use the source checkout for the workflow documented here:
+Requires Python 3.11+. This guide targets the **0.4.0b1 beta**. PyPI 0.3.0
+predates these interfaces. The source instructions work while beta publication
+is pending; see [channel status](docs/RELEASING.md#publication-channels).
 
 ```bash
 git clone https://github.com/chriswu727/sibyl.git
@@ -177,7 +178,7 @@ and extraction limitations remain inspectable; scans, encrypted files, and
 oversized documents fail explicitly. Automatic citation-graph crawling is not
 implemented; explicitly follow selected references.
 
-For autonomous execution, install `.[report]`, configure a model, and call
+For **experimental autonomous execution**, install `.[report]`, configure a model, and call
 `start_research(question="...", mode="autonomous")`. Poll `get_research`;
 `continue_research(job_id="...")` explicitly resumes interrupted work and may
 incur additional model usage. `cancel_research` stops work; `delete=true` also

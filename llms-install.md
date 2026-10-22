@@ -3,15 +3,16 @@
 Sibyl is a local stdio deep-research MCP server. Its default keyless profile
 supports persistent host-assisted research, inspectable evidence, and cited
 Markdown/JSON reports. The host agent plans and writes; no second model key is
-required. Configured-model autonomous research and PDF export are optional.
+required. Configured-model autonomous research is experimental. PDF export is optional.
 
 ## Requirements
 
 - Python 3.11 or newer
 - Git and a local virtual environment
 
-This guide targets unreleased `main`. PyPI 0.3.0 predates the current evidence
-API and profile flags. Install the checkout before using this configuration:
+This guide targets the 0.4.0b1 beta. PyPI 0.3.0 predates the current evidence
+API and profile flags. The checkout works before beta publication completes;
+see [channel status](docs/RELEASING.md#publication-channels).
 
 ```bash
 git clone https://github.com/chriswu727/sibyl.git

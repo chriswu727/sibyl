@@ -1,6 +1,6 @@
 # SourceBundle 1.6 consumer contract
 
-Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a contract fixture for consuming agents and applications. Sibyl's tests validate it against the typed MCP model and check serialization. This describes unreleased `main`; see the [documentation index](README.md) for installation and release status.
+Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a contract fixture for consuming agents and applications. Sibyl's tests validate it against the typed MCP model and check serialization. This describes the 0.4.0b1 beta; see the [documentation index](README.md) for installation and release status.
 
 ## Compatibility rules
 
