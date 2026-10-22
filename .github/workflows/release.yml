@@ -67,7 +67,7 @@ jobs:
           jq --raw-output --arg wheel "$WHEEL" --arg sdist "$SDIST" '
             .assets[] | select(.name == $wheel or .name == $sdist) |
             (.digest | ltrimstr("sha256:")) + "  dist/" + .name
-          ' release-assets.json | sha256sum -c
+          ' release-assets.json | shasum -a 256 -c
       - name: Validate distribution metadata
         run: python -m twine check dist/*
       - name: Smoke-test core and optional wheel profiles in clean environments
