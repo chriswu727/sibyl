@@ -4,14 +4,20 @@
 
 <img src="https://raw.githubusercontent.com/chriswu727/sibyl/main/assets/sibyl-banner.svg" alt="Sibyl — deep research, traceable reports." width="100%">
 
+[![Beta 0.4.0b1](https://img.shields.io/badge/beta-0.4.0b1-0f766e)](https://github.com/chriswu727/sibyl/releases/tag/v0.4.0b1)
+[![Stable PyPI version](https://img.shields.io/pypi/v/sibyl-research?label=stable%20PyPI&color=64748b)](https://pypi.org/project/sibyl-research/)
 [![Tests & security](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
-[![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=0f766e)](https://pypi.org/project/sibyl-research/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-0f766e)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
 **A Deep Research MCP that turns complex questions into traceable reports through multi-round retrieval, source tracking, and evidence review.**
 
 Plan. Investigate. Check the evidence. Deliver a report—with its limitations.
+
+**Current beta: 0.4.0b1** · [Release notes](https://github.com/chriswu727/sibyl/releases/tag/v0.4.0b1) · [Install from PyPI](https://pypi.org/project/sibyl-research/0.4.0b1/) · [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.chriswu727%2Fsibyl/versions/0.4.0b1)
+
+The workflow below targets this beta. GitHub's **Latest** label and the stable
+PyPI badge refer to the older **0.3.0** release.
 
 [Quick start](#quick-start) · [Research workflow](#research-workflow) · [Documentation](docs/README.md) · [Operations](docs/OPERATIONS.md) · [Roadmap](docs/QUALITY_BUILD_PLAN.md)
 
