@@ -16,7 +16,7 @@ classifiers = [
 ]
 keywords = ["research", "evidence", "retrieval", "mcp", "citations", "agents"]
 dependencies = [
-    "mcp>=1.30.0,<2.0.0",
+    "mcp>=2.3.0,<3.0.0",
     "httpx>=0.27.0",
     "httpcore>=1.0.0,<2.0.0",
     "certifi>=2024.0.0",
