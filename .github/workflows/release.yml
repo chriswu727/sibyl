@@ -9,6 +9,11 @@ on:
         description: Published release tag whose existing assets should be validated and published
         required: true
         type: string
+      registry_only:
+        description: Publish corrected Registry metadata from main for an existing PyPI version
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -16,6 +21,7 @@ permissions:
 jobs:
   build:
     name: Build and validate distributions
+    if: ${{ !inputs.registry_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -122,6 +128,7 @@ jobs:
   mcp-registry:
     name: Publish to the official MCP Registry
     needs: publish
+    if: ${{ !cancelled() && (needs.publish.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.registry_only && github.ref == 'refs/heads/main')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -129,7 +136,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name || inputs.release_tag }}
+          ref: ${{ inputs.registry_only && github.sha || github.event.release.tag_name || inputs.release_tag }}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Validate Registry release metadata
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+        run: python scripts/check_release.py "$RELEASE_TAG" --require-release-note
       - name: Wait for PyPI indexing
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}

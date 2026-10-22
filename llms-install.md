@@ -8,22 +8,19 @@ required. Configured-model autonomous research is experimental. PDF export is op
 ## Requirements
 
 - Python 3.11 or newer
-- Git and a local virtual environment
+- A local virtual environment
 
-This guide targets the 0.4.0b1 beta. PyPI 0.3.0 predates the current evidence
-API and profile flags. The checkout works before beta publication completes;
-see [channel status](docs/RELEASING.md#publication-channels).
+This guide targets the published 0.4.0b1 beta. Pin the exact version to opt in;
+PyPI 0.3.0 predates the current evidence API and profile flags.
 
 ```bash
-git clone https://github.com/chriswu727/sibyl.git
-cd sibyl
 python -m venv .venv
-.venv/bin/python -m pip install -e .
+.venv/bin/python -m pip install 'sibyl-research==0.4.0b1'
 ```
 
 ## Keyless MCP configuration
 
-Replace `/absolute/path/to/sibyl` with the checkout's absolute path.
+Replace `/absolute/path/to/sibyl` with the directory containing your `.venv`.
 
 ```json
 {
@@ -36,7 +33,7 @@ Replace `/absolute/path/to/sibyl` with the checkout's absolute path.
 }
 ```
 
-Verify the source installation:
+Verify the installed package:
 
 ```bash
 .venv/bin/sibyl-mcp --version
@@ -50,7 +47,7 @@ The default output should identify the `keyless` profile and list
 
 ## Optional PDF input and monitoring
 
-For text-PDF input and local monitoring, install `.[pdf,monitor]`. PDF ingestion
+For text-PDF input and local monitoring, install `sibyl-research[pdf,monitor]==0.4.0b1`. PDF ingestion
 needs a POSIX host and does not perform OCR. Monitoring is disabled by default;
 see [Operations](docs/OPERATIONS.md) before enabling `--monitor-port` with a
 host-supplied `SIBYL_MONITOR_TOKEN`. It is not a remote MCP endpoint.
@@ -87,8 +84,8 @@ the host's documented secret mechanism; do not pass these strings literally.
 
 ## Optional experimental report profile
 
-Install the report extra from the checkout with
-`.venv/bin/python -m pip install -e '.[report]'` and provide a model credential:
+Install the report extra with
+`.venv/bin/python -m pip install 'sibyl-research[report]==0.4.0b1'` and provide a model credential:
 
 ```json
 {

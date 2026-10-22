@@ -27,9 +27,17 @@ source preview and needs to be reconciled with the release candidate.
 The GitHub `v0.4.0b1` prerelease and both distribution assets are available.
 Its first PyPI attempt failed before upload: the pinned publisher v1.14.0
 rejected Metadata 2.5, although the build job's Twine 7 validation passed.
-The corrected workflow uses publisher v1.14.3 and can recover the existing
-release assets without rebuilding or replacing them. PyPI and Registry
-availability still require verification after the protected publication job.
+The corrected workflow uses publisher v1.14.3 and recovered the existing
+release assets without rebuilding or replacing them. PyPI now exposes 0.4.0b1;
+both file hashes match the GitHub assets. The next Registry step rejected an
+overlong description. The corrected manifest and Registry-only recovery path
+avoid re-uploading an already published PyPI version.
+
+An isolated installation from public PyPI passed dependency consistency, version
+and console-script checks, the real 12-tool MCP stdio smoke test, and the two-round
+host research replay with review, citations, exports, restart, and immutability.
+The temporary environment was removed. README and installation examples now
+pin the verified public beta; 0.3.0 remains the older stable package.
 
 `glama.json` declares the repository maintainer for directory integration. It
 does not publish a package, refresh a listing on demand, or prove a successful
@@ -147,6 +155,27 @@ runs Twine and all clean-wheel checks before the existing `pypi` environment
 approval. It does not rebuild or replace GitHub assets, disable metadata
 validation, skip existing PyPI files, or bypass approval. Registry publication
 uses the same release tag after successful PyPI publication.
+
+## Recover a Registry-only failure
+
+If PyPI publication succeeded but Registry validation failed, correct
+`server.json` on `main` and run:
+
+```bash
+gh workflow run release.yml --ref main -f release_tag=v0.4.0b1 -f registry_only=true
+```
+
+This mode uses the dispatch commit's corrected manifest, requires the `main`
+branch, and verifies that its package version and dated changelog match the
+requested tag. It confirms the PyPI version exists before Registry publication.
+Build, GitHub-asset upload, and PyPI upload jobs are skipped; no PyPI approval
+is needed because no package is uploaded. The original tag and distributions
+remain unchanged. This recovery is for the version currently described on
+`main`, not arbitrary historical manifests.
+
+The release validator enforces the Registry description's 1–100 character
+limit before publication. Regression tests also validate the actual repository
+manifest, not only synthetic release fixtures.
 
 Prereleases are opt-in. An unpinned `pip install sibyl-research` may continue to
 select 0.3.0 as the latest stable version. Publish beta installation examples
