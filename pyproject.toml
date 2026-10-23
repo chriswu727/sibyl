@@ -30,7 +30,7 @@ dependencies = [
 report = [
     # Floor tested to pass response_format json_object through to deepseek/ and
     # register v4-flash; ceiling protects the provider-specific thinking contract.
-    "litellm>=1.96.2,<2.0.0",
+    "litellm>=1.106.0,<2.0.0",
     "fpdf2>=2.7.0",
     "pillow>=13.0.0",
 ]
@@ -49,7 +49,7 @@ all = [
     "pypdf>=6.21.2,<7",
     "uvicorn>=0.54.0,<1",
     "pillow>=13.0.0",
-    "litellm>=1.96.2,<2.0.0",
+    "litellm>=1.106.0,<2.0.0",
     "fpdf2>=2.7.0",
     "yfinance>=0.2.0",
     "matplotlib>=3.8.0",
