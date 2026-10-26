@@ -355,6 +355,12 @@ or regression. The narrow reading regressions below passed, but current discover
 and readiness stability still block a stable release. Do not lower thresholds,
 discard unsuccessful runs, or treat report/export improvements as clearing this gate.
 
+Subsequent [three-case query tracing](../evals/results/query-identifiers-2026-10-26.json)
+fixed contracted-question fallback and decimal-version preservation, but all
+three after runs still lack a frozen gold/alias match. Two return heuristic status
+ok, which is not answer correctness. No replacement full-gate pass or host-model
+quality verdict has been established after those parsing changes.
+
 ## Claims supported now
 
 ### Body-selection regressions, 2026-10-26

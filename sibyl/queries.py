@@ -6,7 +6,11 @@ import re
 from typing import List
 from urllib.parse import urlsplit
 
-_TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
+_TERM_RE = re.compile(
+    r"\bv?\d+(?:\.\d+)+(?:[a-z]+\d*)?(?:[-+][a-z0-9]+(?:[.-][a-z0-9]+)*)?(?!\w)"
+    r"|[^\W_]+(?:['’][^\W_]+)?",
+    re.UNICODE | re.IGNORECASE,
+)
 _SITE_RE = re.compile(r"""(?<![-\w])site:["']?([^\s"'()\[\]{},;]+)""", re.IGNORECASE)
 _QUOTED_RE = re.compile(r"""["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)""")
 _SEARCH_OPERATOR_RE = re.compile(
@@ -81,6 +85,12 @@ def focused_site_query(query: str, host: str) -> str:
     return f"{' '.join(focused.split())} site:{host}".strip()
 
 
+def _search_term_key(term: str) -> str:
+    normalized = term.casefold().replace("’", "'")
+    base = normalized.split("'", 1)[0]
+    return base if base in _QUESTION_WORDS else normalized
+
+
 def search_query_variants(query: str) -> List[str]:
     clean = " ".join(str(query or "").split())
     if not clean:
@@ -89,7 +99,9 @@ def search_query_variants(query: str) -> List[str]:
         return [clean]
 
     terms = _TERM_RE.findall(clean)
-    if not terms or not any(term.casefold() in _QUESTION_WORDS for term in terms):
+    if not terms or not any(
+        _search_term_key(term) in _QUESTION_WORDS for term in terms
+    ):
         return [clean]
 
     quoted_match = _QUOTED_RE.search(clean)
@@ -99,7 +111,7 @@ def search_query_variants(query: str) -> List[str]:
             return [clean, quoted]
 
     focused_terms = [
-        term for term in terms if term.casefold() not in _SEARCH_STOP_WORDS
+        term for term in terms if _search_term_key(term) not in _SEARCH_STOP_WORDS
     ]
     focused = " ".join(focused_terms)
     if len(focused_terms) < 3 or focused.casefold() == clean.casefold():

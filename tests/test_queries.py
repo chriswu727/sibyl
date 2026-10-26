@@ -112,6 +112,21 @@ class TestSearchQueryVariants(unittest.TestCase):
     def test_empty_query_has_no_variants(self):
         self.assertEqual(search_query_variants("  "), [])
 
+    def test_contracted_question_keeps_the_quoted_title_fallback(self):
+        title = "Articulatory constraints on stop insertion and elision in consonant clusters"
+        for opener in ("What's", "What’s", "Where's", "Who’s"):
+            query = f'{opener} the publication date of the paper "{title}"?'
+            with self.subTest(opener=opener):
+                self.assertEqual(search_query_variants(query), [query, title])
+
+    def test_versions_are_not_split_in_focused_queries(self):
+        for version in ("0.7", "3.12", "v0.4.0-rc.1", "0.4.0b1", "3.13.0rc1"):
+            query = f"What changed in Patch {version} for the supported client?"
+            self.assertEqual(
+                search_query_variants(query),
+                [query, f"changed Patch {version} supported client"],
+            )
+
     def test_detects_dependent_relative_clause(self):
         self.assertTrue(
             query_requires_decomposition(

@@ -1396,6 +1396,35 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
                 passage.content_hash, hashlib.sha256(passage.text.encode()).hexdigest()
             )
 
+    async def test_decimal_version_remains_distinct_through_source_selection(self):
+        pages = [
+            WebPage(
+                f"https://example.com/patch/{version}",
+                f"Patch {version}",
+                f"Crusader Strike behavior changed in patch {version}. " * 30,
+            )
+            for version in ("0.8", "0.7", "0.9")
+        ]
+        results = [SearchResult(p.title, p.url, p.text[:180]) for p in pages]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Crusader Strike patch 0.7",
+                max_sources=1,
+                client=object(),
+            )
+        self.assertEqual(bundle.sources[0].url, pages[1].url)
+        self.assertIn("patch 0.7", bundle.sources[0].evidence[0].text)
+
     async def test_bounds_request_parameters(self):
         with (
             mock.patch(

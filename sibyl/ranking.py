@@ -9,7 +9,10 @@ import unicodedata
 from dataclasses import dataclass
 from typing import List, Literal, Sequence, Set, Tuple
 
-_WORD_RE = re.compile(r"[^\W_]+", re.UNICODE)
+_WORD_RE = re.compile(
+    r"\bv?\d+(?:\.\d+)+(?:[a-z]+\d*)?(?:[-+][a-z0-9]+(?:[.-][a-z0-9]+)*)?(?!\w)|[^\W_]+",
+    re.UNICODE | re.IGNORECASE,
+)
 _CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+")
 _STOP_WORDS = {
     "a",
