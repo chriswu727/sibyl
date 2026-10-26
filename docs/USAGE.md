@@ -384,8 +384,12 @@ guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
 source passage IDs, timestamps, limitations, verification scope, and legacy model-call
 counters when reading old records. New work makes no model calls. PDF export requires `[report]`; text-PDF input separately requires `[pdf]`.
-If PDF-only export fails, the MCP call returns a tool error. With `format="both"`,
-a PDF failure is disclosed while a successful Markdown artifact is retained.
+For Markdown and JSON, call `save_report` twice with `format="md"` and
+`format="json"`. The legacy `format="both"` means PDF plus Markdown only.
+Each export gets an independent filename; use its returned path, not a guessed
+path with another extension. If PDF-only export fails, the MCP call returns a
+tool error. With `format="both"`, a PDF failure is disclosed while a successful
+Markdown artifact is retained.
 Input is extracted in an isolated child process without inherited credentials,
 then split into the same hashed passages as HTML. Scanned pages have no OCR;
 text order, columns, tables, and formulas still need source inspection.

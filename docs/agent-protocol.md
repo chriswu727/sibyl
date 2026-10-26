@@ -120,6 +120,13 @@ New jobs omit summary/findings/analysis arguments; old contract-1 checkpoints
 retain those prose fields. See [Claim reports](research-claims.md#optional-reports).
 `allow_incomplete=true` explicitly preserves unmet gates; it is not a quality pass.
 
+For Markdown and JSON, call `save_report` separately with `format="md"` and
+`format="json"`. The legacy `format="both"` means PDF plus Markdown, not JSON.
+Each artifact gets an independent filename. Use only the paths explicitly returned
+as saved; replacing a Markdown suffix does not identify a JSON artifact.
+A rejected assessment does not persist that review or advance its revision. Correct
+the request or preserve the missing review as a gap before finalizing.
+
 Direct Python job methods and the keyless profile continue returning full snapshots.
 Python embedders opt in with `create_server(runtime, agent_mode=True)`. This sets
 both the eight-tool catalog and compact transport. Old checkpoints load as contract

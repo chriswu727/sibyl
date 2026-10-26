@@ -308,6 +308,23 @@ all research-quality gates. The maintainer must review this checklist before
 publishing a GitHub Release. The version validator checks metadata agreement,
 not research quality.
 
+### Low-effort real-host smoke, 2026-10-26
+
+The [retained four-request record](../evals/results/host-agent-luna-low-2026-10-26.json)
+used Codex CLI 0.163.0-alpha.10.2, GPT-6 Luna with low effort, the agent MCP profile
+and anonymous retrieval under explicit subscription-quota approval. One initial
+request failed on harness approval configuration; the corrected SQLite workflow
+delivered real Markdown/JSON artifacts with explicit partial status. Both attempts
+at the unknown-outcome task failed the requested report delivery. A host-invented
+JSON link exposed ambiguous export semantics; clearer instructions did not solve
+claim-error/revision recovery in the last run. The server rejected malformed/stale
+submissions rather than inventing completed reports.
+
+All four requests ended within one minute, but that is not a latency distribution.
+No native-search comparator, cross-host run, exact monetary cost or new release
+verdict was established. The approved four-request allowance is exhausted.
+This is functional evidence and a retained usability failure, not a stable gate pass.
+
 ## Claims supported now
 
 - A local Deep Research MCP for multi-round investigations and traceable reports.

@@ -111,6 +111,32 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             finally:
                 await runtime.aclose()
 
+    async def test_markdown_and_json_need_separate_exports_and_return_real_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            server = create_server(runtime)
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("unavailable"),
+                ):
+                    _, combined = await server.call_tool(
+                        "save_report", {"format": "both"}
+                    )
+                self.assertIn("PDF failed", combined["result"])
+                self.assertNotIn("JSON saved", combined["result"])
+                self.assertFalse(list(Path(directory).glob("*.json")))
+                md_path = Path(combined["result"].split("Markdown saved: ")[1])
+                self.assertTrue(md_path.is_file())
+                _, exported = await server.call_tool("save_report", {"format": "json"})
+                json_path = Path(exported["result"].removeprefix("JSON saved: "))
+                self.assertTrue(json_path.is_file())
+                self.assertNotEqual(json_path, md_path.with_suffix(".json"))
+                self.assertIn('"summary": "summary"', json_path.read_text())
+            finally:
+                await runtime.aclose()
+
     async def test_export_uses_runtime_root_and_rejects_escape(self):
         with tempfile.TemporaryDirectory() as directory:
             runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))

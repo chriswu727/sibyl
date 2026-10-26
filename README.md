@@ -116,6 +116,8 @@ See the [claim contract and complete example](docs/research-claims.md).
 
 Reports are optional. For a new job, submit `complete_research` with the current
 revision and optional `claim_ids`, then `save_report(job_id=..., format="md")`.
+For JSON as well, call `save_report` again with `format="json"` and use its returned
+path. The legacy `format="both"` means PDF plus Markdown, not Markdown plus JSON.
 Sibyl renders the host-authored claims and citations, including their premises,
 criteria and assumptions. Unknown/disputed claims remain visible even if omitted
 from the selection. Old saved jobs retain prose-based completion.

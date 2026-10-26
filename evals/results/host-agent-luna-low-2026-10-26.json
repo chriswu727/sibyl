@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "date": "2026-10-26",
+  "method": "Exploratory real-host functional smoke, not an independent benchmark, paired native-search comparison, or release gate.",
+  "baseline_commit": "7b9377179f0ab532aa2f88693e4c8c9f8e3fac0b",
+  "retest_change": "Explicit MCP choice schemas and export/error-handling instructions; no retrieval or claim-validation rules changed.",
+  "host": {
+    "client": "Codex CLI",
+    "version": "0.163.0-alpha.10.2",
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "authentication": "Existing ChatGPT login; no model API key supplied",
+    "profile": "agent",
+    "search_provider": "keyless",
+    "timeout_seconds_per_request": 300,
+    "requests_authorized_and_used": 4,
+    "isolation": "Temporary working/output directories; user configuration ignored; native search disabled; no paid retrieval key supplied. Corrected runs disabled plugins, apps, shell, browser, computer use and multi-agent features, preapproved only the configured Sibyl server, and hid cancel_research.",
+    "intervention": "Harness configuration correction after the first permission failure; server instructions/schema changes before the final run; no manual tool calls, source URL rescues, or coaching within a model run.",
+    "billing_limitations": "Token counters are CLI-reported cumulative per-turn usage, including repeated context. They are not unique prompt sizes, dollar costs, or subscription-quota measurements. No pricing or exact monetary cost was established."
+  },
+  "prompts": {
+    "recommendation": "Use Sibyl to research whether SQLite WAL is suitable for a local application with several reader processes and two occasional writers on one machine. I value simplicity, but I cannot afford silently lost writes. Investigate a limitation or counterargument before recommending anything. Do not invent performance measurements for my workload. Save a concise Markdown report and a JSON report through Sibyl, and tell me the outcome and paths. Keep the investigation to at most three retrieval calls. Use only Sibyl tools; do not read local source files, run shell commands, or modify code. Finish within four minutes, preserving gaps honestly if necessary.",
+    "unknown": "Use Sibyl to investigate the exact realized global market share NVIDIA will have in AI accelerators in 2030. Distinguish forecasts from observed outcomes. I want a short answer without invented numbers, plus Markdown and JSON reports saved through Sibyl. At most two retrieval calls; use only Sibyl tools, with no shell commands or local source inspection. Finish within four minutes and preserve any uncertainty in the reports."
+  },
+  "runs": [
+    {
+      "id": "recommendation_permissions",
+      "prompt_id": "recommendation",
+      "source_state": "baseline",
+      "elapsed_seconds": 9.29,
+      "exit_code": 0,
+      "timed_out": false,
+      "tool_calls": 1,
+      "retrieval_calls": 0,
+      "exact_passage_reads": 0,
+      "outcome": "Harness failure: start_research required approval while the noninteractive harness denied approval. No Sibyl operation succeeded; no report was generated.",
+      "usage": {"input_tokens": 48668, "cached_input_tokens": 38528, "output_tokens": 296, "reasoning_output_tokens": 0},
+      "raw_trace_sha256": "8aafd1da724d30b2a15b7c76c2e55188bcea367be211f609e1e69ebbd9ede0fe"
+    },
+    {
+      "id": "recommendation_configured",
+      "prompt_id": "recommendation",
+      "source_state": "baseline",
+      "elapsed_seconds": 57.98,
+      "exit_code": 0,
+      "timed_out": false,
+      "tool_calls": 19,
+      "retrieval_calls": 2,
+      "exact_passage_reads": 10,
+      "tool_errors": 0,
+      "report_status": "partial",
+      "claim_count": 11,
+      "artifacts_verified_on_disk": ["md", "json", "pdf"],
+      "outcome": "Completed the requested Markdown/JSON delivery from live SQLite documentation, with conditional recommendations, explicit criteria and an unknown storage/application-safety claim. No workload speed measurement was invented. An overlong counterevidence query returned no sources; those gaps remained in the partial report. The host unnecessarily selected legacy both (PDF plus Markdown) before separately exporting JSON.",
+      "usage": {"input_tokens": 357246, "cached_input_tokens": 318976, "output_tokens": 3166, "reasoning_output_tokens": 0},
+      "raw_trace_sha256": "f37847c8abc0d676b9e5d288d9ba9b69fbe7a02f4bf467c4b4c62a76315a3afc"
+    },
+    {
+      "id": "unknown_configured",
+      "prompt_id": "unknown",
+      "source_state": "baseline",
+      "elapsed_seconds": 28.57,
+      "exit_code": 0,
+      "timed_out": false,
+      "tool_calls": 18,
+      "retrieval_calls": 1,
+      "exact_passage_reads": 11,
+      "tool_errors": 1,
+      "report_status": "partial",
+      "artifacts_verified_on_disk": ["md", "pdf"],
+      "requested_json_exists": false,
+      "errors": ["assess_research: Inferences and recommendations must identify their factual/reasoning basis."],
+      "outcome": "Correctly declined to invent a realized future market-share number and retained an unresolved inference. One review was rejected and not repaired. Used legacy both, then fabricated a JSON link by changing the Markdown suffix without issuing a JSON export. Requested delivery failed despite CLI exit zero.",
+      "usage": {"input_tokens": 253580, "cached_input_tokens": 224512, "output_tokens": 2061, "reasoning_output_tokens": 0},
+      "raw_trace_sha256": "e50ec8e4a576b6ebb9e502d31e2a5dc834880f73ec0849842e9b8a51208ca935"
+    },
+    {
+      "id": "unknown_retest",
+      "prompt_id": "unknown",
+      "source_state": "guidance_and_choice_schema_changes",
+      "elapsed_seconds": 44.86,
+      "exit_code": 0,
+      "timed_out": false,
+      "tool_calls": 12,
+      "retrieval_calls": 1,
+      "exact_passage_reads": 3,
+      "tool_errors": 5,
+      "report_status": null,
+      "artifacts_verified_on_disk": [],
+      "errors": [
+        "assess_research: Disputed claims require both a supporting basis and challenging evidence.",
+        "assess_research: Reload the host research job and use its current revision.",
+        "complete_research: Reload the host research job and use its current revision.",
+        "save_report(md): The research job has no completed report.",
+        "save_report(json): The research job has no completed report."
+      ],
+      "outcome": "Used separate md/json export calls and did not invent a saved path, but failed to repair a rejected disputed claim and guessed revisions. No assessment, final report or export persisted. Final answer acknowledged that saves were unconfirmed but did not clearly explain the validation errors. Requested delivery still failed; this single run does not establish an improvement rate or causal effect.",
+      "usage": {"input_tokens": 370981, "cached_input_tokens": 314752, "output_tokens": 2005, "reasoning_output_tokens": 0},
+      "raw_trace_sha256": "ea9388404fcf66dbca5d296285f475336751d33eee5b7826fd8104a3b5116c9e"
+    }
+  ],
+  "conclusion": "This low-effort host completed one live evidence-linked research/report workflow. That does not establish reliable usability: both unknown-case deliveries failed. The server rejected malformed/stale submissions and did not invent completed reports. Clarified instructions alone did not resolve host error recovery. Keep live usability and stable-release quality gates open.",
+  "follow_up": [
+    "Make rejected claims and current-revision recovery easier for hosts to consume; preserve validation rather than accepting malformed claims.",
+    "Consider a machine-readable artifact manifest that preserves compatibility and exposes actual formats, saved paths and failures without suffix guessing.",
+    "Improve focused counterevidence query guidance and investigate overlong-query failures separately from report delivery.",
+    "Rerun fixed real-host tasks after recovery changes with renewed explicit quota approval; this four-request allowance is exhausted."
+  ],
+  "retention": "Raw local CLI traces, run configuration, checkpoints and artifacts remain under /tmp/sibyl-host-validation-20261026 for this session. They are not committed because they include full third-party source text and machine-specific paths. Hashes identify local traces but do not make them a publicly reproducible semantic benchmark."
+}

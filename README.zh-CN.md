@@ -103,6 +103,8 @@ agent 的订阅不包含 Tavily 的费用。参见[安装说明](llms-install.md
 需要报告时，向 `complete_research` 提交当前 revision 和可选的 `claim_ids`，
 再调用 `save_report(job_id=..., format="md")`。报告从宿主已经记录的主张生成，
 自动带入引用、前提、标准和假设；未被选择的未知或争议信息仍然保留。
+还需要 JSON 时，再调用一次 `save_report(format="json", job_id=...)` 并使用返回的路径；
+旧选项 `format="both"` 表示 PDF 加 Markdown，不包含 JSON，不能通过替换后缀猜测文件路径。
 旧任务继续使用原来的文字定稿接口。
 引用检查验证目标是否存在，**不证明原文支持该主张，更不保证主张符合现实**。
 研究不完整时必须保留缺口；`allow_incomplete=true` 会产生 partial 报告。
