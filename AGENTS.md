@@ -115,6 +115,16 @@ historical experiment notes are not current-model quality guarantees.
 
 ## Development
 
+Read docs/REFACTOR_GOALS.md for the functional target and
+docs/QUALITY_BUILD_PLAN.md for delivery order before extending this refactor.
+Keep maintained repository documentation, code comments/messages, MCP descriptions,
+metadata and maintainer-authored PR/release text in English. README.zh-CN.md is
+the sole Chinese documentation file and must track the English README's scope,
+installation and limitations. Preserve original-language evidence, proper names,
+multilingual fixtures and matching literals; this policy does not remove language
+support or rewrite historical results. Do not advertise zero hallucinations or
+treat citation-target validation as proof of semantic support.
+
 Keep model execution out of the server. Evidence contracts and report models
 must remain independent of host model providers.
 Implement job lifecycle changes in research_jobs.py, persistence in job_store.py,

@@ -2,6 +2,8 @@
 
 # Sibyl
 
+[English](README.md) | [Simplified Chinese](README.zh-CN.md)
+
 **A research MCP for your AI agent: investigate across sources, inspect evidence,
 track counterevidence and gaps, and export a cited report when needed.**
 
@@ -182,6 +184,10 @@ and controlled exports reduce risk; they do not turn Sibyl into a sandbox.
 
 [Release evidence](docs/LAUNCH_READINESS.md) · [Roadmap](docs/QUALITY_BUILD_PLAN.md) ·
 [Security](SECURITY.md) · [Privacy](PRIVACY.md)
+
+The [refactor goals](docs/REFACTOR_GOALS.md) define the intended evidence,
+inference and recommendation contract, with current capabilities separated from
+planned work. Traceable evidence is the goal; zero hallucinations is not a guarantee.
 
 ## Contributing
 

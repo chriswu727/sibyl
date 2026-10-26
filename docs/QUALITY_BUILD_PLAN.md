@@ -37,81 +37,157 @@ is preserved in Git history, not a source of current defaults or quality claims.
 - A ten-case live host research suite with adaptive follow-ups, inspected evidence,
   explicit discovery failures, and verified Markdown/JSON delivery.
 
-## Before stable 0.4.0
+## Implementation sequence
 
-The primary product is a research capability inside the host agent, not a second
-agent or a mandatory report generator. Prioritize automatic primary-source
-discovery and useful evidence feedback; internal model execution is out of scope.
-The agent interface is implemented; better-than-built-in-search quality is still
-a hypothesis. Validate it with a paired same-host/same-budget evaluation that
-scores the returned evidence and conclusions, not report length or round count.
+The [functional goals](REFACTOR_GOALS.md) define the target and responsibility
+boundary. This is a proposal for the remaining work, not authorization to run
+paid evaluations or an announcement that the features exist. Deliver each phase
+as a focused, tested change; do not start by adding tools or replacing the entire
+retrieval pipeline.
 
-The opt-in 0.4.0b1 beta ships the host-assisted workflow under the separate
-[beta release policy](LAUNCH_READINESS.md#release-gates). The goals below remain
-open; they are not claims that the beta has passed the research-quality gates.
+### P0 Freeze scope and acceptance cases
 
-### 1. Establish a current research-quality baseline
+Status: product goals and this plan recorded; the new case set and rubric remain
+to be implemented. Covers G1-G7.
 
-The [ten-case host baseline](examples/host-suite/README.md) is complete: frozen
-questions/rubric, live production MCP, evidence inspection, gap-led follow-ups,
-reviews, and ten verified Markdown/JSON deliveries. Nine reports are structurally
-complete and one is intentionally partial. Seven investigations required
-host-supplied URLs; do not count them as successful automatic discovery. The
-record is host-authored and self-scored, not independent evaluation.
+Define a frozen representative set before tuning retrieval. Cover three user tasks:
+technical suitability, factual investigation and evidence-based recommendations.
+Include cases for missing primary sources, stale facts, contradictory accounts,
+syndicated copies, unsupported precise numbers, unclear user preferences,
+snippet/abstract-only evidence, truncated PDFs, prompt injection, provider failure,
+budget exhaustion and follow-up questions after restart.
 
-The next quality test is a paired host-agent comparison against built-in search,
-not an internal-model evaluation. It needs explicit authorization for host usage.
-Hold model, source access and budget constant; judge evidence-linked conclusions,
-not report length. Removal of the internal model does not waive retrieval gates.
+For each case record the user need, required research questions, expected evidence
+types, failure/abstention behavior and how success is scored. Keep deterministic
+fixtures separate from held-out live evaluation questions. Record whether each
+source was automatically discovered or supplied by the host/operator.
 
-### 2. Fix measured retrieval and report failures
+Deliverables: versioned cases, scoring rubric, controlled baseline and an additive
+contract proposal for facts/inferences/recommendations/unknowns. Map each proposed
+field to an actual consumer need and a validation rule before implementing it.
+Do not create a numerical confidence score without a calibrated meaning.
 
-Prioritize false-ready states, missing query anchors, concentrated or duplicated
-sources, ineffective follow-ups, and conclusions that overlook PDF truncation.
-Turn each reproducible failure into an offline regression. Preserve unknowns
-and unsupported claims rather than weakening the readiness checks.
+Exit: cases, scoring rules and scope are reviewed before tuning. Establish numeric
+quality thresholds before inspecting treatment results; no retrospective lowering
+of the existing 66-case live-retrieval thresholds.
 
-Acceptance: targeted regressions pass, followed by the committed 66-case,
-three-repeat live retrieval gate with its existing thresholds. The small research
-baseline supplements that gate; it does not replace or waive it.
+### P1 Fix source discovery and reading failures
 
-### 3. Retain the verified runtime boundary
+Status: pending. Covers G2 and G7; starts after P0.
 
-Keep the bounded runtime soak passing. The current fixture covers repeated
-upstream failure, cancellation, timeouts, descriptor/task/file growth, worker
-cleanup, and backup/restore with the runtime stopped. It is not an RSS benchmark
-or a long-running public-provider availability test.
+Use the frozen failures to prioritize primary-source candidate selection, query
+constraints, extraction and transparent fallbacks. Improve one failure class at
+a time, using the existing search and safe-fetch boundaries. Separate discovery
+success from successful reading of a manually supplied URL.
 
-Longer-duration scenarios and additional metrics are follow-up enhancements,
-not a reason to reopen the completed runtime work. Possible metrics include fetch outcomes, parser
-failures, investigation rounds, and insufficient-evidence rates. Keep questions,
-URLs, job IDs, and evidence out of metric labels.
+Deliverables: targeted retrieval fixes and offline regressions, preserved provenance
+and extraction warnings, and a dated live result when authorized. Consider PDF
+page/range reads only if the cases show that bounded extraction prevents useful
+investigation; do not bundle OCR or browser automation into this phase.
 
-Acceptance: reproducible fault scenarios, documented recovery outcomes and
-resource measurements. Optional live scraping, alerts, or a dashboard require an
-operator-selected deployment and retention policy; a runbook example is not a
-deployed monitoring service.
+Exit: targeted cases and existing lexical/pipeline/source-quality gates pass.
+Show the effect on held-out cases and preserve failure records. A regression fix
+does not by itself establish a stable-release quality pass.
 
-### 4. Review dependencies and distribution compatibility
+### P2 Add the evidence and judgment contract
 
-Review dependency proposals individually. Major MCP SDK and data-library updates
-need dedicated compatibility tests; a green dependency audit alone is insufficient.
-Keep the implemented core, PDF/monitoring, and report/extraction clean-wheel
-checks passing for each release candidate. Extend adversarial input tests without claiming prompt-injection
-immunity or treating a parser process as a security sandbox.
+Status: proposed design, not implemented. Covers G3, G4 and G6.
 
-Acceptance: supported Python matrices, clean-wheel checks, audit results, and
-documented upgrade behavior. No release/version changes merely to clear a queue.
+Extend the existing review ledger with the minimum representation needed for
+material factual assertions, host inferences, recommendation criteria and explicit
+unknowns. Link factual premises to inspected passages; preserve contrary evidence,
+assumptions and relevant dates/scope. Recommendation weights and preferences must
+remain visibly distinct from source facts.
 
-### 5. Complete release validation and publish
+Deliverables: additive schema, compatibility/migration fixtures, deterministic
+validation, revised brief/export presentation and host instructions. Reuse the
+current evidence store and stable IDs. Old host checkpoints remain readable; old
+autonomous execution remains disabled.
 
-Retain the test method, results, and limitations. Satisfy every release gate before
-dating the changelog, tagging, publishing PyPI/Registry metadata, or expanding
-directory promotion. Follow [Releasing](RELEASING.md).
+Exit: nonexistent references, stale revisions and malformed records are rejected.
+Missing support is exposed or the assertion omitted, never silently called verified.
+Cross-format exports preserve qualifications. Tests distinguish structural
+validation from semantic support; no internal judge model is introduced.
 
-Acceptance: recorded evaluation, all required checks, and consistent GitHub,
-PyPI, Registry, Glama, and product-page descriptions. Local engineering checks
-do not establish live research accuracy.
+### P3 Validate the host research loop and usability
+
+Status: existing eight-tool workflow is implemented; real-host acceptance remains
+pending. Covers G1, G3, G5 and G6; builds on P1/P2.
+
+Improve result guidance where frozen cases show the host cannot identify the next
+useful action. Preserve compact self-contained briefs, on-demand passages,
+question-level gaps, failure reasons and remaining budgets. Do not add a tool
+unless an observed task cannot be handled clearly by the current surface.
+
+Select and record two real local MCP host/version configurations, including a
+subscription-backed workflow. Verify setup, discovery, structured-content handling,
+natural-language research requests, focused follow-ups, explicit abstention,
+optional reports and restart. Test text-oriented compatibility separately.
+Obtain explicit approval before consuming model/subscription usage.
+
+Deliverables: setup matrix, sanitized interaction traces, reproducible defects and
+corresponding fixes. Record required prompt scaffolding and manual intervention.
+An MCP client fixture is necessary but is not proof of natural agent usability.
+
+Exit: supported hosts can use the workflow without per-call human coaching;
+unsupported hosts and needed configuration are documented. No universal
+compatibility claim, hidden billing or silent interpretation of a failed call.
+
+### P4 Measure research quality against ordinary search
+
+Status: not established. Covers the differentiation claim across G2-G6.
+
+Compare the same host/model/effort, dated questions, provider access and overall
+time/call budget with and without the Sibyl workflow. Where native-search provider
+access cannot be matched, report that confound and limit causal claims.
+Declare prompts, stopping rules, retries, cache policy, scoring and budget first.
+
+Measure original-source discovery, material-claim support, important-question
+coverage, counterevidence, disclosed uncertainty, justified recommendations,
+appropriate abstention, latency and actual usage. Keep factual premises separate
+from subjective preference judgments when scoring recommendations. Retain both
+outputs and failures; blind scoring to the condition where practical.
+
+Deliverables: paired results, evidence-linked scoring, uncertainty/scope statement
+and explicit manual-URL-rescue counts. A self-scored small sample is exploratory,
+not independent proof. Do not claim that fewer response bytes imply lower token
+cost or better reasoning.
+
+Exit: predeclared comparative criteria are met before making a scoped superiority
+claim. If not, fix measured failures or narrow positioning. The separate dated
+66-case, three-repeat live retrieval gate still applies before stable publication.
+
+### P5 Validate and publish the release candidate
+
+Status: pending quality and host-acceptance work. Covers G1, G6 and G7.
+
+Retain Python 3.11-3.13 CI, lint/format, typed core, documentation checks, dependency
+audits, offline retrieval gates, real stdio replay, bounded fault/soak checks and
+clean-wheel core, PDF/monitoring and report/extraction profiles. No failing security
+check is waived by product simplification.
+
+Verify package/Registry manifests, source versus release instructions, GitHub About,
+English README, the sole Chinese README and the product-page description against
+the actual candidate. Coordinate the separately maintained website rather than
+silently assuming it matches the repository. Keep histories and published records
+accurate; a source commit does not update an existing PyPI distribution.
+
+Exit: all applicable [release gates](LAUNCH_READINESS.md#release-gates) are met,
+then follow [Releasing](RELEASING.md). After publishing, verify actual installation
+and public artifacts. No tag/version bump or promotional expansion merely because
+a documentation change or offline suite passed.
+
+## Working rules
+
+- Execute P0 first; do not substitute a feature list for acceptance cases.
+- Keep runtime and storage safeguards in force throughout every phase.
+- Separate code changes, live research measurements and publication.
+- Use explicit usage approval for paid search/model/subscription evaluations.
+- Preserve failed results and unknowns; do not optimize a benchmark by weakening it.
+- Keep maintained repository prose and metadata in English. README.zh-CN.md is
+  the only Chinese documentation; original evidence and multilingual fixtures
+  retain their language.
+- Update this plan's status only with retained implementation/verification evidence.
 
 ## Subsequent enhancements
 
