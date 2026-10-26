@@ -58,6 +58,9 @@ async def get_research(
     the full source catalog (limit 1-20); pass revision to detect stale pagination.
     passage_id reads exact evidence with provenance. full returns the compatible
     job snapshot, attempt history, selected evidence and complete report.
+    Passage results include source_char_count and is_excerpt for the bounded
+    extracted text, not complete-paper coverage. read_more points to a budgeted
+    URL read when available; supply a focused query for the missing qualification.
     Retrieval coverage is heuristic, not factual proof. Semantic support in
     host-authored reports is not independently verified. Read limitations.
     """
@@ -139,6 +142,9 @@ async def assess_research(
     recommendation also needs criteria with origin=user or host_assumption.
     Unknown facts use status=unresolved and explain the missing evidence in
     rationale. Read exact passages first; status is your judgment, not a proof.
+    Each cited passage must support every asserted qualification. Split compound
+    facts or cite separate passages; a matching URL or prior knowledge is not
+    passage support. Retrieve missing support or leave the claim unresolved.
     """
     return get_runtime().research_jobs.assess(
         job_id,

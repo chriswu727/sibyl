@@ -88,6 +88,22 @@ substantive-domain gates, consistent with persistent-job accounting. Catalog
 leads remain available. This stricter classification does not identify every HTML
 abstract/catalog page, prove semantic support or clear the frozen live gate.
 
+A renewed, explicitly bounded [two-workflow low-effort host retest](../evals/results/host-agent-structured-retest-2026-10-26.json)
+delivered confirmed Markdown/JSON files for both tasks in 44.9/49.9 seconds. The
+unknown-outcome task recovered from a rejected inference and preserved uncertainty.
+Both reports remain partial. Manual review found that the SQLite single-writer
+qualification was not supported by its cited excerpt, so this is not a two-case
+research-quality pass. The same source's qualification lay outside the selected
+passages for the host's broad query. Discovery, evidence coverage and exact
+claim-to-passage semantic support remain unfinished quality work.
+
+Exact passage reads now expose their bounded-source length, excerpt status and
+a budgeted read-more hint, and host instructions explicitly require support for
+each qualification. This makes the scope/recovery path visible; it does not
+implement semantic verification or establish a fixed host outcome. The approved
+two-workflow allowance is exhausted, and those subsequent changes have not been
+retested with another model request.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary

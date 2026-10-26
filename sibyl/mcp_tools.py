@@ -93,6 +93,9 @@ Fact claims cite supporting/challenging passage IDs; inference/recommendation
 claims link basis_claim_ids and a rationale. Recommendations must state criteria
 with origin=user or host_assumption. Explain unknowns with status=unresolved.
 Keep material claims atomic; never turn missing numbers into guessed facts.
+Check every qualification against its exact cited text, not a matching page URL
+or prior knowledge. Split compound facts or retrieve the missing support. Passage
+reads expose is_excerpt and a budgeted read_more hint; neither certifies completeness.
 Investigate counterevidence with purpose="counterevidence", then reassess gaps.
 Consume the review ledger directly; a prose report is not required. Optional
 complete_research needs current revision and optional claim_ids, then save_report
