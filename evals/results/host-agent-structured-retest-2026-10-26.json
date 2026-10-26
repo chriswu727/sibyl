@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0",
+  "date": "2026-10-26",
+  "scope": "Two explicitly authorized low-effort host workflows; functional delivery and targeted manual passage review, not a stable-release gate or paired benchmark.",
+  "source_commit": "ea5617fc73b21df3d16da5ad735d0d0bb772a7b9",
+  "host": {
+    "client": "Codex CLI",
+    "version": "0.163.0-alpha.10.2",
+    "model": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "profile": "agent",
+    "workflow_invocations_authorized": 2,
+    "workflow_invocations_used": 2,
+    "timeout_seconds_per_workflow": 120,
+    "deadline_in_prompt_seconds": 100,
+    "search_provider": "keyless",
+    "model_api_keys_supplied": false,
+    "server_model_calls": 0,
+    "native_search": false,
+    "isolation": "Fresh private working/report directories; user config ignored; shell, plugins, apps, browser, computer use and multi-agent features disabled; only Sibyl MCP preapproved; cancel hidden. Existing CLI auth, no credential files copied or inspected.",
+    "invocation_reference": "https://learn.chatgpt.com/docs/non-interactive-mode",
+    "usage_scope": "CLI-reported cumulative per-turn token usage, including repeated cached context; two workflows are not a claim of only two low-level inference calls or exact monetary/subscription cost."
+  },
+  "prompts": {
+    "unknown": "Use Sibyl to investigate the exact realized global market share NVIDIA will have in AI accelerators in 2030. Distinguish forecasts from observed outcomes. I want a short answer without invented numbers, plus Markdown and JSON reports saved through Sibyl. At most two retrieval calls; use only Sibyl tools, with no shell commands or local source inspection. Finish within 100 seconds and preserve any uncertainty in the reports.",
+    "recommendation": "Use Sibyl to research whether SQLite WAL is suitable for a local application with several reader processes and two occasional writers on one machine. I value simplicity, but I cannot afford silently lost writes. Investigate a limitation or counterargument before recommending anything. Do not invent performance measurements for my workload. Save a concise Markdown report and a JSON report through Sibyl, and tell me the outcome and paths. Keep the investigation to at most three retrieval calls. Use only Sibyl tools; do not read local source files, run shell commands, or modify code. Finish within 100 seconds, preserving gaps honestly if necessary."
+  },
+  "runs": [
+    {
+      "case": "unknown",
+      "elapsed_seconds": 44.91,
+      "exit_code": 0,
+      "timed_out": false,
+      "completed_tool_calls": 15,
+      "retrieval_calls": 1,
+      "host_supplied_direct_url_reads": 0,
+      "exact_passage_reads": 6,
+      "tool_errors": [
+        {
+          "tool": "assess_research",
+          "code": "invalid_request",
+          "message": "A supported inference or recommendation cannot depend on unresolved or disputed claims.",
+          "current_revision": 4
+        }
+      ],
+      "report_status": "partial",
+      "claim_count": 3,
+      "artifact_manifests_verified": [
+        {
+          "format": "md",
+          "size_bytes": 3807,
+          "sha256": "79cfdbc59eb55035d6a6f13240d72deec8b253f898de042cc0d6b18534d5b997"
+        },
+        {
+          "format": "json",
+          "size_bytes": 36370,
+          "sha256": "1fbfbaab1471d728c26b7099b3b5a79af382df007d6997ecfec776b111a24e46"
+        }
+      ],
+      "final_paths_confirmed": true,
+      "stored_passage_hashes_and_span_lengths_valid": true,
+      "claim_references_structurally_valid": true,
+      "requested_md_json_delivery_complete": true,
+      "usage": {
+        "input_tokens": 340344,
+        "cached_input_tokens": 295680,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2266,
+        "reasoning_output_tokens": 0
+      },
+      "raw_trace_sha256": "f62b152f602c428d0f3e4aae00eb7e0043863d0f9566a41c8fa5e566173c128c",
+      "final_answer_sha256": "effe3a89e6da73bf5e4f80118db83c3f030c9f3fe26a211b1c63f656e075cc2c",
+      "manual_review": {
+        "outcome": "Bounded abstention/delivery success, with limitations.",
+        "observations": [
+          "Final answer and report keep the realized 2030 share unknown; attributed numerical forecasts are distinguished from observed outcomes.",
+          "The two attributed numerical statements were checked against their cited retained excerpts; no primary forecast methodology was obtained.",
+          "A supported inference depending on an unresolved premise was rejected. The host repaired its assessment using the returned current revision and then exported actual md/json artifacts.",
+          "Only one retrieval was used; counterevidence/question coverage remains incomplete and the report stays partial."
+        ]
+      }
+    },
+    {
+      "case": "recommendation",
+      "elapsed_seconds": 49.85,
+      "exit_code": 0,
+      "timed_out": false,
+      "completed_tool_calls": 11,
+      "retrieval_calls": 2,
+      "host_supplied_direct_url_reads": 0,
+      "exact_passage_reads": 3,
+      "tool_errors": [],
+      "report_status": "partial",
+      "claim_count": 5,
+      "artifact_manifests_verified": [
+        {
+          "format": "md",
+          "size_bytes": 6815,
+          "sha256": "b670b52a4d8334225f31498da35e49090c8a636d8ed01cbd68623e34c209109a"
+        },
+        {
+          "format": "json",
+          "size_bytes": 78353,
+          "sha256": "720a818fedbdfa298b2a1764aec45849a344c802a0d0fbd4bc54dd0cffd40e50"
+        }
+      ],
+      "final_paths_confirmed": true,
+      "stored_passage_hashes_and_span_lengths_valid": true,
+      "claim_references_structurally_valid": true,
+      "requested_md_json_delivery_complete": true,
+      "usage": {
+        "input_tokens": 247177,
+        "cached_input_tokens": 218496,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2246,
+        "reasoning_output_tokens": 0
+      },
+      "raw_trace_sha256": "f039a9f5157b8a20ad8159b6b131206a71a5ca5554eb5be9d23a8aa06020c480",
+      "final_answer_sha256": "a7ff536c14841fd988caa62bbf1774f2f430985921ac7b30db5a581708289170",
+      "manual_review": {
+        "outcome": "Delivery success, but semantic support is insufficient for the requested recommendation.",
+        "unsupported_qualification": {
+          "claim_id": "Q2.C1",
+          "claim_text": "WAL permits reading and writing concurrently, but only one writer can write at a time.",
+          "cited_passage_id": "sb_2a5952a8b5af382c/S1/P2",
+          "cited_span": [
+            0,
+            1274
+          ],
+          "passage_hash": "d4e233fd5a6abf10127bbae6c52c5ad20454e0e392bd86a7d17a73bfc8ad70fb",
+          "finding": "The cited excerpt supports reader/writer overlap, not the only-one-writer qualification. The fact was not determined false; its recorded support is incomplete.",
+          "model_free_followup": "Re-reading the same official source produced the identical 30000-character source hash. The writer-limit phrase begins at character 7390, outside all selected excerpts for this broad query.",
+          "source_hash": "63aa97d9207e9e971feb457563a5ba7a33b9febed6ae8f77439c72e100128fba"
+        },
+        "observations": [
+          "The initial focused site query returned no sources; a second host-authored counterevidence query discovered the official WAL page without human URL rescue.",
+          "The network-filesystem and synchronous=NORMAL/checkpoint passages support their respective recorded qualifications.",
+          "User durability/simplicity criteria and uncertainty about the exact workload remain explicit; no workload performance measurements were invented.",
+          "The unreviewed first question and other gaps remain in the partial report; export success is not research completeness."
+        ]
+      }
+    }
+  ],
+  "conclusion": "Both workflows delivered confirmed Markdown and JSON reports within the authorized timeout. This is not a 2/2 research-quality pass: the SQLite recommendation contains a material qualification without supporting cited passage text. The earlier failed full live gate remains open. The approved two-workflow allowance is exhausted; no further model request is authorized by this record.",
+  "limitations": [
+    "One host/model and two purposively selected tasks; no blinded scoring, cross-host compatibility result, native-search comparator or causal improvement estimate.",
+    "Raw traces, checkpoints and third-party page excerpts are retained privately under /tmp/sibyl-host-retest-20261026, not committed.",
+    "Recorded source predates subsequent excerpt-scope metadata and passage-support guidance edits. Those changes have not received another model-backed test."
+  ]
+}

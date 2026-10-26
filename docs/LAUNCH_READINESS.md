@@ -363,6 +363,28 @@ quality verdict has been established after those parsing changes.
 
 ## Claims supported now
 
+### Structured-recovery host retest, 2026-10-26
+
+The [retained two-workflow record](../evals/results/host-agent-structured-retest-2026-10-26.json)
+used Codex CLI 0.163.0-alpha.10.2, GPT-6 Luna low, anonymous search and the same
+frozen source commit for both tasks, under fresh approval for two workflows of
+at most 120 seconds each. No human supplied URLs or coached calls during a run.
+Both delivered confirmed Markdown/JSON artifacts in 44.9 and 49.9 seconds, with
+partial report status retained. The unknown case repaired a rejected supported
+inference and did not invent a realized future result or saved paths.
+
+Delivery is not semantic correctness. The SQLite recommendation's cited passage
+supports reader/writer overlap but not its added single-writer qualification.
+That qualification exists elsewhere in the same official document, outside the
+selected excerpts for this broad query. Other inspected limits were supported,
+but this material support gap prevents a research-quality pass. The record keeps
+tool errors, hashes, usage counters, limitations and the unsupported passage ID.
+
+Subsequent excerpt-scope metadata and read-more guidance have offline coverage,
+not a new host result. The approved two-workflow allowance is exhausted. This is
+not a paired comparator, cross-host test, full semantic benchmark or replacement
+for the failed 66-case gate; stable release remains blocked by quality criteria.
+
 ### Body-selection regressions, 2026-10-26
 
 The [two-case model-free real-MCP record](../evals/results/body-evidence-2026-10-26.json)

@@ -154,6 +154,20 @@ class ResearchJobs:
                 url=display_url(source.url),
                 title=source.title,
                 passage=passage.__dict__,
+                source_char_count=source.char_count,
+                is_excerpt=passage.start_char > 0
+                or passage.end_char < source.char_count,
+                read_more={
+                    "tool": "continue_research",
+                    "job_id": job_id,
+                    "url": display_url(source.url),
+                    "requires_focused_query": True,
+                    "uses_retrieval_step": True,
+                }
+                if job["mode"] == "host"
+                and job["status"] in {"awaiting_input", "interrupted"}
+                and len(notebook.attempts) < notebook.max_steps
+                else None,
                 source_kind=source_kind(source, notebook.preferred_domains),
                 source_id=source.source_id,
                 content_hash=source.content_hash,

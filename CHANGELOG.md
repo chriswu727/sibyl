@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Expose bounded-source length, excerpt status and an available budgeted read-more
+  route on exact passage reads. Clarify support for each factual qualification.
+- Retain the authorized two-workflow host retest: confirmed partial md/json
+  delivery for both cases, but a material unsupported SQLite qualification keeps
+  semantic quality open. Do not treat export success as a research-quality pass.
 - Keep Crossref metadata and search snippets as inspectable leads, not substantive
   text or independent full-text domains for retrieval readiness. Expose the
   substantive-domain count separately without changing catalog domain counts.

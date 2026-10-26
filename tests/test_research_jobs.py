@@ -1,6 +1,7 @@
 """Offline research lifecycle, persistence, resource and citation contracts."""
 
 import asyncio
+import hashlib
 import json
 import os
 import stat
@@ -89,6 +90,39 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
             mock.AsyncMock(return_value=evidence_bundle("Focused question")),
         ):
             return await self.jobs.continue_job(job["job_id"], "Focused question")
+
+    async def test_exact_passage_scope_and_budgeted_read_more_are_read_only(self):
+        bundle = evidence_bundle("Focused question", 1)
+        source = bundle.sources[0]
+        passage = source.evidence[0]
+        excerpt = passage.text[:80]
+        passage = replace(
+            passage,
+            text=excerpt,
+            end_char=passage.start_char + len(excerpt),
+            content_hash=hashlib.sha256(excerpt.encode()).hexdigest(),
+        )
+        bundle = replace(bundle, sources=[replace(source, evidence=[passage])])
+        for max_steps in (1, 3):
+            job = self.start(max_steps=max_steps)
+            with mock.patch(
+                "sibyl.research_jobs.gather_source_bundle",
+                mock.AsyncMock(return_value=bundle),
+            ):
+                job = await self.jobs.continue_job(job["job_id"], "Focused question")
+            before = self.jobs.get(job["job_id"])
+            view = self.jobs.get(job["job_id"], passage.citation_id)
+            self.assertEqual(view["source_char_count"], source.char_count)
+            self.assertTrue(view["is_excerpt"])
+            self.assertEqual(view["passage"]["text"], excerpt)
+            if max_steps == 1:
+                self.assertIsNone(view["read_more"])
+            else:
+                self.assertEqual(view["read_more"]["tool"], "continue_research")
+                self.assertEqual(view["read_more"]["url"], source.url)
+                self.assertTrue(view["read_more"]["requires_focused_query"])
+                self.assertTrue(view["read_more"]["uses_retrieval_step"])
+            self.assertEqual(self.jobs.get(job["job_id"]), before)
 
     async def test_autonomous_start_rejected_without_creating_job(self):
         before = self.jobs.store.list_jobs()
