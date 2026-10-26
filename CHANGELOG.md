@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserve decimal/release identifiers in focused queries and lexical ranking;
+  recognize contracted question words so quoted-title discovery is not skipped.
 - Present claim-based conclusions and reasoning once in human reports while
   preserving compatible JSON fields, unknowns, criteria, citations and old layouts.
 - Check PDF glyph coverage, retain common punctuation with the fallback font,

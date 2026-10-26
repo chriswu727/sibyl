@@ -67,6 +67,19 @@ JSON retains compatible summary/findings/analysis fields and the full ledger.
 PDF rendering checks font coverage and reports failures instead of silently losing
 required text. Legacy prose layouts and saved research state remain unchanged.
 
+Tracing three live misses found separate discovery failures rather than only a
+passage-window problem. Contracted question words such as What's skipped the
+existing quoted-title fallback, and focused patch queries split 0.7 into 0 7
+while lexical ranking discarded both digits. Targeted regressions now preserve
+those query identifiers and recognize contractions. Missing historical tenure and
+unreadable/metadata-only papers still need investigation; these parsing fixes do
+not clear the retained live gate or establish version-specific semantic support.
+The [three-case tracing record](../evals/results/query-identifiers-2026-10-26.json)
+retains the before/after queries, failed reads and after-run outcomes. None of
+the three after runs contains a frozen gold/alias match; two nevertheless return
+retrieval status ok. Do not present query preservation or those heuristic statuses
+as successful answers. The 66-case gate has not been rerun after this parsing fix.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary
