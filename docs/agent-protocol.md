@@ -116,6 +116,18 @@ passages separately. No additional download or paid model call is needed to read
 an already stored passage. `passage_id` must not be combined with brief/source
 views. Omitting `job_id` still lists jobs rather than returning a research brief.
 
+Search bundles select up to three disjoint excerpts per source within the requested
+character budget. Unicode lexical selection favors prose/table matches over
+navigation-only hits; it does not translate queries or establish semantic support.
+Offsets address the normalized extracted source, not concatenated excerpts or HTML
+bytes. If the stored passages do not cover a needed section, call
+`continue_research(job_id, url=..., query="the specific missing issue", question_id=...)`.
+This uses another retrieval attempt, extracts at most 60,000 characters through the
+same safe reader, and returns at most nine passages / 16,000 evidence characters.
+Omitted sections, extraction truncation and unreadable PDF pages remain limitations.
+Changing the selected spans changes their bundle-scoped identities, even when the
+underlying extracted-source hash is unchanged; old stored passages remain accessible.
+
 ## Investigate and stop honestly
 
 Use focused `continue_research` calls linked to a `question_id`, with a rationale

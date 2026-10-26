@@ -334,6 +334,25 @@ does not authorize more model usage. Stable quality gates remain open.
 
 ## Claims supported now
 
+### Body-selection regressions, 2026-10-26
+
+The [two-case model-free real-MCP record](../evals/results/body-evidence-2026-10-26.json)
+repeats the frozen SQLite WAL and Stripe/AWS retry queries without supplied URLs.
+The inspected SQLite and AWS extracted-source hashes are unchanged between runs.
+Before the change, their selected passages covered characters 0-4000 and omitted
+the declared single-writer / retry-contract qualifications. After body-aware
+multi-span selection, the SQLite excerpt includes the one-writer limit alongside
+reader/writer overlap; AWS includes resource-lifetime retention and parameter
+mismatch behavior. The record retains span offsets, hashes and phrase-match scope.
+
+Selection remains lexical, not semantic verification. This small sequential live
+check does not establish complete-source reading, a successful host-authored
+investigation, or superiority over native search. URL reads now extract up to
+60,000 characters but return at most 16,000 evidence characters; omitted text and
+parser limits remain visible. The separate stable research-quality gates remain.
+
+### Supported scope
+
 - A local Deep Research MCP for multi-round investigations and traceable reports.
 - Keyless host-assisted research with explicit evidence reviews and limitations.
 - Versioned passage provenance, duplicate-content signals, and bounded text-PDF reads.

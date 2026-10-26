@@ -1354,6 +1354,48 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.passages_returned, len(source.evidence))
         self.assertEqual(bundle.diagnostics.chunks_ranked, len(source.evidence))
 
+    async def test_body_selection_preserves_qualifications_beyond_contents(self):
+        text = (
+            "Contents\n"
+            + "Late requests\nRequest token intent\nRetention\n" * 50
+            + "\nBackground notes. " * 250
+            + "\nLate requests require retained token state; the retention period is bounded. "
+            * 15
+            + "\nOther background notes. " * 250
+            + "\nThe same request token with different intent causes a parameter mismatch error. "
+            * 15
+        )
+        page = WebPage("https://docs.example/retries", "Retry contract", text)
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(return_value=[SearchResult(page.title, page.url, "")]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[page])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "late requests request token intent retention",
+                max_sources=1,
+                chars_per_source=2400,
+                client=object(),
+            )
+        source = bundle.sources[0]
+        selected = "\n".join(p.text for p in source.evidence)
+        self.assertIn("retention period is bounded", selected)
+        self.assertIn("parameter mismatch error", selected)
+        self.assertLessEqual(sum(len(p.text) for p in source.evidence), 2400)
+        self.assertEqual(source.content_hash, hashlib.sha256(text.encode()).hexdigest())
+        for passage in source.evidence:
+            self.assertEqual(passage.text, text[passage.start_char : passage.end_char])
+            self.assertEqual(
+                passage.content_hash, hashlib.sha256(passage.text.encode()).hexdigest()
+            )
+
     async def test_bounds_request_parameters(self):
         with (
             mock.patch(

@@ -39,6 +39,26 @@ class TestRelevantWindow(unittest.TestCase):
     def test_non_positive_width_returns_empty(self):
         self.assertEqual(relevant_window("query", "text", width=0), "")
 
+    def test_chinese_query_selects_the_answer_region(self):
+        text = "安装介绍。" * 1000 + "\n写入限制：数据库只支持一个写入者。" * 50
+        self.assertIn(
+            "只支持一个写入者", relevant_window("数据库写入限制", text, width=600)
+        )
+
+    def test_body_matches_beat_repeated_contents_headings(self):
+        text = (
+            "Contents\n"
+            + "Token retention\nLate retries\n" * 80
+            + "\nBackground material. " * 200
+            + "\nToken retention cannot be indefinite. Late retries require handling after expiry. "
+            * 20
+        )
+        start, end = relevant_window_span(
+            "token retention late retries", text, width=800
+        )
+        self.assertGreater(start, 2000)
+        self.assertIn("cannot be indefinite", text[start:end])
+
 
 if __name__ == "__main__":
     unittest.main()

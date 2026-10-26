@@ -100,6 +100,8 @@ async def continue_research(
 
     Host attempts link to question_id. Purpose: explore, counterevidence, or
     follow_citation. URL reads share the job budget and persist exact passages;
+    supply query with url to target missing sections in a bounded 60000-character
+    extraction (at most 16000 evidence characters). Omitted text remains unread.
     follow_citation requires a parent passage ID. This parent link is host-declared,
     not an automatically verified hyperlink.
     Explain why this round is needed in rationale. Each round records its prior

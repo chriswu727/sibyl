@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Select bounded, disjoint evidence passages across extracted source sections;
+  prefer prose/table matches over navigation-only matches and support Unicode
+  lexical selection without translation or an internal model.
+- Let query-targeted URL reads inspect up to 60,000 extracted characters while
+  retaining a 16,000-character evidence ceiling, exact offsets/hashes, selection
+  identities, extraction warnings and explicit unread-section limitations.
+- Return structured agent recovery for rejected claims and stale revisions, plus
+  confirmed per-format export manifests with file size/hash and explicit failures.
 - Add evidence-linked claims to new MCP research jobs: atomic facts, inferences,
   recommendations, explicit unknowns, criteria and reasoning dependencies.
 - Validate claim/evidence IDs and dependency cycles; require dependent reviews
