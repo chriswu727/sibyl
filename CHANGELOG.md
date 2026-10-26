@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep Crossref metadata and search snippets as inspectable leads, not substantive
+  text or independent full-text domains for retrieval readiness. Expose the
+  substantive-domain count separately without changing catalog domain counts.
 - Preserve decimal/release identifiers in focused queries and lexical ranking;
   recognize contracted question words so quoted-title discovery is not skipped.
 - Present claim-based conclusions and reasoning once in human reports while

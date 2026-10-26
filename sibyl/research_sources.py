@@ -78,6 +78,13 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
             16000,
             0,
             passages_returned=len(passages),
+            unique_domains=int(usable),
+            substantive_sources=int(
+                usable and page.content_origin not in {"search_snippet", "crossref_api"}
+            ),
+            substantive_domains=int(
+                usable and page.content_origin not in {"search_snippet", "crossref_api"}
+            ),
             evidence_chars=sum(len(passage.text) for passage in passages),
             evidence_sufficiency="limited",
             recommended_action="refine_query",

@@ -289,6 +289,13 @@ with only the confirmed Markdown artifact; inspect the manifest failures.
 `verification_scope="citation_targets_only"` means reference checks, not proof
 of semantic support or factual truth.
 
+Retrieval diagnostics keep `unique_domains` for all returned sources and expose
+`substantive_domains` for relevant extracted-text sources used by readiness.
+Crossref metadata and search-snippet origins do not count as substantive text,
+independent content or full-text domain diversity. They remain inspectable leads.
+Downloaded HTML may itself be an abstract or catalog entry; the host still needs
+to judge the actual evidence scope rather than infer a full paper was read.
+
 Markdown, PDF, and plain-text reports separate **Cited Sources** from **Uncited
 Background** using citation markers in the report. Source numbers stay unchanged,
 including gaps between numbers; JSON retains the original source inventory and

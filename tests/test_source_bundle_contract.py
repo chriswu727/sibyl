@@ -45,6 +45,16 @@ class TestSourceBundleContract(unittest.TestCase):
             )
         )
 
+    def test_older_payload_without_substantive_domains_remains_readable(self):
+        expected = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+        expected["diagnostics"].pop("substantive_domains")
+        bundle = TypeAdapter(SourceBundle).validate_python(expected)
+        self.assertEqual(bundle.diagnostics.substantive_domains, 0)
+        self.assertEqual(
+            bundle.sources[0].evidence[0].text,
+            expected["sources"][0]["evidence"][0]["text"],
+        )
+
     def test_contract_schema_exposes_consumer_enums(self):
         schema = TypeAdapter(SourceBundle).json_schema()
 
