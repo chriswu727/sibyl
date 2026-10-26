@@ -118,6 +118,10 @@ Reports are optional. For a new job, submit `complete_research` with the current
 revision and optional `claim_ids`, then `save_report(job_id=..., format="md")`.
 For JSON as well, call `save_report` again with `format="json"` and use its returned
 path. The legacy `format="both"` means PDF plus Markdown, not Markdown plus JSON.
+Agent exports return a machine-readable manifest with confirmed file paths,
+formats, sizes, hashes and per-format failures. Errors expose recovery instructions
+and the current saved revision when available; rejected claims are never silently
+accepted. See the [agent protocol](docs/agent-protocol.md#structured-recovery).
 Sibyl renders the host-authored claims and citations, including their premises,
 criteria and assumptions. Unknown/disputed claims remain visible even if omitted
 from the selection. Old saved jobs retain prose-based completion.

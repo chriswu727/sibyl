@@ -325,6 +325,13 @@ No native-search comparator, cross-host run, exact monetary cost or new release
 verdict was established. The approved four-request allowance is exhausted.
 This is functional evidence and a retained usability failure, not a stable gate pass.
 
+The current source now adds structured recovery for rejected claims and stale
+revisions, plus confirmed per-format export manifests. Offline real-stdio
+regressions cover reload/repair and explicit unknown-report export without
+relaxing validation. This is an interface-contract improvement, not a new host
+measurement: the failed Luna runs above have not been rerun, and their approval
+does not authorize more model usage. Stable quality gates remain open.
+
 ## Claims supported now
 
 - A local Deep Research MCP for multi-round investigations and traceable reports.

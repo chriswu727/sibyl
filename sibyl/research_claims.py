@@ -83,7 +83,9 @@ def validate_claims(
             claim = ResearchClaim.model_validate(value).model_dump()
         except ValidationError:
             raise ResearchRequestError(
-                "Invalid claim record; follow the ResearchClaim schema."
+                "Invalid claim record; follow the ResearchClaim schema.",
+                code="invalid_claim",
+                field="claims",
             ) from None
         if not claim["claim_id"].startswith(question_id + "."):
             raise ResearchRequestError(
@@ -107,7 +109,12 @@ def validate_claims(
             )
         if not set(support + challenge) <= evidence_ids:
             raise ResearchRequestError(
-                "Claim references an unknown or snippet-only passage."
+                "Claim references an unknown or snippet-only passage.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.supporting_passage_ids"
+                if not set(support) <= evidence_ids
+                else "claims.challenging_passage_ids",
             )
         if claim["status"] == "supported" and challenge:
             raise ResearchRequestError(
@@ -115,13 +122,23 @@ def validate_claims(
             )
         if claim["status"] == "unresolved" and not claim["rationale"]:
             raise ResearchRequestError(
-                "Unresolved claims must explain what evidence is missing or disputed."
+                "Unresolved claims must explain what evidence is missing or disputed.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.rationale",
             )
         if claim["status"] == "disputed" and (
             not challenge or not (support or claim["basis_claim_ids"])
         ):
             raise ResearchRequestError(
-                "Disputed claims require both a supporting basis and challenging evidence."
+                "Disputed claims require both a supporting basis and challenging evidence.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.challenging_passage_ids"
+                if not challenge
+                else "claims.supporting_passage_ids"
+                if claim["kind"] == "fact"
+                else "claims.basis_claim_ids",
             )
         if claim["kind"] == "fact":
             if claim["basis_claim_ids"] or claim["criteria"]:
@@ -130,20 +147,32 @@ def validate_claims(
                 )
             if claim["status"] == "supported" and not support:
                 raise ResearchRequestError(
-                    "Supported facts require exact evidence passage IDs."
+                    "Supported facts require exact evidence passage IDs.",
+                    code="invalid_claim",
+                    claim_id=claim["claim_id"],
+                    field="claims.supporting_passage_ids",
                 )
         else:
             if not claim["rationale"]:
                 raise ResearchRequestError(
-                    "Inferences and recommendations must explain their reasoning."
+                    "Inferences and recommendations must explain their reasoning.",
+                    code="invalid_claim",
+                    claim_id=claim["claim_id"],
+                    field="claims.rationale",
                 )
             if claim["status"] != "unresolved" and not claim["basis_claim_ids"]:
                 raise ResearchRequestError(
-                    "Inferences and recommendations must identify their factual/reasoning basis."
+                    "Inferences and recommendations must identify their factual/reasoning basis.",
+                    code="invalid_claim",
+                    claim_id=claim["claim_id"],
+                    field="claims.basis_claim_ids",
                 )
         if claim["kind"] == "recommendation" and not claim["criteria"]:
             raise ResearchRequestError(
-                "Recommendations must state criteria and whether they come from the user or a host assumption."
+                "Recommendations must state criteria and whether they come from the user or a host assumption.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.criteria",
             )
         if claim["kind"] != "recommendation" and claim["criteria"]:
             raise ResearchRequestError("Only recommendations have selection criteria.")

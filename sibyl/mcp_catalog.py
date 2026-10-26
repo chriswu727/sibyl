@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 from contextlib import asynccontextmanager
 from functools import wraps
 from typing import get_type_hints
@@ -13,6 +14,8 @@ from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel
 
 from .async_cache import CapacityError
+from .mcp_errors import AgentMCP, SafeToolError
+from .report_exports import ExportManifest, ReportExportError
 from .research_errors import ResearchRequestError
 from .research_state import ResearchBudgetExceeded
 from .research_views import research_brief
@@ -51,31 +54,53 @@ class ToolCatalog:
         def register(function):
             @wraps(function)
             async def bounded(*args, **kwargs):
-                _validate_payload([*args, *kwargs.values()])
+                async def execute():
+                    result = await function(*args, **kwargs)
+                    if isinstance(result, ExportManifest) and result.status == "failed":
+                        raise ReportExportError(result)
+                    return result
+
                 try:
-                    return await get_runtime().execute(
-                        function.__name__, lambda: function(*args, **kwargs)
-                    )
+                    _validate_payload([*args, *kwargs.values()])
+                    return await get_runtime().execute(function.__name__, execute)
                 except (
                     CapacityError,
                     ResearchBudgetExceeded,
                     ResearchRequestError,
                 ) as exc:
-                    raise ToolError(str(exc)) from None
+                    error = (
+                        exc
+                        if isinstance(exc, ResearchRequestError)
+                        else ResearchRequestError(
+                            str(exc),
+                            code="capacity_exceeded"
+                            if isinstance(exc, CapacityError)
+                            else "budget_exhausted",
+                        )
+                    )
+                    raise SafeToolError(error) from None
                 except ValueError:
-                    raise ToolError(
-                        "Invalid request or configuration. Check the tool parameters."
+                    raise SafeToolError(
+                        ResearchRequestError(
+                            "Invalid request or configuration. Check the tool parameters."
+                        )
                     ) from None
                 except asyncio.TimeoutError:
-                    raise ToolError(
-                        "Operation deadline exceeded. Retry with a narrower request."
+                    raise SafeToolError(
+                        ResearchRequestError(
+                            "Operation deadline exceeded. Inspect state before retrying with a narrower request.",
+                            code="deadline_exceeded",
+                        )
                     ) from None
-                except ToolError:
-                    raise
+                except ToolError as exc:
+                    raise SafeToolError(ResearchRequestError(str(exc))) from None
                 except Exception:
                     # Provider exceptions can contain credentials or full request URLs.
-                    raise ToolError(
-                        "Operation failed. Check configuration and retry."
+                    raise SafeToolError(
+                        ResearchRequestError(
+                            "Operation failed. Check configuration and retry.",
+                            code="operation_failed",
+                        )
                     ) from None
 
             bounded.__annotations__ = get_type_hints(function)
@@ -95,8 +120,13 @@ class ToolCatalog:
             finally:
                 await runtime.aclose()
 
-        server = FastMCP(
-            "sibyl", log_level="WARNING", instructions=instructions, lifespan=lifespan
+        server_options = dict(
+            log_level="WARNING", instructions=instructions, lifespan=lifespan
+        )
+        server = (
+            AgentMCP(runtime, **server_options)
+            if agent_mode
+            else FastMCP("sibyl", **server_options)
         )
         for function, options in self.tools:
 
@@ -106,6 +136,13 @@ class ToolCatalog:
                     token = current_runtime.set(runtime)
                     try:
                         result = await function(*args, **kwargs)
+                        if isinstance(result, ExportManifest):
+                            if not agent_mode:
+                                return result.text()
+                            return CallToolResult(
+                                content=[TextContent(type="text", text=result.text())],
+                                structuredContent=result.model_dump(mode="json"),
+                            )
                         if agent_mode and function.__name__ in {
                             "start_research",
                             "continue_research",
@@ -132,6 +169,16 @@ class ToolCatalog:
                     finally:
                         current_runtime.reset(token)
 
+                if function.__annotations__.get("return") is ExportManifest:
+                    signature = inspect.signature(function)
+                    hints = get_type_hints(function)
+                    invoke.__signature__ = signature.replace(
+                        parameters=[
+                            parameter.replace(annotation=hints[parameter.name])
+                            for parameter in signature.parameters.values()
+                        ],
+                        return_annotation=ExportManifest if agent_mode else str,
+                    )
                 return invoke
 
             server.tool(**options)(bind(function))

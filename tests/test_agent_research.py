@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import CallToolResult
 from research_fixtures import evidence_bundle
 
@@ -46,6 +45,13 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(response, CallToolResult)
         self.assertFalse(response.isError)
         self.assertIn("structuredContent", response.content[0].text)
+        return response.structuredContent
+
+    async def rejected(self, name, **arguments):
+        response = await self.server.call_tool(name, arguments)
+        self.assertIsInstance(response, CallToolResult)
+        self.assertTrue(response.isError)
+        self.assertEqual(response.structuredContent["view"], "error")
         return response.structuredContent
 
     async def test_agent_surface_and_compatible_default(self):
@@ -109,13 +115,21 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
                 )
             self.assertIn("does not create JSON", tools["save_report"].description)
             self.assertIn("independent filename", tools["save_report"].description)
+            fields = tools["save_report"].outputSchema["properties"]
+            if agent_mode:
+                self.assertTrue(
+                    {"artifacts", "failures", "report_status"} <= fields.keys()
+                )
+            else:
+                self.assertEqual(set(fields), {"result"})
 
     async def test_invalid_source_policy_does_not_create_a_job(self):
-        with self.assertRaises(ToolError):
-            await self.server.call_tool(
-                "start_research",
-                {"question": "Question", "source_policy": "Prefer official sources"},
-            )
+        error = await self.rejected(
+            "start_research",
+            question="Question",
+            source_policy="Prefer official sources",
+        )
+        self.assertEqual(error["error"]["code"], "invalid_parameters")
         self.assertEqual(self.jobs.store.list_jobs(), [])
 
     async def test_brief_is_lossless_for_reviews_limits_and_citation_identity(self):
@@ -172,22 +186,19 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             {"offset": -1},
             {"revision": -1},
         ):
-            with self.assertRaises(ToolError):
-                await self.server.call_tool(
-                    "get_research",
-                    {"job_id": job["job_id"], "view": "sources", **parameters},
-                )
+            await self.rejected(
+                "get_research", job_id=job["job_id"], view="sources", **parameters
+            )
         updated = await self.retrieve(job, "new")
         self.assertGreater(updated["revision"], job["revision"])
-        with self.assertRaisesRegex(ToolError, "restart source pagination"):
-            await self.server.call_tool(
-                "get_research",
-                {
-                    "job_id": job["job_id"],
-                    "view": "sources",
-                    "revision": job["revision"],
-                },
-            )
+        error = await self.rejected(
+            "get_research",
+            job_id=job["job_id"],
+            view="sources",
+            revision=job["revision"],
+        )
+        self.assertIn("restart source pagination", error["error"]["message"])
+        self.assertEqual(error["current_revision"], updated["revision"])
 
     async def test_finalized_partial_report_is_not_a_quality_pass(self):
         job = await self.retrieve(self.start())
@@ -240,8 +251,7 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             {"job_id": job["job_id"], "view": "brief", "passage_id": "x"},
             {"job_id": job["job_id"], "view": "invented"},
         ):
-            with self.assertRaises(ToolError):
-                await self.server.call_tool("get_research", arguments)
+            await self.rejected("get_research", **arguments)
 
     async def test_new_evidence_revokes_old_readiness_in_agent_brief(self):
         job = await self.retrieve(self.start())

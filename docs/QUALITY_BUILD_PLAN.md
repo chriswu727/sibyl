@@ -36,10 +36,14 @@ both unknown-case deliveries failed. The first guessed a nonexistent JSON path;
 after export instructions were clarified, the next attempted the correct formats
 but did not repair rejected claims or stale revisions. The fourth request exhausted
 the approved allowance. CLI exit zero did not establish delivery success.
-Explicit choice schemas and export semantics are implemented; low-effort host
-error recovery remains open. Prioritize actionable claim/revision errors and an
-unambiguous artifact manifest without weakening integrity checks. This smoke is
-not a paired search comparison or a stable-release gate pass.
+Explicit choice schemas and export semantics are implemented. Agent calls now
+also return structured claim/revision recovery and confirmed artifact manifests,
+with real stdio regression coverage for rejected assessments, reload, repair and
+explicit unknown-report export. Validation rules remain intact and keyless text
+responses are preserved. No new model request was run; whether these contracts
+improve low-effort host behavior still needs a separately authorized retest.
+The recorded smoke remains a usability failure, not a paired search comparison
+or a stable-release gate pass.
 
 ## The finished user experience
 

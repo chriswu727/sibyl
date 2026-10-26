@@ -64,7 +64,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["sibyl/job_models.py", "sibyl/job_store.py", "sibyl/research_state.py", "sibyl/research_review.py", "sibyl/research_jobs.py", "sibyl/research_views.py", "sibyl/research_claims.py"]
+files = ["sibyl/job_models.py", "sibyl/job_store.py", "sibyl/research_state.py", "sibyl/research_review.py", "sibyl/research_jobs.py", "sibyl/research_views.py", "sibyl/research_claims.py", "sibyl/mcp_errors.py", "sibyl/report_exports.py"]
 follow_imports = "silent"
 check_untyped_defs = true
 disallow_untyped_defs = true

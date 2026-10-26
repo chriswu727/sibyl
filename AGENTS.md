@@ -45,6 +45,14 @@ Use `view="sources"` with the current revision to page the full catalog, and
    and disputed claims remain included. Old contract-1 jobs retain prose completion.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
+Agent failures retain `isError=true` and structured recovery. For `view="error"`,
+inspect `error.code/field/claim_id`, `current_revision` and `recovery.read`; reload
+the current brief and repair rejected claims before finalizing. Never guess a
+revision. Agent exports return `view="export"` with confirmed `artifacts`
+(format/path/size_bytes/sha256) and `failures`. Only use listed artifact paths.
+Export status `saved` does not upgrade a partial `report_status`. Keyless keeps
+its text export/error responses. See docs/agent-protocol.md.
+
 Use `source_policy="academic"` to enable scholarly discovery, and
 `preferred_domains` for topic-appropriate primary publishers. These are routing
 hints, not verified authority or peer-review labels. Encyclopedia/community

@@ -78,7 +78,8 @@ class ResearchJobs:
             raise CapacityError("Research job is busy.")
         if job["status"] == "completed":
             raise ResearchRequestError(
-                "Completed reports are immutable. Start a new research job."
+                "Completed reports are immutable. Start a new research job.",
+                code="immutable_report",
             )
 
     def start(
@@ -341,9 +342,17 @@ class ResearchJobs:
     ) -> dict[str, Any]:
         job = self.store.get(job_id)
         self._idle(job)
-        if job["mode"] != "host" or revision != job["revision"]:
+        if job["mode"] != "host":
             raise ResearchRequestError(
-                "Reload the host research job and use its current revision."
+                "Legacy autonomous jobs cannot be assessed. Read/export the saved state or start a new host job.",
+                code="unsupported_mode",
+                field="mode",
+            )
+        if revision != job["revision"]:
+            raise ResearchRequestError(
+                "Reload the host research job and use its current revision.",
+                code="stale_revision",
+                field="revision",
             )
         notebook = ResearchNotebook.from_dict(job["notebook"])
         review_question(
@@ -380,9 +389,17 @@ class ResearchJobs:
 
         job = self.store.get(job_id)
         self._idle(job)
-        if job["mode"] != "host" or job["revision"] != revision:
+        if job["mode"] != "host":
             raise ResearchRequestError(
-                "Reload the host research job and use its current revision."
+                "Legacy autonomous jobs cannot be finalized. Read/export the saved state or start a new host job.",
+                code="unsupported_mode",
+                field="mode",
+            )
+        if job["revision"] != revision:
+            raise ResearchRequestError(
+                "Reload the host research job and use its current revision.",
+                code="stale_revision",
+                field="revision",
             )
         if len(key_findings) > 32 or len(limitations) > 32:
             raise ValueError("At most 32 findings and limitations are supported.")
@@ -408,7 +425,8 @@ class ResearchJobs:
             and not allow_incomplete
         ):
             raise ResearchRequestError(
-                "Research gaps remain. Inspect research_plan, review the evidence, or set allow_incomplete=true to disclose the gaps."
+                "Research gaps remain. Inspect research_plan, review the evidence, or set allow_incomplete=true to disclose the gaps.",
+                code="research_gaps",
             )
         sources = notebook.report_sources()
         if not sources and not (

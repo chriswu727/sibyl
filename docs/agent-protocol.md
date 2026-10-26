@@ -26,8 +26,33 @@ The agent profile exposes eight tools:
 The six research operations return domain JSON in MCP `structuredContent` and
 a short text pointer. The host must actually consume `structuredContent`; a
 text-only integration should use `--profile keyless`. `gather_bundle` keeps the
-SourceBundle contract and `save_report` keeps its export response. Tool failures
-remain MCP errors, not successful briefs containing an invented outcome.
+SourceBundle contract. `save_report` returns an export manifest in the agent
+profile and the existing text response in the keyless profile. Failures remain
+MCP errors, not successful briefs containing an invented outcome.
+
+## Structured recovery
+
+In the agent profile, failed calls keep MCP `isError=true` and provide
+`structuredContent`. Request/workflow errors use `schema_version="1.0"`,
+`view="error"`, and `status="error"`. They include `operation`, an `error` object
+with a safe `code`/`message` and optional `field`/`claim_id`, plus `job_id`,
+`current_revision` and `job_status` when the saved job is available.
+Schema failures omit input values and provider exceptions are sanitized.
+
+`recovery.action` and `recovery.instructions` explain the next step.
+`recovery.read` supplies a tool name and arguments to reload the current brief;
+it is null if no saved job could be read. Common actions are `repair_assessment`,
+`reload_research`, `review_and_finalize`, `inspect_gaps`, and `start_new_research`.
+Generic failures ask the host to correct/inspect the request, not retry blindly.
+
+A rejected assessment is atomic: it does not save claims or increment the
+revision. Reload the brief, repair the indicated claim, and resubmit the complete
+question claim set. Do not advance a guessed revision or finalize as if a rejected
+claim existed. Current revision is a recovery hint, not a lock against later
+changes. Never fabricate a passage or bypass validation merely to satisfy a check;
+retain an unresolved claim and explain the gap when support is unavailable.
+Export failures use the export manifest below, also with `isError=true` when
+no artifact was confirmed. The keyless profile retains text errors.
 
 ## Brief 1.0
 
@@ -127,6 +152,30 @@ as saved; replacing a Markdown suffix does not identify a JSON artifact.
 A rejected assessment does not persist that review or advance its revision. Correct
 the request or preserve the missing review as a gap before finalizing.
 
+### Export manifest 1.0
+
+Agent `save_report` results have `schema_version="1.0"`, `view="export"`, `job_id`
+(null for the legacy last-report fallback), `report_status`, `requested_formats`,
+`artifacts`, `failures`, and `status`. Each artifact contains its `format`, exact
+absolute `path`, `size_bytes`, and `sha256`, checked against a real file in the
+output store before returning. Hashes identify bytes, not factual correctness.
+Failure entries contain only `format`, a safe `code`, and `message`; failed
+formats do not acquire a guessed artifact path.
+
+| Export status | Meaning |
+|---|---|
+| `saved` | Every requested artifact was confirmed; the research may still be partial |
+| `partial` | Some formats succeeded and some failed; use only listed artifacts |
+| `failed` | No saved artifact was confirmed; MCP `isError=true` |
+
+For example, unavailable PDF rendering with `format="both"` returns `partial`,
+one Markdown artifact, and one PDF failure. A PDF-only failure returns `failed`
+with an empty artifact list. If a later format fails after a successful PDF,
+that PDF remains in the partial manifest. Files are independent exports, not
+an atomic multi-file transaction. Store validation can instead return a structured
+request error before any format is attempted. Export does not mutate the report,
+upgrade `report_status`, or guarantee that files will not later be removed.
+
 Direct Python job methods and the keyless profile continue returning full snapshots.
 Python embedders opt in with `create_server(runtime, agent_mode=True)`. This sets
 both the eight-tool catalog and compact transport. Old checkpoints load as contract
@@ -146,6 +195,9 @@ python scripts/check_mcp_stdio.py /absolute/path/to/sibyl-mcp --agent
 Both replays use the same recorded SQLite sources, host-authored reasoning and
 real MCP stdio. They check two research rounds, gap reviews, exact passage reads,
 catalog pages, current citations, report export, restart and immutable completion.
+Agent replay additionally exercises schema rejection, missing-challenge/basis
+recovery, a current-revision reload, an explicit unknown report without invented
+citations, and actual paths/sizes/hashes in Markdown/JSON/PDF manifests.
 HTTP is blocked and no model is invoked. The agent replay also verifies that a
 reviewed conclusion is available before any report is written.
 
