@@ -38,6 +38,8 @@ jobs:
         run: python -m unittest discover tests -v
       - name: Smoke-test the keyless MCP stdio surface
         run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
+      - name: Smoke-test the agent MCP stdio surface
+        run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --agent
       - name: Smoke-test authenticated monitoring and MCP shutdown
         run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
       - name: Check bounded runtime resource recovery

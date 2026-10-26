@@ -1,9 +1,19 @@
 # Install Sibyl MCP
 
-Sibyl is a local stdio deep-research MCP server. Its default keyless profile
+Sibyl is a local stdio deep-research MCP tool for AI agents. Its default keyless profile
 supports persistent host-assisted research, inspectable evidence, and cited
 Markdown/JSON reports. The host agent plans and writes; no second model key is
-required. Configured-model autonomous research is experimental. PDF export is optional.
+required. Reports are optional outputs; the agent can consume the question-review
+ledger directly. Configured-model autonomous research is experimental. PDF export is optional.
+
+## Agent-first source installation (unreleased)
+
+The `main` branch adds `--profile agent`, with eight focused tools, compact
+structured briefs and on-demand evidence reads. It is not included in 0.4.0b1.
+Install a source checkout with `python -m pip install -e .`, then set
+`"args": ["--profile", "agent"]` in the configuration below. This mode requires
+a host that reads MCP `structuredContent`. Keep `keyless` for text-only clients.
+See [Agent protocol](docs/agent-protocol.md) for the contract and research workflow.
 
 ## Requirements
 

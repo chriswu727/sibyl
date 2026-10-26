@@ -10,14 +10,15 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-0f766e)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
-**A Deep Research MCP that turns complex questions into traceable reports through multi-round retrieval, source tracking, and evidence review.**
+**Deep research tools for AI agents: investigate across sources, review evidence and counterevidence, track what is still unknown, and produce reports when people need them.**
 
-Plan. Investigate. Check the evidence. Deliver a report—with its limitations.
+Your agent does the reasoning. Sibyl gives it a persistent, inspectable research workflow through MCP.
 
 **Current beta: 0.4.0b1** · [Release notes](https://github.com/chriswu727/sibyl/releases/tag/v0.4.0b1) · [Install from PyPI](https://pypi.org/project/sibyl-research/0.4.0b1/) · [MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.chriswu727%2Fsibyl/versions/0.4.0b1)
 
-The workflow below targets this beta. GitHub's **Latest** label and the stable
-PyPI badge refer to the older **0.3.0** release.
+The published workflow below targets this beta. The new **agent profile and brief
+views are on `main`, unreleased**; use the [source installation](#agent-first-interface-main)
+to try them. GitHub's **Latest** label and the stable PyPI badge refer to the older **0.3.0** release.
 
 [Quick start](#quick-start) · [Research workflow](#research-workflow) · [Documentation](docs/README.md) · [Operations](docs/OPERATIONS.md) · [Roadmap](docs/QUALITY_BUILD_PLAN.md)
 
@@ -25,11 +26,16 @@ PyPI badge refer to the older **0.3.0** release.
 
 ---
 
-## From a question to a traceable report
+## Research for the agent, reports for the person
 
-A search result is not yet a research report. Sibyl keeps the plan, searches,
-evidence, progress, and final report together in a bounded local research job.
-Your existing agent can plan and write using the **keyless host-assisted mode**.
+A search result is a lead, not a finished investigation. Sibyl lets your existing
+agent break a question down, inspect original sources, test counterevidence,
+record supported or disputed conclusions, and pursue the gaps in later rounds.
+The research state is usable directly by the agent; a long-form report is an
+optional delivery format, not the product's required endpoint.
+
+Sibyl keeps the plan, searches, evidence, review ledger, and optional report in a
+bounded local research job. Your existing agent plans and reasons in **host mode**.
 An experimental configured-model mode can run research in the background, including
 a bounded follow-up search and report-wide source-support checks.
 
@@ -51,6 +57,9 @@ configuration and billing; it does not inherit the host's subscription.
   decompose, retry, or revise—not an answer-shaped guess when retrieval fails.
 - **Independent support:** near-duplicate clusters expose syndicated copies so
   the host does not mistake repetition for corroboration.
+- **Agent-first interface (unreleased):** eight focused tools, compact structured
+  research briefs, on-demand exact passages, and a revision-checked source catalog.
+  Reuse the per-question conclusions and evidence links without writing a report.
 - **One evidence layer, three interfaces:** MCP for agents, a CLI for inspection,
   and an async Python API for applications.
 - **Persistent research:** task IDs, progress events, explicit continuation,
@@ -74,6 +83,7 @@ configuration and billing; it does not inherit the host's subscription.
 | Published beta | [PyPI 0.4.0b1](https://pypi.org/project/sibyl-research/0.4.0b1/); install the exact version below |
 | Stable package | 0.3.0 remains the older stable version; unpinned installs may select it |
 | Default MCP profile | 12 keyless tools; 20 tools in the configured full profile |
+| Agent profile on `main` | 8 tools, compact research briefs and a paginated saved-source catalog; not yet on PyPI |
 | Engineering evidence | Python 3.11–3.13 CI, real stdio/monitoring smoke tests, dependency audits |
 | Research-quality evidence | 2026-10-21 live run misses readiness/stability gates; no same-model superiority claim |
 | Autonomous research | Experimental opt-in; separately configured model and usage charges |
@@ -99,6 +109,43 @@ exports, and restartable state. Two official pages still represent one publisher
 database documentation, security guidance, and semiconductor-market revisions.
 The record includes adaptive follow-ups, host-supplied source disclosures, cited
 findings, verified Markdown/JSON exports, and an explicit future-outcome abstention.
+
+## Agent-first interface (main)
+
+This interface is **not included in 0.4.0b1**. Install the source checkout:
+
+```bash
+git clone https://github.com/chriswu727/sibyl.git
+cd sibyl
+python -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/sibyl-mcp --profile agent --list-tools
+```
+
+Use `"args": ["--profile", "agent"]` in your MCP host configuration. The host must
+consume MCP `structuredContent`; text-only hosts should keep `--profile keyless`.
+The existing default and full responses remain compatible.
+
+The agent gets a research brief after each action: the current revision, question
+reviews, supporting/challenging passage IDs, gaps, suggested next queries,
+remaining budget, and limitations. It reads exact passages with
+`get_research(job_id, passage_id=...)` and can inspect the entire source catalog
+with `get_research(job_id, view="sources", revision=..., offset=0, limit=10)`.
+`get_research(job_id, view="full")` retrieves the compatible full view.
+
+The agent can hand its reviewed conclusions directly to a planning, coding, or
+decision workflow. When a person needs a report, `complete_research` and
+`save_report` still produce cited Markdown/JSON and optional PDF from the same job.
+
+**What this adds beyond a search call:** persistent question coverage, exact
+evidence links, counterevidence work, and an explicit trail from a gap to the next
+investigation. It does **not** establish that Sibyl outperforms every agent's
+built-in search. Automatic discovery remains a measured weakness; the ten-case
+host suite needed host-supplied URLs in seven cases. A controlled same-model,
+same-budget comparison is still needed before making a superiority claim.
+
+See the [agent protocol](docs/agent-protocol.md) for result fields, stopping rules,
+compatibility, and a reproducible offline transport measurement.
 
 ## Quick start
 

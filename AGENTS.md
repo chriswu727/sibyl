@@ -1,7 +1,23 @@
 # Sibyl — Agent Guide
 
-Sibyl is a local deep-research MCP server. It turns bounded public-web
-investigations into reports with inspectable evidence and explicit limitations.
+Sibyl is a local deep-research MCP tool for AI agents. It maintains bounded
+public-web investigations, evidence-linked conclusions, and explicit gaps.
+Human-readable reports are optional outputs of the same research state.
+
+## Agent profile on main (unreleased)
+
+Source installs can use `sibyl-mcp --profile agent`: eight focused tools and
+compact research responses in MCP `structuredContent`. This flag is not in the
+published 0.4.0b1 beta. Text-only hosts should use the compatible keyless profile.
+See docs/agent-protocol.md for the versioned brief and source-page contracts.
+
+Read `research_plan.questions[].review` for host-authored conclusions and stable
+support/challenge links; inspect gaps before reusing a conclusion. No report is
+required to consume this ledger. It remains resumable until explicitly finalized.
+Use `get_research(passage_id=...)` for exact evidence before making an assessment;
+briefs intentionally omit raw text. Use `view="sources"` with the current revision
+to page the full catalog, and `view="full"` for the compatible snapshot. Each brief
+is self-contained, not a delta: never carry forward an old readiness decision.
 
 ## Installation
 
@@ -26,7 +42,7 @@ and PDF export; Markdown/JSON host reports need no optional model dependency.
    For unresolved gaps, supply focused `follow_up_queries`, then use
    `continue_research(..., rationale="the gap this round addresses")`. Inspect the
    new evidence and reassess; a repeated call alone does not establish deeper research.
-5. Submit `complete_research(job_id, revision, summary, key_findings, analysis,
+5. Optionally submit `complete_research(job_id, revision, summary, key_findings, analysis,
    limitations)`. Summary and each finding must cite selected `[Source N]`.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
@@ -94,7 +110,8 @@ long investigations.
 - `quick_search(query)`: search hits without full-page extraction.
 - `read_url(url)`: text from one public HTTP(S) page.
 
-Use a primitive for a focused fact lookup; use persistent jobs for reports.
+Use a primitive for a focused fact lookup; use persistent jobs for deeper research
+and reusable evidence-linked conclusions, with optional reports.
 These APIs remain available alongside the research workflow.
 
 ## Operational boundaries

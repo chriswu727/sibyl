@@ -1,6 +1,6 @@
 # Sibyl roadmap
 
-Reviewed 2026-10-21. This is the active roadmap for the 0.4.0 beta line
+Reviewed 2026-10-25. This is the active roadmap for the 0.4.0 beta line
 and future stable release. Implemented features are documented in [Usage](USAGE.md);
 release blockers are governed by [Launch readiness](LAUNCH_READINESS.md).
 The [earlier implementation plan](https://github.com/chriswu727/sibyl/blob/d343267/docs/QUALITY_BUILD_PLAN.md)
@@ -8,6 +8,9 @@ is preserved in Git history, not a source of current defaults or quality claims.
 
 ## Implemented baseline
 
+- Agent-first source interface (unreleased): eight focused tools, compact
+  structured briefs, direct review-ledger consumption, exact evidence reads,
+  and revision-checked source pages. Human-readable reports remain optional.
 - Persistent host-assisted investigations with multi-round retrieval, question
   reviews, counterevidence requirements, explicit gaps, and partial reports.
 - Shared source/passages contracts, hashes, offsets, provenance, date hints,
@@ -35,6 +38,13 @@ is preserved in Git history, not a source of current defaults or quality claims.
   explicit discovery failures, and verified Markdown/JSON delivery.
 
 ## Before stable 0.4.0
+
+The primary product is a research capability inside the host agent, not a second
+agent or a mandatory report generator. Prioritize automatic primary-source
+discovery and useful evidence feedback over expanding autonomous report features.
+The agent interface is implemented; better-than-built-in-search quality is still
+a hypothesis. Validate it with a paired same-host/same-budget evaluation that
+scores the returned evidence and conclusions, not report length or round count.
 
 The opt-in 0.4.0b1 beta ships the host-assisted workflow under the separate
 [beta release policy](LAUNCH_READINESS.md#release-gates). The goals below remain

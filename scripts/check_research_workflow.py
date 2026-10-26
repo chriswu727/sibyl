@@ -23,19 +23,33 @@ def require(condition: bool, message: str) -> None:
         raise RuntimeError(message)
 
 
-async def check(directory: Path, include_pdf: bool = False) -> dict:
+async def check(
+    directory: Path, include_pdf: bool = False, agent: bool = False
+) -> dict:
     parameters = StdioServerParameters(
         command=sys.executable,
-        args=[str(Path(__file__).with_name("fixture_mcp_server.py"))],
+        args=[
+            str(Path(__file__).with_name("fixture_mcp_server.py")),
+            *(["--agent"] if agent else []),
+        ],
         env={"SIBYL_OUTPUT_ROOT": str(directory)},
     )
     async with stdio_client(parameters) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
+            if agent:
+                tools = (await session.list_tools()).tools
+                require(len(tools) == 8, "Agent profile did not expose eight tools")
+
+            response_bytes = 0
 
             async def call(name: str, **arguments):
+                nonlocal response_bytes
                 response = await session.call_tool(name, arguments)
                 require(not response.isError, f"{name} failed: {response.content}")
+                response_bytes += len(
+                    response.model_dump_json(exclude_none=True).encode()
+                )
                 return response.structuredContent or {}
 
             job = await call("start_research", question=QUESTION, max_steps=3)
@@ -47,7 +61,13 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 question_id="Q0",
                 rationale="Establish documented concurrency benefits and limitations.",
             )
-            wal_passage = job["evidence"][0]["evidence"][0]["citation_id"]
+            wal_passage = job["sources"][0]["passage_ids"][0]
+            passage = await call("get_research", job_id=job_id, passage_id=wal_passage)
+            require(passage["passage"]["text"], "Exact WAL evidence unavailable")
+            require(passage["retrieved_at"], "Passage lost provenance")
+            if agent:
+                require(job["view"] == "brief", "Agent mutation did not return a brief")
+                require("evidence" not in job, "Agent brief repeated raw evidence")
             job = await call(
                 "assess_research",
                 job_id=job_id,
@@ -74,10 +94,14 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 rationale="Test the stronger claim that WAL allows simultaneous writers.",
             )
             require(
-                job["attempts"][-1]["prior_gaps"], "Follow-up lost its research gaps"
+                (job["latest_attempt"] if agent else job["attempts"][-1])["prior_gaps"],
+                "Follow-up lost its research gaps",
             )
             require(
-                job["attempts"][-1]["based_on_revision"] == first_revision,
+                (job["latest_attempt"] if agent else job["attempts"][-1])[
+                    "based_on_revision"
+                ]
+                == first_revision,
                 "Follow-up revision lost",
             )
             require(
@@ -85,9 +109,37 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 "New evidence did not require reassessment",
             )
             passages = {
-                source["url"]: source["evidence"][0]["citation_id"]
-                for source in job["evidence"]
+                source["url"]: source["passage_ids"][0] for source in job["sources"]
             }
+            for passage_id in passages.values():
+                evidence = await call(
+                    "get_research", job_id=job_id, passage_id=passage_id
+                )
+                require(
+                    hashlib.sha256(evidence["passage"]["text"].encode()).hexdigest()
+                    == evidence["passage"]["content_hash"],
+                    "Passage read changed exact text",
+                )
+            catalog = await call(
+                "get_research",
+                job_id=job_id,
+                view="sources",
+                revision=job["revision"],
+                limit=1,
+            )
+            require(
+                catalog["total"] == 2 and catalog["next_offset"] == 1,
+                "Source pagination contract failed",
+            )
+            page2 = await call(
+                "get_research",
+                job_id=job_id,
+                view="sources",
+                revision=job["revision"],
+                offset=catalog["next_offset"],
+                limit=1,
+            )
+            require(page2["next_offset"] is None, "Source catalog did not end")
             job = await call(
                 "assess_research",
                 job_id=job_id,
@@ -102,6 +154,7 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 job["research_plan"]["ready_to_complete"],
                 "Reviewed investigation remained incomplete",
             )
+            require(job["report"] is None, "An agent ledger required a prose report")
             citations = {source["url"]: source["citation"] for source in job["sources"]}
             summary = f"WAL improves reader/writer concurrency but does not eliminate writer serialization. {citations[WAL]} {citations[ISOLATION]}"
             findings = [
@@ -149,10 +202,16 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 "continue_research", {"job_id": job_id, "url": WAL}
             )
             require(bool(mutate.isError), "Completed report was mutable")
+            job = await call("get_research", job_id=job_id, view="full")
+            print(
+                f"{'agent' if agent else 'compatible'} successful replay response bytes: {response_bytes}"
+            )
     async with stdio_client(parameters) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            restored = await session.call_tool("get_research", {"job_id": job_id})
+            restored = await session.call_tool(
+                "get_research", {"job_id": job_id, "view": "full"}
+            )
             require(not restored.isError, "Checkpoint did not survive process restart")
             require(
                 restored.structuredContent["report"] == job["report"],
@@ -182,13 +241,16 @@ def main() -> None:
         action="store_true",
         help="Also verify PDF export; requires report extra",
     )
+    parser.add_argument(
+        "--agent", action="store_true", help="Use the compact eight-tool agent profile"
+    )
     args = parser.parse_args()
     if args.output:
         args.output.mkdir(mode=0o700, parents=True, exist_ok=False)
-        asyncio.run(check(args.output.resolve(), args.pdf))
+        asyncio.run(check(args.output.resolve(), args.pdf, args.agent))
     else:
         with tempfile.TemporaryDirectory(prefix="sibyl-workflow-") as directory:
-            asyncio.run(check(Path(directory), args.pdf))
+            asyncio.run(check(Path(directory), args.pdf, args.agent))
     print(
         "Host research replay passed: two rounds, gap review, counterevidence, citations, exports, restart, and immutability; no network/model calls."
     )

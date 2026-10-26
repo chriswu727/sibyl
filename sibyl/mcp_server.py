@@ -65,11 +65,20 @@ __all__ = [
 ]
 
 
-def create_server(runtime: SibylRuntime | None = None) -> FastMCP:
+def create_server(
+    runtime: SibylRuntime | None = None, *, agent_mode: bool = False
+) -> FastMCP:
     """Create an isolated server without sharing reports, loops, or cache entries."""
-    return mcp_tools._catalog.create_server(
-        runtime or SibylRuntime(), mcp_tools._INSTRUCTIONS
+    server = mcp_tools._catalog.create_server(
+        runtime or SibylRuntime(),
+        mcp_tools._AGENT_INSTRUCTIONS if agent_mode else mcp_tools._INSTRUCTIONS,
+        agent_mode=agent_mode,
     )
+    if agent_mode:
+        for function, _ in mcp_tools._catalog.tools:
+            if function.__name__ not in mcp_tools._AGENT_TOOLS:
+                server.remove_tool(function.__name__)
+    return server
 
 
 mcp = create_server(default_runtime)
@@ -77,9 +86,9 @@ mcp = create_server(default_runtime)
 
 def _mcp_profile(config: Config) -> str:
     requested = os.environ.get("SIBYL_MCP_PROFILE", "auto").strip().lower()
-    if requested not in {"auto", "keyless", "report", "finance", "full"}:
+    if requested not in {"auto", "agent", "keyless", "report", "finance", "full"}:
         raise RuntimeError(
-            "SIBYL_MCP_PROFILE must be auto, keyless, report, finance, or full"
+            "SIBYL_MCP_PROFILE must be auto, agent, keyless, report, finance, or full"
         )
     if requested == "auto":
         installed = all(find_spec(name) for name in ("litellm", "fpdf"))
@@ -89,7 +98,9 @@ def _mcp_profile(config: Config) -> str:
 
 async def configure_tool_profile(server: FastMCP, runtime: SibylRuntime) -> str:
     profile = _mcp_profile(runtime.config)
-    enabled = set(mcp_tools._KEYLESS_TOOLS)
+    enabled = set(
+        mcp_tools._AGENT_TOOLS if profile == "agent" else mcp_tools._KEYLESS_TOOLS
+    )
     for profiles, modules, extra, names in (
         ({"report", "full"}, ("litellm", "fpdf"), "report", mcp_tools._REPORT_TOOLS),
         (
@@ -127,7 +138,7 @@ def main() -> None:
     )
     parser.add_argument("--log-level", choices=["WARNING", "INFO"], default="WARNING")
     parser.add_argument(
-        "--profile", choices=["auto", "keyless", "report", "finance", "full"]
+        "--profile", choices=["auto", "agent", "keyless", "report", "finance", "full"]
     )
     args = parser.parse_args()
     if args.version:
@@ -147,7 +158,7 @@ def main() -> None:
             monitor_port=args.monitor_port,
         )
     )
-    server = create_server(runtime)
+    server = create_server(runtime, agent_mode=_mcp_profile(runtime.config) == "agent")
     profile = asyncio.run(configure_tool_profile(server, runtime))
     if args.list_tools:
         print(f"profile: {profile}")

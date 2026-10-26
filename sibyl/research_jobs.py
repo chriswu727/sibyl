@@ -159,6 +159,12 @@ class ResearchJobs:
                 title=source.title,
                 passage=passage.__dict__,
                 source_kind=source_kind(source, notebook.preferred_domains),
+                source_id=source.source_id,
+                content_hash=source.content_hash,
+                content_origin=source.content_origin,
+                content_cluster_id=source.content_cluster_id,
+                retrieved_at=source.retrieved_at,
+                published_at=source.published_at,
             )
         public: dict[str, Any] = {
             key: value for key, value in job.items() if key != "notebook"
@@ -185,6 +191,9 @@ class ResearchJobs:
             preferred_domains=notebook.preferred_domains,
             source_catalog=[
                 dict(
+                    source_id=source.source_id,
+                    content_hash=source.content_hash,
+                    content_cluster_id=source.content_cluster_id,
                     url=display_url(source.url),
                     title=source.title,
                     source_kind=source_kind(source, notebook.preferred_domains),

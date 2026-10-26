@@ -1,9 +1,10 @@
 # Sibyl documentation
 
-These documents describe the 0.4.0b1 beta, not the older PyPI 0.3.0 package.
+These documents follow main. The agent profile and research views are unreleased;
+the published 0.4.0b1 beta does not contain them. PyPI 0.3.0 is an older stable package.
 See [installation](../llms-install.md) and [channel status](RELEASING.md). Sibyl is a local
-Deep Research MCP for multi-round investigations, traceable evidence, and cited
-reports; its current maturity is public beta.
+deep-research MCP tool for AI agents, with multi-round investigations, traceable
+evidence, gap tracking, and optional reports; its current maturity is public beta.
 
 ## Start and use
 
@@ -13,6 +14,7 @@ reports; its current maturity is public beta.
 | [MCP installation](../llms-install.md) | Source installation, host configuration, optional extras |
 | [Usage reference](USAGE.md) | All 20 tools, profiles, research jobs, configuration, and export |
 | [Agent guide](../AGENTS.md) | Evidence-handling rules and the host research procedure |
+| [Agent protocol](agent-protocol.md) | Compact briefs, evidence reads, source pagination, and compatibility |
 | [Complete workflow example](examples/sqlite-wal/README.md) | Recorded-source MCP replay, gap investigation, and exported report |
 | [Configuration example](../sibyl.yaml.example) | Optional model workflow settings; no embedded credentials |
 

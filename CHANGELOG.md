@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Add an opt-in eight-tool agent profile with compact MCP structured research
+  briefs; retain compatible defaults and explicit full views.
+- Expose on-demand source catalog pages with revision checks and richer exact
+  passage provenance. Preserve host conclusions, support/challenge links, gaps,
+  failed retrievals, remaining budgets, and partial-report status in briefs.
+- Position Sibyl as deep-research tooling for the host agent; reports remain
+  optional. Add real-stdio agent replay and clean-wheel profile verification.
+- Do not claim research-quality superiority from response-size measurements.
+
 ## 0.4.0b1 — 2026-10-21
 
 ### Beta release scope

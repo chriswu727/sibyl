@@ -8,7 +8,7 @@ This reference follows the `main` branch. See the [landing page](../README.md)
 for release status and the [architecture guide](MCP_ARCHITECTURE.md) for current
 execution limits.
 
-**Deep research through MCP — persistent investigations and traceable reports.**
+**Deep research tools for AI agents — persistent investigations and reusable evidence.**
 
 Sibyl is a local MCP server for public-web research and cited reports. Its CLI and Python API also expose evidence retrieval and model-backed research. A shared `SourceBundle` pipeline searches, extracts, ranks, and preserves provenance. Persistent jobs support host-assisted writing or an explicitly configured autonomous model; Sibyl is not a hosted service.
 
@@ -25,11 +25,11 @@ Sibyl is a local MCP server for public-web research and cited reports. Its CLI a
 
 Sibyl combines a research workflow with an inspectable evidence boundary:
 
-> Research produces a report. Evidence makes that report inspectable—not automatically true.
+> Research produces evidence-linked conclusions and visible gaps. A report is optional; neither output is automatically true.
 
 The core path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states. For dependent questions, `gather_evidence()` adds a bounded, auditable sequence of atomic retrieval steps while leaving planning and synthesis to the host agent.
 
-Persistent jobs are the report-oriented workflow. The existing `research()` tool remains a blocking configured-model interface. Both use the same retrieval pipeline. Report quality depends on evidence and model behavior; no current-model comparative quality claim has been established.
+Persistent jobs maintain the agent's research state; they do not require a report to be useful. The existing `research()` tool remains a blocking configured-model interface. Both use the same retrieval pipeline. Research quality depends on evidence and model behavior; no current-model comparative quality claim has been established.
 
 | Mode | Tool | API key | Who reasons? | Best for |
 |---|---|---:|---|---|
@@ -44,7 +44,8 @@ Persistent jobs are the report-oriented workflow. The existing `research()` tool
 
 ### 1. Install the current source checkout
 
-This guide describes the 0.4.0b1 beta. The older 0.3.0 package does not
+This guide follows main, including the unreleased agent profile and research views.
+These additions are not in 0.4.0b1. The older 0.3.0 package does not
 provide the current CLI subcommands, capability profiles, or evidence-loop API.
 
 ```bash
@@ -146,7 +147,17 @@ The CLI's explicit `--output` option remains an operator-controlled path.
 
 Without an LLM credential, the default `auto` profile exposes twelve tools: five evidence primitives, six research-job operations, and report export. Host jobs and Markdown/JSON export need no model key. Autonomous mode requires `[report]` and a configured model; PDF requires the rendering extra. A configured `[report]` installation also exposes the legacy model tools. Finance tools remain explicit.
 
-Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
+Use `sibyl-mcp --profile agent|keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
+
+The unreleased `agent` profile exposes eight tools: the six job operations,
+`save_report`, and `gather_bundle`. Persistent operations return compact JSON in
+`structuredContent` and a short text pointer, not duplicated prose. Read
+`research_plan.questions[].review` for agent-usable conclusions and evidence links;
+reports remain optional. `get_research(view="brief")` is also available in the
+compatible profiles. `view="sources"` pages the full source catalog (limit 1-20);
+pass the current `revision` on every page to reject concurrent changes.
+`passage_id` reads exact text with provenance; `view="full"` retains the full
+compatible snapshot. See [Agent protocol](agent-protocol.md).
 
 | Group | Tool | Result | LLM key |
 |---|---|---|---:|
