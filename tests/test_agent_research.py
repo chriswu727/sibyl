@@ -81,6 +81,43 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             "deleted",
         )
 
+    async def test_tool_schemas_expose_choices_and_export_semantics(self):
+        for agent_mode in (False, True):
+            tools = {
+                tool.name: tool
+                for tool in await create_server(
+                    self.runtime, agent_mode=agent_mode
+                ).list_tools()
+            }
+            for name, field, choices in (
+                ("start_research", "source_policy", {"primary", "academic"}),
+                (
+                    "continue_research",
+                    "purpose",
+                    {"explore", "counterevidence", "follow_citation"},
+                ),
+                (
+                    "assess_research",
+                    "status",
+                    {"supported", "disputed", "unresolved"},
+                ),
+                ("save_report", "format", {"md", "json", "pdf", "both"}),
+            ):
+                self.assertEqual(
+                    set(tools[name].inputSchema["properties"][field]["enum"]),
+                    choices,
+                )
+            self.assertIn("does not create JSON", tools["save_report"].description)
+            self.assertIn("independent filename", tools["save_report"].description)
+
+    async def test_invalid_source_policy_does_not_create_a_job(self):
+        with self.assertRaises(ToolError):
+            await self.server.call_tool(
+                "start_research",
+                {"question": "Question", "source_policy": "Prefer official sources"},
+            )
+        self.assertEqual(self.jobs.store.list_jobs(), [])
+
     async def test_brief_is_lossless_for_reviews_limits_and_citation_identity(self):
         job = await self.retrieve(self.start())
         passage = job["evidence"][0]["evidence"][0]["citation_id"]

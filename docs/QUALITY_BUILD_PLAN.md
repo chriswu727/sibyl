@@ -30,6 +30,17 @@ changes. The final check returned original SQLite/Stripe documentation, but a
 PostgreSQL 17 question still returned version 16 documentation. These sequential
 single runs are exploratory; they do not clear the live gate or establish causality.
 
+A [four-request Codex Luna low-effort smoke](../evals/results/host-agent-luna-low-2026-10-26.json)
+completed one live SQLite investigation with partial Markdown/JSON reports, but
+both unknown-case deliveries failed. The first guessed a nonexistent JSON path;
+after export instructions were clarified, the next attempted the correct formats
+but did not repair rejected claims or stale revisions. The fourth request exhausted
+the approved allowance. CLI exit zero did not establish delivery success.
+Explicit choice schemas and export semantics are implemented; low-effort host
+error recovery remains open. Prioritize actionable claim/revision errors and an
+unambiguous artifact manifest without weakening integrity checks. This smoke is
+not a paired search comparison or a stable-release gate pass.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary

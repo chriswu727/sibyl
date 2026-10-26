@@ -14,9 +14,9 @@ from .runtime import get_runtime
 async def start_research(
     question: str,
     sub_questions: list[str] | None = None,
-    mode: str = "host",
+    mode: Literal["host"] = "host",
     max_steps: int = 8,
-    source_policy: str = "primary",
+    source_policy: Literal["primary", "academic"] = "primary",
     preferred_domains: list[str] | None = None,
 ) -> dict[str, Any]:
     """Create a persistent research job. Default host mode is keyless.
@@ -92,7 +92,7 @@ async def continue_research(
     query: str = "",
     url: str = "",
     question_id: str = "",
-    purpose: str = "explore",
+    purpose: Literal["explore", "counterevidence", "follow_citation"] = "explore",
     parent_passage_id: str = "",
     rationale: str = "",
 ) -> dict[str, Any]:
@@ -115,7 +115,7 @@ async def assess_research(
     job_id: str,
     revision: int,
     question_id: str,
-    status: str,
+    status: Literal["supported", "disputed", "unresolved"],
     conclusion: str,
     counterevidence_note: str,
     supporting_passage_ids: list[str] | None = None,

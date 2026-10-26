@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from mcp.server.fastmcp.exceptions import ToolError
 
@@ -95,6 +95,12 @@ Investigate counterevidence with purpose="counterevidence", then reassess gaps.
 Consume the review ledger directly; a prose report is not required. Optional
 complete_research needs current revision and optional claim_ids, then save_report
 exports md/json or optional PDF. allow_incomplete preserves gaps as a partial report.
+For Markdown and JSON, call save_report twice: format="md", then format="json".
+The legacy format="both" means PDF plus Markdown only, never JSON. Use only
+artifact paths explicitly returned by successful exports; never guess a path.
+A rejected assessment does not save that review or advance its revision. Correct the request
+or preserve the missing review as a gap; a completed tool invocation is not proof
+that its requested operation succeeded.
 For new jobs omit summary/key_findings/analysis on completion; the report renders
 the recorded claims, dependencies, criteria and assumptions. Unknown/disputed
 claims stay visible. Old contract-1 jobs retain their prose completion fields.
@@ -388,14 +394,21 @@ async def read_url(url: str) -> str:
 
 @_catalog.tool()
 async def save_report(
-    format: str = "md", output_dir: str = ".", job_id: str = ""
+    format: Literal["md", "json", "pdf", "both"] = "md",
+    output_dir: str = ".",
+    job_id: str = "",
 ) -> str:
     """Export a completed host-authored report.
 
     Call this after complete_research(), supplying its job_id.
+    For Markdown AND JSON, call twice: format="md", then format="json".
+    Legacy format="both" exports PDF plus Markdown ONLY; it does not create JSON.
+    Each export gets an independent filename. Return only the paths this tool
+    actually reports as saved; never derive another path by replacing a suffix.
 
     Args:
-        format: "pdf", "md", "json", or "both" (default: md). PDF needs the report extra.
+        format: md (default), json, pdf, or both (PDF + Markdown, not JSON).
+            PDF needs the report extra.
         output_dir: Subdirectory within SIBYL_OUTPUT_ROOT (default: root)
         job_id: Completed persistent job ID
     """
