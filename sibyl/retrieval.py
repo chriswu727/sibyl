@@ -57,7 +57,7 @@ from .search import (
     search_wikipedia,
     wikipedia_lookup,
 )
-from .source_policy import matches_domain, normalize_domains
+from .source_policy import matches_domain, normalize_domains, source_kind
 from .temporal import period_match
 
 _ACADEMIC_QUERY_RE = re.compile(
@@ -671,6 +671,44 @@ async def gather_source_bundle(
         source_ranking_method,
         source_ranking_warning,
     ) = await _score_documents(clean_query, ranking_documents, selected_ranker)
+
+    preferred_representatives: set[int] = set()
+    preferred_order = sorted(
+        range(len(source_candidates)),
+        key=lambda index: (
+            -period_match(
+                clean_query,
+                source_candidates[index][1],
+                source_candidates[index][0].url,
+                source_candidates[index][0].published_at,
+            ),
+            -(relevance_scores[index] or 0.0),
+            index,
+        ),
+    )
+    for domain in preferred_hosts:
+        representative_index = next(
+            (
+                index
+                for index in preferred_order
+                if (relevance_scores[index] or 0.0) > 0
+                and source_candidates[index][0].content_origin
+                not in {"search_snippet", "crossref_api"}
+                and source_kind(source_candidates[index][0], preferred_hosts)
+                not in {"community", "encyclopedia"}
+                and matches_domain(
+                    (urlsplit(source_candidates[index][0].url).hostname or "").lower(),
+                    [domain],
+                )
+            ),
+            None,
+        )
+        if representative_index is not None:
+            preferred_representatives.add(representative_index)
+
+    def source_preference(index: int) -> int:
+        return int(index in preferred_representatives)
+
     ranked_indices = sorted(
         range(len(source_candidates)),
         key=lambda index: (
@@ -682,6 +720,7 @@ async def gather_source_bundle(
             )
             if selected_ranker != "none"
             else 0,
+            -source_preference(index) if selected_ranker != "none" else 0,
             -(relevance_scores[index] or 0.0),
             index,
         ),
@@ -715,7 +754,8 @@ async def gather_source_bundle(
                     source_candidates[index][1],
                     source_candidates[index][0].url,
                     source_candidates[index][0].published_at,
-                )
+                ),
+                -source_preference(index),
             ),
         )[:effective_max_sources]
     selected_sources = [

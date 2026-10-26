@@ -37,9 +37,15 @@ def source_kind(source, preferred_domains=()) -> str:
         return "encyclopedia"
     if matches_domain(host, ("openreview.net",)):
         return "research_candidate"
-    if matches_domain(host, ("reddit.com", "news.ycombinator.com")) or re.search(
-        r"/(discussions|issues|forum)(/|$)", path
-    ):
+    if matches_domain(
+        host,
+        (
+            "reddit.com",
+            "news.ycombinator.com",
+            "stackoverflow.com",
+            "stackexchange.com",
+        ),
+    ) or re.search(r"/(discussions|issues|forum|message-id|mailing-lists)(/|$)", path):
         return "community"
     if matches_domain(host, ("arxiv.org", "biorxiv.org", "medrxiv.org")):
         return "preprint"

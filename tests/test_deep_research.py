@@ -110,6 +110,18 @@ class TestSourceSelection(unittest.TestCase):
             with self.assertRaises(ValueError):
                 normalize_domains([value])
 
+    def test_mailing_archives_and_qa_remain_community_on_preferred_domains(self):
+        source = evidence_bundle(count=1).sources[0]
+        for url, preferred in (
+            ("https://www.postgresql.org/message-id/question", ["postgresql.org"]),
+            ("https://stackoverflow.com/questions/1", ["stackoverflow.com"]),
+            ("https://dba.stackexchange.com/questions/1", ["stackexchange.com"]),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(
+                    source_kind(replace(source, url=url), preferred), "community"
+                )
+
     def test_reviewed_source_is_not_evicted_by_later_search(self):
         notebook = ResearchNotebook(
             "q", bundles=[evidence_bundle("early", 1)], synthesis_limit=2

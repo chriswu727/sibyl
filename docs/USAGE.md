@@ -185,7 +185,11 @@ first two also receive bounded domain-focused discovery searches, unless the
 query already contains an explicit `site:` constraint. Preferences prioritize
 relevant candidates before fetching; they are not an allowlist and do not exclude
 useful sources from other domains. All preferences still apply during final
-source selection. Match
+source selection. Ranked retrieval prioritizes a relevant full-text representative
+from each preferred domain within the existing period constraints; other slots
+retain relevance and content/domain diversity. Snippets, metadata and community
+archives do not receive that representative boost. `ranker="none"` keeps its
+original ordering. Domain preference does not establish authority. Match
 the source type to the claim: papers for methods and experiments, current official
 docs for product capabilities and pricing. Preprints and publisher-platform entries
 are not automatically peer reviewed. Crossref metadata does not count as full text.
