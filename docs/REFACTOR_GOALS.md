@@ -4,7 +4,7 @@ Recorded 2026-10-26. This is the functional target for the current refactor,
 not a description of features that have all shipped. The implementation baseline
 is [314e721](https://github.com/chriswu727/sibyl/commit/314e721), which removed
 internal model execution. The [implementation plan](QUALITY_BUILD_PLAN.md)
-defines delivery order; [launch readiness](LAUNCH_READINESS.md#release-gates)
+connects the requirements into a complete product; [launch readiness](LAUNCH_READINESS.md#release-gates)
 continues to govern publication.
 
 ## Product purpose

@@ -36,7 +36,7 @@ evidence, gap tracking, and optional reports; its current maturity is public bet
 
 | Document | Purpose |
 |---|---|
-| [Roadmap](QUALITY_BUILD_PLAN.md) | Implemented baseline, remaining work, acceptance criteria |
+| [Implementation plan](QUALITY_BUILD_PLAN.md) | Complete user workflow, connected capability changes and product completion criteria |
 | [Refactor goals](REFACTOR_GOALS.md) | Functional target, evidence policy, recommendation requirements, non-goals and language policy |
 | [Launch readiness](LAUNCH_READINESS.md) | Dated engineering evidence and unmet release gates |
 | [Live host self-evaluation](examples/idempotency-live/README.md) | Failed source discovery, successful direct reads, and an explicit partial report |
