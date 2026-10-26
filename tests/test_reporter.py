@@ -11,10 +11,10 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from sibyl.report_models import ResearchReport, Source
 from sibyl.report_references import reference_groups
 from sibyl.report_text import _format_report
 from sibyl.reporter import _report_to_markdown, generate_pdf
-from sibyl.researcher import ResearchReport, Source
 
 
 def _report():
@@ -109,7 +109,7 @@ class TestMarkdownReport(unittest.TestCase):
 
 class TestVerificationRendering(unittest.TestCase):
     def test_unverified_marker_in_markdown(self):
-        from sibyl.verifier import FindingVerification
+        from sibyl.report_models import FindingVerification
 
         rep = _report()
         rep.finding_verifications = [
@@ -128,7 +128,7 @@ class TestVerificationRendering(unittest.TestCase):
         self.assertNotIn("confidence:", md)
 
     def test_length_mismatch_no_crash(self):
-        from sibyl.verifier import FindingVerification
+        from sibyl.report_models import FindingVerification
 
         rep = _report()  # 2 findings
         rep.finding_verifications = [

@@ -6,7 +6,6 @@ Run: python -m unittest discover tests
 import unittest
 from unittest import mock
 
-from sibyl.analyzer import CrossAnalysis, format_cross_analysis
 from sibyl.scraper import _extract_content, scrape_url
 from sibyl.search import _extract_ddg_url
 
@@ -303,22 +302,6 @@ class TestDdgUrl(unittest.TestCase):
 
     def test_passthrough_when_no_uddg(self):
         self.assertEqual(_extract_ddg_url("https://plain.com/x"), "https://plain.com/x")
-
-
-class TestFormatCrossAnalysis(unittest.TestCase):
-    def test_renders_sections(self):
-        ca = CrossAnalysis(
-            consensus_points=["everyone agrees on A"],
-            disagreement_points=["X vs Y"],
-            unique_insights=["only source 3 notes Z"],
-            overall_sentiment="positive",
-            sentiment_breakdown={"positive": 3, "negative": 1, "neutral": 0},
-        )
-        out = format_cross_analysis(ca)
-        self.assertIn("POSITIVE", out)
-        self.assertIn("everyone agrees on A", out)
-        self.assertIn("X vs Y", out)
-        self.assertIn("only source 3 notes Z", out)
 
 
 if __name__ == "__main__":

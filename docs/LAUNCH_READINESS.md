@@ -6,6 +6,19 @@ This record separates implemented behavior, verified engineering checks, and
 unmet product-quality gates. See the [roadmap](QUALITY_BUILD_PLAN.md) for execution
 order and [Releasing](RELEASING.md) for publication mechanics.
 
+## Host-only scope update — 2026-10-26
+
+The current source preview removes internal model execution and the finance
+surface. Default MCP now exposes eight agent tools; the host owns planning,
+semantic judgment and writing. Human reports remain optional. This change is not
+a new PyPI publication or proof of better retrieval.
+
+The internal-model evaluation gate is retired because that execution path no
+longer exists. Its replacement is a paired same-host, same-budget research
+comparison against ordinary search, with explicit spend authorization. Live
+retrieval thresholds remain unchanged. The historical records below describe
+the architecture and checks at their dated commits, not current capabilities.
+
 ## Decision
 
 On 2026-10-21 the maintainer approved an opt-in **0.4.0b1 prerelease**, focused
@@ -39,7 +52,7 @@ research-quality benchmark. Offline model tests use mocks. Dependency audits
 cover resolved core and report/finance/extract/pdf/monitor installations, not
 every possible optional environment or unknown vulnerability.
 
-Current behavior includes persistent host investigations, per-question reviews,
+Behavior at that baseline included persistent host investigations, per-question reviews,
 counterevidence requirements, explicit partial reports, and optional autonomous
 research. Host completion checks citation targets and workflow structure, not
 semantic entailment. Autonomous model audits are fallible. Monitoring is read-only
@@ -255,7 +268,7 @@ those failures are resolved.
 
 ## Release gates
 
-### Opt-in 0.4.0b1 beta
+### Opt-in 0.4.0b1 beta (historical scope)
 
 1. Release-commit CI, regression, lint, typed-core, dependency-audit, offline
    retrieval, MCP lifecycle, and authenticated monitoring checks pass.
@@ -279,10 +292,11 @@ all five gates below are satisfied:
 
 1. A new dated 66-case, three-repeat live retrieval run passes every committed
    threshold. Freeze thresholds before inspecting results.
-2. The optional report path completes a bounded model-backed evaluation with
-   declared model/configuration, rubric, cost, and retained results. Explicit
-   model-quota/API-spend approval is required. Include the host research workflow
-   in the representative research-quality baseline.
+2. A paired host-agent evaluation compares this workflow with ordinary search
+   using the same model, provider access and budget, a declared rubric, and
+   retained outputs. Record evidence support, gaps, abstention, cost and latency.
+   Explicit model-quota/API-spend approval is required. A host-authored fixture
+   alone does not establish research-quality superiority.
 3. The release wheel passes clean core and report-extra installation smoke tests;
    also exercise the new PDF/monitoring extras and check installed dependencies.
 4. Required GitHub CI passes on Python 3.11–3.13 at the release commit.
@@ -300,7 +314,7 @@ not research quality.
 - Keyless host-assisted research with explicit evidence reviews and limitations.
 - Versioned passage provenance, duplicate-content signals, and bounded text-PDF reads.
 - Authenticated operational monitoring and tested local runtime controls.
-- Experimental configured-model research with explicit costs and audit limitations.
+- Host-only execution without internal model calls or subscription credential access.
 
 Not established: exhaustive web coverage, production-grade anonymous-search
 availability, guaranteed citation truth, automatic peer-review/authority

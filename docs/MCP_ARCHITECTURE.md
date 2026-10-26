@@ -3,7 +3,7 @@
 Sibyl is a local, asynchronous research application with MCP, CLI, and Python
 interfaces. It is not a hosted or multi-tenant service. Research jobs persist
 public-web evidence and reports. The default host-assisted mode leaves planning
-and writing to the host; explicit autonomous mode uses a configured model.
+and writing to the host. There is no internal generative-model execution.
 
 ## Module boundaries
 
@@ -20,13 +20,11 @@ flowchart TD
     NET --> PDF[pdf_reader: bounded subprocess lifecycle]
     PDF --> PARSER[pdf_worker: optional PDF parser]
     RET --> PURE[retrieval_policy / dedup / passages / ranking / evidence]
-    TOOLS --> OPT[researcher: optional model workflow]
     TOOLS --> JOB[research_jobs: lifecycle]
     JOB --> DB[job_store: bounded SQLite]
     JOB --> STATE[research_state: evidence checkpoints]
-    JOB --> OPT
-    OPT --> RET
-    OPT --> MODELS[report_models: provider-free contracts]
+    JOB --> RET
+    JOB --> MODELS[report_models: provider-free contracts]
     TOOLS --> STORE[storage / reporter: artifact boundary]
 ```
 
@@ -54,15 +52,16 @@ flowchart TD
 | `research_sources.py` | Budgeted direct-page evidence with stable hashes and passage offsets |
 | `research_review.py` | Host evidence links, per-question gaps, stale reviews, completion gates |
 | `research_errors.py` | Application-authored validation errors safe for the MCP boundary |
-| `research_jobs.py` | Host/autonomous job lifecycle, progress, cancellation, continuation |
+| `research_jobs.py` | Host job lifecycle, progress, cancellation, continuation |
 | `job_store.py` | Private bounded SQLite, directory ownership, optimistic revisions |
-| `report_audit.py` | Citation-target validation and report-wide source-support disclosure |
+| `report_audit.py` | Deterministic citation-target validation |
 | `storage.py` | Output-root policy, private staging, atomic publication |
 | `privacy.py` | Display-only URL metadata redaction |
 
-The retained tool exports in `mcp_server` preserve Python import compatibility.
-The `Source` and `ResearchReport` names remain importable from `researcher`, but
-new code should import their provider-independent definitions from `report_models`.
+Retained retrieval exports in `mcp_server` preserve Python import compatibility.
+Removed model/finance modules are not compatibility shims. Import `Source` and
+`ResearchReport` from `report_models`; historical records retain their model fields
+for reading and exporting, not for resuming old execution.
 
 The catalog holds tool definitions, not per-client job or report state. Persistent
 handlers register through the same catalog as the compatibility tools; runtime
@@ -83,7 +82,7 @@ and linted; it is not fully strict-typed.
 3. The runtime admits or rejects the call. Eight calls may run concurrently;
    a full runtime returns a retryable capacity error instead of building a queue.
 4. A whole-operation deadline covers the tool coroutine, including its awaits:
-   60 seconds normally, 600 seconds for model-assisted operations.
+   60 seconds per operation; jobs also have a 600-second cumulative active budget.
 5. A normalized retrieval key coalesces identical in-flight bundle requests.
    Each key has a consumer count. The final departing consumer cancels the work.
    Failed results are not cached; successful/insufficient results expire after
@@ -92,7 +91,7 @@ and linted; it is not fully strict-typed.
    message. It does not serialize raw provider exceptions into MCP output.
 7. Server lifespan shutdown cancels runtime-owned tasks, drains cache tasks,
    clears evidence loops, and releases the last report. Persistent jobs are
-   interrupted and retained; startup never silently restarts model work.
+   interrupted and retained; startup never silently dispatches new work.
 
 Runtime events expose tool name, outcome, duration, and active-call count as JSON
 on stderr at `--log-level INFO`; the default is `WARNING`. Invocation completion
@@ -111,10 +110,9 @@ locks. Initial retrieval holds the lock too, so capacity pruning cannot evict an
 active start. A cancelled/failed start removes its unfinished state.
 The limit is four retrieval steps; the host supplies the atomic query plan.
 
-Optional report tools retain one successful report per runtime.
-`research`, `save_report`, `fetch_market_data`, and `chart` are mutually exclusive:
-an overlapping stateful call fails as busy instead of racing the latest report.
-This preserves the existing `research` → `save_report` workflow.
+Report exports are mutually exclusive within a runtime. MCP callers provide a
+completed job ID; the runtime retains a programmatic last_report fallback for
+existing Python integrations, but no MCP tool generates a report through a model.
 
 New research jobs use a separate SQLite store, opened lazily below the output
 root. An OS-held file lock prevents simultaneous owners of the same directory.
@@ -129,12 +127,12 @@ later retrieval for a question makes its review stale. Completion requires a
 review and a substantive counterevidence investigation per question, or explicit
 incomplete delivery with the remaining gaps preserved. These checks validate
 structure, not semantic truth, source independence, or research exhaustiveness.
-Older checkpoints retain their previous completion behavior. Autonomous mode
-does not populate this host review ledger.
+Older host checkpoints retain their previous completion behavior. Old autonomous
+records remain readable/exportable, but cannot resume execution.
 
-Autonomous work runs as runtime-owned asyncio tasks (two job workers maximum).
+Host retrieval runs as runtime-owned asyncio tasks (two job workers maximum).
 Shutdown cancels and awaits them before releasing the store. Explicit continuation
-reuses completed evidence and consumed budgets; unfinished model work may repeat.
+reuses completed evidence and consumed budgets.
 This is checkpoint recovery, not exactly-once external execution. A process crash
 can leave an in-flight attempt without a result; it remains budgeted.
 
@@ -142,15 +140,15 @@ Storage holds at most 64 jobs, 1 MiB per serialized job (plus 64 KiB reserved fo
 recovery metadata), and 16,384 SQLite pages. An oversized evidence checkpoint
 retains the previous evidence and current consumed budgets, marks the discarded
 attempt failed, and records an actionable event. Host jobs return to awaiting
-input; autonomous jobs fail without automatically retrying. Startup converts
+input. Startup converts
 unfinished attempts to failed without refunding their budgets. Physical disk or
 database corruption failures are still surfaced; recovery cannot manufacture
 durability when the underlying store cannot write.
 Full history requires explicit checkpoint deletion. Progress retains 80 events.
-Retrieval and model budgets are reserved before dispatch. The 600-second execution
+Retrieval attempts are reserved before dispatch. The 600-second execution
 budget accumulates across continuations; a crash can lose time since the last
-checkpoint, but cannot reset persisted retrieval/model-attempt counters.
-Reserved output tokens exclude input tokens and are not an exact monetary cap.
+checkpoint, but cannot reset persisted retrieval-attempt counters.
+Legacy model counters remain in stored records; they are not new execution budgets.
 
 UUIDs and separate runtime objects are not user authentication. Do not multiplex
 mutually untrusted users into one stdio process.
@@ -198,7 +196,7 @@ cancellation, blocking optional libraries, and OS-level resource isolation.
   and serialization tests together. Preserve hash/offset consistency.
 - **New export:** render from `report_models`; publish through `ArtifactStore`.
   Do not put model-provider imports into data contracts.
-- **New research behavior:** extend `research_state` or `researcher`, keeping
+- **New research behavior:** extend `research_state` or `research_jobs`, keeping
   retrieval shared. Test interruption/resume and budget accounting. Persistence
   belongs in `job_store`, not MCP handlers.
 - **New research quality gate:** extend `research_review`; keep source-type
@@ -210,8 +208,8 @@ cancellation, blocking optional libraries, and OS-level resource isolation.
 ## Design decisions
 
 **Host reasoning, not hidden sampling.** Retrieval works in local stdio clients
-without depending on host sampling support or another model credential. An
-autonomous configured-model path remains optional and explicit.
+without host sampling or another model credential. The host performs all planning,
+semantic judgment and writing; Sibyl never reads its subscription credentials.
 
 **Single process, local durability.** SQLite provides checkpoint persistence
 without a task broker, cloud deployment, or tenant identity system.
@@ -220,8 +218,8 @@ without a task broker, cloud deployment, or tenant identity system.
 Predictable resource limits matter more than accepting work that cannot finish.
 
 **Compatible contracts, explicit policy changes.** SourceBundle 1.6,
-EvidenceLoop 1.0, and the current 20-tool catalog have explicit consumer contracts.
-The keyless profile exposes 12 tools. MCP output-directory
+EvidenceLoop 1.0, and the eight-tool agent catalog have explicit consumer contracts.
+The keyless compatibility profile exposes 12 tools. MCP output-directory
 confinement and final-consumer cancellation are intentional behavioral changes.
 
 **Tests are evidence, not a guarantee.** Unit tests and real stdio smoke tests

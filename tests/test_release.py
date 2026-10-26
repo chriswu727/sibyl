@@ -20,11 +20,30 @@ class TestRuntimeCompatibility(unittest.TestCase):
         self.assertEqual(self.project["requires-python"], ">=3.11")
 
     def test_image_using_extras_enforce_pillow_security_floor(self):
-        for extra in ("report", "finance", "all"):
+        for extra in ("report", "all"):
             with self.subTest(extra=extra):
                 self.assertIn(
                     "pillow>=13.0.0", self.project["optional-dependencies"][extra]
                 )
+
+    def test_model_and_finance_dependencies_are_not_declared(self):
+        extras = self.project["optional-dependencies"]
+        self.assertNotIn("finance", extras)
+        requirements = self.project["dependencies"] + [
+            requirement for group in extras.values() for requirement in group
+        ]
+        for name in (
+            "litellm",
+            "openai",
+            "anthropic",
+            "yfinance",
+            "pytrends",
+            "matplotlib",
+            "pandas",
+        ):
+            self.assertFalse(
+                any(item.lower().startswith(name) for item in requirements)
+            )
 
     def test_core_does_not_pull_in_pillow(self):
         self.assertFalse(

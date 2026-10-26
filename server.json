@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.chriswu727/sibyl",
-  "title": "Sibyl — Deep Research MCP",
-  "description": "Deep Research MCP for multi-round investigations, traceable evidence, and cited reports.",
+  "title": "Sibyl — Deep Research for AI Agents",
+  "description": "Deep research for AI agents: multi-round retrieval, evidence review, gaps, and optional reports.",
   "version": "0.4.0b1",
   "repository": {
     "url": "https://github.com/chriswu727/sibyl",

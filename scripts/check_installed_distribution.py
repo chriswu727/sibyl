@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from importlib.metadata import distribution
+from importlib.metadata import distribution, distributions
 from pathlib import Path
 
 import sibyl
@@ -26,6 +26,15 @@ def main() -> int:
             "installed version mismatch: "
             f"module={sibyl.__version__!r}, metadata={installed.version!r}, "
             f"expected={expected_version!r}",
+            file=sys.stderr,
+        )
+        return 1
+
+    forbidden = {"litellm", "openai", "anthropic", "yfinance", "pytrends"}
+    present = {item.metadata["Name"].lower() for item in distributions()}
+    if forbidden & present:
+        print(
+            f"Unexpected removed dependencies: {sorted(forbidden & present)}",
             file=sys.stderr,
         )
         return 1

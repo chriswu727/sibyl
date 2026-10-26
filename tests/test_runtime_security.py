@@ -13,7 +13,6 @@ import httpx
 from mcp.server.fastmcp.exceptions import ToolError
 
 from sibyl.async_cache import AsyncSingleFlightTTL, CapacityError
-from sibyl.config import Config, Provider
 from sibyl.mcp_server import create_server
 from sibyl.privacy import display_url
 from sibyl.report_models import ResearchReport
@@ -200,7 +199,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             started.set()
             await release.wait()
 
-        first = asyncio.create_task(runtime.execute("research", report))
+        first = asyncio.create_task(runtime.execute("save_report", report))
         await started.wait()
         with self.assertRaises(CapacityError):
             await runtime.execute("save_report", report)
@@ -314,12 +313,6 @@ class TestArtifacts(unittest.TestCase):
                 with store.staging(".md"):
                     raise RuntimeError("failed")
             self.assertEqual(list(Path(directory).iterdir()), [])
-
-    def test_credentials_are_hidden_in_configuration_repr(self):
-        config = Config(
-            providers=[Provider("model", api_key="SECRET", api_base="http://SECRET")]
-        )
-        self.assertNotIn("SECRET", repr(config))
 
     def test_url_metadata_redacts_credentials_but_preserves_query(self):
         result = display_url(

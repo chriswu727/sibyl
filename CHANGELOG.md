@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Make the eight-tool agent profile the default, with compact MCP structured
+  research briefs. Keep keyless compatibility responses and explicit full views.
+- Remove internal model execution, LiteLLM, provider configuration, autonomous
+  jobs, model analysis tools, and finance/chart tools. The host owns reasoning.
+- Keep host-authored reports; Markdown is the default export and the report extra
+  is PDF rendering only. Reject removed profiles and legacy model settings.
+- Preserve old checkpoints and completed exports; reject autonomous resume
+  without converting or deleting evidence. Recommend a fresh install environment.
+- Expose on-demand source catalog pages with revision checks and richer exact
+  passage provenance. Preserve host conclusions, support/challenge links, gaps,
+  failed retrievals, remaining budgets, and partial-report status in briefs.
+- Position Sibyl as deep-research tooling for the host agent; reports remain
+  optional. Add real-stdio agent replay and clean-wheel profile verification.
+- Do not claim research-quality superiority from response-size measurements.
+
 ## 0.4.0b1 — 2026-10-21
 
 ### Beta release scope

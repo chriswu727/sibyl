@@ -8,8 +8,8 @@ development workflow. Historical timings do not establish current-model results.
 
 Host investigations alternate between retrieval and host reasoning. Sibyl measures
 tool execution, not the time the host spends thinking or waiting for a user.
-Configured-model jobs additionally spend time on planning, synthesis, reflection,
-and audits. Those calls use an explicit provider and can incur charges.
+All planning, synthesis and semantic judgment happen in the host. Sibyl makes
+no generative-model calls; host subscription/API usage is outside its runtime.
 
 Search-provider latency, throttling, publisher access, parsing, and model output
 all affect completion time. A fast response can be an insufficient-evidence result;
@@ -20,7 +20,7 @@ measure usability and correctness separately from speed.
 | Layer | Bound / behavior |
 |---|---|
 | MCP admission | 8 concurrent calls; busy requests fail without an unbounded queue |
-| Tool deadline | 60 seconds normally; 600 seconds for configured-model operations |
+| Tool deadline | 60 seconds per call; 600 seconds accumulated active work per job |
 | Persistent job workers | 2; active execution time accumulates across continuations |
 | Bundle cache | 30-second TTL, 64 entries, single-flight work shared among consumers |
 | Search batch | 8-second collection deadline; cancellation awaits all provider tasks |
@@ -39,7 +39,7 @@ or event-loop stalls can add time. A timed-out request can still have been proce
 by its provider. Empty or blocked search results do not establish that no evidence
 exists. No CAPTCHA bypass or automatic provider-key provisioning is performed.
 
-Embedding applications own those limits. Optional PDF export/chart libraries can
+Embedding applications own those limits. Optional PDF export libraries can
 block the event loop; monitoring shares that loop and cannot diagnose a stalled
 process from inside it. Use an external process/scrape timeout as well.
 
@@ -60,8 +60,8 @@ process from inside it. Use an external process/scrape timeout as well.
 The [operations endpoints](OPERATIONS.md) expose invocation latency histograms,
 outcomes, capacity, cache counts, and store state. Counters reset at restart;
 rejected calls contribute zero-duration observations. A completed invocation is
-not a quality verdict. Internal model calls and host thinking are not independent
-MCP latency observations.
+not a quality verdict. Host thinking is not a Sibyl
+MCP latency observation.
 
 ## Bounded runtime recovery check
 
@@ -91,10 +91,9 @@ anchor. Raising concurrency can increase provider throttling. Raising source or
 output budgets increases cost and may not increase independent support. Preserve
 content clusters, citations, and limitation markers when changing extraction.
 
-`fast` and effort/depth settings change configured-model work; they are not a
-promised percentage speedup. Select a provider using a dated, budget-controlled
-evaluation rather than an old model comparison. Verify the actual current defaults
-in [config.py](../sibyl/config.py) and the [usage reference](USAGE.md).
+There are no internal model, fast-mode or effort/depth settings. Adjust the host
+reasoning budget separately; never describe reduced tool response bytes as reduced
+host tokens or better answers without measuring them. See the [usage reference](USAGE.md).
 
 ## Historical evidence
 

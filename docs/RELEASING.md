@@ -91,13 +91,14 @@ changelog. This does not enforce the research-quality gates.
    The live gate uses public websites and is intentionally not part of CI.
    For 0.4.0b1, retain the 2026-10-21 run and its failed metrics; do not rerun
    until a favorable result or weaken its thresholds. A stable release also
-   needs the model-backed evaluation with an explicitly authorized provider
-   budget and retained model, configuration, and raw result. Autonomous mode
-   remains experimental in this beta.
+   needs the paired host-agent research evaluation with explicitly authorized
+   usage and retained model, configuration, rubric and raw results. The current
+   source preview removes internal autonomous execution; the published beta
+   still contains the previous architecture.
 
-   Install the selected extras with `.[report,finance,extract,pdf,monitor]` first.
+   Install the selected extras with `.[report,extract,pdf,monitor]` first.
    The release workflow installs all of those extras, then separately validates
-   clean core, PDF/monitoring, and report/finance/extraction wheel installations.
+   clean core, PDF/monitoring, and report/extraction wheel installations.
    Checks include installed-module origin, dependency consistency, real MCP
    research replay, authenticated monitoring shutdown, PDF parsing/export, and
    optional-tool availability. Temporary environments are removed sequentially.

@@ -9,10 +9,12 @@ from typing import get_type_hints
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
+from mcp.types import CallToolResult, TextContent
 
 from .async_cache import CapacityError
 from .research_errors import ResearchRequestError
 from .research_state import ResearchBudgetExceeded
+from .research_views import research_brief
 from .runtime import SibylRuntime, current_runtime, get_runtime
 
 
@@ -79,7 +81,9 @@ class ToolCatalog:
 
         return register
 
-    def create_server(self, runtime: SibylRuntime, instructions: str) -> FastMCP:
+    def create_server(
+        self, runtime: SibylRuntime, instructions: str, *, agent_mode: bool = False
+    ) -> FastMCP:
         @asynccontextmanager
         async def lifespan(server):
             try:
@@ -98,7 +102,30 @@ class ToolCatalog:
                 async def invoke(*args, **kwargs):
                     token = current_runtime.set(runtime)
                     try:
-                        return await function(*args, **kwargs)
+                        result = await function(*args, **kwargs)
+                        if agent_mode and function.__name__ in {
+                            "start_research",
+                            "continue_research",
+                            "get_research",
+                            "assess_research",
+                            "complete_research",
+                            "cancel_research",
+                        }:
+                            if (
+                                "research_plan" in result
+                                and kwargs.get("view", "auto") == "auto"
+                            ):
+                                result = research_brief(result)
+                            return CallToolResult(
+                                content=[
+                                    TextContent(
+                                        type="text",
+                                        text="Research result in structuredContent. Read status, research_plan and limitations; completion is not a factual verification.",
+                                    )
+                                ],
+                                structuredContent=result,
+                            )
+                        return result
                     finally:
                         current_runtime.reset(token)
 
