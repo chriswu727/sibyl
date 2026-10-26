@@ -148,3 +148,7 @@ live source-discovery or semantic-accuracy benchmark. Controlled tests also cove
 unknown/disputed outputs, cross-question dependency changes and input limits.
 Real-host usability and a paired comparison with native search remain separate
 quality work; see the [implementation plan](QUALITY_BUILD_PLAN.md).
+
+The [anonymous source-discovery smoke record](../evals/results/source-discovery-claims-2026-10-26.json)
+retains the observed original-source results and a PostgreSQL version mismatch.
+Its retrieval-ready statuses are not semantic answer judgments or release evidence.

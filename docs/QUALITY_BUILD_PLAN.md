@@ -24,6 +24,12 @@ Recorded-source MCP replay covers this workflow and export/restart. Real host
 usability, live discovery reliability and a paired native-search comparison still
 require retained measurements before the complete-product criteria are met.
 
+An [anonymous three-query smoke record](../evals/results/source-discovery-claims-2026-10-26.json)
+retains source identities and diagnostics before/after final-source preference
+changes. The final check returned original SQLite/Stripe documentation, but a
+PostgreSQL 17 question still returned version 16 documentation. These sequential
+single runs are exploratory; they do not clear the live gate or establish causality.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary
