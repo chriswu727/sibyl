@@ -13,6 +13,7 @@ from research_fixtures import evidence_bundle
 from sibyl.mcp_catalog import _validate_payload
 from sibyl.mcp_server import create_server
 from sibyl.report_models import ResearchReport
+from sibyl.report_text import _format_report
 from sibyl.reporter import _report_to_markdown
 from sibyl.research_claims import ResearchClaim
 from sibyl.runtime import RuntimePolicy, SibylRuntime
@@ -128,6 +129,18 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Criterion (user)", report["analysis"])
         self.assertIn("not been benchmarked", report["analysis"])
         self.assertEqual(report["verification_scope"], "citation_targets_only")
+        stored = ResearchReport.from_dict(report)
+        for render in (_report_to_markdown, _format_report):
+            text = render(stored)
+            self.assertIn("Evidence-linked conclusions", text)
+            self.assertNotIn("## Summary", text)
+            self.assertNotIn("## Key Findings", text)
+            for claim in report["claims"]:
+                self.assertEqual(text.count(claim["text"]), 1)
+            self.assertIn("Criterion (user)", text)
+            self.assertIn("not been benchmarked", text)
+            self.assertIn("[Source 1]", text)
+        self.assertEqual(stored.to_dict(), report)
         for format in ("md", "json"):
             await self.server.call_tool(
                 "save_report", {"job_id": job["job_id"], "format": format}

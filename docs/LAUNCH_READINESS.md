@@ -332,6 +332,29 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### Current-source live gate, 2026-10-26
+
+The [retained 66-case, three-repeat run](../evals/results/live-retrieval-body-selection-2026-10-26.json)
+used the body-selection candidate merged in #37, anonymous keyless search, no
+model calls and the unchanged frozen datasets/thresholds. It exited 1 with
+`passed=false`. Its package version string is still 0.4.0b1; the record identifies
+the actual source commit, not a newly published beta artifact.
+
+| Metric | Result | Gate | Outcome |
+|---|---:|---:|---|
+| Answer coverage | 81.5% | 80% | Pass |
+| Trap-safe rate | 100% | 80% | Pass |
+| Repeat stability | 51.5% | 90% | Fail |
+| Answerable ready rate | 57.4% | 75% | Fail |
+| Ready-state answer precision | 97.9% | 95% | Pass |
+| p95 retrieval latency | 11.0 s | 30 s | Pass |
+
+This uses gold/alias matching, not semantic report scoring. Dated sequential runs
+do not isolate changes in public search results or establish a causal improvement
+or regression. The narrow reading regressions below passed, but current discovery
+and readiness stability still block a stable release. Do not lower thresholds,
+discard unsuccessful runs, or treat report/export improvements as clearing this gate.
+
 ## Claims supported now
 
 ### Body-selection regressions, 2026-10-26

@@ -278,7 +278,14 @@ a new edition.
 Report JSON schema 1.1 adds the claim ledger and freshness flags, alongside exact
 selected passages, hashes, offsets, reviews and investigation steps. Markdown/PDF
 retain the reasoning, criteria, assumptions and limitations in the generated
-analysis. Use JSON for the complete machine-readable evidence package.
+analysis, presented once under Evidence-linked conclusions rather than repeated
+in summary, findings and analysis. JSON keeps the compatible fields and full
+machine-readable evidence package; old prose reports retain their layout.
+PDF export tries available Arial Unicode, DejaVu Sans or Noto Sans fonts and
+otherwise uses the core font. Font coverage and required rendering failures
+are explicit errors, not saved PDFs with missing report text. Use Markdown/JSON
+when a suitable font is unavailable. A combined PDF/Markdown export may be partial
+with only the confirmed Markdown artifact; inspect the manifest failures.
 `verification_scope="citation_targets_only"` means reference checks, not proof
 of semantic support or factual truth.
 

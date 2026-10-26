@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Present claim-based conclusions and reasoning once in human reports while
+  preserving compatible JSON fields, unknowns, criteria, citations and old layouts.
+- Check PDF glyph coverage, retain common punctuation with the fallback font,
+  and fail explicitly on rendering errors instead of saving missing report text.
+  Keep successful Markdown exports and actionable per-format failure messages.
+- Retain the frozen 66-case, three-repeat anonymous live gate from 2026-10-26:
+  readiness and stability still fail; no stable release is authorized by this run.
 - Select bounded, disjoint evidence passages across extracted source sections;
   prefer prose/table matches over navigation-only matches and support Unicode
   lexical selection without translation or an internal model.

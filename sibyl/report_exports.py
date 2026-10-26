@@ -69,7 +69,7 @@ def export_report(
     format: Literal["md", "json", "pdf", "both"],
     job_id: str | None,
 ) -> ExportManifest:
-    from .reporter import _report_to_markdown, generate_pdf
+    from .reporter import PDFRenderingError, _report_to_markdown, generate_pdf
 
     store = ArtifactStore(root, output_dir)
     formats: list[ExportFormat] = ["pdf", "md"] if format == "both" else [format]
@@ -117,7 +117,9 @@ def export_report(
                     code="capacity_exceeded"
                     if isinstance(exc, CapacityError)
                     else "export_failed",
-                    message=f"Could not confirm a saved {selected} artifact. Do not infer a path.",
+                    message=str(exc)
+                    if isinstance(exc, PDFRenderingError)
+                    else f"Could not confirm a saved {selected} artifact. Do not infer a path.",
                 )
             )
     return ExportManifest(
