@@ -80,6 +80,14 @@ the three after runs contains a frozen gold/alias match; two nevertheless return
 retrieval status ok. Do not present query preservation or those heuristic statuses
 as successful answers. The 66-case gate has not been rerun after this parsing fix.
 
+An additional controlled regression reproduced a readiness mismatch: three
+distinct Crossref metadata records could be counted as three substantive sources
+and return ok even when every page read failed. Retrieval now excludes known
+metadata/snippet origins from substantive-source, independent-content and
+substantive-domain gates, consistent with persistent-job accounting. Catalog
+leads remain available. This stricter classification does not identify every HTML
+abstract/catalog page, prove semantic support or clear the frozen live gate.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary

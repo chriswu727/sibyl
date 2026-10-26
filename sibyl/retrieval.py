@@ -110,6 +110,7 @@ def _diagnostics(
     recommended_action: RecommendedAction = "not_assessed",
     refinement_searches: int = 0,
     refinement_failures: int = 0,
+    substantive_domains: int = 0,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -155,6 +156,7 @@ def _diagnostics(
         recommended_action=recommended_action,
         refinement_searches=refinement_searches,
         refinement_failures=refinement_failures,
+        substantive_domains=substantive_domains,
     )
 
 
@@ -175,6 +177,14 @@ async def _score_documents(
         reason = type(exc).__name__
         warning = f"FlashRank failed ({reason}); fell back to lexical_v1."
         return lexical_relevance_scores(query, documents), "lexical_v1", warning
+
+
+def _has_substantive_text(page: WebPage) -> bool:
+    return (
+        len(page.text) > 200
+        and not page.error
+        and page.content_origin not in {"search_snippet", "crossref_api"}
+    )
 
 
 async def gather_source_bundle(
@@ -503,8 +513,7 @@ async def gather_source_bundle(
             urlsplit(page.url).netloc.casefold().removeprefix("www.")
             for page in good
             if (
-                len(page.text) > 200
-                and page.content_origin != "search_snippet"
+                _has_substantive_text(page)
                 and (
                     not query_anchor_terms
                     or query_anchor_terms <= lexical_query_terms(page.text)
@@ -590,7 +599,7 @@ async def gather_source_bundle(
                     else:
                         snippet_fallbacks += 1
                 good = dedup_pages(good)
-        substantive = [page for page in good if len(page.text) > 200]
+        substantive = [page for page in good if _has_substantive_text(page)]
         if len(substantive) < 3 and not site_hosts:
             wiki_pages = await wikipedia_lookup(
                 search_queries[-1], client=client, max_pages=2
@@ -598,7 +607,7 @@ async def gather_source_bundle(
             wikipedia_fallbacks += len(wiki_pages)
             if wiki_pages:
                 good = dedup_pages(good + wiki_pages)
-                substantive = [page for page in good if len(page.text) > 200]
+                substantive = [page for page in good if _has_substantive_text(page)]
         candidates = good
 
     except Exception:
@@ -888,12 +897,16 @@ async def gather_source_bundle(
             prepared, source_evidence_terms
         )
         if (
-            len(page.text) > 200
-            and page.content_origin != "search_snippet"
+            _has_substantive_text(page)
             and (not query_anchor_terms or query_anchor_terms <= source_terms)
         )
     ]
     substantive_sources = len(substantive_prepared)
+    substantive_domains = {
+        urlsplit(page.url).netloc.lower().removeprefix("www.")
+        for page, _ in substantive_prepared
+        if urlsplit(page.url).netloc
+    }
     selected_cluster_ids = {
         cluster_id_by_source_hash[source_hash] for _, _, source_hash, _, _ in prepared
     }
@@ -914,7 +927,7 @@ async def gather_source_bundle(
         evidence_chars=evidence_chars,
         query_terms=coverage.query_terms,
         query_term_coverage=coverage.score,
-        unique_domains=len(domains),
+        unique_domains=len(substantive_domains),
         independent_content_clusters=independent_content_clusters,
         missing_anchor_terms=missing_anchor_terms,
         future_outcome_unobservable=_future_outcome_is_unobservable(clean_query),
@@ -1024,6 +1037,7 @@ async def gather_source_bundle(
         query_term_coverage=coverage.score if sources else None,
         unique_domains=len(domains),
         substantive_sources=substantive_sources,
+        substantive_domains=len(substantive_domains),
         evidence_chars=evidence_chars,
         candidate_content_clusters=content_clusters.cluster_count,
         duplicate_candidates=content_clusters.duplicate_count,

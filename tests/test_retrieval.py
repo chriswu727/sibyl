@@ -1036,9 +1036,106 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.search_providers, ["crossref"])
         self.assertEqual(bundle.diagnostics.metadata_fallbacks, 1)
         self.assertIn(
-            "fewer_than_two_substantive_sources",
+            "no_substantive_sources",
             bundle.diagnostics.sufficiency_reasons,
         )
+
+    async def test_metadata_only_cannot_establish_substantive_readiness(self):
+        descriptions = [
+            "Catalog record includes authors journal identifiers volume registration and publication dates. ",
+            "Bibliographic metadata lists title edition publisher copyright deposit records and article identifiers. ",
+            "Citation index stores descriptive fields including author affiliations reference counts and document type. ",
+        ]
+        results = [
+            SearchResult(
+                "Target paper",
+                f"https://metadata{index}.example/item",
+                "Target paper publication date. " + description * 12,
+                "academic",
+                "crossref",
+            )
+            for index, description in enumerate(descriptions)
+        ]
+        for full_text in (False, True):
+            pages = [WebPage(r.url, r.title, "", error="HTTP 403") for r in results]
+            if full_text:
+                pages[0] = WebPage(results[0].url, "Target paper", results[0].snippet)
+            with (
+                self.subTest(full_text=full_text),
+                mock.patch(
+                    "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+                ),
+                mock.patch(
+                    "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+                ),
+                mock.patch(
+                    "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+                ),
+            ):
+                bundle = await gather_source_bundle(
+                    "Target paper publication date", client=object()
+                )
+            self.assertEqual(bundle.status, "insufficient_evidence")
+            self.assertEqual(bundle.diagnostics.substantive_sources, int(full_text))
+            self.assertEqual(bundle.diagnostics.substantive_domains, int(full_text))
+            self.assertEqual(
+                bundle.diagnostics.independent_content_clusters, int(full_text)
+            )
+            self.assertEqual(len(bundle.sources), 3)
+            self.assertEqual(
+                sum(s.content_origin == "crossref_api" for s in bundle.sources),
+                2 if full_text else 3,
+            )
+            self.assertEqual(bundle.diagnostics.recommended_action, "refine_query")
+            self.assertIn(
+                "fewer_than_two_substantive_sources"
+                if full_text
+                else "no_substantive_sources",
+                bundle.diagnostics.sufficiency_reasons,
+            )
+
+    async def test_metadata_domain_cannot_supply_full_text_domain_diversity(self):
+        descriptions = [
+            "Target paper publication date. Research methods describe experimental design and observed results. "
+            * 12,
+            "Target paper publication date. Limitations discuss population selection and uncertainty in measured outcomes. "
+            * 12,
+            "Target paper publication date. Catalog record includes authors journal identifiers and article registration. "
+            * 12,
+        ]
+        results = [
+            SearchResult("Target paper", url, text, "academic", "crossref")
+            for url, text in zip(
+                (
+                    "https://journal.example/paper",
+                    "https://journal.example/limitations",
+                    "https://metadata.example/item",
+                ),
+                descriptions,
+            )
+        ]
+        pages = [WebPage(r.url, r.title, r.snippet) for r in results[:2]]
+        pages.append(WebPage(results[2].url, results[2].title, "", error="HTTP 403"))
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Target paper publication date", client=object()
+            )
+        self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.diagnostics.substantive_domains, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn("single_domain", bundle.diagnostics.sufficiency_reasons)
 
     async def test_quoted_target_requires_coherent_source_support(self):
         query = 'What is the online date of "Target paper"?'

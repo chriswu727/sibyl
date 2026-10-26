@@ -193,6 +193,9 @@ heading hits alone. For missing sections, use `continue_research(url=..., query=
 the direct read extracts up to 60,000 characters and returns at most 16,000 evidence
 characters. Exact offsets/hashes are retained; omitted sections remain unread.
 These are relevance heuristics, not semantic support checks or translation.
+Known Crossref metadata and search snippets remain leads, not substantive text
+or independent full-text domains for readiness. An HTML download can still be an
+abstract or catalog entry; the host must inspect what was actually read.
 
 Public search can throttle; original pages can block extraction. Source-kind,
 recency and duplicate-cluster labels are heuristics. PDFs are bounded text reads,

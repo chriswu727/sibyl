@@ -127,6 +127,7 @@ class BundleDiagnostics:
     recommended_action: RecommendedAction = "not_assessed"
     refinement_searches: int = 0
     refinement_failures: int = 0
+    substantive_domains: int = 0
 
 
 @dataclass(frozen=True)
