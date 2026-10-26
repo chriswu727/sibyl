@@ -36,7 +36,7 @@ Persistent jobs maintain agent research state without requiring a report. Source
 | Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
 | Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
 | Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
-| Host-assisted report | `start_research(mode="host")` | No | Your agent | Persistent research and Markdown/JSON delivery |
+| Persistent investigation | `start_research(mode="host")` | No | Your agent | Reusable research state and optional reports |
 
 ## Quick start
 
@@ -54,7 +54,9 @@ python -m venv .venv
 python -m pip install -e .
 ```
 
-Sibyl requires Python 3.11 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
+Sibyl requires Python 3.11 or newer. The default installation includes persistent
+host-led research and keyless retrieval, without a model SDK. Optional features
+are installed explicitly:
 
 ```bash
 python -m pip install -e '.[report]'   # PDF rendering only
@@ -550,6 +552,9 @@ When Jina Reader is used, the target URL is sent to that external service. It is
 
 ## Migration
 
+See the [migration and legacy boundary](MIGRATION.md) for the canonical inventory
+of removed capabilities and intentionally retained data compatibility.
+
 This source preview removes internal model execution, LiteLLM, provider routing,
 the `research/analyze/compare/swot/timeline` tools and finance/chart tools.
 The `sibyl research` CLI and implicit `sibyl "question"` report command are gone;
@@ -593,7 +598,21 @@ answerable runs containing both `ok` and expected evidence, ready-state precisio
 and p50/p95 latency. It records configured and actual provider paths. Save dated
 results; public search and publisher availability vary between runs.
 
-The latest formal keyless three-repeat run is retained in [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). Answer coverage improved from 75.9% in the [original baseline](../evals/results/live-retrieval-2026-07-21.json) to 85.2%, trap safety remained 100%, and p95 latency was 11.0 seconds. A subsequent [105-request Tavily pilot](../evals/results/live-retrieval-tavily-pilot-2026-07-21.json) reached 88.9% answer coverage and 10.7-second p95 latency. Recomputed under metric version 2, Tavily produced synthesis-ready answer evidence on 70.4% of answerable cases with 92.7% ready-state precision; the gates are 75% and 95%. Sibyl therefore remains a public beta until a dated three-repeat run clears every threshold; offline checks or a single-repeat pilot are not release evidence.
+The latest retained full keyless gate is the [2026-10-26 body-selection run](../evals/results/live-retrieval-body-selection-2026-10-26.json):
+66 cases, three repeats, 81.5% answer coverage and 97.9% ready-state answer
+precision, but 57.4% answerable readiness (gate 75%) and 51.5% repeat stability
+(gate 90%). It failed. Gold/alias matches do not measure semantic report accuracy.
+This run predates the subsequent query, metadata-classification and excerpt-hint
+changes; there is no replacement full-gate pass on the latest source.
+Historical July keyless/Tavily runs remain linked in
+[launch readiness](LAUNCH_READINESS.md#historical-live-evidence), not presented
+as current measurements. The host-only source is not cleared for stable release.
+
+The [two-workflow low-effort host retest](../evals/results/host-agent-structured-retest-2026-10-26.json)
+delivered partial Markdown/JSON for both tasks and recovered from a rejected
+inference. Its SQLite report still cited an excerpt missing a material
+qualification. Delivery success is not semantic-quality success; later hints
+have offline coverage, not a new host-model measurement.
 
 The repository also contains an exploratory 30-question SimpleQA comparison: the measured host workflow answered 26/30 correctly and the configured one-shot workflow 5/30. This small, agent-graded, model/configuration-confounded experiment does not establish the quality of this new workflow or current models. Read the [method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md). A fresh comparison must use the same model, source access, budget, and realistic research questions; report coverage, citation support, contradictions, freshness, cost, and latency separately.
 

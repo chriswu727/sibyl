@@ -4,8 +4,8 @@ Run Sibyl as one trusted local stdio MCP process. Monitoring is an optional,
 read-only view of that same runtime, not a remote MCP API. This runbook covers
 startup, health interpretation, alerts, recovery, and local retention.
 
-This describes the 0.4.0b1 beta; start with [Installation](../llms-install.md).
-For unimplemented monitoring extensions, see the [roadmap](QUALITY_BUILD_PLAN.md).
+This describes unreleased host-only `main`, not the published 0.4.0b1 beta.
+Start with [Installation](../llms-install.md) and the [implementation plan](QUALITY_BUILD_PLAN.md).
 
 ## Start with monitoring
 
@@ -24,13 +24,13 @@ The token must contain 32–256 printable ASCII characters without spaces. Add
 ```json
 {
   "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
-  "args": ["--profile", "keyless", "--monitor-port", "8766", "--log-level", "INFO"]
+  "args": ["--monitor-port", "8766", "--log-level", "INFO"]
 }
 ```
 
 The host must pass the token through its environment/secret mechanism. Its
 configuration syntax varies by host. For manual stdio operation, the equivalent
-command is `sibyl-mcp --profile keyless --monitor-port 8766 --log-level INFO` with
+command is `sibyl-mcp --monitor-port 8766 --log-level INFO` with
 the token already in the environment. Do not start a second runtime against the
 same research directory just to monitor the first.
 
@@ -54,7 +54,7 @@ publish this endpoint through a proxy, tunnel, or public interface.
 Readiness returns 503 while busy or when the initialized store cannot be read.
 An uninitialized lazy store is not tested or created by monitoring; inspect
 `jobs.initialized` / `sibyl_store_initialized`. Readiness does not test publisher
-availability, model credentials, disk writeability, evidence completeness, or
+availability, disk writeability, evidence completeness, or
 semantic correctness. An unhealthy store does not make the liveness endpoint
 fail. A blocked event loop can prevent all four endpoints from responding.
 
@@ -71,8 +71,9 @@ cancelled, and rejected invocations. `sibyl_tool_duration_seconds` is a histogra
 including rejected calls at zero duration. A completed invocation can return
 insufficient evidence or a partial report: it is not a successful-research score.
 Schema validation before runtime admission is outside these invocation counters.
-Autonomous work is visible in job-state counts; its internal model operations are
-not separate MCP invocation metrics.
+Background retrieval is visible in job-state counts; host reasoning happens
+outside Sibyl and is not included in MCP invocation metrics. Sibyl has no
+internal model operations.
 
 At INFO, runtime events are JSON lines on stderr. The host owns log rotation and
 retention. Sibyl does not create an unbounded log file or contact a telemetry
@@ -114,8 +115,10 @@ check scrape health and store initialization before interpreting job counts.
 Shutdown closes the listener, cancels owned work, and releases the research lock.
 After a crash, unfinished jobs become interrupted and unfinished retrieval attempts
 become failed. Consumed attempts remain budgeted. Inspect `get_research(job_id)`
-before explicit continuation. Autonomous continuation can incur provider charges;
-it does not run automatically or provide exactly-once external execution.
+before explicit continuation. Only host jobs can continue; legacy autonomous
+records are read/export-only. Continuation can contact search providers, with
+separate charges if a paid provider was explicitly configured. It never starts
+automatically or provides exactly-once external execution.
 
 If new evidence exceeds the 1 MiB checkpoint payload ceiling, the prior evidence
 is retained, the discarded round becomes failed, and consumed budgets remain.
@@ -145,6 +148,7 @@ ruff check sibyl tests scripts
 ruff format --check sibyl tests scripts
 mypy
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
+python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --agent
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
 python scripts/check_research_workflow.py
 ```

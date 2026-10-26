@@ -1,9 +1,33 @@
-# Architecture
+# Host-only research architecture
 
 Sibyl is a local, asynchronous research application with MCP, CLI, and Python
 interfaces. It is not a hosted or multi-tenant service. Research jobs persist
-public-web evidence and reports. The default host-assisted mode leaves planning
-and writing to the host. There is no internal generative-model execution.
+public-web evidence, host judgments and optional reports. The host is the only
+supported execution mode and owns planning, semantic judgment and writing. There
+is no internal generative-model execution. This document specifies current source,
+not the older published packages; [migration](MIGRATION.md) defines the retained
+legacy-data boundary.
+
+## Product contract
+
+The primary deliverable is reusable research state for the calling agent. A human
+report is an optional projection of that state, not a second research pipeline.
+The agent decides what to investigate and what the evidence supports; Sibyl owns
+retrieval, provenance, persistence, revision/reference integrity and bounded exports.
+See [functional goals](REFACTOR_GOALS.md) for acceptance criteria and non-goals.
+
+New MCP investigations use claim contract 2. The host starts a job, retrieves
+evidence for named questions, reads exact passages, records atomic facts and
+derived judgments, investigates counterevidence and reassesses gaps. Retrieval
+or premise changes make affected reviews stale. Optional completion selects
+claims, includes transitive premises and all unknown/disputed claims, and freezes
+the report. Export returns only confirmed artifacts. Structured errors expose
+safe reload/repair guidance rather than silently accepting an invalid revision.
+
+These checks prove record consistency, not semantic entailment or factual truth.
+Every factual qualification still needs actual support in the cited passage.
+Search snippets and known scholarly metadata are leads, not full-text reads;
+bounded excerpts do not establish that an entire document has been inspected.
 
 ## Module boundaries
 
@@ -32,6 +56,7 @@ flowchart TD
 |---|---|
 | `mcp_server.py` | Server construction, profile selection, console startup |
 | `mcp_catalog.py` | Tool registration, runtime binding, public error boundary |
+| `mcp_errors.py` | Structured agent validation/revision recovery and safe exception projection |
 | `mcp_tools.py` | Tool schemas and application-level orchestration |
 | `research_tools.py` | Persistent research tool schemas and delegation to job operations |
 | `runtime.py` | Policy, lazy configuration, per-server state, execution lifecycle |
@@ -51,10 +76,14 @@ flowchart TD
 | `source_policy.py` | Heuristic source classification and primary/academic routing priority |
 | `research_sources.py` | Budgeted direct-page evidence with stable hashes and passage offsets |
 | `research_review.py` | Host evidence links, per-question gaps, stale reviews, completion gates |
+| `research_claims.py` | Atomic claim validation, dependency freshness, criteria and claim-derived report narrative |
 | `research_errors.py` | Application-authored validation errors safe for the MCP boundary |
 | `research_jobs.py` | Host job lifecycle, progress, cancellation, continuation |
 | `job_store.py` | Private bounded SQLite, directory ownership, optimistic revisions |
 | `report_audit.py` | Deterministic citation-target validation |
+| `research_views.py` | Compact briefs, revision-pinned source pages and compatibility views |
+| `report_sections.py`, `report_references.py` | Shared claim presentation and cited/background source grouping |
+| `report_exports.py` | Per-format export results, actual artifact paths, hashes and failures |
 | `storage.py` | Output-root policy, private staging, atomic publication |
 | `privacy.py` | Display-only URL metadata redaction |
 
@@ -162,7 +191,7 @@ at 2 MiB. gzip/zlib-deflate decoding limits output allocation; unsupported stack
 encodings and truncated streams fail closed.
 
 Only direct page fetching uses this pinned transport. Search services and
-optional provider SDKs use their own outbound clients; they are separate trust
+optional rendering services use their own outbound clients; they are separate trust
 boundaries, not covered by a blanket "all networking is sandboxed" claim.
 
 MCP exports are confined to an operator-selected root. Agents can request a

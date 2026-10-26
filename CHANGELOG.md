@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Reconcile host-only design, goals, README translations, operations, evaluation
+  status and stable-release instructions. Document removed execution separately
+  from intentional legacy checkpoint/report compatibility and historical evidence.
+- Remove the unused single-window context helper; retain tail/identifier selection
+  regressions on the production passage selector. Guard against removed imports.
+- Label stored legacy report verdicts as historical in text, Markdown and PDF;
+  preserve original serialized data instead of implying fresh verification.
 - Expose bounded-source length, excerpt status and an available budgeted read-more
   route on exact passage reads. Clarify support for each factual qualification.
 - Retain the authorized two-workflow host retest: confirmed partial md/json

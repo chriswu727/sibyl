@@ -72,6 +72,8 @@ metadata queries. Jina rendering is separately opt-in and sends target URLs to J
 
 Never commit real keys. Environment placeholder expansion depends on your host,
 not Sibyl. The old model-backed `report/full` profiles are no longer available.
+See the [migration inventory](docs/MIGRATION.md) before reusing an old installation
+or checkpoint directory.
 
 Read the [Agent protocol](docs/agent-protocol.md), [Usage](docs/USAGE.md),
 [Privacy](PRIVACY.md) and [release evidence](docs/LAUNCH_READINESS.md).

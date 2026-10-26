@@ -192,7 +192,7 @@ Model/subscription-backed evaluations require explicit approval for usage.
 
 ## Current baseline versus remaining work
 
-| Area | Status at the recorded baseline |
+| Area | Current source status; historical measurements are dated separately |
 |---|---|
 | Internal model removal and eight-tool default | Implemented on main; not a new PyPI release |
 | Structured briefs, exact passage reads and source pagination | Implemented |
@@ -201,13 +201,19 @@ Model/subscription-backed evaluations require explicit approval for usage.
 | Markdown/JSON and optional PDF export | Implemented |
 | Original-source discovery reliability | Measured weakness; improvement required |
 | Explicit claim/inference/recommendation contract | Implemented in the source preview; host-declared semantic support |
-| Natural tool use inside real subscription-backed hosts | Requires a recorded compatibility/usability evaluation |
+| Natural tool use inside real subscription-backed hosts | Two bounded low-effort workflows delivered partial reports; broader usability and exact claim support remain unproven |
 | Better research than built-in search | Hypothesis; paired evaluation not established |
 
 The retained ten-case host suite needed host-supplied URLs in seven cases. The
 dated live retrieval gates still have failures. See [launch evidence](LAUNCH_READINESS.md)
 for the runs and their scope. Neither architecture simplification nor offline
 tests erase those limitations.
+
+The [latest host retest](../evals/results/host-agent-structured-retest-2026-10-26.json)
+improved delivery and error recovery but retained a material SQLite citation-support
+gap. Later excerpt-scope hints have offline coverage, not another model test.
+The [architecture](MCP_ARCHITECTURE.md) specifies the implemented design;
+[migration](MIGRATION.md) inventories intentional legacy data compatibility.
 
 ## Non-goals for this refactor
 

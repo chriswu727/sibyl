@@ -131,6 +131,9 @@ historical experiment notes are not current-model quality guarantees.
 
 Read docs/REFACTOR_GOALS.md for the functional target and
 docs/QUALITY_BUILD_PLAN.md for the complete implementation approach before extending this refactor.
+Use docs/MCP_ARCHITECTURE.md for current design and docs/MIGRATION.md for the
+removed-execution versus retained-data boundary. Do not restore old capabilities
+because a historical checklist or serialized field mentions them.
 Keep maintained repository documentation, code comments/messages, MCP descriptions,
 metadata and maintainer-authored PR/release text in English. README.zh-CN.md is
 the sole Chinese documentation file and must track the English README's scope,

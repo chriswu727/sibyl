@@ -1,6 +1,6 @@
 # Sibyl launch readiness
 
-Reviewed 2026-10-21 against engineering baseline
+Historical engineering baseline reviewed 2026-10-21 against
 [`d343267`](https://github.com/chriswu727/sibyl/commit/d343267).
 This record separates implemented behavior, verified engineering checks, and
 unmet product-quality gates. See the [roadmap](QUALITY_BUILD_PLAN.md) for execution
@@ -19,7 +19,7 @@ comparison against ordinary search, with explicit spend authorization. Live
 retrieval thresholds remain unchanged. The historical records below describe
 the architecture and checks at their dated commits, not current capabilities.
 
-## Decision
+## Historical beta decision — not current release authority
 
 On 2026-10-21 the maintainer approved an opt-in **0.4.0b1 prerelease**, focused
 on the keyless host-assisted MCP workflow. Configured-model autonomous research
@@ -31,7 +31,7 @@ Beta publication requires the engineering, security, clean-install, and honest
 documentation checks below. See [channel status](RELEASING.md#publication-channels)
 for publication progress; version metadata alone does not prove availability.
 
-## Current engineering evidence
+## Historical engineering evidence — 2026-10-21
 
 [PR #22](https://github.com/chriswu727/sibyl/pull/22) delivered bounded PDF input,
 authenticated local monitoring, checkpoint recovery, and artifact quotas.
@@ -88,7 +88,7 @@ the reference inventory remain follow-up issues. This single host-authored
 exercise is not a successful discovery benchmark, an independent review, or
 the required autonomous model-backed report evaluation.
 
-### Current model-free retrieval gate, 2026-10-21
+### Model-free retrieval gate, 2026-10-21
 
 The [new retained run](../evals/results/live-retrieval-keyless-2026-10-21.json)
 used baseline `29147979bb396c863d1edd196027918974a52673`, metric version 2,
@@ -268,6 +268,11 @@ those failures are resolved.
 
 ## Release gates
 
+The current target is a complete stable host-only release, not another beta.
+The historical beta exception below applies only to the already published
+0.4.0b1 artifact. It does not waive any gate for current `main` or authorize
+republishing changed source under that version.
+
 ### Opt-in 0.4.0b1 beta (historical scope)
 
 1. Release-commit CI, regression, lint, typed-core, dependency-audit, offline
@@ -285,9 +290,9 @@ independent quality benchmark. No new paid model evaluation is authorized or
 required for this scoped beta. Experimental status does not waive security or
 dependency checks for the optional packages.
 
-### Stable 0.4.0
+### Current stable host-only release
 
-Do not publish stable v0.4.0 or claim the research-quality gates passed until
+Do not publish a stable host-only version or claim the research-quality gates passed until
 all five gates below are satisfied:
 
 1. A new dated 66-case, three-repeat live retrieval run passes every committed
@@ -297,6 +302,9 @@ all five gates below are satisfied:
    retained outputs. Record evidence support, gaps, abstention, cost and latency.
    Explicit model-quota/API-spend approval is required. A host-authored fixture
    alone does not establish research-quality superiority.
+   Verify natural host recovery, exact support for material qualifications,
+   counterevidence, follow-ups and honest unknown delivery. Existing partial
+   exports and the unsupported SQLite qualification do not clear this gate.
 3. The release wheel passes clean core and report-extra installation smoke tests;
    also exercise the new PDF/monitoring extras and check installed dependencies.
 4. Required GitHub CI passes on Python 3.11–3.13 at the release commit.
@@ -307,6 +315,12 @@ A green release workflow automates packaging and publishing; it does not enforce
 all research-quality gates. The maintainer must review this checklist before
 publishing a GitHub Release. The version validator checks metadata agreement,
 not research quality.
+
+Current clean-wheel profiles are core, PDF/monitoring and report/extraction;
+there is no finance extra or internal-model evaluation path. Use a fresh,
+not-yet-published version only after these gates pass. The historical beta
+checklist and measurements retain their original architecture below/above;
+they are not instructions to reintroduce removed capabilities.
 
 ### Low-effort real-host smoke, 2026-10-26
 

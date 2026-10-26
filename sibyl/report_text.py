@@ -6,7 +6,9 @@ from .report_references import reference_groups
 from .report_sections import (
     CLAIM_SECTION_NOTICE,
     CLAIM_SECTION_TITLE,
+    LEGACY_VERDICT_NOTICE,
     claim_report_body,
+    legacy_verdict_tag,
 )
 
 
@@ -54,17 +56,15 @@ def _format_report(report: ResearchReport) -> str:
     else:
         lines.extend(["## Summary", report.summary, "", "## Key Findings"])
         fv = report.finding_verifications or []
+        if fv:
+            lines.append("> " + LEGACY_VERDICT_NOTICE)
         if report.key_findings and not fv:
             lines.append("> Claim verification was not performed for this report.")
         for i, finding in enumerate(report.key_findings, 1):
             verdict = fv[i - 1] if i - 1 < len(fv) else None
             tag = ""
             if verdict is not None:
-                tag = (
-                    f"  [verified: {verdict.confidence}]"
-                    if verdict.supported
-                    else "  (unverified)"
-                )
+                tag = "  " + legacy_verdict_tag(verdict)
             lines.append(f"{i}. {finding}{tag}")
         if report.analysis:
             lines.extend(["", "## Analysis", report.analysis])

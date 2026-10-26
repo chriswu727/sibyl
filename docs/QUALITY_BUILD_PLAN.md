@@ -13,6 +13,31 @@ does not complete the refactor.
 
 ## Current source implementation
 
+The implementation below exists on main, not in a new published package.
+[Architecture](MCP_ARCHITECTURE.md) is the current design; [migration](MIGRATION.md)
+separates removed behavior from intentional old-record compatibility. The dated
+paragraphs in this section are evidence history, not separate unfinished phases.
+
+### Remaining implementation priorities
+
+1. Diagnose original-source discovery and readiness instability against retained
+   failures without changing frozen thresholds or hiding host-supplied URL rescues.
+2. Improve qualification/section coverage in bounded reading and make exact
+   claim-to-passage support reliable in real host use. Do not infer entailment
+   from structural validation; the latest SQLite sample still fails this criterion.
+3. Verify natural research, recovery, counterevidence, follow-ups, unknown delivery
+   and optional exports on supported host configurations. New model-backed runs
+   require fresh explicit consent; both approved retest workflows have been used.
+4. Retain the declared same-host/provider/budget comparison and a new full live
+   retrieval pass before the stable release decision. Then choose a fresh version,
+   verify distributions and reconcile public channels through the release runbook.
+
+These are connected acceptance gaps in the same product, not permission to
+restore internal models, add an unrelated UI or ship another beta. The design,
+README, migration and operations documents must remain aligned throughout.
+
+### Implemented contracts and retained measurements
+
 New MCP jobs now connect atomic facts, reasoning and recommendation criteria
 through the [claim contract](research-claims.md). The source implementation checks
 references and reasoning cycles, detects changed/stale premises, retains unknowns
@@ -20,9 +45,9 @@ and disputes, and renders optional reports from the same ledger. Old checkpoints
 retain their completion behavior. Focused query variants also preserve a leading
 entity name when the question word occurs later in the query.
 
-Recorded-source MCP replay covers this workflow and export/restart. Real host
-usability, live discovery reliability and a paired native-search comparison still
-require retained measurements before the complete-product criteria are met.
+Recorded-source MCP replay covers this workflow and export/restart. Broader host
+usability, reliable live discovery and a paired native-search comparison remain
+acceptance gaps; the bounded host results below do not meet the complete-product criteria.
 
 An [anonymous three-query smoke record](../evals/results/source-discovery-claims-2026-10-26.json)
 retains source identities and diagnostics before/after final-source preference
@@ -40,10 +65,9 @@ Explicit choice schemas and export semantics are implemented. Agent calls now
 also return structured claim/revision recovery and confirmed artifact manifests,
 with real stdio regression coverage for rejected assessments, reload, repair and
 explicit unknown-report export. Validation rules remain intact and keyless text
-responses are preserved. No new model request was run; whether these contracts
-improve low-effort host behavior still needs a separately authorized retest.
-The recorded smoke remains a usability failure, not a paired search comparison
-or a stable-release gate pass.
+responses are preserved. The subsequently authorized two-workflow retest below
+measured improved delivery, not a complete semantic-quality pass. The original
+four-request smoke remains a retained usability failure, not a paired comparison.
 
 Body selection now chooses disjoint passages across the bounded extracted source
 instead of splitting one head-biased window. Unicode lexical matches and
@@ -140,15 +164,16 @@ automatically discovered or manually supplied.
 
 ## Connect conclusions and recommendations to evidence
 
-The current question-level review stores a conclusion with supporting/challenging
-passage IDs. Extend it so material factual assertions can be linked individually
-to evidence, and so deductions and recommendation preferences remain explicit.
+The implemented claim contract extends question-level conclusions and passage
+links with individual factual assertions, deductions and recommendation criteria.
+The requirements below describe invariants to preserve while closing the remaining
+quality gaps, not an instruction to build a second claim store.
 
 Represent the minimum information needed by the host: stable statement identity,
 statement text and type, support/challenge references, dependencies on other
 statements, assessment status, reasoning and applicable assumptions or scope.
-Keep missing or disputed information visible. Define the concrete additive schema
-with examples as part of implementation; avoid redundant fields and uncalibrated
+Keep missing or disputed information visible. Maintain the concrete additive
+[schema and examples](research-claims.md); avoid redundant fields and uncalibrated
 numerical confidence scores.
 
 For recommendations, record the user's criteria and distinguish them from

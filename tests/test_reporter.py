@@ -149,9 +149,33 @@ class TestVerificationRendering(unittest.TestCase):
             FindingVerification(1, True, "high", [1], ""),
             FindingVerification(2, False, "low", [], "no support"),
         ]
-        md = _report_to_markdown(rep)
-        self.assertIn("confidence: high", md)
-        self.assertIn("(unverified)", md)
+        before = rep.to_dict()
+        for render in (_report_to_markdown, _format_report):
+            text = render(rep)
+            self.assertIn("historical: supported; recorded confidence: high", text)
+            self.assertIn("historical: unverified", text)
+            self.assertIn("not revalidated on read or export", text)
+            self.assertNotIn("[verified:", text)
+        self.assertEqual(rep.to_dict(), before)
+        self.assertEqual(ResearchReport.from_dict(before).to_dict(), before)
+
+    @unittest.skipUnless(find_spec("pypdf"), "PDF reader extra is optional")
+    def test_pdf_labels_old_verdicts_without_mutating_saved_report(self):
+        from pypdf import PdfReader
+
+        from sibyl.report_models import FindingVerification
+
+        rep = _report()
+        rep.finding_verifications = [FindingVerification(1, True, "high", [1], "")]
+        before = rep.to_dict()
+        with tempfile.TemporaryDirectory() as directory:
+            path = generate_pdf(rep, directory)
+            text = "\n".join(page.extract_text() for page in PdfReader(path).pages)
+        self.assertIn("Historical recorded verdicts", text)
+        self.assertIn("not revalidated on read or export", text)
+        self.assertIn("historical: supported; recorded confidence: high", text)
+        self.assertNotIn("[verified:", text)
+        self.assertEqual(rep.to_dict(), before)
 
     def test_empty_verifications_no_markers(self):
         rep = _report()

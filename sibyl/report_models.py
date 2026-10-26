@@ -26,6 +26,8 @@ class Source:
 
 @dataclass
 class FindingVerification:
+    """Historical stored verdict; loading it never performs a new audit."""
+
     index: int
     supported: bool
     confidence: str = "low"
@@ -51,7 +53,7 @@ class ResearchReport:
     sub_questions: List[str] = field(default_factory=list)
     finding_verifications: List = field(
         default_factory=list
-    )  # verifier.FindingVerification per finding
+    )  # Historical FindingVerification records; no verifier executes on load.
     status: str = "ok"  # ok | partial | insufficient_evidence | failed
     error: str = ""
     schema_version: str = "1.0"

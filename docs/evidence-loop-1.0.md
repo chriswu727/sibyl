@@ -8,7 +8,10 @@ performs the final synthesis.
 For durable investigations, reviews, and report export, use
 [persistent research jobs](USAGE.md#persistent-research-jobs) instead. An evidence
 loop is a short-lived retrieval primitive, not a persistent job or an autonomous
-researcher. This contract describes the 0.4.0b1 beta.
+researcher. Main retains this compatibility contract; it is exposed by the
+twelve-tool `keyless` profile, not the default eight-tool agent profile. Its
+presence in the older 0.4.0b1 beta does not make the host-only source a published
+package. See [channel status](RELEASING.md).
 
 ## Start
 
