@@ -5,6 +5,18 @@ or documentation are welcome.
 
 ## Development setup
 
+English is the canonical language for maintained documentation, code comments and
+messages, MCP descriptions, metadata, and maintainer-authored issues/PRs/releases.
+README.zh-CN.md is the sole Chinese documentation file; keep its installation,
+capabilities and limitations aligned with README.md. Original-language sources,
+proper names, multilingual fixtures and matching literals retain their language.
+Do not change evidence or remove language support to satisfy this policy.
+
+For the current refactor, read the [functional goals](docs/REFACTOR_GOALS.md) and
+[implementation sequence](docs/QUALITY_BUILD_PLAN.md) before proposing features.
+Planned claim-support checks must not be advertised as implemented or as a
+guarantee of factual truth.
+
 ```bash
 git clone https://github.com/chriswu727/sibyl.git
 cd sibyl
