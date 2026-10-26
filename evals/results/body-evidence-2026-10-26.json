@@ -1,0 +1,148 @@
+{
+  "date": "2026-10-26",
+  "scope": "Two frozen model-free real-MCP source-selection regressions, not a complete investigation or stable release gate.",
+  "provider": "keyless",
+  "model_calls": 0,
+  "manual_url_rescues": 0,
+  "method": "Same recorded questions and queries; sequential live searches are not a controlled comparison. Inspect retained excerpts for the declared phrases, not answer truth.",
+  "after_code_base": "342666c142ac43dc6633feaeee8951f3e6ca0505 plus body-evidence-selection changes",
+  "cases": [
+    {
+      "case_id": "sqlite_wal",
+      "runs": {
+        "before": {
+          "raw_record_sha256": "4ef1eba66fb5a80699b2071525c51f2190c7a40cf6017c9deba6d131dcbd42bd",
+          "source_url": "https://sqlite.org/wal.html",
+          "source_hash": "63aa97d9207e9e971feb457563a5ba7a33b9febed6ae8f77439c72e100128fba",
+          "retrieval_attempts": 2,
+          "source_count": 12,
+          "spans": [
+            {
+              "start": 0,
+              "end": 1274,
+              "sha256": "d4e233fd5a6abf10127bbae6c52c5ad20454e0e392bd86a7d17a73bfc8ad70fb"
+            },
+            {
+              "start": 2578,
+              "end": 4000,
+              "sha256": "1f002ec1671733a1ba9f84f489c79424891b777c4f09b5d190e9c7e28d71aed9"
+            },
+            {
+              "start": 1275,
+              "end": 2577,
+              "sha256": "3fd39891cd2173419f2f3f21f50ba479cea78d6e6c96868a2b45c0b516e52c0b"
+            }
+          ],
+          "inspected_phrase_matches": {
+            "single_writer_limit": false,
+            "reader_writer_overlap": false
+          }
+        },
+        "after": {
+          "raw_record_sha256": "7c606ef09edd2aa479355d29a2f86250a0f9e73d4b44001dc29a394d9428ff94",
+          "source_url": "https://sqlite.org/wal.html",
+          "source_hash": "63aa97d9207e9e971feb457563a5ba7a33b9febed6ae8f77439c72e100128fba",
+          "retrieval_attempts": 2,
+          "source_count": 10,
+          "spans": [
+            {
+              "start": 10656,
+              "end": 11861,
+              "sha256": "79f63e2ef21bc939cb646fde65f5915ec3c85196f74ea7323f09d33d3c97fa85"
+            },
+            {
+              "start": 6915,
+              "end": 8195,
+              "sha256": "63a0a31bb17b635c9f2605172ea0866c8ebd975cc3fec2ee8317ac350e44f96e"
+            },
+            {
+              "start": 14624,
+              "end": 15880,
+              "sha256": "b5836ba12623ff71d4f24a7bd81a8efabbbfab0726e3b5409669ee0a9a2a9711"
+            }
+          ],
+          "inspected_phrase_matches": {
+            "single_writer_limit": true,
+            "reader_writer_overlap": true
+          }
+        }
+      },
+      "question": "Does SQLite WAL eliminate write contention, and what concurrency benefit does it actually provide?",
+      "queries": [
+        "SQLite WAL readers writer concurrency",
+        "SQLite WAL SQLITE_BUSY only one writer limitations"
+      ]
+    },
+    {
+      "case_id": "idempotency",
+      "runs": {
+        "before": {
+          "raw_record_sha256": "331fafd6774f5d18fb4fe9b1fe8c21b42b5524111fe3d3e29eba240050f089d6",
+          "source_url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "source_hash": "de705e7d9f394da082a64533d4c0ad102e3c4b007d9daa13cf16384335a8e2a2",
+          "retrieval_attempts": 2,
+          "source_count": 10,
+          "spans": [
+            {
+              "start": 0,
+              "end": 1329,
+              "sha256": "12dfbd22d0bbfb6d0b2534a41ec203f5b067d3e96271d04b5d45cb833e6e047d"
+            },
+            {
+              "start": 1330,
+              "end": 2643,
+              "sha256": "797dd4f7c95fc371a5355d7489e223b779412b8d74be9e1a17bc5ba793f9f55d"
+            },
+            {
+              "start": 2644,
+              "end": 4000,
+              "sha256": "139fb86abfd10e93c31b722ea8fc955d0352ec5e77911be804eab239d3c53997"
+            }
+          ],
+          "inspected_phrase_matches": {
+            "parameter_mismatch": false,
+            "bounded_resource_lifetime": false
+          }
+        },
+        "after": {
+          "raw_record_sha256": "94ac40229e82dcafd9d2ba48930b365b69272acede218c0680c9e40882cc33bf",
+          "source_url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "source_hash": "de705e7d9f394da082a64533d4c0ad102e3c4b007d9daa13cf16384335a8e2a2",
+          "retrieval_attempts": 2,
+          "source_count": 10,
+          "spans": [
+            {
+              "start": 16673,
+              "end": 17982,
+              "sha256": "e442773bb9e6d3312c58c65dc957971205dee0624f7502bd432109f27a048e1c"
+            },
+            {
+              "start": 12760,
+              "end": 14007,
+              "sha256": "4a4e469e80fa47966f76510f17446e48b8c9e9f283697665e337f37ccb96c32c"
+            },
+            {
+              "start": 5913,
+              "end": 7125,
+              "sha256": "c7bf8f143eb35838facdfa11ed6917c137b68cb45f6ef574761ba5e62037cf82"
+            }
+          ],
+          "inspected_phrase_matches": {
+            "parameter_mismatch": true,
+            "bounded_resource_lifetime": true
+          }
+        }
+      },
+      "question": "Do idempotency keys make retries safe indefinitely? Compare the documented limits in Stripe and AWS guidance.",
+      "queries": [
+        "Stripe idempotent requests key retention 24 hours",
+        "AWS builders library idempotent APIs late arriving requests intent limitations"
+      ]
+    }
+  ],
+  "limitations": [
+    "Only selected passages from the declared original source were inspected; other sources and final conclusions were not scored.",
+    "No model-host retest, native-search comparator, translation or complete-document reading is established.",
+    "The frozen 66-case three-repeat release gate remains separate."
+  ]
+}

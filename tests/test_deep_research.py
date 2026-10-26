@@ -256,6 +256,58 @@ class TestDirectEvidence(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.status, "insufficient_evidence")
         self.assertFalse(bundle.sources)
 
+    async def test_targeted_read_reaches_beyond_the_old_head_limit(self):
+        text = (
+            "General introductory background. " * 650
+            + "\nToken retention\n"
+            + "Late retries can arrive after token expiry; retention is not indefinite. "
+            * 50
+            + "\nOther considerations\n"
+            + "Other implementation material. " * 650
+        )
+        page = WebPage(
+            "https://example.com/retries",
+            "Retries",
+            text,
+            extraction_warnings=("HTML text truncated to 60000 characters.",),
+        )
+        with mock.patch(
+            "sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=page)
+        ) as read:
+            first = await read_source_bundle(
+                page.url, "token retention expiry late retries"
+            )
+            second = await read_source_bundle(page.url, "other implementation material")
+        read.assert_awaited_with(page.url, max_chars=60000)
+        evidence = first.sources[0].evidence
+        self.assertTrue(
+            any(
+                "retention is not indefinite" in p.text and p.start_char > 16000
+                for p in evidence
+            )
+        )
+        self.assertLessEqual(sum(len(p.text) for p in evidence), 16000)
+        self.assertLessEqual(len(evidence), 9)
+        self.assertEqual(
+            first.diagnostics.evidence_chars, sum(len(p.text) for p in evidence)
+        )
+        self.assertNotEqual(first.bundle_id, second.bundle_id)
+        self.assertEqual(first.sources[0].content_hash, second.sources[0].content_hash)
+        self.assertIn(
+            page.extraction_warnings[0], first.diagnostics.sufficiency_reasons
+        )
+        self.assertTrue(
+            any(
+                "omitted sections remain unread" in reason
+                for reason in first.diagnostics.sufficiency_reasons
+            )
+        )
+        for passage in evidence:
+            self.assertEqual(text[passage.start_char : passage.end_char], passage.text)
+            self.assertEqual(
+                hashlib.sha256(passage.text.encode()).hexdigest(), passage.content_hash
+            )
+
     async def test_site_query_does_not_fetch_or_fallback_to_wikipedia(self):
         results = [
             SearchResult("Study", "https://docs.example.com/paper", "", "web"),

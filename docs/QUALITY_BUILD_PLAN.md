@@ -45,6 +45,17 @@ improve low-effort host behavior still needs a separately authorized retest.
 The recorded smoke remains a usability failure, not a paired search comparison
 or a stable-release gate pass.
 
+Body selection now chooses disjoint passages across the bounded extracted source
+instead of splitting one head-biased window. Unicode lexical matches and
+prose/table context reduce navigation-only matches; this is not translation or
+semantic verification. Query-targeted URL reads inspect up to 60,000 extracted
+characters with at most 16,000 evidence characters and explicit unread sections.
+The [two-case real-MCP record](../evals/results/body-evidence-2026-10-26.json)
+retains unchanged SQLite/AWS source hashes and before/after passage spans. Both
+after runs include the declared writer-limit and retry-contract qualifications,
+without host-supplied URLs or model calls. These are narrow reading regressions,
+not a complete research, host-usability or stable-release gate pass.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary

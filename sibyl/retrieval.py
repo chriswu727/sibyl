@@ -12,7 +12,6 @@ from urllib.parse import urlsplit
 import httpx
 
 from .content_clusters import cluster_content
-from .context import relevant_window_span
 from .dedup import canonical_url, dedup_pages
 from .evidence import (
     BundleDiagnostics,
@@ -24,7 +23,7 @@ from .evidence import (
     RecommendedAction,
     SourceBundle,
 )
-from .passages import TextPassage, split_passages
+from .passages import select_passages
 from .queries import (
     focused_site_query,
     query_requires_decomposition,
@@ -649,21 +648,24 @@ async def gather_source_bundle(
 
     content_clusters = cluster_content([page.text for page in candidates])
     cluster_id_by_source_hash = {}
+    passage_size = min(2500, max(500, effective_chars_per_source // 3))
+    max_passages_per_source = min(3, max(1, effective_chars_per_source // passage_size))
 
     source_candidates = []
     ranking_documents = []
     for page, cluster_id in zip(candidates, content_clusters.cluster_ids):
-        representative_start, representative_end = relevant_window_span(
-            clean_query, page.text, width=effective_chars_per_source
+        chunks = select_passages(
+            clean_query,
+            page.text,
+            max_chars=effective_chars_per_source,
+            max_passages=max_passages_per_source,
         )
-        representative = page.text[representative_start:representative_end]
+        representative = "\n\n".join(chunk.text for chunk in chunks)
         page_key = canonical_url(page.url)
         title = page.title or result_titles.get(page_key, page.url)
         source_hash = _sha256(page.text)
         cluster_id_by_source_hash[source_hash] = cluster_id
-        source_candidates.append(
-            (page, title, source_hash, representative_start, representative)
-        )
+        source_candidates.append((page, title, source_hash, chunks))
         ranking_documents.append((title, representative))
 
     (
@@ -763,28 +765,9 @@ async def gather_source_bundle(
         for index in selected_indices
     ]
 
-    passage_size = min(2500, max(500, effective_chars_per_source // 3))
-    max_passages_per_source = min(3, max(1, effective_chars_per_source // passage_size))
     chunk_groups = []
     chunk_documents = []
-    for (
-        page,
-        title,
-        source_hash,
-        representative_start,
-        representative,
-        relevance_score,
-    ) in selected_sources:
-        chunks = split_passages(representative, max_chars=passage_size, overlap_chars=0)
-        if len(chunks) > max_passages_per_source:
-            tail_start = chunks[max_passages_per_source - 1].start_char
-            chunks = chunks[: max_passages_per_source - 1] + [
-                TextPassage(
-                    representative[tail_start:],
-                    tail_start,
-                    len(representative),
-                )
-            ]
+    for page, title, source_hash, chunks, relevance_score in selected_sources:
         score_start = len(chunk_documents)
         chunk_documents.extend((title, chunk.text) for chunk in chunks)
         chunk_groups.append(
@@ -792,7 +775,6 @@ async def gather_source_bundle(
                 page,
                 title,
                 source_hash,
-                representative_start,
                 relevance_score,
                 chunks,
                 score_start,
@@ -829,7 +811,6 @@ async def gather_source_bundle(
         page,
         title,
         source_hash,
-        representative_start,
         relevance_score,
         chunks,
         score_start,
@@ -848,11 +829,7 @@ async def gather_source_bundle(
                 continue
             selected_passages.append(
                 (
-                    TextPassage(
-                        chunk.text,
-                        representative_start + chunk.start_char,
-                        representative_start + chunk.end_char,
-                    ),
+                    chunk,
                     content_hash,
                     chunk_scores[chunk_index],
                 )

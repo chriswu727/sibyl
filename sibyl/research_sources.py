@@ -6,16 +6,23 @@ import hashlib
 from datetime import datetime, timezone
 
 from .evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, SourceBundle
-from .passages import split_passages
+from .passages import select_passages
 from .scraper import scrape_url
 
 
 async def read_source_bundle(url: str, query: str) -> SourceBundle:
-    page = await scrape_url(url, max_chars=16000)
+    page = await scrape_url(url, max_chars=60000)
     text = page.text if not page.error else ""
     digest = hashlib.sha256(text.encode()).hexdigest()
-    bundle_id = "read_" + hashlib.sha256((page.url + digest).encode()).hexdigest()[:20]
     usable = len(text.strip()) >= 200
+    chunks = (
+        select_passages(query, text, max_chars=16000, max_passages=9) if usable else []
+    )
+    selection = ":".join(f"{chunk.start_char}-{chunk.end_char}" for chunk in chunks)
+    bundle_id = (
+        "read_"
+        + hashlib.sha256((page.url + digest + selection).encode()).hexdigest()[:20]
+    )
     passages = (
         [
             EvidencePassage(
@@ -26,7 +33,7 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
                 chunk.start_char,
                 chunk.end_char,
             )
-            for index, chunk in enumerate(split_passages(text, overlap_chars=0), 1)
+            for index, chunk in enumerate(chunks, 1)
         ]
         if usable
         else []
@@ -71,7 +78,7 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
             16000,
             0,
             passages_returned=len(passages),
-            evidence_chars=len(text),
+            evidence_chars=sum(len(passage.text) for passage in passages),
             evidence_sufficiency="limited",
             recommended_action="refine_query",
             sufficiency_reasons=[
@@ -82,7 +89,14 @@ async def read_source_bundle(url: str, query: str) -> SourceBundle:
                     or "No substantive text extracted; use an accessible HTML/full-text source."
                 )
             ]
-            + list(page.extraction_warnings),
+            + list(page.extraction_warnings)
+            + (
+                [
+                    "Query-selected excerpts from a bounded read of up to 60000 characters; omitted sections remain unread."
+                ]
+                if len(text) > 16000
+                else []
+            ),
         ),
         error=""
         if usable

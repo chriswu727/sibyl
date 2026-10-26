@@ -187,6 +187,13 @@ repeat stability (68.2% vs 90%). These use gold/alias evidence matching, not
 semantic report accuracy. Seven of ten live host-suite cases needed host-supplied
 URLs. Compact responses and model removal do not fix those discovery weaknesses.
 
+Search bundles select up to three disjoint passages per source from the bounded
+extracted text, using Unicode lexical matches and prose/table context rather than
+heading hits alone. For missing sections, use `continue_research(url=..., query=...)`:
+the direct read extracts up to 60,000 characters and returns at most 16,000 evidence
+characters. Exact offsets/hashes are retained; omitted sections remain unread.
+These are relevance heuristics, not semantic support checks or translation.
+
 Public search can throttle; original pages can block extraction. Source-kind,
 recency and duplicate-cluster labels are heuristics. PDFs are bounded text reads,
 not OCR or guaranteed table extraction. Retrieved text can contain prompt
