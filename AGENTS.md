@@ -116,7 +116,7 @@ historical experiment notes are not current-model quality guarantees.
 ## Development
 
 Read docs/REFACTOR_GOALS.md for the functional target and
-docs/QUALITY_BUILD_PLAN.md for delivery order before extending this refactor.
+docs/QUALITY_BUILD_PLAN.md for the complete implementation approach before extending this refactor.
 Keep maintained repository documentation, code comments/messages, MCP descriptions,
 metadata and maintainer-authored PR/release text in English. README.zh-CN.md is
 the sole Chinese documentation file and must track the English README's scope,

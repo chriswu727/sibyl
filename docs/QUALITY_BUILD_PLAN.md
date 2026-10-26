@@ -1,209 +1,189 @@
-# Sibyl roadmap
+# Sibyl implementation plan
 
-Reviewed 2026-10-26. This is the active roadmap for the 0.4.0 beta line
-and future stable release. Implemented features are documented in [Usage](USAGE.md);
-release blockers are governed by [Launch readiness](LAUNCH_READINESS.md).
-The [earlier implementation plan](https://github.com/chriswu727/sibyl/blob/d343267/docs/QUALITY_BUILD_PLAN.md)
-is preserved in Git history, not a source of current defaults or quality claims.
+Updated 2026-10-26. The objective is a complete research MCP that an existing AI
+agent can install, understand and use to investigate questions, make evidence-based
+recommendations and produce optional reports. The [functional goals](REFACTOR_GOALS.md)
+define the requirements; [launch readiness](LAUNCH_READINESS.md#release-gates)
+governs publication.
 
-## Implemented baseline
+Work toward that complete user experience through tested, reviewable changes.
+Cases, contracts, retrieval fixes and host usability are parts of the same product
+implementation. A case collection, a new schema or a passing test suite alone
+does not complete the refactor.
 
-- Agent-first source interface (unreleased): eight focused tools, compact
-  structured briefs, direct review-ledger consumption, exact evidence reads,
-  and revision-checked source pages. Human-readable reports remain optional.
-- Persistent host-assisted investigations with multi-round retrieval, question
-  reviews, counterevidence requirements, explicit gaps, and partial reports.
-- Shared source/passages contracts, hashes, offsets, provenance, date hints,
-  duplicate-content clusters, and source inspection.
-- Host-only execution: no LiteLLM, autonomous model workflow, subscription
-  credential handling or generic model/finance tools. PDF rendering remains optional.
-- Optional text-PDF reads through the safe fetch boundary, page markers,
-  bounded parsing workers, and explicit extraction limitations.
-- Private SQLite checkpoints, cancellation/resume, retained budgets on oversized
-  checkpoints, bounded exports, and single-runtime ownership.
-- Authenticated loopback monitoring, content-free metrics, structured stderr
-  events, and documented recovery procedures. Monitoring is opt-in; an alert
-  service and dashboard are not installed automatically.
-- Consistent formatting/import checks and typed core job/state/review contracts.
-- Recorded-source full MCP workflow replay and clean-wheel core,
-  PDF/monitoring, and report/extraction verification.
-- Bounded fault tests for abrupt process termination, failed writes before/after
-  retrieval dispatch, transaction rollback, repeated cancellation, and export cleanup.
-- HTML title fallback, whitespace normalization and truncation warnings; stable
-  cited-source/background grouping across report renderers.
-- A bounded runtime soak with real SQLite, optional monitoring/PDF workers,
-  injected upstream failures, resource sampling, and stopped-store backup/restore.
-- Preferred-domain discovery and relevance ranking before the bounded fetch limit.
-- A ten-case live host research suite with adaptive follow-ups, inspected evidence,
-  explicit discovery failures, and verified Markdown/JSON delivery.
+## The finished user experience
 
-## Implementation sequence
+A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary
+question or requests a recommendation. The agent can identify the user's needs,
+investigate focused questions, read original sources, examine contrary evidence
+and return a useful answer whose material factual premises have inspectable
+support. The user can ask a follow-up and reuse the ongoing investigation.
+A human-readable report is available when requested.
 
-The [functional goals](REFACTOR_GOALS.md) define the target and responsibility
-boundary. This is a proposal for the remaining work, not authorization to run
-paid evaluations or an announcement that the features exist. Deliver each phase
-as a focused, tested change; do not start by adding tools or replacing the entire
-retrieval pipeline.
+The agent should learn this workflow from tool descriptions and concise server
+instructions. Users should not have to call tools manually or repeatedly explain
+how to connect evidence to a conclusion. Sibyl stores evidence and research state;
+all semantic reasoning and writing remain in the host.
 
-### P0 Freeze scope and acceptance cases
+## Start with a complete investigation
 
-Status: product goals and this plan recorded; the new case set and rubric remain
-to be implemented. Covers G1-G7.
+Begin implementation with a representative suitability/recommendation request
+that exercises the whole path: user constraints, focused questions, source
+discovery, passage reads, factual premises, counterevidence, a conditional
+recommendation, follow-up investigation and optional export.
 
-Define a frozen representative set before tuning retrieval. Cover three user tasks:
-technical suitability, factual investigation and evidence-based recommendations.
-Include cases for missing primary sources, stale facts, contradictory accounts,
-syndicated copies, unsupported precise numbers, unclear user preferences,
-snippet/abstract-only evidence, truncated PDFs, prompt injection, provider failure,
-budget exhaustion and follow-up questions after restart.
+Use this investigation as a working example while connecting the missing pieces
+of the existing code. Keep the eight-tool default and extend the current review
+ledger and evidence store. Establish meaningful cases and expected outcomes
+alongside the behavior being implemented, then retain each fixed failure as a
+regression. Do not make an isolated test-package delivery the stopping point.
 
-For each case record the user need, required research questions, expected evidence
-types, failure/abstention behavior and how success is scored. Keep deterministic
-fixtures separate from held-out live evaluation questions. Record whether each
-source was automatically discovered or supplied by the host/operator.
+Use recorded sources for repeatable development and reserve separate held-out
+questions for live quality measurements. Include technical suitability, factual
+investigation and recommendations, with conflicting sources, stale information,
+copied content, missing numbers, unclear preferences, unreadable documents,
+prompt injection, provider failure and restart. Record whether sources were
+automatically discovered or manually supplied.
 
-Deliverables: versioned cases, scoring rubric, controlled baseline and an additive
-contract proposal for facts/inferences/recommendations/unknowns. Map each proposed
-field to an actual consumer need and a validation rule before implementing it.
-Do not create a numerical confidence score without a calibrated meaning.
+## Connect conclusions and recommendations to evidence
 
-Exit: cases, scoring rules and scope are reviewed before tuning. Establish numeric
-quality thresholds before inspecting treatment results; no retrospective lowering
-of the existing 66-case live-retrieval thresholds.
+The current question-level review stores a conclusion with supporting/challenging
+passage IDs. Extend it so material factual assertions can be linked individually
+to evidence, and so deductions and recommendation preferences remain explicit.
 
-### P1 Fix source discovery and reading failures
+Represent the minimum information needed by the host: stable statement identity,
+statement text and type, support/challenge references, dependencies on other
+statements, assessment status, reasoning and applicable assumptions or scope.
+Keep missing or disputed information visible. Define the concrete additive schema
+with examples as part of implementation; avoid redundant fields and uncalibrated
+numerical confidence scores.
 
-Status: pending. Covers G2 and G7; starts after P0.
+For recommendations, record the user's criteria and distinguish them from
+host-supplied assumptions. Connect each material advantage, disadvantage and
+comparison premise to its supporting evidence. If a price or performance figure
+is unavailable, preserve the unknown and explain its effect on the recommendation.
+If priorities are missing, the host should ask or offer conditional choices.
 
-Use the frozen failures to prioritize primary-source candidate selection, query
-constraints, extraction and transparent fallbacks. Improve one failure class at
-a time, using the existing search and safe-fetch boundaries. Separate discovery
-success from successful reading of a manually supplied URL.
+Apply the contract throughout Sibyl-managed conclusions and deliverables,
+including analysis and recommendation rationale. Existing evidence IDs, revisions
+and provenance remain the common reference system. Unknown references and stale
+submissions fail clearly; new evidence marks affected assessments for review.
+Structural validation and host-declared semantic support must stay distinguishable.
 
-Deliverables: targeted retrieval fixes and offline regressions, preserved provenance
-and extraction warnings, and a dated live result when authorized. Consider PDF
-page/range reads only if the cases show that bounded extraction prevents useful
-investigation; do not bundle OCR or browser automation into this phase.
+Implementation belongs in the existing job models, research state/review,
+persistent handlers and result projections. Keep persistence in the job store.
+Version new records explicitly, preserve old checkpoints and exports, and keep
+old autonomous execution disabled. Historical records must not acquire a fresh
+verification verdict merely because they can be loaded.
 
-Exit: targeted cases and existing lexical/pipeline/source-quality gates pass.
-Show the effect on held-out cases and preserve failure records. A regression fix
-does not by itself establish a stable-release quality pass.
+## Make useful original evidence easier to obtain
 
-### P2 Add the evidence and judgment contract
+Improve source discovery and reading as actual investigations reveal failures.
+Trace each miss through query generation, candidate selection, relevance ranking,
+fetching and extraction before choosing the fix. Prioritize relevant original
+documentation, papers and first-party disclosures while retaining useful contrary
+evidence. Source labels remain heuristics rather than authority guarantees.
 
-Status: proposed design, not implemented. Covers G3, G4 and G6.
+Preserve canonical source identity, exact passages, hashes/offsets, timestamps,
+available publication metadata, content origin and extraction warnings.
+Search snippets and abstracts are leads; a truncated document is only partially
+read. Duplicate content must not become independent corroboration.
 
-Extend the existing review ledger with the minimum representation needed for
-material factual assertions, host inferences, recommendation criteria and explicit
-unknowns. Link factual premises to inspected passages; preserve contrary evidence,
-assumptions and relevant dates/scope. Recommendation weights and preferences must
-remain visibly distinct from source facts.
+Keep direct reads and explicit citation-following in the same investigation and
+budget. Add selective PDF page/range reading if observed tasks need evidence
+beyond a truncated read. Any new reader must use the existing safe network and
+bounded-parser boundary. Expose failed reads and the remaining evidence gap.
+Keep paid providers and third-party rendering explicit.
 
-Deliverables: additive schema, compatibility/migration fixtures, deterministic
-validation, revised brief/export presentation and host instructions. Reuse the
-current evidence store and stable IDs. Old host checkpoints remain readable; old
-autonomous execution remains disabled.
+Judge discovery separately from reading a host-supplied URL. Track the unresolved
+weakness shown by the retained host suite, where seven of ten cases needed
+manually supplied URLs. A successful manual rescue must not hide a discovery miss.
 
-Exit: nonexistent references, stale revisions and malformed records are rejected.
-Missing support is exposed or the assertion omitted, never silently called verified.
-Cross-format exports preserve qualifications. Tests distinguish structural
-validation from semantic support; no internal judge model is introduced.
+## Make the research loop clear to the host
 
-### P3 Validate the host research loop and usability
+After each action, return enough current state for the host to decide what to do:
+what was found, which judgments have evidence, which questions remain unresolved,
+what conflicts or limitations matter, and what retrieval budget remains.
+The next query should address a specific gap. A repeated query or a larger source
+count alone must not be treated as progress.
 
-Status: existing eight-tool workflow is implemented; real-host acceptance remains
-pending. Covers G1, G3, G5 and G6; builds on P1/P2.
+Keep compact self-contained briefs, on-demand exact passages and the complete
+saved-source catalog. Preserve evidence outside the selected report window.
+Make failures and incomplete outcomes actionable, and let the host stop with
+uncertainty when more retrieval is unlikely to resolve the question.
 
-Improve result guidance where frozen cases show the host cannot identify the next
-useful action. Preserve compact self-contained briefs, on-demand passages,
-question-level gaps, failure reasons and remaining budgets. Do not add a tool
-unless an observed task cannot be handled clearly by the current surface.
+Support both focused lookups and persistent investigations without making a
+simple factual query require a long form. Add or change a tool only when a real
+user task cannot be expressed clearly through the current surface.
 
-Select and record two real local MCP host/version configurations, including a
-subscription-backed workflow. Verify setup, discovery, structured-content handling,
-natural-language research requests, focused follow-ups, explicit abstention,
-optional reports and restart. Test text-oriented compatibility separately.
+## Preserve useful answers and optional reports
+
+The structured investigation must be useful before a report is finalized.
+Keep conclusions, evidence links, recommendation criteria, assumptions, conflicts
+and gaps available to downstream agent work.
+
+Markdown, JSON and optional PDF should render from the same saved state.
+Human-readable outputs can summarize evidence but must preserve material
+qualifications and partial status. JSON retains the machine-readable evidence
+package. Completed reports remain immutable; new editions need an explicit
+research/update design rather than a silent rewrite.
+
+## Verify the complete product during implementation
+
+Exercise the actual MCP journey as the capabilities are connected. Retain
+regressions for missing support, invalid IDs, stale judgments, contradictory
+sources, incomplete reads, failed providers, cancellation, restart and exports.
+Existing Python, type, lint, security, runtime and distribution checks stay in force.
+
+Record real host/version configurations, including a subscription-backed workflow
+and text-oriented compatibility where supported. Check installation, tool discovery,
+structured results, natural research requests, follow-ups, explicit uncertainty
+and optional export. Record prompt scaffolding and manual intervention so that
+a fixture success is not mistaken for autonomous host usability.
 Obtain explicit approval before consuming model/subscription usage.
 
-Deliverables: setup matrix, sanitized interaction traces, reproducible defects and
-corresponding fixes. Record required prompt scaffolding and manual intervention.
-An MCP client fixture is necessary but is not proof of natural agent usability.
+Measure answer quality with the same host/model/effort, dated questions, provider
+access and overall budget against ordinary search. Declare scoring, stopping and
+retry rules before inspecting results. Where native-search access cannot be
+matched, disclose the confound and limit the claim.
 
-Exit: supported hosts can use the workflow without per-call human coaching;
-unsupported hosts and needed configuration are documented. No universal
-compatibility claim, hidden billing or silent interpretation of a failed call.
+Assess original-source discovery, important-question coverage, material-claim
+support, counterevidence, justified recommendations, appropriate abstention,
+latency and actual usage. Keep subjective preferences separate from empirical
+facts. Retain both outputs and failures; blind scoring to the condition where
+practical. Smaller tool responses are not automatically lower token cost or better
+answers. The existing dated 66-case, three-repeat retrieval gate remains applicable.
 
-### P4 Measure research quality against ordinary search
+## What counts as done
 
-Status: not established. Covers the differentiation claim across G2-G6.
+The refactor is complete when the supported installation and host configurations
+can perform the intended investigation end to end, and retained evidence shows:
 
-Compare the same host/model/effort, dated questions, provider access and overall
-time/call budget with and without the Sibyl workflow. Where native-search provider
-access cannot be matched, report that confound and limit causal claims.
-Declare prompts, stopping rules, retries, cache policy, scoring and budget first.
+- Material factual premises can be traced to exact evidence; inferences,
+  recommendation criteria, assumptions and unknowns remain explicit.
+- The host can find/read useful sources, investigate counterevidence, address gaps
+  and continue after a follow-up without per-call human coaching.
+- Discovery failures, conflicting evidence, stale claims, incomplete reads and
+  exhausted budgets produce useful, honest outcomes.
+- Structured results and optional reports preserve the same evidence and limitations.
+- Existing records remain usable, and runtime, security and clean-install checks pass.
+- Research-quality and real-host acceptance results meet their declared criteria,
+  with any superiority claim limited to what the comparison establishes.
+- English repository documentation, the sole Chinese README, GitHub About, package
+  and Registry metadata, and the separately maintained product page agree with
+  the actual candidate.
+- Applicable [release gates](LAUNCH_READINESS.md#release-gates) are satisfied and
+  published artifacts are verified through the [release runbook](RELEASING.md).
 
-Measure original-source discovery, material-claim support, important-question
-coverage, counterevidence, disclosed uncertainty, justified recommendations,
-appropriate abstention, latency and actual usage. Keep factual premises separate
-from subjective preference judgments when scoring recommendations. Retain both
-outputs and failures; blind scoring to the condition where practical.
+## Delivery rules
 
-Deliverables: paired results, evidence-linked scoring, uncertainty/scope statement
-and explicit manual-URL-rescue counts. A self-scored small sample is exploratory,
-not independent proof. Do not claim that fewer response bytes imply lower token
-cost or better reasoning.
+Continue toward the complete product through scoped commits and reviewable PRs.
+An intermediate artifact or successful subsystem check is progress, not completion.
+Keep development, live measurements and publication accurately documented.
 
-Exit: predeclared comparative criteria are met before making a scoped superiority
-claim. If not, fix measured failures or narrow positioning. The separate dated
-66-case, three-repeat live retrieval gate still applies before stable publication.
-
-### P5 Validate and publish the release candidate
-
-Status: pending quality and host-acceptance work. Covers G1, G6 and G7.
-
-Retain Python 3.11-3.13 CI, lint/format, typed core, documentation checks, dependency
-audits, offline retrieval gates, real stdio replay, bounded fault/soak checks and
-clean-wheel core, PDF/monitoring and report/extraction profiles. No failing security
-check is waived by product simplification.
-
-Verify package/Registry manifests, source versus release instructions, GitHub About,
-English README, the sole Chinese README and the product-page description against
-the actual candidate. Coordinate the separately maintained website rather than
-silently assuming it matches the repository. Keep histories and published records
-accurate; a source commit does not update an existing PyPI distribution.
-
-Exit: all applicable [release gates](LAUNCH_READINESS.md#release-gates) are met,
-then follow [Releasing](RELEASING.md). After publishing, verify actual installation
-and public artifacts. No tag/version bump or promotional expansion merely because
-a documentation change or offline suite passed.
-
-## Working rules
-
-- Execute P0 first; do not substitute a feature list for acceptance cases.
-- Keep runtime and storage safeguards in force throughout every phase.
-- Separate code changes, live research measurements and publication.
-- Use explicit usage approval for paid search/model/subscription evaluations.
-- Preserve failed results and unknowns; do not optimize a benchmark by weakening it.
-- Keep maintained repository prose and metadata in English. README.zh-CN.md is
-  the only Chinese documentation; original evidence and multilingual fixtures
-  retain their language.
-- Update this plan's status only with retained implementation/verification evidence.
-
-## Subsequent enhancements
-
-These are candidates, not implemented capabilities or release commitments:
-
-1. Selective PDF page/range reads so a host can investigate beyond a truncated
-   extraction without repeatedly downloading/parsing the same full input.
-2. Extracted citation-link traversal with explicit parent/child provenance;
-   current citation lineage is host-declared.
-3. Incremental research editions that distinguish retained from refreshed
-   evidence; current completed reports remain immutable.
-4. Optional OCR and layout-aware tables/formulas with explicit resource and
-   confidence limits; no automatic model downloads.
-5. A research-progress interface built on appropriately scoped state access;
-   current monitoring deliberately excludes research content.
-
-Select these based on observed research failures and user needs. Keep the local
-runtime, network policy, evidence contracts, and persistence boundaries clear;
-see [Architecture](MCP_ARCHITECTURE.md) for where each extension belongs.
+Use English for maintained repository prose and metadata. README.zh-CN.md is the
+only Chinese documentation; retain original-language evidence and multilingual
+fixtures. Do not alter historical results, weaken gates or add hidden billable
+actions. Keep internal model execution and subscription-token handling out of
+Sibyl. Independent chat UI, model orchestration, financial-analysis tools, OCR and
+automatic publication are outside the current requirements.
