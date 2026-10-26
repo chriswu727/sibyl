@@ -22,8 +22,6 @@ def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "status",
                 "remaining_steps",
                 "elapsed_seconds",
-                "model_calls",
-                "reserved_output_tokens",
                 "source_policy",
                 "preferred_domains",
                 "research_plan",

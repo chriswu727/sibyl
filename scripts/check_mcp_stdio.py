@@ -38,7 +38,7 @@ async def check(command: str, monitor: bool = False, agent: bool = False) -> Non
 async def check_in_directory(
     command: str, directory: str, monitor: bool = False, agent: bool = False
 ) -> None:
-    args = ["--profile", "agent" if agent else "keyless"]
+    args = [] if agent else ["--profile", "keyless"]
     env = {"SIBYL_OUTPUT_ROOT": directory}
     token = secrets.token_urlsafe(32)
     if monitor:

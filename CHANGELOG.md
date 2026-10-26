@@ -2,8 +2,14 @@
 
 ## Unreleased
 
-- Add an opt-in eight-tool agent profile with compact MCP structured research
-  briefs; retain compatible defaults and explicit full views.
+- Make the eight-tool agent profile the default, with compact MCP structured
+  research briefs. Keep keyless compatibility responses and explicit full views.
+- Remove internal model execution, LiteLLM, provider configuration, autonomous
+  jobs, model analysis tools, and finance/chart tools. The host owns reasoning.
+- Keep host-authored reports; Markdown is the default export and the report extra
+  is PDF rendering only. Reject removed profiles and legacy model settings.
+- Preserve old checkpoints and completed exports; reject autonomous resume
+  without converting or deleting evidence. Recommend a fresh install environment.
 - Expose on-demand source catalog pages with revision checks and richer exact
   passage provenance. Preserve host conclusions, support/challenge links, gaps,
   failed retrievals, remaining budgets, and partial-report status in briefs.

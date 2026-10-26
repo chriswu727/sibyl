@@ -145,11 +145,7 @@ class SibylRuntime:
             if path:
                 self._config = Config.from_yaml(path)
             else:
-                self._config = Config.from_env(
-                    model=os.environ.get("SIBYL_MODEL", ""),
-                    api_key=os.environ.get("SIBYL_API_KEY", ""),
-                    api_base=os.environ.get("SIBYL_API_BASE", ""),
-                )
+                self._config = Config.from_env()
         return self._config
 
     def validate_query(self, query: str) -> None:
@@ -165,7 +161,7 @@ class SibylRuntime:
         if len(self._tasks) >= self.policy.max_active:
             self.metrics.record(name, "rejected", 0)
             raise CapacityError("Server capacity is busy. Retry later.")
-        stateful = name in {"research", "save_report", "chart", "fetch_market_data"}
+        stateful = name == "save_report"
         if stateful and self._report_lock.locked():
             self.metrics.record(name, "rejected", 0)
             raise CapacityError(
@@ -180,11 +176,7 @@ class SibylRuntime:
             if stateful:
                 await self._report_lock.acquire()
                 locked = True
-            timeout = (
-                self.policy.report_timeout
-                if name in {"research", "analyze", "compare", "swot", "timeline"}
-                else self.policy.tool_timeout
-            )
+            timeout = self.policy.tool_timeout
             result = await asyncio.wait_for(operation(), timeout)
             self.completed += 1
             outcome = "completed"

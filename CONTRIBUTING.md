@@ -10,7 +10,7 @@ git clone https://github.com/chriswu727/sibyl.git
 cd sibyl
 python3.12 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e '.[report,finance,extract,pdf,monitor]' ruff==0.17.1 mypy==2.4.0
+python -m pip install -e '.[report,extract,pdf,monitor]' ruff==0.17.1 mypy==2.4.0
 ruff check sibyl tests scripts
 ruff format --check sibyl tests scripts
 mypy
@@ -41,7 +41,7 @@ The [workflow replay](docs/examples/sqlite-wal/README.md) uses recorded official
 excerpts over real MCP stdio, without a model or live retrieval. For distribution
 changes, build a wheel into a fresh directory and run
 `python scripts/check_wheel.py /absolute/path/to/sibyl_research-0.4.0-py3-none-any.whl 0.4.0`.
-This installs core, PDF/monitoring, and report/finance/extraction profiles in
+This installs core, PDF/monitoring, and report/extraction profiles in
 separate temporary environments and removes each after checking it. It downloads
 package dependencies but no ranking models; do not substitute an editable install.
 Read the [module map and extension guide](docs/MCP_ARCHITECTURE.md) before adding

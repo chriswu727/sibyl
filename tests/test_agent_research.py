@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import CallToolResult
-from test_researcher import evidence_bundle
+from research_fixtures import evidence_bundle
 
 from sibyl.config import Config
 from sibyl.mcp_server import create_server

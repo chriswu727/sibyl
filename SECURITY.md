@@ -28,7 +28,7 @@ validation and a coordinated fix before publishing details.
 ## Trust boundary
 
 Sibyl runs locally with the permissions of the user who starts it. It makes
-outbound requests to search services and public web pages. MCP reports and charts
+outbound requests to search services and public web pages. MCP reports
 are confined to the operator-selected `SIBYL_OUTPUT_ROOT` (default: `reports/`).
 `save_report(output_dir=...)` accepts only a relative subdirectory of that root.
 The CLI and direct Python rendering API retain explicit operator-selected paths.
@@ -51,32 +51,30 @@ bounded before allocation. Unsupported or stacked encodings fail closed.
 These controls reduce SSRF and resource-exhaustion risk but do not establish
 that a public site is benign or accurate.
 
-Third-party Jina rendering is opt-in for keyless retrieval. Optional LLM,
-finance, and ranking integrations expand the dependency and network trust
+Third-party Jina rendering is opt-in for keyless retrieval. Optional rendering, parsing,
+and local ranking integrations expand the dependency and network trust
 boundary. Install only the extras you need and review their policies separately.
 
 ## Execution and storage controls
 
 - Each MCP runtime admits at most eight simultaneous calls. Busy admission fails
   immediately; there is no unbounded task queue. Default deadlines are 60 seconds
-  for retrieval/data/export and 600 seconds for model-assisted tools.
+  per MCP operation; research jobs also have a 600-second cumulative active budget.
 - Matching retrievals share one task. Cancelling one consumer does not interrupt
   another; cancelling the last consumer cancels the factory. Completed results
   have a 30-second TTL and a 64-entry cap. Shutdown cancels runtime-owned tasks.
 - Stateful report operations are mutually exclusive. Reports, loops, and caches
   are not shared between independently created server runtimes.
-- Persistent research admits two job workers, bounds retrieval/model attempts
-  and reserved completion tokens, and requires explicit continuation after
+- Persistent research admits two job workers, bounds retrieval attempts and active execution time, and requires explicit continuation after
   interruption. Checkpoints reserve attempts before dispatch. These are not exact
-  provider billing limits; input tokens and already-dispatched work can be billed.
+  search-provider billing limits; already-dispatched requests can be billed.
 - Research state uses an owner-locked private SQLite database below the output
   root, with 64 records, a 1 MiB payload ceiling per job (plus 64 KiB reserved
   for failure recovery metadata), 80 progress events per
   job, and a 16,384-page database limit. A stale revision cannot finalize a host
   report against different citation numbering. Finished reports are immutable.
 - Host report validation checks citation targets, not semantic entailment.
-  Automated report audits are fallible. Lexical overlap never establishes support;
-  unassessed or unsupported blocks remain visibly marked.
+  No internal model performs semantic audits. Lexical overlap never establishes support.
 - Tool text is bounded recursively: 10,000 characters per string, 64,000 combined,
   128 elements per collection, and eight nesting levels.
 - Artifact names are unique, writes are staged then atomically published, and
@@ -128,7 +126,7 @@ surfaces omit questions, source URLs, passage text, job IDs, paths, and credenti
 See [Operations](docs/OPERATIONS.md) for lifecycle and readiness semantics.
 
 Async deadlines are cooperative. Cancellation cannot forcibly stop an already
-running native library or thread. Optional PDF export/chart work can briefly block the
+running native library or thread. Optional PDF export work can briefly block the
 event loop, and third-party provider SDKs have their own resource behavior. Use
 OS/container resource limits for stronger memory, CPU, disk, and network isolation.
 The direct Python API does not inherit MCP admission limits; embedding applications
@@ -136,7 +134,7 @@ must bound their own concurrency and whole-operation deadlines.
 
 ## Dependency maintenance
 
-CI audits clean core and report/finance/extract/pdf/monitor installations on Python 3.11,
+CI audits clean core and report/extract/pdf/monitor installations on Python 3.11,
 3.12, and 3.13 against OSV, on pull requests and weekly. Audit failures block a
 green workflow. Dependabot tracks
 Python requirements and GitHub Actions. Release validation audits its environment.
@@ -147,7 +145,7 @@ using `[rerank]` should audit that installed environment separately.
 A clean audit means no known matching advisory was found at that time—not that
 every dependency or execution path has been proven secure.
 
-Python 3.11 is the minimum supported runtime. Report and finance extras require
+Python 3.11 is the minimum supported runtime. The report extra requires
 Pillow 13.0.0 or newer to exclude known-vulnerable older versions; Pillow 13 no
 longer supports Python 3.10. The core installation does not require Pillow.
 

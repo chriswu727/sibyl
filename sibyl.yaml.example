@@ -1,35 +1,9 @@
-# Optional configured-model research settings.
-# CLI: sibyl research "question" --config /private/path/sibyl.yaml
-# MCP: set SIBYL_CONFIG to that absolute path. No file is loaded implicitly.
-# Replace model placeholders; supply provider-supported environment credentials.
-# Sibyl does not expand ${VARIABLE} strings inside YAML.
-
-providers:
-  - model: provider/model-id
-    api_key: ""
-    role: general
-  - model: provider/synthesis-model-id
-    api_key: ""
-    role: synthesis
-  - model: provider/verification-model-id
-    api_key: ""
-    role: verify
-
+# Optional compatibility-tool retrieval settings.
+# Set SIBYL_CONFIG to this file's absolute path; no file is loaded implicitly.
+# These settings affect quick_search/read_url in the keyless profile.
+# Persistent research uses its explicit tool arguments and safe defaults.
+# No model credentials or subscription login belong in this file.
 search_engine: all
-max_sources: 15
-max_depth: 2
-language: auto
-tier: standard
-fast: false
 extractor: bs4
-reranker: lexical
-max_synth_sources: 12
-dedup: true
-perspectives: true
-rich_citations: true
-verify_claims: true
-verify_drop_unsupported: false
-reflect_rounds: 1
-compact_sources: false
 jina_fallback: false
 js_render: false

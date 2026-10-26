@@ -1,6 +1,7 @@
 # Sibyl documentation
 
-These documents follow main. The agent profile and research views are unreleased;
+These documents follow main. The host-only architecture, default agent profile
+and research views are unreleased;
 the published 0.4.0b1 beta does not contain them. PyPI 0.3.0 is an older stable package.
 See [installation](../llms-install.md) and [channel status](RELEASING.md). Sibyl is a local
 deep-research MCP tool for AI agents, with multi-round investigations, traceable
@@ -12,11 +13,11 @@ evidence, gap tracking, and optional reports; its current maturity is public bet
 |---|---|
 | [Product overview](../README.md) | Core workflow, capabilities, quick start, and limits |
 | [MCP installation](../llms-install.md) | Source installation, host configuration, optional extras |
-| [Usage reference](USAGE.md) | All 20 tools, profiles, research jobs, configuration, and export |
+| [Usage reference](USAGE.md) | Eight default tools, compatibility profile, research jobs, configuration, and export |
 | [Agent guide](../AGENTS.md) | Evidence-handling rules and the host research procedure |
 | [Agent protocol](agent-protocol.md) | Compact briefs, evidence reads, source pagination, and compatibility |
 | [Complete workflow example](examples/sqlite-wal/README.md) | Recorded-source MCP replay, gap investigation, and exported report |
-| [Configuration example](../sibyl.yaml.example) | Optional model workflow settings; no embedded credentials |
+| [Configuration example](../sibyl.yaml.example) | Compatibility retrieval settings; no model credentials |
 
 ## Operate and extend
 

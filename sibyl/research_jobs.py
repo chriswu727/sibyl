@@ -1,10 +1,9 @@
-"""Durable host-assisted and model-backed research orchestration."""
+"""Durable host-led research orchestration."""
 
 from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
 from .job_models import JobRecord, ResearchMode, SearchPurpose
@@ -93,11 +92,11 @@ class ResearchJobs:
         preferred_domains: list[str] | None = None,
     ) -> dict[str, Any]:
         self.runtime.validate_query(question)
-        if (
-            not question.strip()
-            or mode not in {"host", "autonomous"}
-            or depth not in {1, 2, 3}
-        ):
+        if mode != "host":
+            raise ResearchRequestError(
+                "Sibyl no longer calls models. Use host mode from your MCP agent."
+            )
+        if not question.strip() or depth not in {1, 2, 3}:
             raise ValueError("Invalid research request.")
         if not 1 <= max_steps <= 12 or len(sub_questions) > 5:
             raise ValueError("Use 1-12 retrieval steps and at most five sub-questions.")
@@ -108,20 +107,13 @@ class ResearchJobs:
             self.runtime.validate_query(item)
             if not item.strip():
                 raise ValueError("Sub-questions must not be empty.")
-        if mode == "autonomous":
-            if not self.runtime.config.has_llm_credentials():
-                raise ValueError("Autonomous research requires a configured model.")
-            from .researcher import Researcher  # noqa: F401
-
-            if len(self.tasks) >= 2:
-                raise CapacityError("Research worker capacity reached.")
         notebook = ResearchNotebook(
             question,
             sub_questions=list(dict.fromkeys(sub_questions)),
             max_steps=max_steps,
             source_policy=source_policy,
             preferred_domains=preferred_domains,
-            require_review=mode == "host",
+            require_review=True,
         )
         job = self.store.create(
             {
@@ -138,8 +130,6 @@ class ResearchJobs:
         )
         self._event(job, "Research created; sources are untrusted data.")
         self.store.save(job)
-        if mode == "autonomous":
-            self._launch(job)
         return self.get(job["job_id"])
 
     def get(self, job_id: str, passage_id: str = "") -> dict[str, Any]:
@@ -213,84 +203,6 @@ class ResearchJobs:
                 source["url"] = display_url(source["url"])
         return public
 
-    def _launch(self, job: JobRecord) -> None:
-        self._idle(job)
-        if len(self.tasks) >= 2:
-            raise CapacityError("Research worker capacity reached.")
-        if job["elapsed_seconds"] >= self.runtime.policy.report_timeout:
-            raise ResearchBudgetExceeded("Research wall-time budget exhausted.")
-        job["status"] = "running"
-        self._event(job, "Autonomous research running.")
-        self.store.save(job)
-        task = asyncio.create_task(self._run(job))
-        self.tasks[job["job_id"]] = task
-
-        def finished(completed: asyncio.Task[None]) -> None:
-            if self.tasks.get(job["job_id"]) is completed:
-                self.tasks.pop(job["job_id"], None)
-            if not completed.cancelled():
-                completed.exception()
-
-        task.add_done_callback(finished)
-
-    async def _run(self, job: JobRecord) -> None:
-        from .researcher import Researcher
-
-        started = time.monotonic()
-        elapsed = job["elapsed_seconds"]
-        notebook = ResearchNotebook.from_dict(job["notebook"])
-
-        def checkpoint(state: ResearchNotebook) -> None:
-            job["notebook"] = state.to_dict()
-            job["elapsed_seconds"] = elapsed + time.monotonic() - started
-            self._checkpoint(job)
-
-        def progress(message: str) -> None:
-            self._event(job, message)
-            checkpoint(notebook)
-
-        try:
-            config = replace(
-                self.runtime.config, providers=list(self.runtime.config.providers)
-            )
-            researcher = Researcher(config, notebook=notebook, on_checkpoint=checkpoint)
-            report = await asyncio.wait_for(
-                researcher.research(
-                    job["question"],
-                    depth=job["depth"],
-                    language=job["language"],
-                    on_progress=progress,
-                ),
-                self.runtime.policy.report_timeout - elapsed,
-            )
-            job["report"] = report.to_dict()
-            job["status"] = "completed" if report.status == "ok" else "failed"
-            self._event(
-                job,
-                "Report ready."
-                if report.status == "ok"
-                else "No complete report produced.",
-            )
-        except asyncio.CancelledError:
-            job["status"] = "interrupted"
-            self._event(
-                job, "Research interrupted; completed evidence checkpoints retained."
-            )
-            raise
-        except (asyncio.TimeoutError, ResearchBudgetExceeded):
-            job["status"] = "budget_exhausted"
-            self._event(job, "Research budget exhausted.")
-        except Exception:
-            job["status"] = "failed"
-            self._event(
-                job, "Research failed. Check model configuration and retry explicitly."
-            )
-        finally:
-            try:
-                checkpoint(notebook)
-            finally:
-                self.tasks.pop(job["job_id"], None)
-
     async def continue_job(
         self,
         job_id: str,
@@ -303,20 +215,10 @@ class ResearchJobs:
     ) -> dict[str, Any]:
         job = self.store.get(job_id)
         self._idle(job)
-        if job["mode"] == "autonomous":
-            if (
-                query
-                or url
-                or question_id
-                or parent_passage_id
-                or rationale
-                or purpose != "explore"
-            ):
-                raise ValueError(
-                    "Autonomous continuation reuses its saved plan; omit query."
-                )
-            self._launch(job)
-            return self.get(job_id)
+        if job["mode"] != "host":
+            raise ResearchRequestError(
+                "Autonomous execution has been removed. Read or export the saved job; start a new host research job to continue investigating."
+            )
         self.runtime.validate_query(query)
         if not query.strip() and not url:
             raise ValueError(

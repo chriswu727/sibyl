@@ -1,9 +1,9 @@
 # Agent-facing research protocol
 
 Status: implemented on main, **not yet released on PyPI**. Install the source
-checkout and run `sibyl-mcp --profile agent`. The default/keyless profiles retain
-their existing full responses. No model or search key is required for host mode;
-configured providers and autonomous mode can still incur explicit usage charges.
+checkout and run `sibyl-mcp`: agent is now the default profile. The keyless
+compatibility profile retains full responses. No model or search key is required.
+Sibyl never calls generative models; optional search providers can incur charges.
 
 ## What the host gets
 
@@ -42,7 +42,7 @@ Any profile can explicitly request `get_research(job_id, view="brief")`.
 | `sources` | Current `[Source N]` citation map with source/passage IDs, URLs, titles, timestamps, content origin and heuristic source kind; no raw text |
 | `source_catalog_count` | Count of retained source occurrences, including sources outside the selected citation window |
 | `latest_attempt` | Last retrieval outcome, prior gaps/revision and rationale; null before retrieval |
-| `remaining_steps`, `elapsed_seconds`, `model_calls`, `reserved_output_tokens` | Current budget accounting; not a total monetary-cost estimate |
+| `remaining_steps`, `elapsed_seconds` | Current budget accounting; not a total monetary-cost estimate |
 | `source_policy`, `preferred_domains`, `limitations` | Routing policy and retained limitations |
 | `report` | Null, or finalized status, summary, findings, verification scope and limitations; no analysis body or repeated source text |
 | `evidence_access` | Arguments for exact-passage, catalog and full-view reads; replace the passage-ID placeholder |
@@ -114,7 +114,7 @@ revision and current `[Source N]` citations, then `save_report`. Reports keep th
 same formats, immutability, and provenance. `allow_incomplete=true` explicitly
 preserves unmet gates; it does not waive them or grant a quality pass.
 
-Direct Python job methods and existing profiles continue returning full snapshots.
+Direct Python job methods and the keyless profile continue returning full snapshots.
 Python embedders opt in with `create_server(runtime, agent_mode=True)`. This sets
 both the eight-tool catalog and compact transport. No persisted schema migration,
 background LLM, or new authority over the host is introduced.

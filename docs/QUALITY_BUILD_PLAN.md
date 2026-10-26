@@ -1,6 +1,6 @@
 # Sibyl roadmap
 
-Reviewed 2026-10-25. This is the active roadmap for the 0.4.0 beta line
+Reviewed 2026-10-26. This is the active roadmap for the 0.4.0 beta line
 and future stable release. Implemented features are documented in [Usage](USAGE.md);
 release blockers are governed by [Launch readiness](LAUNCH_READINESS.md).
 The [earlier implementation plan](https://github.com/chriswu727/sibyl/blob/d343267/docs/QUALITY_BUILD_PLAN.md)
@@ -15,8 +15,8 @@ is preserved in Git history, not a source of current defaults or quality claims.
   reviews, counterevidence requirements, explicit gaps, and partial reports.
 - Shared source/passages contracts, hashes, offsets, provenance, date hints,
   duplicate-content clusters, and source inspection.
-- Optional configured-model research with bounded reflection and visible
-  source-support audit limitations; no hidden host sampling or subscription reuse.
+- Host-only execution: no LiteLLM, autonomous model workflow, subscription
+  credential handling or generic model/finance tools. PDF rendering remains optional.
 - Optional text-PDF reads through the safe fetch boundary, page markers,
   bounded parsing workers, and explicit extraction limitations.
 - Private SQLite checkpoints, cancellation/resume, retained budgets on oversized
@@ -26,7 +26,7 @@ is preserved in Git history, not a source of current defaults or quality claims.
   service and dashboard are not installed automatically.
 - Consistent formatting/import checks and typed core job/state/review contracts.
 - Recorded-source full MCP workflow replay and clean-wheel core,
-  PDF/monitoring, and report/finance/extraction verification.
+  PDF/monitoring, and report/extraction verification.
 - Bounded fault tests for abrupt process termination, failed writes before/after
   retrieval dispatch, transaction rollback, repeated cancellation, and export cleanup.
 - HTML title fallback, whitespace normalization and truncation warnings; stable
@@ -41,7 +41,7 @@ is preserved in Git history, not a source of current defaults or quality claims.
 
 The primary product is a research capability inside the host agent, not a second
 agent or a mandatory report generator. Prioritize automatic primary-source
-discovery and useful evidence feedback over expanding autonomous report features.
+discovery and useful evidence feedback; internal model execution is out of scope.
 The agent interface is implemented; better-than-built-in-search quality is still
 a hypothesis. Validate it with a paired same-host/same-budget evaluation that
 scores the returned evidence and conclusions, not report length or round count.
@@ -59,10 +59,10 @@ complete and one is intentionally partial. Seven investigations required
 host-supplied URLs; do not count them as successful automatic discovery. The
 record is host-authored and self-scored, not independent evaluation.
 
-The remaining model-backed evaluation concerns the optional autonomous path,
-not a requirement to repeatedly rebuild the host suite. It needs an explicit
-model/configuration and authorized API budget. Any future comparison with
-ordinary search must hold model, source access, and budget constant.
+The next quality test is a paired host-agent comparison against built-in search,
+not an internal-model evaluation. It needs explicit authorization for host usage.
+Hold model, source access and budget constant; judge evidence-linked conclusions,
+not report length. Removal of the internal model does not waive retrieval gates.
 
 ### 2. Fix measured retrieval and report failures
 
@@ -96,7 +96,7 @@ deployed monitoring service.
 
 Review dependency proposals individually. Major MCP SDK and data-library updates
 need dedicated compatibility tests; a green dependency audit alone is insufficient.
-Keep the implemented core, PDF/monitoring, and report/finance/extraction clean-wheel
+Keep the implemented core, PDF/monitoring, and report/extraction clean-wheel
 checks passing for each release candidate. Extend adversarial input tests without claiming prompt-injection
 immunity or treating a parser process as a security sandbox.
 

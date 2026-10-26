@@ -16,7 +16,7 @@ from pathlib import Path
 
 class BlockOptional(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.split('.')[0] in {'litellm', 'fpdf', 'matplotlib', 'pandas', 'yfinance', 'pytrends', 'flashrank', 'pypdf'}:
+        if fullname.split('.')[0] in {'litellm', 'openai', 'anthropic', 'fpdf', 'matplotlib', 'pandas', 'yfinance', 'pytrends', 'flashrank', 'pypdf'}:
             raise ImportError('Optional dependency blocked: ' + fullname)
 
 sys.meta_path.insert(0, BlockOptional())

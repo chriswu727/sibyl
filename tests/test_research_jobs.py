@@ -11,10 +11,10 @@ from pathlib import Path
 from unittest import mock
 
 from mcp.server.fastmcp.exceptions import ToolError
-from test_researcher import evidence_bundle
+from research_fixtures import evidence_bundle
 
 from sibyl.async_cache import CapacityError
-from sibyl.config import Config, Provider
+from sibyl.config import Config
 from sibyl.job_store import JobStore
 from sibyl.mcp_server import configure_tool_profile, create_server
 from sibyl.report_models import ResearchReport
@@ -51,14 +51,15 @@ class TestNotebook(unittest.TestCase):
         self.assertEqual(notebook.report_sources(), loaded.report_sources())
 
     def test_budgets_do_not_reset_on_restore(self):
-        notebook = ResearchNotebook("q", max_steps=1, max_model_calls=1)
+        notebook = ResearchNotebook(
+            "q", max_steps=1, model_calls=1, reserved_output_tokens=100
+        )
         notebook.begin_search("first")
-        notebook.reserve_model_call(100)
         loaded = ResearchNotebook.from_dict(notebook.to_dict())
         with self.assertRaises(ResearchBudgetExceeded):
             loaded.begin_search("second")
-        with self.assertRaises(ResearchBudgetExceeded):
-            loaded.reserve_model_call(100)
+        self.assertEqual(loaded.model_calls, 1)
+        self.assertEqual(loaded.reserved_output_tokens, 100)
 
 
 class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
@@ -88,6 +89,48 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
             mock.AsyncMock(return_value=evidence_bundle("Focused question")),
         ):
             return await self.jobs.continue_job(job["job_id"], "Focused question")
+
+    async def test_autonomous_start_rejected_without_creating_job(self):
+        before = self.jobs.store.list_jobs()
+        with self.assertRaisesRegex(ValueError, "no longer calls models"):
+            self.jobs.start("q", [], "autonomous", 2, "en", 3)
+        self.assertEqual(self.jobs.store.list_jobs(), before)
+
+    async def test_legacy_autonomous_state_is_readable_but_cannot_resume(self):
+        snapshot = await self.retrieve(self.start())
+        job = self.jobs.store.get(snapshot["job_id"])
+        job["mode"] = "autonomous"
+        job["status"] = "interrupted"
+        self.jobs.store.save(job)
+        await self.runtime.aclose()
+        self.runtime = SibylRuntime(self.policy)
+        self.jobs = self.runtime.research_jobs
+        before = self.jobs.get(job["job_id"])
+        self.assertEqual(before["mode"], "autonomous")
+        self.assertEqual(before["evidence"], snapshot["evidence"])
+        with mock.patch("sibyl.research_jobs.gather_source_bundle") as gather:
+            with self.assertRaisesRegex(ValueError, "removed"):
+                await self.jobs.continue_job(job["job_id"], "resume")
+            gather.assert_not_called()
+        self.assertEqual(self.jobs.get(job["job_id"]), before)
+
+    async def test_legacy_completed_autonomous_report_can_export(self):
+        snapshot = await self.retrieve(self.start())
+        self.jobs.complete(
+            snapshot["job_id"],
+            snapshot["revision"],
+            "Summary [Source 1]",
+            ["Finding [Source 1]"],
+            "",
+            [],
+            allow_incomplete=True,
+        )
+        job = self.jobs.store.get(snapshot["job_id"])
+        job["mode"] = "autonomous"
+        self.jobs.store.save(job)
+        server = create_server(self.runtime, agent_mode=True)
+        await server.call_tool("save_report", {"job_id": job["job_id"]})
+        self.assertEqual(len(list(Path(self.directory.name).glob("*.md"))), 1)
 
     async def test_preferred_domains_reach_discovery(self):
         job = self.start(preferred_domains=["docs.example.com"])
@@ -235,102 +278,6 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(restored["attempts"][0]["status"], "failed")
         self.assertEqual(restored["remaining_steps"], 2)
 
-    async def test_autonomous_resume_preserves_checkpoints(self):
-        self.runtime._config = Config(
-            providers=[Provider(model="test", api_key="not-real")]
-        )
-        entered = asyncio.Event()
-        checkpointed = []
-
-        async def fake_research(researcher, query, **kwargs):
-            if not researcher.notebook.bundles:
-                researcher.notebook.begin_search("saved")
-                researcher.notebook.finish_search("saved", evidence_bundle("saved"))
-                researcher.checkpoint()
-                entered.set()
-                await asyncio.Event().wait()
-            checkpointed.append(len(researcher.notebook.bundles))
-            return ResearchReport(
-                query,
-                "Summary [Source 1]",
-                ["F [Source 1]"],
-                researcher.notebook.report_sources(),
-            )
-
-        with mock.patch("sibyl.researcher.Researcher.research", fake_research):
-            job = self.jobs.start("q", [], "autonomous", 2, "en", 3)
-            await entered.wait()
-            await self.runtime.aclose()
-            self.runtime = SibylRuntime(
-                self.policy,
-                Config(providers=[Provider(model="test", api_key="not-real")]),
-            )
-            self.jobs = self.runtime.research_jobs
-            self.assertEqual(self.jobs.get(job["job_id"])["status"], "interrupted")
-            await self.jobs.continue_job(job["job_id"], "")
-            await asyncio.gather(*list(self.jobs.tasks.values()))
-        self.assertEqual(checkpointed, [1])
-        self.assertEqual(self.jobs.get(job["job_id"])["status"], "completed")
-
-    async def test_autonomous_oversize_recovery_preserves_model_reservations(self):
-        self.runtime._config = Config(
-            providers=[Provider(model="test", api_key="not-real")]
-        )
-
-        async def oversized(researcher, query, **kwargs):
-            researcher.notebook.begin_search("large")
-            researcher.notebook.reserve_model_call(100)
-            researcher.checkpoint()
-            bundle = evidence_bundle("large")
-            bundle.sources[0].evidence[0] = replace(
-                bundle.sources[0].evidence[0],
-                text="x" * (JobStore.MAX_PAYLOAD_BYTES + 1),
-            )
-            researcher.notebook.finish_search("large", bundle)
-            researcher.checkpoint()
-
-        with mock.patch("sibyl.researcher.Researcher.research", oversized):
-            job = self.jobs.start("q", [], "autonomous", 1, "en", 2)
-            await asyncio.gather(
-                *list(self.jobs.tasks.values()), return_exceptions=True
-            )
-        restored = self.jobs.get(job["job_id"])
-        self.assertEqual(restored["status"], "failed")
-        self.assertEqual(restored["model_calls"], 1)
-        self.assertEqual(restored["reserved_output_tokens"], 100)
-        self.assertEqual(restored["remaining_steps"], 1)
-        self.assertEqual(restored["attempts"][0]["status"], "failed")
-        self.assertFalse(self.jobs.tasks)
-
-    async def test_immediate_autonomous_cancel_does_not_leave_busy_job(self):
-        self.runtime._config = Config(
-            providers=[Provider(model="test", api_key="not-real")]
-        )
-        with mock.patch(
-            "sibyl.researcher.Researcher.research", mock.AsyncMock()
-        ) as research:
-            job = self.jobs.start("q", [], "autonomous", 1, "en", 2)
-            result = await self.jobs.cancel(job["job_id"])
-            research.assert_not_called()
-        self.assertFalse(self.jobs.tasks)
-        self.assertEqual(result["status"], "cancelled")
-
-    async def test_autonomous_timeout_retains_checkpoint_and_stops_worker(self):
-        self.runtime.policy = replace(self.policy, report_timeout=0.02)
-        self.runtime._config = Config(
-            providers=[Provider(model="test", api_key="not-real")]
-        )
-
-        async def blocked(*args, **kwargs):
-            await asyncio.Event().wait()
-
-        with mock.patch("sibyl.researcher.Researcher.research", blocked):
-            job = self.jobs.start("q", [], "autonomous", 1, "en", 2)
-            await asyncio.gather(*list(self.jobs.tasks.values()))
-        self.assertEqual(self.jobs.get(job["job_id"])["status"], "budget_exhausted")
-        with self.assertRaises(ResearchBudgetExceeded):
-            await self.jobs.continue_job(job["job_id"], "")
-
     async def test_delete_reclaims_history_capacity(self):
         self.jobs.store.MAX_JOBS = 1
         job = self.start()
@@ -380,11 +327,3 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         loaded = self.jobs.store.get(job["job_id"])
         self.assertEqual(loaded["revision"], revision)
         self.assertNotIn("oversized", loaded)
-
-    async def test_autonomous_model_not_called_for_host_mode(self):
-        with mock.patch(
-            "sibyl.researcher.litellm.acompletion",
-            mock.AsyncMock(side_effect=AssertionError),
-        ) as model:
-            await self.retrieve(self.start())
-        model.assert_not_called()
