@@ -8,9 +8,11 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from importlib.util import find_spec
 from pathlib import Path
 from unittest import mock
 
+from sibyl.report_exports import export_report
 from sibyl.report_models import ResearchReport, Source
 from sibyl.report_references import reference_groups
 from sibyl.report_text import _format_report
@@ -27,6 +29,37 @@ def _report():
         predictions="",
         model_used="deepseek/deepseek-v4-flash",
     )
+
+
+def _claim_report():
+    report = _report()
+    fact = "The documented mode permits reader and writer overlap."
+    recommendation = "Consider this mode if only one writer is required."
+    unknown = "The workload throughput is unknown."
+    report.model_used = "host"
+    report.summary = recommendation + " [Source 1]"
+    report.key_findings = [report.summary]
+    report.analysis = (
+        f"Q0.C1 — fact (supported): {fact} [Source 1]\n\n"
+        f"Q0.C2 — recommendation (supported): {recommendation} [Source 1]\n"
+        "Basis: Q0.C1\nReasoning: The stated concurrency need fits this limit.\n"
+        "Criterion (user): Concurrency — Reader/writer overlap\n"
+        "Assumption: The workload has not been benchmarked.\n\n"
+        f"Q0.C3 — fact (unresolved): {unknown}\n"
+        "Reasoning: No representative workload measurements were available."
+    )
+    report.claims = [
+        {"claim_id": identifier, "text": text}
+        for identifier, text in (
+            ("Q0.C1", fact),
+            ("Q0.C2", recommendation),
+            ("Q0.C3", unknown),
+        )
+    ]
+    report.status = "partial"
+    report.verification_scope = "citation_targets_only"
+    report.limitations = ["No empirical workload benchmark."]
+    return report
 
 
 class TestMarkdownReport(unittest.TestCase):
@@ -139,6 +172,69 @@ class TestVerificationRendering(unittest.TestCase):
 
 
 class TestPdfGeneration(unittest.TestCase):
+    @unittest.skipUnless(find_spec("pypdf"), "PDF reader extra is optional")
+    def test_claim_pdf_retains_each_statement_once_with_the_fallback_font(self):
+        from pypdf import PdfReader
+
+        report = _claim_report()
+        before = report.to_dict()
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch("fpdf.FPDF.add_font", side_effect=OSError("font unavailable")),
+        ):
+            path = generate_pdf(report, directory)
+            text = "\n".join(page.extract_text() for page in PdfReader(path).pages)
+        for claim in report.claims:
+            self.assertEqual(text.count(claim["text"]), 1)
+        for expected in (
+            "Basis: Q0.C1",
+            "Criterion (user)",
+            "not been benchmarked",
+            "citation_targets_only",
+            "Partial report",
+            "[Source 1] Example",
+        ):
+            self.assertIn(expected, text)
+        self.assertNotIn("Key Findings", text)
+        self.assertEqual(report.to_dict(), before)
+
+    def test_unrenderable_text_fails_without_saving_an_incomplete_pdf(self):
+        report = _claim_report()
+        report.analysis += "\n缺少工作负载数据。"
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch("fpdf.FPDF.add_font", side_effect=OSError("font unavailable")),
+        ):
+            with self.assertRaisesRegex(ValueError, "required report text"):
+                generate_pdf(report, directory)
+            self.assertEqual(list(Path(directory).glob("*.pdf")), [])
+
+    def test_missing_unicode_glyph_fails_instead_of_exporting_blank_text(self):
+        report = _claim_report()
+        report.analysis += "\nUnsupported glyph: \U0010ffff"
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "required report text"):
+                generate_pdf(report, directory)
+            self.assertEqual(list(Path(directory).glob("*.pdf")), [])
+
+    def test_render_failure_manifest_retains_markdown_and_actionable_reason(self):
+        report = _claim_report()
+        report.analysis += "\n缺少工作负载数据。"
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch("fpdf.FPDF.add_font", side_effect=OSError("font unavailable")),
+        ):
+            manifest = export_report(report, Path(directory), ".", "both", "test-job")
+            self.assertEqual(manifest.status, "partial")
+            self.assertEqual([a.format for a in manifest.artifacts], ["md"])
+            self.assertEqual([f.format for f in manifest.failures], ["pdf"])
+            self.assertIn("PDF font cannot render", manifest.failures[0].message)
+            self.assertIn("Markdown/JSON", manifest.failures[0].message)
+            self.assertIn(
+                "缺少工作负载数据", Path(manifest.artifacts[0].path).read_text()
+            )
+            self.assertEqual(list(Path(directory).glob("*.pdf")), [])
+
     @unittest.skipUnless(
         shutil.which("pdftotext"), "Poppler text extractor is optional"
     )

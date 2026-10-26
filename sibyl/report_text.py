@@ -3,6 +3,11 @@
 from .privacy import display_url
 from .report_models import ResearchReport
 from .report_references import reference_groups
+from .report_sections import (
+    CLAIM_SECTION_NOTICE,
+    CLAIM_SECTION_TITLE,
+    claim_report_body,
+)
 
 
 def _format_report(report: ResearchReport) -> str:
@@ -35,29 +40,34 @@ def _format_report(report: ResearchReport) -> str:
             if report.status == "partial"
             else []
         ),
-        "## Summary",
-        report.summary,
-        "",
-        "## Key Findings",
     ]
-    fv = report.finding_verifications or []
-    if report.key_findings and not fv:
-        lines.append("> Claim verification was not performed for this report.")
-    for i, finding in enumerate(report.key_findings, 1):
-        verdict = fv[i - 1] if i - 1 < len(fv) else None
-        tag = ""
-        if verdict is not None:
-            tag = (
-                f"  [verified: {verdict.confidence}]"
-                if verdict.supported
-                else "  (unverified)"
-            )
-        lines.append(f"{i}. {finding}{tag}")
-
-    if report.analysis:
-        lines.append("")
-        lines.append("## Analysis")
-        lines.append(report.analysis)
+    if report.claims:
+        lines.extend(
+            [
+                f"## {CLAIM_SECTION_TITLE}",
+                "",
+                CLAIM_SECTION_NOTICE,
+                "",
+                claim_report_body(report),
+            ]
+        )
+    else:
+        lines.extend(["## Summary", report.summary, "", "## Key Findings"])
+        fv = report.finding_verifications or []
+        if report.key_findings and not fv:
+            lines.append("> Claim verification was not performed for this report.")
+        for i, finding in enumerate(report.key_findings, 1):
+            verdict = fv[i - 1] if i - 1 < len(fv) else None
+            tag = ""
+            if verdict is not None:
+                tag = (
+                    f"  [verified: {verdict.confidence}]"
+                    if verdict.supported
+                    else "  (unverified)"
+                )
+            lines.append(f"{i}. {finding}{tag}")
+        if report.analysis:
+            lines.extend(["", "## Analysis", report.analysis])
 
     if report.predictions:
         lines.append("")

@@ -56,6 +56,17 @@ after runs include the declared writer-limit and retry-contract qualifications,
 without host-supplied URLs or model calls. These are narrow reading regressions,
 not a complete research, host-usability or stable-release gate pass.
 
+The subsequent [frozen 66-case, three-repeat live gate](../evals/results/live-retrieval-body-selection-2026-10-26.json)
+still fails: 81.5% answer coverage, 97.9% ready-state answer precision and 100%
+trap-safe rate, but 57.4% answerable readiness and 51.5% repeat stability. Thresholds
+are unchanged. Diagnose discovery/readiness misses without treating the two
+targeted reading fixes as a complete-product pass.
+
+Claim-based human reports now present the generated claim narrative once, while
+JSON retains compatible summary/findings/analysis fields and the full ledger.
+PDF rendering checks font coverage and reports failures instead of silently losing
+required text. Legacy prose layouts and saved research state remain unchanged.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary

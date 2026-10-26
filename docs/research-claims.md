@@ -128,7 +128,11 @@ Its status does not establish factual correctness.
 
 JSON report schema 1.1 adds `claims` with `question_id` and `review_current`.
 Markdown/PDF/plain text retain the reasoning and qualifications in the generated
-analysis. `verification_scope="citation_targets_only"` remains unchanged: reference
+analysis under one Evidence-linked conclusions section, without repeating each
+statement in three human-facing sections. JSON keeps the compatible summary,
+findings and analysis fields and the full claim ledger. PDF font/render failures
+must not silently omit conclusions or criteria; a failed format has no confirmed
+artifact path. `verification_scope="citation_targets_only"` remains unchanged: reference
 checks do not prove entailment, source accuracy or that the host read carefully.
 Stale dependency warnings are preserved when exporting a partial report.
 

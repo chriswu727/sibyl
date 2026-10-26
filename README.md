@@ -180,10 +180,10 @@ The practical difference is **persistent, evidence-directed research**, not a
 claim to have a better model. Whether it produces better answers than built-in
 search still needs a paired same-host, same-provider, same-budget evaluation.
 
-The [2026-10-21 live retrieval run](evals/results/live-retrieval-keyless-budget-fix-2026-10-21.json)
-tested 66 questions three times. It reached 83.3% answer coverage and 97.3%
-ready-state answer precision, but failed answerable readiness (66.0% vs 75%) and
-repeat stability (68.2% vs 90%). These use gold/alias evidence matching, not
+The [2026-10-26 live retrieval run](evals/results/live-retrieval-body-selection-2026-10-26.json)
+tested 66 questions three times. It reached 81.5% answer coverage and 97.9%
+ready-state answer precision, but failed answerable readiness (57.4% vs 75%) and
+repeat stability (51.5% vs 90%). These use gold/alias evidence matching, not
 semantic report accuracy. Seven of ten live host-suite cases needed host-supplied
 URLs. Compact responses and model removal do not fix those discovery weaknesses.
 
@@ -203,6 +203,11 @@ State is private local SQLite storage under `SIBYL_OUTPUT_ROOT/.research`, with
 explicit deletion and bounded quotas, not automatic expiry or encryption.
 One trusted local host owns a runtime. Public-network checks, revision checks
 and controlled exports reduce risk; they do not turn Sibyl into a sandbox.
+
+Claim-based human reports present conclusions and reasoning once; JSON retains
+the full compatible ledger. PDF export requires font coverage for the actual text.
+Unsupported glyphs or failed rendering return an explicit export failure instead
+of saving an incomplete-looking-successful PDF. Markdown/JSON remain available.
 
 [Release evidence](docs/LAUNCH_READINESS.md) · [Roadmap](docs/QUALITY_BUILD_PLAN.md) ·
 [Security](SECURITY.md) · [Privacy](PRIVACY.md)
