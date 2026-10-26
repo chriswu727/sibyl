@@ -82,7 +82,9 @@ def source_page(
         raise ResearchRequestError("Use offset >= 0 and a source page limit of 1-20.")
     if revision is not None and revision != snapshot["revision"]:
         raise ResearchRequestError(
-            "Research revision changed. Reload the brief and restart source pagination."
+            "Research revision changed. Reload the brief and restart source pagination.",
+            code="stale_revision",
+            field="revision",
         )
     catalog = snapshot["source_catalog"]
     end = min(offset + limit, len(catalog))

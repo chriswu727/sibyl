@@ -26,6 +26,7 @@ def require(condition: bool, message: str) -> None:
 async def check(
     directory: Path, include_pdf: bool = False, agent: bool = False
 ) -> dict:
+    directory = directory.resolve()
     parameters = StdioServerParameters(
         command=sys.executable,
         args=[
@@ -40,6 +41,15 @@ async def check(
             if agent:
                 tools = (await session.list_tools()).tools
                 require(len(tools) == 8, "Agent profile did not expose eight tools")
+                invalid = await session.call_tool(
+                    "start_research", {"question": QUESTION, "source_policy": "invalid"}
+                )
+                require(bool(invalid.isError), "Invalid policy was accepted")
+                require(
+                    (invalid.structuredContent or {}).get("error", {}).get("code")
+                    == "invalid_parameters",
+                    "Schema failure lost structured recovery",
+                )
 
             response_bytes = 0
 
@@ -68,6 +78,46 @@ async def check(
             if agent:
                 require(job["view"] == "brief", "Agent mutation did not return a brief")
                 require("evidence" not in job, "Agent brief repeated raw evidence")
+                rejected = await session.call_tool(
+                    "assess_research",
+                    {
+                        "job_id": job_id,
+                        "revision": job["revision"],
+                        "question_id": "Q0",
+                        "status": "disputed",
+                        "conclusion": "Needs investigation.",
+                        "counterevidence_note": "Challenge evidence is missing.",
+                        "claims": [
+                            {
+                                "claim_id": "Q0.C1",
+                                "kind": "fact",
+                                "status": "disputed",
+                                "text": "A stronger concurrency claim remains disputed.",
+                                "supporting_passage_ids": [wal_passage],
+                            }
+                        ],
+                    },
+                )
+                require(bool(rejected.isError), "Malformed disputed claim was accepted")
+                error = rejected.structuredContent or {}
+                require(
+                    error.get("error", {}).get("code") == "invalid_claim",
+                    "Claim error was not structured",
+                )
+                require(
+                    error["error"]["field"] == "claims.challenging_passage_ids",
+                    "Claim error lost repair field",
+                )
+                require(
+                    error["current_revision"] == job["revision"],
+                    "Rejected assessment advanced revision",
+                )
+                recovery = error["recovery"]["read"]
+                job = await call(recovery["tool"], **recovery["arguments"])
+                require(
+                    job["research_plan"]["questions"][0]["review"] is None,
+                    "Rejected claim was persisted",
+                )
             job = await call(
                 "assess_research",
                 job_id=job_id,
@@ -214,6 +264,18 @@ async def check(
                 },
             )
             require(bool(stale.isError), "Stale completion was accepted")
+            if agent:
+                error = stale.structuredContent or {}
+                require(
+                    error.get("error", {}).get("code") == "stale_revision",
+                    "Stale error was not structured",
+                )
+                require(
+                    error["current_revision"] == job["revision"],
+                    "Recovery returned a guessed revision",
+                )
+                recovery = error["recovery"]["read"]
+                job = await call(recovery["tool"], **recovery["arguments"])
             job = await call(
                 "complete_research",
                 job_id=job_id,
@@ -233,7 +295,33 @@ async def check(
                 "Verification scope overstated",
             )
             for format in ["md", "json", *(["pdf"] if include_pdf else [])]:
-                await call("save_report", job_id=job_id, format=format)
+                exported = await call("save_report", job_id=job_id, format=format)
+                if agent:
+                    require(
+                        exported["view"] == "export" and exported["status"] == "saved",
+                        "Export manifest not returned",
+                    )
+                    require(
+                        exported["report_status"] == "ok",
+                        "Export changed report status",
+                    )
+                    require(
+                        exported["requested_formats"] == [format],
+                        "Export returned the wrong formats",
+                    )
+                    require(exported["failures"] == [], "Export silently failed")
+                    artifact = exported["artifacts"][0]
+                    path = Path(artifact["path"])
+                    require(path.is_file(), "Manifest invented an export path")
+                    require(
+                        path.stat().st_size == artifact["size_bytes"],
+                        "Export size changed",
+                    )
+                    require(
+                        hashlib.sha256(path.read_bytes()).hexdigest()
+                        == artifact["sha256"],
+                        "Export hash changed",
+                    )
                 require(
                     len(list(directory.glob(f"*.{format}"))) == 1,
                     f"Missing {format} artifact",
@@ -243,6 +331,8 @@ async def check(
             )
             require(bool(mutate.isError), "Completed report was mutable")
             job = await call("get_research", job_id=job_id, view="full")
+            if agent:
+                await check_unknown_recovery(session, directory)
             print(
                 f"{'agent' if agent else 'compatible'} successful replay response bytes: {response_bytes}"
             )
@@ -269,6 +359,103 @@ async def check(
     return exported
 
 
+async def check_unknown_recovery(session: ClientSession, directory: Path) -> None:
+    async def call(name: str, **arguments):
+        result = await session.call_tool(name, arguments)
+        require(
+            not result.isError, f"Unknown recovery failed at {name}: {result.content}"
+        )
+        return result.structuredContent or {}
+
+    job = await call(
+        "start_research", question="Can an exact future outcome be observed now?"
+    )
+    premature = await session.call_tool(
+        "save_report", {"job_id": job["job_id"], "format": "json"}
+    )
+    require(bool(premature.isError), "Unfinished report was exported")
+    require(
+        (premature.structuredContent or {}).get("error", {}).get("code")
+        == "report_not_finalized",
+        "Export failure lost structured recovery",
+    )
+    arguments = dict(
+        job_id=job["job_id"],
+        revision=job["revision"],
+        question_id="Q0",
+        status="unresolved",
+        conclusion="Not established.",
+        counterevidence_note="No observed outcome is available.",
+    )
+    invalid = dict(
+        claim_id="Q0.C1",
+        kind="inference",
+        status="supported",
+        text="A future realized outcome cannot be reported as observed.",
+        rationale="No observed evidence is available.",
+    )
+    rejected = await session.call_tool(
+        "assess_research", {**arguments, "claims": [invalid]}
+    )
+    require(bool(rejected.isError), "Missing reasoning basis was accepted")
+    error = rejected.structuredContent or {}
+    require(
+        error.get("error", {}).get("field") == "claims.basis_claim_ids",
+        "Missing basis recovery unavailable",
+    )
+    require(
+        error["current_revision"] == job["revision"], "Rejected basis advanced revision"
+    )
+    read = error["recovery"]["read"]
+    job = await call(read["tool"], **read["arguments"])
+    job = await call(
+        "assess_research",
+        **{**arguments, "revision": job["revision"]},
+        claims=[
+            dict(
+                claim_id="Q0.C1",
+                kind="fact",
+                status="unresolved",
+                text="The requested outcome is unknown.",
+                rationale="No observed outcome is available.",
+            )
+        ],
+    )
+    job = await call(
+        "complete_research",
+        job_id=job["job_id"],
+        revision=job["revision"],
+        allow_incomplete=True,
+    )
+    require(
+        job["report"]["status"] == "partial", "Unknown claim became a complete report"
+    )
+    for format in ("md", "json"):
+        manifest = await call(
+            "save_report", job_id=job["job_id"], format=format, output_dir="unknown"
+        )
+        require(
+            manifest["status"] == "saved" and manifest["report_status"] == "partial",
+            "Unknown export lost partial status",
+        )
+        artifact = manifest["artifacts"][0]
+        path = Path(artifact["path"])
+        require(
+            path.parent == directory / "unknown" and path.is_file(),
+            "Unknown export path is not real",
+        )
+        require(
+            hashlib.sha256(path.read_bytes()).hexdigest() == artifact["sha256"],
+            "Unknown artifact hash changed",
+        )
+        if format == "json":
+            report = json.loads(path.read_text())
+            require(
+                report["claims"][0]["status"] == "unresolved" and not report["sources"],
+                "Unknown report invented source support",
+            )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -292,7 +479,7 @@ def main() -> None:
         with tempfile.TemporaryDirectory(prefix="sibyl-workflow-") as directory:
             asyncio.run(check(Path(directory), args.pdf, args.agent))
     print(
-        "Host research replay passed: two rounds, gap review, counterevidence, citations, exports, restart, and immutability; no network/model calls."
+        "Host research replay passed: two rounds, gap review, counterevidence, citations, exports, restart, and immutability; agent mode also checks structured error recovery and unknown-report manifests; no network/model calls."
     )
 
 

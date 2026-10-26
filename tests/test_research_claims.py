@@ -31,7 +31,10 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
 
     async def call(self, name, **arguments):
         response = await self.server.call_tool(name, arguments)
-        self.assertFalse(response.isError)
+        if response.isError:
+            self.assertEqual(response.structuredContent["view"], "error")
+            self.assertEqual(response.structuredContent["status"], "error")
+            raise ToolError(response.structuredContent["error"]["message"])
         return response.structuredContent
 
     async def start(self, sub_questions=None):

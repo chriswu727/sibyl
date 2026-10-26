@@ -11,7 +11,9 @@ from .evidence import EvidenceLoop, SourceBundle
 from .mcp_catalog import catalog as _catalog
 from .privacy import display_url
 from .ranking import RankingBackend
+from .report_exports import ExportManifest, export_report
 from .report_text import _format_report as _format_report
+from .research_errors import ResearchRequestError
 from .research_tools import assess_research as assess_research
 from .research_tools import cancel_research as cancel_research
 from .research_tools import complete_research as complete_research
@@ -101,6 +103,14 @@ artifact paths explicitly returned by successful exports; never guess a path.
 A rejected assessment does not save that review or advance its revision. Correct the request
 or preserve the missing review as a gap; a completed tool invocation is not proof
 that its requested operation succeeded.
+On isError=true, read structuredContent: view=error provides error.code/field/
+claim_id, current_revision and recovery.read. Reload the brief with that read,
+repair the rejected assessment, and resubmit its complete claim set. Never guess
+the next revision or continue as if the rejected claims were recorded.
+save_report returns view=export with requested_formats, artifacts (format, path,
+size_bytes, sha256) and failures. Only artifacts contain confirmed saved paths.
+Export status=saved means files were saved, not that report_status is complete;
+partial retains per-format failures and failed has isError=true with no artifacts.
 For new jobs omit summary/key_findings/analysis on completion; the report renders
 the recorded claims, dependencies, criteria and assumptions. Unknown/disputed
 claims stay visible. Old contract-1 jobs retain their prose completion fields.
@@ -397,7 +407,7 @@ async def save_report(
     format: Literal["md", "json", "pdf", "both"] = "md",
     output_dir: str = ".",
     job_id: str = "",
-) -> str:
+) -> ExportManifest:
     """Export a completed host-authored report.
 
     Call this after complete_research(), supplying its job_id.
@@ -405,6 +415,9 @@ async def save_report(
     Legacy format="both" exports PDF plus Markdown ONLY; it does not create JSON.
     Each export gets an independent filename. Return only the paths this tool
     actually reports as saved; never derive another path by replacing a suffix.
+    Agent results return a structured export manifest: requested_formats,
+    artifacts with real path/size_bytes/sha256, and explicit failures. Inspect
+    export status AND report_status. Partial reports stay partial after export.
 
     Args:
         format: md (default), json, pdf, or both (PDF + Markdown, not JSON).
@@ -418,50 +431,17 @@ async def save_report(
 
         job = get_runtime().research_jobs.store.get(job_id)
         if job["status"] != "completed" or not job["report"]:
-            raise ToolError("The research job has no completed report.")
+            raise ResearchRequestError(
+                "The research job has no completed report.", code="report_not_finalized"
+            )
         report = ResearchReport.from_dict(job["report"])
     if report is None:
-        raise ToolError(
-            "No research report to save. Call complete_research and supply its job_id."
+        raise ResearchRequestError(
+            "No research report to save. Call complete_research and supply its job_id.",
+            code="report_not_finalized",
         )
-
-    from .reporter import _report_to_markdown, generate_pdf
-    from .storage import ArtifactStore
-
-    store = ArtifactStore(get_runtime().policy.output_root, output_dir)
     if format not in {"pdf", "md", "json", "both"}:
         raise ToolError("format must be pdf, md, json, or both.")
-
-    results = []
-
-    if format == "json":
-        import json
-
-        data = report.to_dict()
-        for source in data["sources"]:
-            source["url"] = display_url(source["url"])
-        path = store.write(
-            json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"),
-            "report",
-            ".json",
-        )
-        results.append(f"JSON saved: {path}")
-
-    if format in ("pdf", "both"):
-        try:
-            path = generate_pdf(report, str(store.root))
-            results.append(f"PDF saved: {path}")
-        except Exception:
-            if format == "pdf":
-                raise ToolError(
-                    "PDF export failed; no PDF artifact was produced."
-                ) from None
-            results.append("PDF failed: could not render report.")
-
-    if format in ("md", "both"):
-        md_path = store.write(
-            _report_to_markdown(report).encode("utf-8"), "report", ".md"
-        )
-        results.append(f"Markdown saved: {md_path}")
-
-    return "\n".join(results)
+    return export_report(
+        report, get_runtime().policy.output_root, output_dir, format, job_id or None
+    )

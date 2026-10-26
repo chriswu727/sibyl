@@ -390,6 +390,11 @@ Each export gets an independent filename; use its returned path, not a guessed
 path with another extension. If PDF-only export fails, the MCP call returns a
 tool error. With `format="both"`, a PDF failure is disclosed while a successful
 Markdown artifact is retained.
+The agent profile returns an [export manifest](agent-protocol.md#export-manifest-10)
+with confirmed artifacts and per-format failures; `report_status` remains separate
+from export success. Failed calls also carry [structured recovery](agent-protocol.md#structured-recovery)
+instead of requiring the host to infer state from a text error. The keyless
+profile retains its text response format.
 Input is extracted in an isolated child process without inherited credentials,
 then split into the same hashed passages as HTML. Scanned pages have no OCR;
 text order, columns, tables, and formulas still need source inspection.
