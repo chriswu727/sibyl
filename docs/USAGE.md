@@ -214,53 +214,69 @@ are host-declared; the server does not prove that a hyperlink existed in the par
 The source catalog retains passage IDs even when a source falls out of the selected
 report window. Inspect one with `get_research(job_id="...", passage_id="...")`.
 
-After reading the evidence, call `assess_research` for each question:
+After reading the evidence, call `assess_research` for each question, including
+atomic material claims:
 
 ```text
 assess_research(job_id="...", revision=the_current_revision, question_id="Q1",
-                status="disputed", supporting_passage_ids=["bundle/S1/P1"],
-                challenging_passage_ids=["other/S1/P2"],
-                conclusion="The results differ under these experimental conditions...",
-                counterevidence_note="Compared the original study and the replication...")
+  status="disputed",
+  conclusion="The findings differ under the recorded conditions.",
+  counterevidence_note="Compared the original result and contrary evidence.",
+  claims=[{
+    "claim_id": "Q1.C1", "kind": "fact", "status": "disputed",
+    "text": "The available sources disagree on the requested result.",
+    "supporting_passage_ids": ["bundle/S1/P1"],
+    "challenging_passage_ids": ["other/S1/P2"]
+  }])
 ```
 
-Use `supported`, `disputed`, or `unresolved`. A supported review needs supporting
-passages; disputed needs both sides; unresolved needs an explanation, not invented
-evidence. Only cite passages actually inspected. The server checks link integrity,
-revision freshness, and structural completeness, **not semantic correctness**.
-New evidence for a reviewed question makes that review stale. Linked sources stay
-in the report window; more than twelve distinct reviewed sources or contradictory
-duplicate snapshots require narrowing the review rather than silently losing links.
+Facts link exact evidence. Inferences and recommendations link `basis_claim_ids`
+and explain their rationale; recommendations also declare criteria with origin
+`user` or `host_assumption`. Unknown information uses `status="unresolved"`
+with an explanation in `rationale`. Each assessment replaces the question's claim
+set; preserve IDs that other judgments depend on. The
+[claim contract](research-claims.md) defines fields, limits and a complete example.
 
-After investigating and reviewing all questions, get the latest job and submit:
+A supported review needs supporting evidence; disputed needs both sides;
+unresolved preserves missing evidence. Claim links and transitive reasoning
+premises supply the question-level evidence links automatically. Only cite passages
+actually inspected. The server checks reference integrity, revision freshness and
+structural completeness, **not semantic correctness**.
+
+New retrieval makes the question's review stale. Changed premises and new evidence
+also invalidate dependent judgments across questions. Reviewed evidence stays in
+the report window; more than twelve distinct reviewed sources or conflicting
+duplicate snapshots require narrowing the references instead of losing them.
+
+The claim ledger is usable without a report. To finalize a new job, get the latest
+revision and submit:
 
 ```text
-complete_research(
-  job_id="the returned ID",
-  revision=the_current_revision,
-  summary="An evidence-backed answer [Source 1].",
-  key_findings=["A supported finding [Source 2]."],
-  analysis="Interpretation, explicitly distinguished from sourced facts.",
-  limitations=["A specific unresolved question."]
-)
-save_report(job_id="the returned ID", format="json")
+complete_research(job_id="...", revision=the_current_revision,
+                  claim_ids=["Q1.C1"], allow_incomplete=true,
+                  limitations=["A specific unresolved question."])
+save_report(job_id="...", format="json")
 ```
 
-Summary and each finding must cite a selected `[Source N]`. Numbering may change
-after retrieval; the revision check prevents stale submissions. Citation target
-validation is not entailment checking. Host reports state
-`verification_scope="citation_targets_only"`; the host owns semantic judgment.
-Completed reports are immutable. Start another job for a new edition.
-New host jobs reject completion when required reviews or counterevidence checks are
-missing. `allow_incomplete=true` explicitly permits delivery with every remaining
-gap recorded in report limitations and `report.status="partial"`; it is not a quality
-pass. The job remains `status="completed"` because its report is finalized and immutable.
-Markdown/PDF exports visibly label partial reports. Existing pre-upgrade
-checkpoints remain readable and retain their former completion behavior. JSON exports
-preserve exact selected passages, hashes, offsets, the review ledger, and investigation
-steps. Markdown includes reviews and compact source references instead of dumping
-large source excerpts. PDF retains the narrative and limitations; use JSON for the
-complete machine-readable evidence package.
+New MCP jobs use `claim_contract_version=2`. Omit the legacy summary/findings/analysis
+arguments; the report renders the host-authored claims, their premises, current
+source citations, reasoning, criteria and assumptions. Unknown/disputed claims
+remain included even if not selected. A partial report can explicitly abstain
+without inventing sources. Unknown claim IDs, dependency cycles and stale
+revisions fail. An old checkpoint retains contract 1 and its prose-based completion.
+
+Completion normally requires current question reviews, resolved claim gaps and
+substantive counterevidence investigations. `allow_incomplete=true` permits delivery
+with all remaining gaps and `report.status="partial"`; it is not a quality pass.
+Job `status="completed"` means the report is immutable. Start another job for
+a new edition.
+
+Report JSON schema 1.1 adds the claim ledger and freshness flags, alongside exact
+selected passages, hashes, offsets, reviews and investigation steps. Markdown/PDF
+retain the reasoning, criteria, assumptions and limitations in the generated
+analysis. Use JSON for the complete machine-readable evidence package.
+`verification_scope="citation_targets_only"` means reference checks, not proof
+of semantic support or factual truth.
 
 Markdown, PDF, and plain-text reports separate **Cited Sources** from **Uncited
 Background** using citation markers in the report. Source numbers stay unchanged,

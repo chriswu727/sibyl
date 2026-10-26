@@ -40,9 +40,15 @@ async def main():
                 BundleDiagnostics(1,1,1,1,0,0,0,1,8,8,4000,4000,1)))
             job['notebook'] = notebook.to_dict()
             runtime.research_jobs.store.save(job)
-            _, completed = await server.call_tool('complete_research', {
+            _, reviewed = await server.call_tool('assess_research', {
                 'job_id': job['job_id'], 'revision': job['revision'],
-                'summary': 'Summary [Source 1]', 'key_findings': ['Finding [Source 1]'],
+                'question_id': 'Q0', 'status': 'supported',
+                'conclusion': 'Finding', 'counterevidence_note': 'Further investigation needed.',
+                'claims': [{'claim_id': 'Q0.C1', 'kind': 'fact', 'status': 'supported',
+                    'text': 'Finding', 'supporting_passage_ids': ['bundle/S1/P1']}]})
+            _, completed = await server.call_tool('complete_research', {
+                'job_id': job['job_id'], 'revision': reviewed['revision'],
+                'claim_ids': ['Q0.C1'],
                 'allow_incomplete': True})
             assert completed['status'] == 'completed'
             for format in ('md', 'json'):

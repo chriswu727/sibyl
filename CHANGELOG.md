@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add evidence-linked claims to new MCP research jobs: atomic facts, inferences,
+  recommendations, explicit unknowns, criteria and reasoning dependencies.
+- Validate claim/evidence IDs and dependency cycles; require dependent reviews
+  after premise changes or new retrieval. Keep old checkpoint behavior intact.
+- Render new reports from selected claims, transitive premises and all unresolved
+  or disputed claims, preserving assumptions, criteria and citation scope.
+- Retain leading entity names in focused search-query variants.
 - Make the eight-tool agent profile the default, with compact MCP structured
   research briefs. Keep keyless compatibility responses and explicit full views.
 - Remove internal model execution, LiteLLM, provider configuration, autonomous

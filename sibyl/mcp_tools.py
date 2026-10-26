@@ -28,7 +28,14 @@ ledger can be consumed directly without complete_research or a prose report.
 Default host-assisted workflow:
   start_research -> continue_research (focused searches / source reads) -> get_research ->
   assess_research (support, counterevidence, gaps for each question) ->
-  complete_research (current revision and cited prose) -> save_report (md/json/pdf).
+  complete_research (current revision and claim_ids) -> save_report (md/json/pdf).
+New jobs use claim_contract_version=2. Record material facts, inferences and
+recommendations in assess_research(claims=...). Fact claims cite exact passages;
+reasoning claims cite basis_claim_ids and explain their rationale. Recommendations
+state selection criteria and distinguish user needs from host assumptions.
+Unknown claims remain unresolved with a reason. Finalize selected claim_ids;
+Sibyl derives the report and citations from this ledger. Old saved contract-1
+jobs retain the legacy prose-based completion fields.
 Inspect evidence and limitations, investigate gaps, and label uncertainty.
 Use source_policy="academic" for paper-led research; otherwise prefer current
 primary documentation. Follow references with URL reads, inspect methods and
@@ -79,11 +86,18 @@ You plan and reason; Sibyl retrieves and persists the evidence, reviews and gaps
 Start a host job with focused sub_questions. continue_research searches or reads
 a URL into the job; link each round to question_id and explain its rationale.
 Inspect exact evidence, then assess_research with supported/disputed/unresolved
-conclusions, supporting/challenging passage IDs and focused follow_up_queries.
+conclusions, claims and focused follow_up_queries. Use claim IDs such as Q1.C1.
+Fact claims cite supporting/challenging passage IDs; inference/recommendation
+claims link basis_claim_ids and a rationale. Recommendations must state criteria
+with origin=user or host_assumption. Explain unknowns with status=unresolved.
+Keep material claims atomic; never turn missing numbers into guessed facts.
 Investigate counterevidence with purpose="counterevidence", then reassess gaps.
 Consume the review ledger directly; a prose report is not required. Optional
-complete_research needs current revision and [Source N] citations, then save_report
+complete_research needs current revision and optional claim_ids, then save_report
 exports md/json or optional PDF. allow_incomplete preserves gaps as a partial report.
+For new jobs omit summary/key_findings/analysis on completion; the report renders
+the recorded claims, dependencies, criteria and assumptions. Unknown/disputed
+claims stay visible. Old contract-1 jobs retain their prose completion fields.
 
 Consume structuredContent, not the text pointer.
 Research mutations and get_research(auto) return a self-contained brief: status,

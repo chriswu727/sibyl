@@ -16,6 +16,7 @@ from .job_store import JobStore
 from .privacy import display_url
 from .report_audit import citation_errors
 from .report_models import ResearchReport
+from .research_claims import render_claims
 from .research_errors import ResearchRequestError
 from .research_review import evidence_index, questions, research_plan, review_question
 from .research_sources import read_source_bundle
@@ -76,7 +77,7 @@ class ResearchJobs:
         if job["job_id"] in self.tasks:
             raise CapacityError("Research job is busy.")
         if job["status"] == "completed":
-            raise ValueError(
+            raise ResearchRequestError(
                 "Completed reports are immutable. Start a new research job."
             )
 
@@ -90,6 +91,7 @@ class ResearchJobs:
         max_steps: int,
         source_policy: str = "primary",
         preferred_domains: list[str] | None = None,
+        claim_contract_version: int = 1,
     ) -> dict[str, Any]:
         self.runtime.validate_query(question)
         if mode != "host":
@@ -102,6 +104,8 @@ class ResearchJobs:
             raise ValueError("Use 1-12 retrieval steps and at most five sub-questions.")
         if source_policy not in {"primary", "academic"}:
             raise ValueError("Source policy must be primary or academic.")
+        if claim_contract_version not in {1, 2}:
+            raise ResearchRequestError("Unknown research result contract version.")
         preferred_domains = normalize_domains(preferred_domains or [])
         for item in sub_questions:
             self.runtime.validate_query(item)
@@ -114,6 +118,7 @@ class ResearchJobs:
             source_policy=source_policy,
             preferred_domains=preferred_domains,
             require_review=True,
+            claim_contract_version=claim_contract_version,
         )
         job = self.store.create(
             {
@@ -179,6 +184,7 @@ class ResearchJobs:
             research_plan=research_plan(notebook),
             source_policy=notebook.source_policy,
             preferred_domains=notebook.preferred_domains,
+            claim_contract_version=notebook.claim_contract_version,
             source_catalog=[
                 dict(
                     source_id=source.source_id,
@@ -331,6 +337,7 @@ class ResearchJobs:
         conclusion: str,
         counterevidence_note: str,
         follow_up_queries: list[str] | None = None,
+        claims: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         job = self.store.get(job_id)
         self._idle(job)
@@ -348,6 +355,7 @@ class ResearchJobs:
             conclusion,
             counterevidence_note,
             follow_up_queries,
+            claims,
         )
         job["notebook"] = notebook.to_dict()
         self._event(
@@ -366,6 +374,7 @@ class ResearchJobs:
         analysis: str,
         limitations: list[str],
         allow_incomplete: bool = False,
+        claim_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         import re
 
@@ -375,11 +384,23 @@ class ResearchJobs:
             raise ResearchRequestError(
                 "Reload the host research job and use its current revision."
             )
-        if not summary.strip() or not key_findings:
-            raise ValueError("Provide a summary and evidence-backed findings.")
         if len(key_findings) > 32 or len(limitations) > 32:
             raise ValueError("At most 32 findings and limitations are supported.")
         notebook = ResearchNotebook.from_dict(job["notebook"])
+        report_claims: list[dict[str, Any]] = []
+        if notebook.claim_contract_version >= 2:
+            if summary or key_findings or analysis:
+                raise ResearchRequestError(
+                    "This job uses evidence-linked claims. Record prose with assess_research(claims=...), then complete with claim_ids and omit summary/key_findings/analysis."
+                )
+            report_claims, key_findings, analysis = render_claims(notebook, claim_ids)
+            summary = "\n\n".join(key_findings)
+        elif claim_ids is not None:
+            raise ResearchRequestError(
+                "Claim-based report completion requires a new evidence-linked job."
+            )
+        if not summary.strip() or not key_findings:
+            raise ValueError("Provide a summary and evidence-backed findings.")
         plan = research_plan(notebook)
         if (
             notebook.require_review
@@ -390,9 +411,13 @@ class ResearchJobs:
                 "Research gaps remain. Inspect research_plan, review the evidence, or set allow_incomplete=true to disclose the gaps."
             )
         sources = notebook.report_sources()
-        if not sources:
+        if not sources and not (
+            notebook.claim_contract_version >= 2 and allow_incomplete
+        ):
             raise ValueError("Cannot complete a report without substantive sources.")
-        for text in [summary, *key_findings]:
+        for text in (
+            [] if notebook.claim_contract_version >= 2 else [summary, *key_findings]
+        ):
             if not re.search(r"\[Source\s+\d+\]", text, re.IGNORECASE):
                 raise ValueError(
                     "Summary and each finding must cite a selected [Source N]."
@@ -412,6 +437,8 @@ class ResearchJobs:
                 "Host-authored report. Citation targets checked; semantic support was not independently verified.",
             ],
             verification_scope="citation_targets_only",
+            schema_version="1.1" if report_claims else "1.0",
+            claims=report_claims,
             research_stats={
                 "retrieval_attempts": len(notebook.attempts),
                 "steps": notebook.attempts,

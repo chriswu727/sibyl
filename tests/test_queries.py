@@ -81,6 +81,20 @@ class TestSearchQueryVariants(unittest.TestCase):
             [query, "distributed systems algorithm easier than Paxos"],
         )
 
+    def test_preserves_entity_before_question_word(self):
+        for query, focused in (
+            (
+                "SQLite WAL: how does writer concurrency work?",
+                "SQLite WAL writer concurrency work",
+            ),
+            (
+                "PostgreSQL 17, which isolation level prevents write skew?",
+                "PostgreSQL 17 isolation level prevents write skew",
+            ),
+        ):
+            with self.subTest(query=query):
+                self.assertEqual(search_query_variants(query), [query, focused])
+
     def test_quoted_title_becomes_the_focused_variant(self):
         query = (
             'What is the publication date of the paper "Articulatory constraints '

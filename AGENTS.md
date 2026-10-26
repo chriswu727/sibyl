@@ -31,13 +31,18 @@ Use `view="sources"` with the current revision to page the full catalog, and
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
 4. Call `assess_research` for each question with stable supporting/challenging
-   passage IDs, a conclusion, and a counterevidence note. Investigate counterevidence
+   passage IDs, atomic claims, a conclusion, and a counterevidence note. Facts cite
+   passages; reasoning cites basis_claim_ids with a rationale. Recommendations
+   declare criteria and their user/host_assumption origin. Unknowns remain
+   unresolved with an explanation. See docs/research-claims.md. Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
    For unresolved gaps, supply focused `follow_up_queries`, then use
    `continue_research(..., rationale="the gap this round addresses")`. Inspect the
    new evidence and reassess; a repeated call alone does not establish deeper research.
-5. Optionally submit `complete_research(job_id, revision, summary, key_findings, analysis,
-   limitations)`. Summary and each finding must cite selected `[Source N]`.
+5. Optionally submit `complete_research(job_id, revision, claim_ids=[...],
+   limitations=[...])`. New jobs render reports from recorded claims and their
+   evidence, reasoning and criteria; omit summary/key_findings/analysis. Unknown
+   and disputed claims remain included. Old contract-1 jobs retain prose completion.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
 Use `source_policy="academic"` to enable scholarly discovery, and
@@ -63,8 +68,9 @@ reference-link crawling is performed. Monitoring is optional (`[monitor]`),
 authenticated, read-only, and loopback-only; see docs/OPERATIONS.md.
 
 The host plans and writes. Sibyl persists the investigation and checks citation
-targets, not semantic entailment. Do not describe host reports as independently
-verified. Citation numbering can change after retrieval: always use the current
+targets and reasoning dependency integrity, not semantic entailment. Do not describe
+host reports as independently verified. New jobs use stable claim/evidence IDs;
+report citation numbering is generated at finalization. Always use the current
 revision. Completed reports are immutable.
 
 `get_research()` lists retained jobs. `cancel_research(job_id)` cancels work while

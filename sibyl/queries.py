@@ -99,7 +99,7 @@ def search_query_variants(query: str) -> List[str]:
             return [clean, quoted]
 
     focused_terms = [
-        term for term in terms[1:] if term.casefold() not in _SEARCH_STOP_WORDS
+        term for term in terms if term.casefold() not in _SEARCH_STOP_WORDS
     ]
     focused = " ".join(focused_terms)
     if len(focused_terms) < 3 or focused.casefold() == clean.casefold():

@@ -62,6 +62,10 @@ This ledger can inform a downstream coding task, comparison, or decision without
 calling `complete_research`. The job remains resumable and retained in local
 storage. It is not automatically deleted when the caller stops reading it.
 
+New jobs also return `claim_contract_version=2`. Reviews include atomic `claims`
+with evidence, reasoning dependencies, criteria and assumptions. Their status is
+host-declared. See the [claim contract](research-claims.md).
+
 ## Progressive evidence reads
 
 1. Read `research_plan` and the selected `sources` in the brief.
@@ -110,14 +114,17 @@ it because the budget ended. Source kinds and duplicate clusters are heuristics.
 ## Reports and compatibility
 
 For a person-facing deliverable, call `complete_research` with the current
-revision and current `[Source N]` citations, then `save_report`. Reports keep the
-same formats, immutability, and provenance. `allow_incomplete=true` explicitly
-preserves unmet gates; it does not waive them or grant a quality pass.
+revision and optional `claim_ids`, then `save_report`. The report renders the
+host-authored claim ledger, transitive premises and all unknown/disputed claims.
+New jobs omit summary/findings/analysis arguments; old contract-1 checkpoints
+retain those prose fields. See [Claim reports](research-claims.md#optional-reports).
+`allow_incomplete=true` explicitly preserves unmet gates; it is not a quality pass.
 
 Direct Python job methods and the keyless profile continue returning full snapshots.
 Python embedders opt in with `create_server(runtime, agent_mode=True)`. This sets
-both the eight-tool catalog and compact transport. No persisted schema migration,
-background LLM, or new authority over the host is introduced.
+both the eight-tool catalog and compact transport. Old checkpoints load as contract
+1; new MCP jobs use contract 2. Direct job embedders retain the legacy default and
+can pass `claim_contract_version=2`. No background LLM or new host authority is introduced.
 
 ## Reproducible measurement, not a quality claim
 
@@ -135,7 +142,8 @@ catalog pages, current citations, report export, restart and immutable completio
 HTTP is blocked and no model is invoked. The agent replay also verifies that a
 reviewed conclusion is available before any report is written.
 
-On 2026-10-25, successful tool responses in this fixed replay totaled about
+This historical measurement predates claim contract 2; rerun the script for the
+current response size. On 2026-10-25, successful tool responses in this fixed replay totaled about
 **43 KB in agent mode versus 176 KB in compatible mode** (roughly 75% fewer UTF-8
 JSON bytes). The counter includes requested passages, catalog pages, exports and
 the final full-report read; it excludes discovery, the deliberate stale-revision

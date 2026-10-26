@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from .evidence import EvidencePassage, EvidenceSource
 from .job_models import (
@@ -18,6 +18,7 @@ from .job_models import (
 if TYPE_CHECKING:
     from .research_state import ResearchNotebook
 
+from .research_claims import claim_gaps, claim_index, validate_claims
 from .research_errors import ResearchRequestError
 from .source_policy import source_kind
 
@@ -60,6 +61,7 @@ def review_question(
     conclusion: str,
     counterevidence_note: str,
     follow_up_queries: list[str] | None = None,
+    claims: list[dict[str, Any]] | None = None,
 ) -> None:
     if question_id not in questions(notebook):
         raise ResearchRequestError(
@@ -69,6 +71,39 @@ def review_question(
         raise ResearchRequestError(
             "Review status must be supported, disputed, or unresolved."
         )
+    normalized_claims, basis_fingerprints = validate_claims(
+        notebook, question_id, claims or [], set(evidence_index(notebook))
+    )
+    known_claims = {key: item[1] for key, item in claim_index(notebook).items()}
+    known_claims.update({claim["claim_id"]: claim for claim in normalized_claims})
+    linked_claims = [
+        *normalized_claims,
+        *(known_claims[key] for key in basis_fingerprints),
+    ]
+    supporting = list(
+        dict.fromkeys(
+            [
+                *supporting,
+                *(
+                    ref
+                    for claim in linked_claims
+                    for ref in claim["supporting_passage_ids"]
+                ),
+            ]
+        )
+    )
+    challenging = list(
+        dict.fromkeys(
+            [
+                *challenging,
+                *(
+                    ref
+                    for claim in linked_claims
+                    for ref in claim["challenging_passage_ids"]
+                ),
+            ]
+        )
+    )
     if not conclusion.strip() or not counterevidence_note.strip():
         raise ResearchRequestError(
             "Explain the conclusion and the counterevidence investigation, including gaps."
@@ -80,7 +115,7 @@ def review_question(
         raise ResearchRequestError(
             "Review exceeds the bounded evidence or prose limit."
         )
-    if set(supporting) & set(challenging):
+    if not normalized_claims and set(supporting) & set(challenging):
         raise ResearchRequestError(
             "The same passage cannot both support and challenge this review."
         )
@@ -115,6 +150,9 @@ def review_question(
         assessment_origin="host",
         follow_up_queries=list(dict.fromkeys(query.strip() for query in follow_ups)),
     )
+    if claims is not None:
+        review["claims"] = normalized_claims
+        review["basis_fingerprints"] = basis_fingerprints
     updated = {**notebook.reviews, question_id: review}
     urls = {
         index[item][0].url
@@ -209,6 +247,7 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
         if not review:
             gaps.append("Evidence has not been assessed by the host.")
         else:
+            gaps.extend(claim_gaps(notebook, question_id))
             if review["status"] == "unresolved":
                 gaps.append("The host marked this question unresolved.")
             if any(
@@ -240,11 +279,14 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
             gaps.append(
                 "No completed counterevidence search/read is linked to this question."
             )
+        public_review = review.copy() if review else None
+        if public_review:
+            public_review.pop("basis_fingerprints", None)
         items.append(
             dict(
                 question_id=question_id,
                 question=question,
-                review=review,
+                review=public_review,
                 gaps=gaps,
                 attempts=len(attempts),
             )
