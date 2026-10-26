@@ -3,9 +3,10 @@
 ## Supported versions
 
 Security fixes are developed on `main` and delivered in subsequent releases.
-The runtime hardening documented here is not yet in the published 0.3.0 package;
-use the source-checkout instructions in the README to evaluate it. Include the
-package version or commit when reporting a problem.
+This policy follows unreleased host-only `main`. Published 0.4.0b1 and 0.3.0
+contain older architectures and must not be assumed to have every control below.
+Use the source-checkout instructions in the README to evaluate this implementation.
+Include the package version and checkout commit when reporting a problem.
 
 The [documentation index](docs/README.md) links installation, operations, and
 release status. A development version string is not proof that a fix is on PyPI.

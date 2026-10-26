@@ -13,7 +13,8 @@ a subscription. Sibyl does not call another generative model, read subscription
 credentials, or require a second model API key. The host's own usage rules still apply.
 
 [Installation](#quick-start) · [Agent protocol](docs/agent-protocol.md) ·
-[Documentation](docs/README.md) · [Quality limits](#quality-and-limitations)
+[Design](docs/MCP_ARCHITECTURE.md) · [Documentation](docs/README.md) ·
+[Quality limits](#quality-and-limitations)
 
 > **Source preview, not a new PyPI release.** This README describes the host-only
 > architecture in this checkout. Published beta 0.4.0b1 and stable 0.3.0 still
@@ -173,6 +174,8 @@ its old transitive dependencies. Remove old model settings from `SIBYL_CONFIG`.
 Do not give Sibyl your host's login token. Existing checkpoints remain readable
 and completed reports exportable; old autonomous jobs cannot resume execution.
 Start a new host job to continue investigating. See [migration](docs/USAGE.md#migration).
+The [legacy-boundary inventory](docs/MIGRATION.md) distinguishes removed execution
+from retained checkpoint/report readers and historical evaluation evidence.
 
 ## Quality and limitations
 
@@ -186,6 +189,11 @@ ready-state answer precision, but failed answerable readiness (57.4% vs 75%) and
 repeat stability (51.5% vs 90%). These use gold/alias evidence matching, not
 semantic report accuracy. Seven of ten live host-suite cases needed host-supplied
 URLs. Compact responses and model removal do not fix those discovery weaknesses.
+That gate predates subsequent query/metadata/excerpt-hint changes; no newer full
+pass is recorded. A [two-workflow low-effort host retest](evals/results/host-agent-structured-retest-2026-10-26.json)
+delivered partial Markdown/JSON for both tasks, but the SQLite recommendation
+still cited an excerpt missing a material qualification. Export success is not
+a semantic research-quality pass.
 
 Search bundles select up to three disjoint passages per source from the bounded
 extracted text, using Unicode lexical matches and prose/table context rather than

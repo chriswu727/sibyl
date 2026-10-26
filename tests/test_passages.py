@@ -44,6 +44,28 @@ class TestSplitPassages(unittest.TestCase):
 
 
 class TestSelectPassages(unittest.TestCase):
+    def test_patch_identifier_in_tail_is_found_with_exact_offsets(self):
+        text = (
+            "Intro paragraph about the game. " * 300
+            + "History: Desktop 1.4.1 reduced titanium ore from 5 to 4."
+            + " More trailing notes." * 50
+        )
+        passages = select_passages(
+            "titanium ore 1.4.1 patch history", text, max_chars=2000
+        )
+        self.assertTrue(any("Desktop 1.4.1" in p.text for p in passages))
+        self.assertLessEqual(sum(len(p.text) for p in passages), 2000)
+        for passage in passages:
+            self.assertEqual(text[passage.start_char : passage.end_char], passage.text)
+
+    def test_final_boundary_evidence_is_not_skipped(self):
+        text = "filler " * 200 + "boundaryneedle"
+        passages = select_passages(
+            "boundaryneedle", text, max_chars=500, max_passages=1
+        )
+        self.assertEqual(passages[0].end_char, len(text))
+        self.assertIn("boundaryneedle", passages[0].text)
+
     def test_selects_body_from_separate_sections_instead_of_contents(self):
         contents = "Contents\n" + (
             "WAL concurrency\nReaders and writers\nNetwork filesystem limitations\n"

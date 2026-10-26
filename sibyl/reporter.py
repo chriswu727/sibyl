@@ -10,7 +10,9 @@ from .report_references import reference_groups
 from .report_sections import (
     CLAIM_SECTION_NOTICE,
     CLAIM_SECTION_TITLE,
+    LEGACY_VERDICT_NOTICE,
     claim_report_body,
+    legacy_verdict_tag,
 )
 from .storage import ArtifactStore
 
@@ -57,6 +59,8 @@ def _report_to_markdown(report: ResearchReport) -> str:
     else:
         lines.extend(["## Summary", "", report.summary, "", "## Key Findings", ""])
         fv = report.finding_verifications or []
+        if fv:
+            lines.extend(["> " + LEGACY_VERDICT_NOTICE, ""])
         if report.key_findings and not fv:
             lines.append("> Claim verification was not performed for this report.")
             lines.append("")
@@ -64,11 +68,7 @@ def _report_to_markdown(report: ResearchReport) -> str:
             v = fv[i - 1] if i - 1 < len(fv) else None
             tag = ""
             if v is not None:
-                tag = (
-                    f"  _[confidence: {v.confidence}]_"
-                    if v.supported
-                    else "  _(unverified)_"
-                )
+                tag = "  _" + legacy_verdict_tag(v) + "_"
             lines.append(f"{i}. {finding}{tag}")
         lines.append("")
         if report.analysis:
@@ -207,6 +207,14 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         report.cross_analysis,
         report.market_data_summary,
         report.verification_scope,
+        *(
+            [
+                LEGACY_VERDICT_NOTICE,
+                *map(legacy_verdict_tag, report.finding_verifications),
+            ]
+            if report.finding_verifications and not report.claims
+            else []
+        ),
         *report.limitations,
         *(
             text
@@ -366,20 +374,18 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         body(report.summary)
         separator()
 
-        # Key Findings — annotate each with its verification verdict (if present).
+        # Stored verdicts are history, not an audit performed during export.
         heading("Key Findings", 14)
         fv = report.finding_verifications or []
+        if fv:
+            body(LEGACY_VERDICT_NOTICE)
         if report.key_findings and not fv:
             body("Claim verification was not performed for this report.")
         for i, finding in enumerate(report.key_findings, 1):
             v = fv[i - 1] if i - 1 < len(fv) else None
             tag = ""
             if v is not None:
-                tag = (
-                    f"  [confidence: {v.confidence}]"
-                    if v.supported
-                    else "  (unverified)"
-                )
+                tag = "  " + legacy_verdict_tag(v)
             body(f"{i}. {finding}{tag}")
         separator()
 

@@ -1,11 +1,42 @@
 """Host research must not import optional model or rendering SDKs."""
 
+import ast
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 
 class TestCoreResearch(unittest.TestCase):
+    def test_runtime_source_has_no_removed_provider_imports_or_modules(self):
+        root = Path(__file__).resolve().parents[1] / "sibyl"
+        forbidden = {"litellm", "openai", "anthropic", "yfinance", "pytrends"}
+        removed = {
+            "context",
+            "analyzer",
+            "async_utils",
+            "data",
+            "researcher",
+            "tools",
+            "verifier",
+        }
+        for path in root.glob("*.py"):
+            with self.subTest(module=path.name):
+                self.assertNotIn(path.stem, removed | forbidden)
+                for node in ast.walk(ast.parse(path.read_text())):
+                    if isinstance(node, ast.Import):
+                        names = [alias.name for alias in node.names]
+                    elif isinstance(node, ast.ImportFrom):
+                        names = [node.module or ""]
+                        if node.level:
+                            self.assertNotIn((node.module or "").split(".")[0], removed)
+                    else:
+                        continue
+                    self.assertFalse(
+                        {name.split(".")[0] for name in names} & forbidden,
+                        f"Removed execution dependency imported by {path.name}",
+                    )
+
     def test_host_report_roundtrip_with_optional_imports_blocked(self):
         script = """
 import asyncio

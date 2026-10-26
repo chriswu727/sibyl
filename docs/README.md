@@ -5,7 +5,8 @@ and research views are unreleased;
 the published 0.4.0b1 beta does not contain them. PyPI 0.3.0 is an older stable package.
 See [installation](../llms-install.md) and [channel status](RELEASING.md). Sibyl is a local
 deep-research MCP tool for AI agents, with multi-round investigations, traceable
-evidence, gap tracking, and optional reports; its current maturity is public beta.
+evidence, gap tracking, and optional reports. The host-only product is a source
+preview with unmet quality gates; the older published beta is a different build.
 
 ## Start and use
 
@@ -26,6 +27,7 @@ evidence, gap tracking, and optional reports; its current maturity is public bet
 |---|---|
 | [Operations](OPERATIONS.md) | Authenticated local monitoring, metrics, recovery, retention |
 | [Architecture](MCP_ARCHITECTURE.md) | Module ownership, lifecycle, persistence, extension points |
+| [Migration and legacy boundary](MIGRATION.md) | Removed execution paths, retained data compatibility, and source audit |
 | [Security](../SECURITY.md) | Network, parser, storage, authentication boundaries and reporting |
 | [Privacy](../PRIVACY.md) | Local retention, provider disclosures, credentials, telemetry policy |
 | [Performance](PERFORMANCE.md) | Resource controls and reproducible measurement |
@@ -46,7 +48,7 @@ evidence, gap tracking, and optional reports; its current maturity is public bet
 | [Contributing](../CONTRIBUTING.md) | Development checks and documentation requirements |
 | [Release runbook](RELEASING.md) | Gated packaging, publication, and post-release validation |
 | [Changelog](../CHANGELOG.md) | Development changes and previous releases |
-| [Registry metadata](../server.json) | Next-version publication manifest; not proof of a published release |
+| [Registry metadata](../server.json) | Development manifest; needs a fresh version at release, not proof of published source |
 
 Current behavior belongs in usage/operations documentation, planned behavior in
 the roadmap, and dated measurements in readiness/evaluation records. Passing

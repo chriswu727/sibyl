@@ -28,8 +28,10 @@ class TestMcpFormatting(unittest.TestCase):
             ],
         )
         text = _format_report(report)
-        self.assertIn("[verified: high]", text)
-        self.assertIn("(unverified)", text)
+        self.assertIn("[historical: supported; recorded confidence: high]", text)
+        self.assertIn("historical: unverified", text)
+        self.assertIn("not revalidated", text)
+        self.assertNotIn("[verified:", text)
 
     def test_insufficient_evidence_is_not_formatted_as_a_report(self):
         report = ResearchReport(
