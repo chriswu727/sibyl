@@ -47,6 +47,8 @@ class EvidenceReview(TypedDict):
     reviewed_attempts: int
     assessment_origin: Literal["host"]
     follow_up_queries: list[str]
+    claims: NotRequired[list[dict[str, Any]]]
+    basis_fingerprints: NotRequired[dict[str, str]]
 
 
 class QuestionPlan(TypedDict):

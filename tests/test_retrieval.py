@@ -10,6 +10,129 @@ from sibyl.search import SearchResult
 
 
 class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
+    async def test_preferred_full_text_survives_final_ranking_and_diversity(self):
+        general = WebPage(
+            "https://blog.example/guide",
+            "replication transaction",
+            "replication transaction consistency detailed guide. " * 30,
+        )
+        official = WebPage(
+            "https://docs.example/manual",
+            "Official reference",
+            "Transaction safety has documented conditions and bounded guarantees. "
+            * 12,
+        )
+        second = WebPage(
+            "https://docs.example/limits",
+            "Reference limits",
+            "Transaction limitations require application handling of specific failure conditions. "
+            * 12,
+        )
+        other = WebPage(
+            "https://other.example/article",
+            "replication transaction",
+            "replication transaction distributed tutorial examples and commentary. "
+            * 30,
+        )
+        pages = [general, other, official, second]
+        results = [SearchResult(p.title, p.url, p.text[:180]) for p in pages]
+        for ranker, expected in (
+            ("lexical", [official.url, general.url]),
+            ("none", [general.url, other.url]),
+        ):
+            with (
+                self.subTest(ranker=ranker),
+                mock.patch(
+                    "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+                ),
+                mock.patch(
+                    "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+                ),
+            ):
+                bundle = await gather_source_bundle(
+                    "replication transaction",
+                    max_sources=2,
+                    client=object(),
+                    ranker=ranker,
+                    preferred_domains=["docs.example"],
+                )
+            self.assertEqual([source.url for source in bundle.sources], expected)
+
+    async def test_preferred_domain_does_not_override_relevance_or_period(self):
+        current = WebPage(
+            "https://other.example/2026",
+            "2026 replication transaction",
+            "Replication transaction 2026 research results and measured limits. " * 20,
+        )
+        old = WebPage(
+            "https://docs.example/2025",
+            "2025 replication transaction",
+            "Replication transaction 2025 historical reference and methods. " * 20,
+        )
+        irrelevant = WebPage(
+            "https://docs.example/weather",
+            "Weather",
+            "Weather ocean landscape clouds rainfall mountain forest scenery. " * 20,
+        )
+        pages = [current, old, irrelevant]
+        results = [SearchResult(p.title, p.url, p.text[:180]) for p in pages]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "2026 replication transaction",
+                max_sources=1,
+                client=object(),
+                preferred_domains=["docs.example"],
+            )
+        self.assertEqual(bundle.sources[0].url, current.url)
+
+    async def test_preferred_documentation_is_not_replaced_by_community_archive(self):
+        archive = WebPage(
+            "https://docs.example/message-id/123",
+            "replication transaction",
+            "Replication transaction questions from a mailing list about distributed consistency. "
+            * 25,
+        )
+        manual = WebPage(
+            "https://docs.example/manual",
+            "Reference",
+            "Transaction safety has documented conditions and bounded guarantees. "
+            * 12,
+        )
+        other = WebPage(
+            "https://other.example/tutorial",
+            "replication transaction",
+            "Replication transaction example tutorial explaining distributed systems. "
+            * 25,
+        )
+        pages = [archive, other, manual]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(
+                    return_value=[
+                        SearchResult(p.title, p.url, p.text[:180]) for p in pages
+                    ]
+                ),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "replication transaction",
+                max_sources=1,
+                client=object(),
+                preferred_domains=["docs.example"],
+            )
+        self.assertEqual(bundle.sources[0].url, manual.url)
+
     async def test_preferred_domains_add_bounded_searches_without_excluding_others(
         self,
     ):

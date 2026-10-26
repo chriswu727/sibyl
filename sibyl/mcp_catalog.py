@@ -10,6 +10,7 @@ from typing import get_type_hints
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import CallToolResult, TextContent
+from pydantic import BaseModel
 
 from .async_cache import CapacityError
 from .research_errors import ResearchRequestError
@@ -23,6 +24,8 @@ def _validate_payload(values):
 
     def visit(value, depth=0):
         nonlocal size
+        if isinstance(value, BaseModel):
+            value = value.model_dump()
         if depth > 8:
             raise ToolError("Tool input is too deeply nested.")
         if isinstance(value, str):

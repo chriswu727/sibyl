@@ -59,6 +59,7 @@ class ResearchReport:
     verification_scope: str = "not_performed"
     research_stats: dict = field(default_factory=dict)
     research_plan: dict = field(default_factory=dict)
+    claims: List[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         data = asdict(self)

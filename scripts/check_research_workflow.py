@@ -78,6 +78,22 @@ async def check(
                 conclusion="WAL improves reader/writer concurrency, but writer concurrency remains unestablished.",
                 counterevidence_note="Investigate whether multiple writers can commit concurrently.",
                 follow_up_queries=["SQLite simultaneous writers serialization"],
+                claims=[
+                    {
+                        "claim_id": "Q0.C1",
+                        "kind": "fact",
+                        "status": "supported",
+                        "text": "WAL allows readers and a writer to proceed concurrently.",
+                        "supporting_passage_ids": [wal_passage],
+                    },
+                    {
+                        "claim_id": "Q0.C2",
+                        "kind": "fact",
+                        "status": "unresolved",
+                        "text": "Whether SQLite allows simultaneous writers remains unestablished.",
+                        "rationale": "Read the documented isolation and write serialization limits.",
+                    },
+                ],
             )
             require(
                 not job["research_plan"]["ready_to_complete"],
@@ -149,26 +165,52 @@ async def check(
                 supporting_passage_ids=list(passages.values()),
                 conclusion="No. WAL improves reader/writer overlap, but SQLite serializes writers.",
                 counterevidence_note="The isolation documentation explicitly limits the database to one writer; the WAL page also documents SQLITE_BUSY.",
+                claims=[
+                    {
+                        "claim_id": "Q0.C1",
+                        "kind": "fact",
+                        "status": "supported",
+                        "text": "WAL allows readers and a writer to proceed concurrently.",
+                        "supporting_passage_ids": [passages[WAL]],
+                    },
+                    {
+                        "claim_id": "Q0.C2",
+                        "kind": "fact",
+                        "status": "supported",
+                        "text": "SQLite serializes writers; applications must still handle write contention.",
+                        "supporting_passage_ids": [passages[ISOLATION], passages[WAL]],
+                    },
+                    {
+                        "claim_id": "Q0.C3",
+                        "kind": "recommendation",
+                        "status": "supported",
+                        "text": "Consider WAL when reader/writer overlap is useful and serialized writes are acceptable.",
+                        "basis_claim_ids": ["Q0.C1", "Q0.C2"],
+                        "rationale": "The concurrency benefit addresses overlapping reads and writes, not simultaneous writers.",
+                        "criteria": [
+                            {
+                                "name": "Concurrency needs",
+                                "preference": "Reader/writer overlap with acceptable writer serialization",
+                                "origin": "host_assumption",
+                            }
+                        ],
+                        "assumptions": [
+                            "The actual application workload has not been benchmarked."
+                        ],
+                    },
+                ],
             )
             require(
                 job["research_plan"]["ready_to_complete"],
                 "Reviewed investigation remained incomplete",
             )
             require(job["report"] is None, "An agent ledger required a prose report")
-            citations = {source["url"]: source["citation"] for source in job["sources"]}
-            summary = f"WAL improves reader/writer concurrency but does not eliminate writer serialization. {citations[WAL]} {citations[ISOLATION]}"
-            findings = [
-                f"Readers and a writer can proceed concurrently in WAL mode. {citations[WAL]}",
-                f"Only one writer can write at a time; other writers must take turns. {citations[ISOLATION]}",
-                f"Applications must still handle SQLITE_BUSY. {citations[WAL]}",
-            ]
             stale = await session.call_tool(
                 "complete_research",
                 {
                     "job_id": job_id,
                     "revision": first_revision,
-                    "summary": summary,
-                    "key_findings": findings,
+                    "claim_ids": ["Q0.C3"],
                 },
             )
             require(bool(stale.isError), "Stale completion was accepted")
@@ -176,9 +218,7 @@ async def check(
                 "complete_research",
                 job_id=job_id,
                 revision=job["revision"],
-                summary=summary,
-                key_findings=findings,
-                analysis="Reader/writer concurrency and writer/writer concurrency are different properties. A concurrency benefit does not establish freedom from contention.",
+                claim_ids=["Q0.C3"],
                 limitations=[
                     "Deterministic replay of selected official excerpts recorded on 2026-10-21; no fresh retrieval or model synthesis.",
                     "Both pages have one publisher. This is not independent corroboration or a workload benchmark.",

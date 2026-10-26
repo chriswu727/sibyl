@@ -8,6 +8,11 @@ The original pages were read through Sibyl on 2026-10-21. Excerpts are selected
 and whitespace-normalized; they are not full-page snapshots. Both pages are from
 SQLite's documentation, so two URLs do not imply two independent publishers.
 
+The current replay uses claim contract 2: it records individual facts, resolves an
+explicit unknown and adds a conditional recommendation with declared assumptions.
+The checked-in report illustrates the earlier prose contract; rerun the script
+below to inspect current claim-derived exports. Both use the same recorded sources.
+
 ## Investigation
 
 1. Start one persistent question with a three-attempt budget.

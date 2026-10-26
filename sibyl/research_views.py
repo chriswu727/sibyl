@@ -25,6 +25,7 @@ def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "source_policy",
                 "preferred_domains",
                 "research_plan",
+                "claim_contract_version",
                 "limitations",
             )
         },

@@ -22,7 +22,7 @@ def reference_groups(
         report.market_data_summary,
         *report.limitations,
     ]
-    for question in report.research_plan.get("questions", []):
+    for question in [] if report.claims else report.research_plan.get("questions", []):
         review = question.get("review") or {}
         sections.extend(
             [review.get("conclusion", ""), review.get("counterevidence_note", "")]

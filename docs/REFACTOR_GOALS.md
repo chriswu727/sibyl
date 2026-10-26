@@ -77,11 +77,11 @@ exact excerpt against stored text and preserve extraction limitations. Hashes
 identify stored content; they do not authenticate the publisher's claims.
 
 Semantic entailment, source credibility and recommendation quality remain host
-judgments evaluated separately. A future claim-to-evidence record must distinguish
+judgments evaluated separately. Claim-to-evidence records distinguish
 structural validation from host-declared semantic support. It must not acquire a
-“verified” label merely by passing citation checks. The exact additive schema and
-migration rules will be designed before implementation; they are not current API
-fields. No internal judge model is part of this plan.
+“verified” label merely by passing citation checks. The source implementation now
+provides an additive [claim contract](research-claims.md), explicit migration
+behavior and claim-derived report rendering. No internal judge model is part of this plan.
 
 ## Target user experience
 
@@ -200,7 +200,7 @@ Model/subscription-backed evaluations require explicit approval for usage.
 | Citation target and revision validation | Implemented; not semantic verification |
 | Markdown/JSON and optional PDF export | Implemented |
 | Original-source discovery reliability | Measured weakness; improvement required |
-| Explicit claim/inference/recommendation contract | Proposed; schema and validation not implemented |
+| Explicit claim/inference/recommendation contract | Implemented in the source preview; host-declared semantic support |
 | Natural tool use inside real subscription-backed hosts | Requires a recorded compatibility/usability evaluation |
 | Better research than built-in search | Hypothesis; paired evaluation not established |
 

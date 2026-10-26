@@ -68,7 +68,7 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append(report.predictions)
         lines.append("")
 
-    if report.research_plan:
+    if report.research_plan and not report.claims:
         lines.extend(
             [
                 "## Evidence Review",

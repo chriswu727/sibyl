@@ -16,6 +16,7 @@ evidence, gap tracking, and optional reports; its current maturity is public bet
 | [Usage reference](USAGE.md) | Eight default tools, compatibility profile, research jobs, configuration, and export |
 | [Agent guide](../AGENTS.md) | Evidence-handling rules and the host research procedure |
 | [Agent protocol](agent-protocol.md) | Compact briefs, evidence reads, source pagination, and compatibility |
+| [Claim contract](research-claims.md) | Facts, reasoning, recommendation criteria, dependency freshness and report generation |
 | [Complete workflow example](examples/sqlite-wal/README.md) | Recorded-source MCP replay, gap investigation, and exported report |
 | [Configuration example](../sibyl.yaml.example) | Compatibility retrieval settings; no model credentials |
 

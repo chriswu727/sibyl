@@ -36,6 +36,8 @@ class ResearchNotebook:
     preferred_domains: list[str] = field(default_factory=list)
     reviews: dict[str, EvidenceReview] = field(default_factory=dict)
     require_review: bool = False
+    # Older checkpoints omit this field; new MCP jobs explicitly select version 2.
+    claim_contract_version: int = 1
 
     def begin_search(self, query: str) -> None:
         if len(self.attempts) >= self.max_steps:

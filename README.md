@@ -108,8 +108,17 @@ continue with a focused query and rationale, then reassess. Use
 `get_research(view="sources", revision=..., offset=0, limit=10)` to page evidence
 outside the selected citation window.
 
-Reports are optional. To deliver one, submit `complete_research` with the current
-revision and `[Source N]` citations, then `save_report(job_id=..., format="md")`.
+New MCP jobs also record material facts, inferences and recommendations in
+`assess_research(claims=...)`. Facts link exact passages; reasoning links its
+premises; recommendations state criteria and assumptions. Unknowns stay explicit.
+Changes to a premise or new retrieval make dependent judgments need reassessment.
+See the [claim contract and complete example](docs/research-claims.md).
+
+Reports are optional. For a new job, submit `complete_research` with the current
+revision and optional `claim_ids`, then `save_report(job_id=..., format="md")`.
+Sibyl renders the host-authored claims and citations, including their premises,
+criteria and assumptions. Unknown/disputed claims remain visible even if omitted
+from the selection. Old saved jobs retain prose-based completion.
 Citation validation checks targets, **not whether the text entails the claim**.
 Incomplete research must retain its gaps; `allow_incomplete=true` yields a partial
 report. A completed job means the report is finalized, not that its claims are true.

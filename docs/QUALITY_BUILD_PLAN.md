@@ -11,6 +11,25 @@ Cases, contracts, retrieval fixes and host usability are parts of the same produ
 implementation. A case collection, a new schema or a passing test suite alone
 does not complete the refactor.
 
+## Current source implementation
+
+New MCP jobs now connect atomic facts, reasoning and recommendation criteria
+through the [claim contract](research-claims.md). The source implementation checks
+references and reasoning cycles, detects changed/stale premises, retains unknowns
+and disputes, and renders optional reports from the same ledger. Old checkpoints
+retain their completion behavior. Focused query variants also preserve a leading
+entity name when the question word occurs later in the query.
+
+Recorded-source MCP replay covers this workflow and export/restart. Real host
+usability, live discovery reliability and a paired native-search comparison still
+require retained measurements before the complete-product criteria are met.
+
+An [anonymous three-query smoke record](../evals/results/source-discovery-claims-2026-10-26.json)
+retains source identities and diagnostics before/after final-source preference
+changes. The final check returned original SQLite/Stripe documentation, but a
+PostgreSQL 17 question still returned version 16 documentation. These sequential
+single runs are exploratory; they do not clear the live gate or establish causality.
+
 ## The finished user experience
 
 A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary
