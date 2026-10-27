@@ -471,8 +471,9 @@ session can read a job's evidence, review ledger and report by ID.
 - Runtimes of the previous version take an exclusive directory lock. On POSIX the
   current version holds a shared lock on the same file, so the two generations
   refuse to run on one directory together. Windows checks only at startup;
-  stop older runtimes before upgrading there. Windows locking has not yet been
-  verified with real multi-process runs.
+  stop older runtimes before upgrading there. CI runs the multi-process locking
+  tests on GitHub-hosted Windows runners (Python 3.11 and 3.13); other Windows
+  setups, such as network drives, are untested.
 
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
 source passage IDs, timestamps, limitations, verification scope, and legacy model-call
