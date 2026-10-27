@@ -346,6 +346,30 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### Hedged-search live gate, 2026-10-27
+
+The [retained second run](../evals/results/live-retrieval-hedged-2026-10-27.json) used the same workflow, runner
+type, datasets and thresholds at commit b01927e, after #53 hedged the
+general-web fallback and began recording provider request outcomes. It exited 1
+with `passed=false`.
+
+| Metric | Result | Gate | Outcome |
+|---|---:|---:|---|
+| Answer coverage | 74.1% | 80% | Fail |
+| Trap-safe rate | 100% | 80% | Pass |
+| Repeat stability | 48.5% | 90% | Fail |
+| Answerable ready rate | 35.2% | 75% | Fail |
+| Ready-state answer precision | 90.5% | 95% | Fail |
+| p95 retrieval latency | 10.1 s | 30 s | Pass |
+
+Provider outcomes on the runner across all 198 runs: DuckDuckGo returned 403
+356 times, a 202 challenge 111 times and 200 six times; Mojeek returned 403 464
+times; Yahoo returned 500 341 times and 200 126 times; Reddit always returned
+403; Google News and Wikipedia always returned 200. Answerable runs with
+general-web results were ready 63 of 92 times; without them, 0 of 70. Six ready
+runs on five answerable cases lacked the gold answer. This is one sequential run
+on a datacenter network; it shows provider blocking, not a causal effect size.
+
 ### GitHub-runner live gate, 2026-10-27
 
 The [retained 66-case, three-repeat run](../evals/results/live-retrieval-github-runner-2026-10-27.json) ran the

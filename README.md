@@ -202,11 +202,12 @@ The practical difference is **persistent, evidence-directed research**, not a
 claim to have a better model. Whether it produces better answers than built-in
 search still needs a paired same-host, same-provider, same-budget evaluation.
 
-The [2026-10-27 live retrieval run](evals/results/live-retrieval-github-runner-2026-10-27.json)
+The latest [live retrieval run](evals/results/live-retrieval-hedged-2026-10-27.json)
 tested 66 questions three times on a GitHub-hosted runner. It handled every trap
-question safely but failed answer coverage (72.2% vs 80%), answerable readiness
-(30.2% vs 75%), repeat stability (47.0% vs 90%) and ready-state answer precision
-(90.7% vs 95%). These use gold/alias evidence matching, not semantic report
+question safely but failed answer coverage (74.1% vs 80%), answerable readiness
+(35.2% vs 75%), repeat stability (48.5% vs 90%) and ready-state answer precision
+(90.5% vs 95%). From that datacenter network, DuckDuckGo and Mojeek almost always
+refused keyless requests. These use gold/alias evidence matching, not semantic report
 accuracy. Seven of ten live host-suite cases needed host-supplied
 URLs. Compact responses and model removal do not fix those discovery weaknesses.
 No full pass of this gate is recorded. A [two-workflow low-effort host retest](evals/results/host-agent-structured-retest-2026-10-26.json)

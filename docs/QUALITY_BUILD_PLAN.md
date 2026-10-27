@@ -87,7 +87,11 @@ still fails: 81.5% answer coverage, 97.9% ready-state answer precision and 100%
 trap-safe rate, but 57.4% answerable readiness and 51.5% repeat stability. The
 [2026-10-27 GitHub-runner rerun](../evals/results/live-retrieval-github-runner-2026-10-27.json) also fails, with 72.2%
 coverage, 30.2% answerable readiness, 47.0% stability and 90.7% ready-state
-precision on a network that blocked more page reads. Thresholds are unchanged. Diagnose discovery/readiness misses without treating the two
+precision on a network that blocked more page reads. After hedging the general-web
+fallback, the [second runner run](../evals/results/live-retrieval-hedged-2026-10-27.json) still fails (74.1%
+coverage, 35.2% answerable readiness, 48.5% stability, 90.5% precision); its
+provider outcomes show DuckDuckGo and Mojeek refusing almost every request.
+Thresholds are unchanged. Diagnose discovery/readiness misses without treating the two
 targeted reading fixes as a complete-product pass.
 
 Claim-based human reports now present the generated claim narrative once, while
