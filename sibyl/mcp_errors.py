@@ -90,14 +90,14 @@ def error_result(
         and runtime._research_jobs is not None
     ):
         try:
-            job = runtime.research_jobs.store.get(job_id)
+            revision, status = runtime.research_jobs.current_state(job_id)
         except Exception:
             pass
         else:
             result.update(
                 job_id=job_id,
-                current_revision=job["revision"],
-                job_status=job["status"],
+                current_revision=revision,
+                job_status=status,
             )
             result["recovery"]["read"] = {
                 "tool": "get_research",
@@ -126,11 +126,11 @@ def error_result(
         ),
         "store_busy": (
             "retry_later",
-            "Another session held the research store; nothing was changed. Retry the same request shortly.",
+            "Another session held the research store. Retry the same request shortly; the error message says whether part of it already took effect.",
         ),
         "result_pending": (
             "read_research",
-            "The retrieval already ran. Do not call continue_research again for it: call recovery.read to read the result held by this session, which saves it once the store is free. unsaved_result=true means it is not persisted yet and is lost if this session exits.",
+            "The retrieval already ran. Do not call continue_research again for it: call recovery.read to read the result held by this session, which saves it once the store is free. unsaved_result=true means it is not persisted yet and is lost if this session exits. Reload again after it is saved before using its revision.",
         ),
         "worker_capacity": (
             "retry_later",

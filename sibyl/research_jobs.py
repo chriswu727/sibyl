@@ -38,6 +38,12 @@ PENDING_RESULT_MESSAGE = (
 )
 
 
+class CheckpointDiscarded(CapacityError):
+    """New evidence exceeded the checkpoint limit; the prior state was saved."""
+
+    code = "capacity_exceeded"
+
+
 class ResultPending(CapacityError):
     """A finished retrieval is held unsaved in this session; read, do not retry."""
 
@@ -91,7 +97,7 @@ class ResearchJobs:
             self.store.save(retained, recovery=True)
             cast(dict[str, Any], job).clear()
             job.update(retained)
-            raise CapacityError(
+            raise CheckpointDiscarded(
                 "Checkpoint size limit reached; prior evidence and consumed budgets retained."
             ) from None
 
@@ -101,6 +107,12 @@ class ResearchJobs:
                 self._checkpoint(job)
             except StoreBusy:
                 continue
+            except CheckpointDiscarded:
+                logger.warning(
+                    "Research result for job %s exceeded the checkpoint limit; its new "
+                    "evidence was discarded and the prior state was saved.",
+                    job_id,
+                )
             except Exception:
                 logger.warning(
                     "Research result for job %s was NOT saved and has been discarded; "
@@ -135,6 +147,11 @@ class ResearchJobs:
             self._flush_pending()
         if self._stale_claims:
             self._release_stale_claims()
+
+    def current_state(self, job_id: str) -> tuple[int, str]:
+        """Revision and status as this session's views report them."""
+        job, _ = self._load(job_id)
+        return job["revision"], job["status"]
 
     def list_jobs(self) -> list[JobRecord]:
         self._maintain()
@@ -237,11 +254,10 @@ class ResearchJobs:
         self._maintain()
         pending = self._pending.get(job_id)
         job = copy.deepcopy(pending) if pending else self.store.get(job_id)
+        # A held view keeps the stored revision on purpose: any later write
+        # (saving the result, or releasing the claim without it) moves past it,
+        # so a request made against the held view can never match another state.
         job["unsaved_result"] = pending is not None
-        if pending is not None:
-            # This runtime owns the job, so saving the held result writes
-            # exactly the next revision; show the revision callers must use.
-            job["revision"] += 1
         job["running_elsewhere"] = self.store.running_elsewhere(job)
         if (
             job["status"] == "running"
@@ -651,8 +667,17 @@ class ResearchJobs:
         job = self.store.get(job_id)
         if job["status"] == "running":
             job = self._idle(job)
+        stopped = (
+            "The local retrieval was stopped and recorded as interrupted, but the "
+            "store was busy when {}. Retry cancel_research; no retrieval will run."
+        )
         if delete:
-            self.store.delete(job_id)
+            try:
+                self.store.delete(job_id)
+            except StoreBusy:
+                if task is None:
+                    raise
+                raise StoreBusy(stopped.format("deleting the job")) from None
             return {"job_id": job_id, "status": "deleted"}
         if job["status"] != "completed":
             job["status"] = "cancelled"
@@ -662,11 +687,7 @@ class ResearchJobs:
             except StoreBusy:
                 if task is None:
                     raise
-                raise StoreBusy(
-                    "The local retrieval was stopped and recorded as interrupted, but "
-                    "the store was busy when marking the job cancelled. Retry "
-                    "cancel_research; no retrieval will run."
-                ) from None
+                raise StoreBusy(stopped.format("marking the job cancelled")) from None
         return self.get(job_id)
 
     async def close(self) -> None:

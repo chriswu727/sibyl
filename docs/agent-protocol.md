@@ -55,7 +55,9 @@ the job was not taken over. `retry_later` covers `store_busy` (nothing was
 changed, no retrieval started) and `worker_capacity` (two jobs already run across
 sessions). `read_research` (`result_pending`) means a retrieval already ran but
 its result is not saved yet: never repeat it; call `recovery.read`, whose brief
-shows the held result with `unsaved_result=true` until it is persisted;
+shows the held result with `unsaved_result=true` until it is persisted. That
+brief and the error keep the stored revision; reload once the result is saved
+before assessing;
 `delete_finished_jobs` covers `history_full`. Other capacity errors keep
 `capacity_exceeded`. Generic failures ask the host to correct/inspect the request, not retry blindly.
 

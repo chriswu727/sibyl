@@ -20,7 +20,7 @@ from sibyl.config import Config
 from sibyl.job_store import HistoryFull, JobStore, OwnerUnknown, StoreBusy
 from sibyl.mcp_server import create_server
 from sibyl.research_errors import ResearchRequestError
-from sibyl.research_jobs import ResultPending
+from sibyl.research_jobs import CheckpointDiscarded, ResultPending
 from sibyl.runtime import RuntimePolicy, SibylRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -378,8 +378,22 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
             saved = await server.call_tool(read["tool"], read["arguments"])
         self.assertEqual(len(calls), 1)
         brief = saved.structuredContent
-        # The held view already shows the revision the saved job ends up with.
-        self.assertEqual(held.structuredContent["revision"], brief["revision"])
+        # The held view and the error envelope keep the stored revision; saving
+        # moves past it, so a request against the held view must reload first.
+        self.assertEqual(error["current_revision"], held.structuredContent["revision"])
+        self.assertGreater(brief["revision"], held.structuredContent["revision"])
+        stale = await server.call_tool(
+            "assess_research",
+            {
+                "job_id": job["job_id"],
+                "revision": held.structuredContent["revision"],
+                "question_id": "Q0",
+                "status": "unresolved",
+                "conclusion": "c",
+                "counterevidence_note": "n",
+            },
+        )
+        self.assertEqual(stale.structuredContent["error"]["code"], "stale_revision")
         self.assertFalse(brief["unsaved_result"])
         self.assertEqual(brief["latest_attempt"]["status"], "ok")
         stored = jobs.store.get(job["job_id"])
@@ -523,6 +537,47 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(stored["status"], "awaiting_input")
         self.assertEqual(len(stored["notebook"]["bundles"]), 1)
 
+    async def test_held_revision_cannot_match_a_release_without_the_result(self):
+        jobs = self.owner.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        blocker = self.block_store(jobs)
+        _, retrieve = self.counting_retriever(blocker)
+        with (
+            mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1),
+            mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
+        ):
+            with self.assertRaises(ResultPending):
+                await jobs.continue_job(job["job_id"], "query", question_id="Q0")
+            held = jobs.get(job["job_id"])
+        blocker.execute("COMMIT")
+        self.assertTrue(held["unsaved_result"])
+        # Saving fails for good, so the claim is released without the result.
+        with mock.patch.object(jobs, "_checkpoint", side_effect=RuntimeError("io")):
+            with self.assertLogs("sibyl.research_jobs", "WARNING"):
+                jobs.list_jobs()
+        released = jobs.get(job["job_id"])
+        self.assertEqual(released["status"], "interrupted")
+        self.assertFalse(released["evidence"])
+        with self.assertRaises(ResearchRequestError) as raised:
+            jobs.assess(
+                job["job_id"], held["revision"], "Q0", "unresolved", [], [], "c", "n"
+            )
+        self.assertEqual(raised.exception.code, "stale_revision")
+
+    async def test_oversized_held_result_is_logged_as_saved_without_evidence(self):
+        jobs = self.owner.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        jobs._pending[job["job_id"]] = jobs.store.get(job["job_id"])
+        with mock.patch.object(
+            jobs, "_checkpoint", side_effect=CheckpointDiscarded("limit")
+        ):
+            with self.assertLogs("sibyl.research_jobs", "WARNING") as logs:
+                jobs.list_jobs()
+        message = " ".join(logs.output)
+        self.assertIn("prior state was saved", message)
+        self.assertNotIn("NOT saved", message)
+        self.assertFalse(jobs._stale_claims)
+
     async def test_busy_cancel_says_the_local_retrieval_already_stopped(self):
         jobs = self.owner.research_jobs
         job = jobs.start("Question", [], "host", 1, "en", 3)
@@ -553,6 +608,36 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(raised.exception.code, "store_busy")
         self.assertEqual(jobs.store.get(job["job_id"])["status"], "interrupted")
         self.assertEqual((await jobs.cancel(job["job_id"]))["status"], "cancelled")
+
+    async def test_busy_delete_says_the_local_retrieval_already_stopped(self):
+        jobs = self.owner.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        started = asyncio.Event()
+
+        async def blocked(*args, **kwargs):
+            started.set()
+            await asyncio.Event().wait()
+
+        with mock.patch("sibyl.research_jobs.gather_source_bundle", blocked):
+            task = asyncio.create_task(
+                jobs.continue_job(job["job_id"], "query", question_id="Q0")
+            )
+            await asyncio.wait_for(started.wait(), 5)
+            with mock.patch.object(jobs.store, "delete", side_effect=StoreBusy("busy")):
+                with self.assertRaisesRegex(StoreBusy, "stopped.*deleting"):
+                    await jobs.cancel(job["job_id"], delete=True)
+            await asyncio.gather(task, return_exceptions=True)
+        self.assertEqual(
+            (await jobs.cancel(job["job_id"], delete=True))["status"], "deleted"
+        )
+
+    async def test_store_busy_guidance_does_not_claim_nothing_changed(self):
+        server = create_server(self.other, agent_mode=True)
+        with mock.patch.object(JobStore, "create", side_effect=StoreBusy("busy")):
+            response = await server.call_tool("start_research", {"question": "Q"})
+        instructions = response.structuredContent["recovery"]["instructions"]
+        self.assertNotIn("nothing was changed", instructions)
+        self.assertIn("whether part of it already took effect", instructions)
 
     async def test_transient_capacity_errors_carry_retry_guidance(self):
         server = create_server(self.other, agent_mode=True)

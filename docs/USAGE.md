@@ -452,14 +452,17 @@ session can read a job's evidence, review ledger and report by ID.
   failed `start_research` never leaves a job behind.) If a retrieval already
   finished but its result cannot be saved, the call fails with `result_pending`
   instead. Do not repeat the retrieval: its session holds the result,
-  `get_research(job_id)` shows it with `unsaved_result=true` and the revision it
-  will be saved at, and a repeated `continue_research` is refused until then.
+  `get_research(job_id)` shows it with `unsaved_result=true` (keeping the stored
+  revision, so reload after it is saved before assessing), and a repeated
+  `continue_research` is refused until then.
   Any later call in that session, on any job, retries the save. Other sessions
   still see the job running meanwhile. If saving fails for another reason (for
   example a full disk), the session releases its claim as `interrupted`, on that
-  call or its next one, so the job and its worker slot are not held. A cancel
-  whose final save meets a busy store after stopping the local retrieval says
-  so; retrying it starts no retrieval. If the session shuts down before the save succeeds, it logs
+  call or its next one, so the job and its worker slot are not held. A cancel or
+  delete whose final write meets a busy store after stopping the local
+  retrieval says so; retrying it starts no retrieval. A held result that turns
+  out to exceed the checkpoint limit is logged as discarded while the prior
+  state is saved. If the session shuts down before the save succeeds, it logs
   that the result was NOT saved and is lost; the job is then recovered as
   `interrupted` without that evidence. A full database reports the SQLite error
   itself, not a rollback error.
