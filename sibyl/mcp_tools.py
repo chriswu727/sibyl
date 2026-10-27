@@ -21,10 +21,11 @@ from .research_tools import start_research as start_research
 from .retrieval import gather_source_bundle
 from .runtime import get_runtime
 
-_INSTRUCTIONS = """Sibyl is a research workspace inside your agent workflow.
-You search, plan and reason. Sibyl reads sources into a persistent job, keeps
-exact passages with provenance, checks your evidence links and exports optional
-reports. It never calls a model and does not replace your own search.
+_INSTRUCTIONS = """Sibyl manages a research job inside your agent workflow.
+It tells you what to search for next and why, reads the sources you find into a
+persistent job, keeps exact passages with provenance, checks your evidence
+links and exports optional reports. You run the searches, judge support and
+write the answer. Sibyl never calls a model.
 
 Use Sibyl when conclusions must be checked or reused: decisions that need cited
 evidence, comparisons with counterevidence, investigations spanning several
@@ -38,6 +39,10 @@ Quick path:
    need", question_id=...).
    Only without a search of your own, continue_research(job_id, query=...) falls
    back to Sibyl's keyless search, which public search sites often refuse.
+   Every result's research_plan.suggested_queries names the next searches to run
+   with your own search, each with a kind (initial, primary_source,
+   independent_source, counterevidence, recency, host_follow_up) and the reason
+   from the question's gaps. Prefer them over improvised queries.
 3. get_research(job_id, passage_ids=[...]) returns exact passage text. Briefs omit
    raw text; read passages before relying on them.
 4. Answer from what you read and cite passage IDs or URLs. Stop here if no

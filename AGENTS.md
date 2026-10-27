@@ -39,7 +39,9 @@ Use `view="sources"` with the current revision to page the full catalog, and
    passages and quote exact text from them (unverifiable quotes are rejected);
    reasoning cites basis_claim_ids with a rationale. Recommendations
    declare criteria and their user/host_assumption origin. Unknowns remain
-   unresolved with an explanation. See docs/research-claims.md. Investigate counterevidence
+   unresolved with an explanation. See docs/research-claims.md. Run the searches in
+   `research_plan.suggested_queries` (each has a kind and the gap-based reason).
+   Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
    For unresolved gaps, supply focused `follow_up_queries`, then use
    `continue_research(..., rationale="the gap this round addresses")`. Inspect the

@@ -60,9 +60,20 @@ class QuestionPlan(TypedDict):
     attempts: int
 
 
+SuggestionKind = Literal[
+    "host_follow_up",
+    "initial",
+    "primary_source",
+    "independent_source",
+    "counterevidence",
+    "recency",
+]
+
+
 class SuggestedQuery(TypedDict):
     question_id: str
     purpose: SearchPurpose
+    kind: SuggestionKind
     query: str
     reason: str
 

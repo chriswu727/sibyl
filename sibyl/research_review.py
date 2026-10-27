@@ -9,10 +9,7 @@ from .job_models import (
     EvidenceReview,
     QuestionPlan,
     ResearchPlan,
-    RetrievalAttempt,
     ReviewStatus,
-    SearchPurpose,
-    SuggestedQuery,
 )
 
 if TYPE_CHECKING:
@@ -20,6 +17,7 @@ if TYPE_CHECKING:
 
 from .research_claims import claim_gaps, claim_index, validate_claims
 from .research_errors import ResearchRequestError
+from .search_guidance import question_attempts, suggest_searches
 from .source_policy import source_kind
 
 
@@ -39,17 +37,6 @@ def evidence_index(
         if source.content_origin != "search_snippet"
         for passage in source.evidence
     }
-
-
-def question_attempts(
-    notebook: ResearchNotebook, question_id: str, question: str
-) -> list[RetrievalAttempt]:
-    return [
-        a
-        for a in notebook.attempts
-        if a.get("question_id") == question_id
-        or (not a.get("question_id") and a["query"] == question)
-    ]
 
 
 def review_question(
@@ -189,55 +176,6 @@ def review_question(
         )
 
 
-def _suggested_queries(
-    notebook: ResearchNotebook, items: list[QuestionPlan]
-) -> list[SuggestedQuery]:
-    suggestions: list[SuggestedQuery] = []
-    for item in items:
-        if not item["gaps"]:
-            continue
-        attempts = question_attempts(notebook, item["question_id"], item["question"])
-        completed = {
-            " ".join(a["query"].casefold().split())
-            for a in attempts
-            if a["status"] in {"ok", "insufficient_evidence"} and not a.get("url")
-        }
-        review = item["review"]
-        follow_ups = review["follow_up_queries"] if review else []
-        candidates: list[tuple[str, SearchPurpose, str]] = [
-            (query, "explore", "host_review_gap") for query in follow_ups
-        ]
-        if not follow_ups:
-            suffix = (
-                " original research paper methods results limitations"
-                if notebook.source_policy == "academic"
-                else " primary source official documentation"
-            )
-            candidates.append(
-                (item["question"] + suffix, "explore", "research_plan_gap")
-            )
-        candidates.append(
-            (
-                item["question"] + " limitations conflicting evidence replication",
-                "counterevidence",
-                "counterevidence_check",
-            )
-        )
-        for query, purpose, reason in candidates:
-            normalized = " ".join(query.casefold().split())
-            if normalized not in completed:
-                suggestions.append(
-                    dict(
-                        question_id=item["question_id"],
-                        purpose=purpose,
-                        query=query,
-                        reason=reason,
-                    )
-                )
-                completed.add(normalized)
-    return suggestions
-
-
 def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
     index = evidence_index(notebook)
     items: list[QuestionPlan] = []
@@ -304,5 +242,5 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
         else ("review_or_report_limitations" if not remaining else "investigate_gaps"),
         remaining_steps=remaining,
         assessment_scope="host_declared_evidence_links_not_semantic_verification",
-        suggested_queries=_suggested_queries(notebook, items) if remaining else [],
+        suggested_queries=suggest_searches(notebook, items) if remaining else [],
     )

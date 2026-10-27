@@ -235,7 +235,7 @@ Model/subscription-backed evaluations require explicit approval for usage.
 | Explicit claim/inference/recommendation contract | Implemented in the source preview; host-declared semantic support |
 | Natural tool use inside real subscription-backed hosts | Two bounded low-effort workflows delivered partial reports; broader usability and exact claim support remain unproven |
 | Better research than built-in search | Hypothesis; paired evaluation not established |
-| Search guidance to the host | Fixed suffix templates only; not shown in agent instructions |
+| Search guidance to the host | Deterministic gap-driven suggestions with kind and reason, named in the agent instructions; effect on research quality unmeasured |
 | Full assessment of host-supplied URLs | Not implemented; URL reads skip ranking, clustering and sufficiency |
 | Source quality per claim; claim/quote consistency; source disagreement | Not implemented |
 
