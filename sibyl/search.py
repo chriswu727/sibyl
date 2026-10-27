@@ -19,6 +19,8 @@ from urllib.parse import parse_qs, quote, quote_plus, unquote, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
+from .scraper import USER_AGENT
+
 if TYPE_CHECKING:
     from .scraper import WebPage
 
@@ -32,7 +34,7 @@ class SearchResult:
     provider: str = ""
 
 
-_HEADERS = {"User-Agent": "Sibyl/0.4 (+https://github.com/chriswu727/sibyl)"}
+_HEADERS = {"User-Agent": USER_AGENT}
 _SEARCH_BATCH_TIMEOUT_SECONDS = 8.0
 _GENERAL_WEB_TIMEOUT_SECONDS = 7.0
 _TAVILY_TIMEOUT_SECONDS = 2.0

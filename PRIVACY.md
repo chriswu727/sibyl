@@ -54,6 +54,10 @@ environment credentials. No raw PDF files or OCR models are saved automatically.
 - Keyless retrieval sends search terms to DuckDuckGo, Mojeek, or Yahoo Search;
   Google News, Reddit, Wikipedia, Semantic Scholar, and—for academic or DOI
   questions—Crossref; then requests pages from the selected publishers.
+- Search and page requests identify themselves with the User-Agent
+  `Sibyl/0.4 (+https://github.com/chriswu727/sibyl)`. Sibyl does not imitate a
+  browser or retry a refused page under another identity, so publishers that
+  refuse automated clients stay refused.
 - When `SIBYL_SEARCH_PROVIDER=tavily` is explicitly configured, general-web
   search terms are sent to Tavily instead. Tavily receives the request metadata
   associated with that traffic and applies its own privacy and retention terms.

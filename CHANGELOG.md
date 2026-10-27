@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Page reads now identify as `Sibyl/0.4 (+https://github.com/chriswu727/sibyl)`,
+  like search requests, instead of rotating browser User-Agent strings, and a
+  403 or 429 is no longer retried under another identity. The first
+  host-source gate run found every Wikipedia read refused from a GitHub runner
+  while Wikipedia's API answered Sibyl's identifying requests. Some publishers
+  that refuse automated clients will now refuse Sibyl too.
 - Host-source retrieval gate: the release retrieval gate now reads each of the
   66 cases' three frozen host-search URLs instead of searching, with the same six
   thresholds; `scripts/eval_live_retrieval.py --host-sources` and the

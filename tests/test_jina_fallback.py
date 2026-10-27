@@ -29,7 +29,7 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(fetch_patcher.stop)
 
     async def test_not_triggered_by_default(self):
-        # 403 twice, jina_fallback off (default) → error, Jina never called.
+        # 403, jina_fallback off (default) → error, Jina never called.
         client = mock.Mock()
         self.fetch.return_value = _resp(403)
         with mock.patch("sibyl.scraper._try_jina") as jina:
@@ -37,8 +37,19 @@ class TestJinaFallback(unittest.IsolatedAsyncioTestCase):
         jina.assert_not_called()
         self.assertTrue(page.error and "403" in page.error)
 
+    async def test_refusal_is_fetched_once_with_sibyl_identity(self):
+        # Sibyl does not imitate browsers or retry a refusal under another
+        # identity.
+        self.fetch.return_value = _resp(403)
+        page = await scrape_url("https://blocked.com/x", client=mock.Mock())
+        self.fetch.assert_awaited_once()
+        agent = self.fetch.await_args.kwargs["headers"]["User-Agent"]
+        self.assertTrue(agent.startswith("Sibyl/"), agent)
+        self.assertNotIn("Mozilla", agent)
+        self.assertEqual(page.error, "HTTP 403")
+
     async def test_triggered_on_451_first_attempt(self):
-        # 451 doesn't retry (no UA-swap continue) — the fallback must still fire.
+        # 451 is not retried — the fallback must still fire.
         client = mock.Mock()
         self.fetch.return_value = _resp(451)
         from sibyl.scraper import WebPage
