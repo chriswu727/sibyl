@@ -146,6 +146,8 @@ class TestClaimChecks(unittest.TestCase):
             {"1000", "2024", "2025", "3.45.0"},
         )
         self.assertEqual(numbers("version v3 or SQLite3"), set())
+        self.assertEqual(numbers("1,234.56 and 1234.56"), {"1234.56"})
+        self.assertEqual(numbers("该版本于2024年发布，共３个"), {"2024", "3"})
 
     def test_names_skip_plain_sentence_starts(self):
         self.assertEqual(

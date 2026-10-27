@@ -16,8 +16,10 @@ from functools import lru_cache
 from .queries import keyword_query
 
 _FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９", "0123456789")
-_NUMBER_RE = re.compile(r"(?<!\w)\d+(?:[.,]\d+)*")
-_THOUSANDS_RE = re.compile(r"\d{1,3}(?:,\d{3})+")
+# Only Latin letters, digits and underscores glue a number into a token (v3,
+# SQLite3); CJK text writes numbers directly against characters (2024年).
+_NUMBER_RE = re.compile(r"(?<![A-Za-z0-9_])\d+(?:[.,]\d+)*")
+_THOUSANDS_RE = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?")
 _WORD_RE = re.compile(r"[^\W\d_][\w'’-]*")
 _SENTENCE_BREAKS = ".!?:;"
 CONFLICT_OVERLAP = 0.6
