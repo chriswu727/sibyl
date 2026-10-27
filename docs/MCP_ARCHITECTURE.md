@@ -160,7 +160,7 @@ later retrieval for a question makes its review stale. Completion requires a
 review and a substantive counterevidence investigation per question, or explicit
 incomplete delivery with the remaining gaps preserved. These checks validate
 structure, not semantic truth, source independence, or research exhaustiveness.
-Older host checkpoints retain their previous completion behavior. Old autonomous
+Older contract-1 host checkpoints cannot be finalized. Old autonomous
 records remain readable/exportable, but cannot resume execution.
 
 Host retrieval runs as runtime-owned asyncio tasks; at most two jobs run at once

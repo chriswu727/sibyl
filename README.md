@@ -142,7 +142,7 @@ and the current saved revision when available; rejected claims are never silentl
 accepted. See the [agent protocol](docs/agent-protocol.md#structured-recovery).
 Sibyl renders the host-authored claims and citations, including their premises,
 criteria and assumptions. Unknown/disputed claims remain visible even if omitted
-from the selection. Old saved jobs retain prose-based completion.
+from the selection. Old contract-1 jobs can no longer be finalized.
 Citation validation checks targets, **not whether the text entails the claim**.
 Incomplete research must retain its gaps; `allow_incomplete=true` yields a partial
 report. A completed job means the report is finalized, not that its claims are true.

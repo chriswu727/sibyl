@@ -53,8 +53,8 @@ README, migration and operations documents must remain aligned throughout.
 New MCP jobs now connect atomic facts, reasoning and recommendation criteria
 through the [claim contract](research-claims.md). The source implementation checks
 references and reasoning cycles, detects changed/stale premises, retains unknowns
-and disputes, and renders optional reports from the same ledger. Old checkpoints
-retain their completion behavior. Focused query variants also preserve a leading
+and disputes, and renders optional reports from the same ledger. Old contract-1
+checkpoints can no longer be finalized. Focused query variants also preserve a leading
 entity name when the question word occurs later in the query.
 
 Recorded-source MCP replay covers this workflow and export/restart. Broader host

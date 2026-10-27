@@ -69,7 +69,7 @@ python -m pip install -e '.[all]'      # every optional capability
 For Claude Code:
 
 ```bash
-claude mcp add sibyl -- /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile agent
+claude mcp add sibyl -- /absolute/path/to/sibyl/.venv/bin/sibyl-mcp
 ```
 
 For clients that accept an MCP server configuration, replace the absolute path:
@@ -646,8 +646,8 @@ See [configuration example](../sibyl.yaml.example).
 
 Existing checkpoints and completed reports remain readable/exportable. An old
 autonomous checkpoint cannot resume model execution and is not silently converted
-or deleted. Start a new host job to investigate further. Old host checkpoints
-retain their prior completion rules. Historical model verdicts remain historical,
+or deleted. Start a new host job to investigate further. Old contract-1 host
+checkpoints cannot be finalized; completed ones stay readable. Historical model verdicts remain historical,
 not new independent verification.
 
 ## Evaluation and reproducibility
