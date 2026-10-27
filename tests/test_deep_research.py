@@ -411,6 +411,26 @@ class TestHostSourceReads(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(bundle.diagnostics.scrape_failures, 1)
         self.assertEqual(bundle.error, "")
 
+    async def test_fact_chain_reads_keep_the_decomposition_safeguard(self):
+        query = "In what year was the company that created CUDA founded?"
+        first = WebPage(
+            "https://a.example/cuda",
+            "CUDA creator",
+            "The company created CUDA as a parallel computing platform. " * 20,
+        )
+        second = WebPage(
+            "https://b.example/history",
+            "Company history",
+            "The company was founded in 1993 and later created CUDA. " * 20,
+        )
+        with self.pages(first, second):
+            bundle = await read_sources([first.url, second.url], query)
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.query_complexity, "multi_step")
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "insufficient")
+        self.assertEqual(bundle.diagnostics.recommended_action, "decompose_query")
+        self.assertIn("multi_step_query", bundle.diagnostics.sufficiency_reasons)
+
     async def test_read_limits_are_enforced_before_fetching(self):
         with mock.patch("sibyl.research_sources.scrape_url") as scrape:
             for urls in ([], [f"https://e{i}.example" for i in range(6)]):

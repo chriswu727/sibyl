@@ -9,6 +9,7 @@ from dataclasses import replace
 from .bundle_builder import Discovery, build_bundle
 from .dedup import canonical_url
 from .evidence import SourceBundle
+from .queries import query_requires_decomposition
 from .scraper import WebPage, scrape_url
 
 MAX_READ_URLS = 5
@@ -69,7 +70,7 @@ async def read_sources(
         requested_ranker="lexical",
         selected_ranker="lexical",
         preferred_hosts=[],
-        multi_step_query=False,
+        multi_step_query=query_requires_decomposition(query),
         started_at=started_at,
         max_passages_per_source=PASSAGES_PER_SOURCE,
         status_from_read=True,
