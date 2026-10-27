@@ -124,6 +124,14 @@ def error_result(
             "start_new_research",
             "Completed reports cannot be changed. Read/export this job, or explicitly start a new investigation.",
         ),
+        "job_running_elsewhere": (
+            "wait_for_other_session",
+            "Another live session is running this job. Read it freely; retry the change after that retrieval finishes. It cannot be cancelled from here.",
+        ),
+        "owner_unknown": (
+            "check_storage",
+            "The owner of this running job could not be checked, so it was not taken over. Check the research directory permissions; do not delete lock files of running sessions.",
+        ),
         "research_gaps": (
             "inspect_gaps",
             "Inspect the current research_plan and investigate/review gaps. Use allow_incomplete only to disclose unresolved gaps, not to bypass invalid claims.",

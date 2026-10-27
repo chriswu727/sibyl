@@ -71,16 +71,31 @@ class ResearchJobs:
                 "Checkpoint size limit reached; prior evidence and consumed budgets retained."
             ) from None
 
-    def _idle(self, job: JobRecord) -> None:
+    def _idle(self, job: JobRecord) -> JobRecord:
+        """Return the job ready for a change, recovering it if its owner exited.
+
+        A job running in another live session stays read-only here.
+        """
         if self.closed:
             raise ValueError("Research runtime is closed.")
         if job["job_id"] in self.tasks:
             raise CapacityError("Research job is busy.")
+        if job["status"] == "running":
+            recovered = self.store.recover(
+                job, owner_exited=self.store.job_owner(job) == self.store.instance_id
+            )
+            if recovered is None or recovered["status"] == "running":
+                raise ResearchRequestError(
+                    "This job is running in another session. Read it, or retry after that retrieval finishes.",
+                    code="job_running_elsewhere",
+                )
+            job = recovered
         if job["status"] == "completed":
             raise ResearchRequestError(
                 "Completed reports are immutable. Start a new research job.",
                 code="immutable_report",
             )
+        return job
 
     def start(
         self,
@@ -140,8 +155,14 @@ class ResearchJobs:
 
     def _load(self, job_id: str) -> tuple[JobRecord, ResearchNotebook]:
         job = self.store.get(job_id)
-        if job["status"] == "running" and job_id not in self.tasks:
+        job["running_elsewhere"] = self.store.running_elsewhere(job)
+        if (
+            job["status"] == "running"
+            and job_id not in self.tasks
+            and not job["running_elsewhere"]
+        ):
             job["status"] = "interrupted"
+        job.pop("owner", None)
         return job, ResearchNotebook.from_dict(job["notebook"])
 
     def _passage(
@@ -263,8 +284,7 @@ class ResearchJobs:
         parent_passage_id: str = "",
         rationale: str = "",
     ) -> dict[str, Any]:
-        job = self.store.get(job_id)
-        self._idle(job)
+        job = self._idle(self.store.get(job_id))
         if job["mode"] != "host":
             raise ResearchRequestError(
                 "Autonomous execution has been removed. Read or export the saved job; start a new host research job to continue investigating."
@@ -322,9 +342,8 @@ class ResearchJobs:
             }
         )
         job["notebook"] = notebook.to_dict()
-        job["status"] = "running"
         self._event(job, f"Retrieving evidence: {query}")
-        self.store.save(job)
+        self.store.claim(job)
         started = time.monotonic()
         task = asyncio.current_task()
         assert task is not None
@@ -383,8 +402,7 @@ class ResearchJobs:
         follow_up_queries: list[str] | None = None,
         claims: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        job = self.store.get(job_id)
-        self._idle(job)
+        job = self._idle(self.store.get(job_id))
         if job["mode"] != "host":
             raise ResearchRequestError(
                 "Legacy autonomous jobs cannot be assessed. Read/export the saved state or start a new host job.",
@@ -430,8 +448,7 @@ class ResearchJobs:
     ) -> dict[str, Any]:
         import re
 
-        job = self.store.get(job_id)
-        self._idle(job)
+        job = self._idle(self.store.get(job_id))
         if job["mode"] != "host":
             raise ResearchRequestError(
                 "Legacy autonomous jobs cannot be finalized. Read/export the saved state or start a new host job.",
@@ -527,6 +544,9 @@ class ResearchJobs:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
             job = self.store.get(job_id)
+        elif job["status"] == "running":
+            # Another session's retrieval cannot be cancelled from here.
+            job = self._idle(job)
         if delete:
             self.store.delete(job_id)
             return {"job_id": job_id, "status": "deleted"}

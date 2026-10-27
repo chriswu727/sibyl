@@ -6,7 +6,6 @@ import argparse
 import asyncio
 import logging
 import os
-from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
@@ -28,6 +27,7 @@ from .mcp_tools import (
     start_research,
 )
 from .runtime import RuntimePolicy, SibylRuntime, default_runtime
+from .storage import LEGACY_OUTPUT_ROOT
 
 __all__ = [
     "create_server",
@@ -109,12 +109,21 @@ def main() -> None:
     operational_logger.setLevel(args.log_level)
     operational_logger.addHandler(logging.StreamHandler())
     operational_logger.propagate = False
-    runtime = SibylRuntime(
-        RuntimePolicy(
-            output_root=Path(os.environ.get("SIBYL_OUTPUT_ROOT", "reports")).absolute(),
-            monitor_port=args.monitor_port,
+    policy = RuntimePolicy(monitor_port=args.monitor_port)
+    legacy = LEGACY_OUTPUT_ROOT.absolute()
+    if (
+        not os.environ.get("SIBYL_OUTPUT_ROOT")
+        and (legacy / ".research" / "jobs.sqlite3").is_file()
+        and legacy != policy.output_root
+    ):
+        operational_logger.warning(
+            "Sibyl now stores research in %s. Research saved under %s was not "
+            "moved; set SIBYL_OUTPUT_ROOT=%s to keep using it.",
+            policy.output_root,
+            legacy,
+            legacy,
         )
-    )
+    runtime = SibylRuntime(policy)
     server = create_server(runtime, agent_mode=_mcp_profile(runtime.config) == "agent")
     profile = asyncio.run(configure_tool_profile(server, runtime))
     if args.list_tools:

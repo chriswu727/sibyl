@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Share one research store safely between concurrent local sessions. Each
+  runtime holds an instance lock; running jobs record their owner and are
+  read-only elsewhere (`job_running_elsewhere`); orphans are recovered only after
+  the owner's lock is free, and lock-check failures (`owner_unknown`) never
+  count as an exited owner. Claims, recovery, creation and deletion are
+  conditional immediate transactions; the two-job worker limit now applies to
+  the whole store. SQLite uses WAL mode on a local filesystem.
+- Default the output root to the per-user data directory when
+  `SIBYL_OUTPUT_ROOT` is unset. An older `./reports` store is never moved; the
+  MCP server warns how to keep using it. Older exclusive runtimes and current
+  runtimes refuse to share a directory (checked only at startup on Windows).
 - Agent-profile results, errors and export manifests now also carry their
   structuredContent as serialized JSON text, as the MCP specification recommends
   for hosts that pass only text to the model.

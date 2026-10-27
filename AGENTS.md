@@ -117,9 +117,13 @@ the keyless compatibility profile.
 ## Operational boundaries
 
 One trusted local host owns a runtime. This is not a multi-tenant service.
-Checkpoints are private local files below `SIBYL_OUTPUT_ROOT/.research`.
-One runtime owns a research directory at a time. The default job allows eight
-retrieval attempts, two active job workers, 600 seconds of active execution,
+Checkpoints are private local files below `<output root>/.research`; the output
+root is `SIBYL_OUTPUT_ROOT`, or the per-user data directory when unset. Local
+sessions of one user share the store: a job running in another live session is
+read-only (`job_running_elsewhere`) until it finishes or its owner exits, and
+lock-check failures never count as an exited owner. The store is a shared research
+space, not project isolation. The default job allows eight retrieval attempts,
+two running jobs per store across sessions, 600 seconds of active execution,
 with no internal model attempts. Search-provider usage is not an exact monetary
 budget. Storage holds at most 64 jobs with a 1 MiB
 payload limit each. Explicit deletion reclaims history capacity.

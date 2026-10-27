@@ -34,6 +34,7 @@ def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "claim_contract_version",
             )
         },
+        "running_elsewhere": snapshot.get("running_elsewhere", False),
         "limitations": [
             note for note in snapshot["limitations"] if note not in plan_gaps
         ],

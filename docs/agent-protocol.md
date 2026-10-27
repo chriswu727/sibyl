@@ -48,7 +48,10 @@ Schema failures omit input values and provider exceptions are sanitized.
 `recovery.read` supplies a tool name and arguments to reload the current brief;
 it is null if no saved job could be read. Common actions are `repair_assessment`,
 `reload_research`, `review_and_finalize`, `inspect_gaps`, and `start_new_research`.
-Generic failures ask the host to correct/inspect the request, not retry blindly.
+`wait_for_other_session` (`job_running_elsewhere`) means another live local session
+runs the job: read it, and retry the change after that retrieval finishes.
+`check_storage` (`owner_unknown`) means the owner lock could not be checked, so
+the job was not taken over. Generic failures ask the host to correct/inspect the request, not retry blindly.
 
 A rejected assessment is atomic: it does not save claims or increment the
 revision. Reload the brief, repair the indicated claim, and resubmit the complete
@@ -68,6 +71,7 @@ Any profile can explicitly request `get_research(job_id, view="brief")`.
 |---|---|
 | `schema_version`, `view` | `"1.0"`, `"brief"` |
 | `job_id`, `revision`, `question`, `mode`, `status` | Current checkpoint identity and lifecycle |
+| `running_elsewhere` | True while another live local session runs this job; it is read-only here until that retrieval finishes |
 | `research_plan` | Complete question-review ledger, gaps, next action, suggested queries, and assessment scope |
 | `sources` | Current `[Source N]` citation map with source/passage IDs, URLs, titles, timestamps, content origin and heuristic source kind; no raw text |
 | `source_catalog_count` | Count of retained source occurrences, including sources outside the selected citation window |

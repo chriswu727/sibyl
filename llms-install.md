@@ -24,7 +24,9 @@ change; record the checkout commit when reporting problems.
 
 ## Host configuration
 
-For hosts accepting `mcpServers` JSON, replace the paths:
+For hosts accepting `mcpServers` JSON, replace the paths. `SIBYL_OUTPUT_ROOT` is
+optional; without it, research is stored in the per-user data directory and
+shared by your local sessions (see [shared research store](docs/USAGE.md#shared-research-store)):
 
 ```json
 {

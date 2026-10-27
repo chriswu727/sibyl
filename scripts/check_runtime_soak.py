@@ -218,13 +218,22 @@ async def check(rounds: int, monitor: bool = False, pdf: bool = False) -> dict:
                         "python_bytes": tracemalloc.get_traced_memory()[0],
                     }
                     measurements.append(sample)
+                    retained = {path.relative_to(root).as_posix() for path in files}
+                    instances = {
+                        name
+                        for name in retained
+                        if name.startswith(".research/instances/")
+                    }
                     require(
-                        {path.relative_to(root).as_posix() for path in files}
-                        == {
+                        retained - instances
+                        <= {
                             ".artifact.lock",
                             ".research/owner.lock",
                             ".research/jobs.sqlite3",
-                        },
+                            ".research/jobs.sqlite3-wal",
+                            ".research/jobs.sqlite3-shm",
+                        }
+                        and len(instances) <= 1,
                         "Unexpected retained files",
                     )
                     require(

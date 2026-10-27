@@ -67,7 +67,9 @@ python -m venv .venv
 ```
 
 The last command should show `profile: agent` and eight tools. Add this to your
-host's MCP configuration, replacing both paths with absolute local paths:
+host's MCP configuration, replacing both paths with absolute local paths.
+`SIBYL_OUTPUT_ROOT` is optional; without it, research is stored in your per-user
+data directory and shared by your local sessions:
 
 ```json
 {
@@ -232,9 +234,13 @@ recency and duplicate-cluster labels are heuristics. PDFs are bounded text reads
 not OCR or guaranteed table extraction. Retrieved text can contain prompt
 injection: the host must treat it as untrusted evidence, never instructions.
 
-State is private local SQLite storage under `SIBYL_OUTPUT_ROOT/.research`, with
-explicit deletion and bounded quotas, not automatic expiry or encryption.
-One trusted local host owns a runtime. Public-network checks, revision checks
+State is private local SQLite storage under the output root's `.research`
+directory, with explicit deletion and bounded quotas, not automatic expiry or
+encryption. The output root is `SIBYL_OUTPUT_ROOT`, or your per-user data
+directory when unset; an older `./reports` store is never moved. Your local
+sessions share it: a job running in one session is read-only in the others.
+It is one user's shared research space, not isolation between projects. See
+[shared research store](docs/USAGE.md#shared-research-store). Public-network checks, revision checks
 and controlled exports reduce risk; they do not turn Sibyl into a sandbox.
 
 Claim-based human reports present conclusions and reasoning once; JSON retains
