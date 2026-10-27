@@ -1,38 +1,37 @@
 """MCP report safety and request-isolation tests. No network."""
+
 import asyncio
-import os
 import unittest
 from unittest import mock
 
-from mcp.server.fastmcp.exceptions import ToolError
-
 import sibyl.mcp_server as mcp_server
-from sibyl.runtime import get_runtime
-from sibyl.config import Config, Provider
 from sibyl.evidence import BundleDiagnostics, SourceBundle
 from sibyl.mcp_server import (
     _format_report,
     gather_bundle,
     gather_evidence,
     gather_sources,
-    research,
 )
-from sibyl.researcher import ResearchReport
-from sibyl.verifier import FindingVerification
+from sibyl.report_models import FindingVerification, ResearchReport
 
 
 class TestMcpFormatting(unittest.TestCase):
     def test_verification_verdicts_are_visible(self):
         report = ResearchReport(
-            "q", "summary", ["Supported [Source 1]", "Unsupported [Source 1]"], [],
+            "q",
+            "summary",
+            ["Supported [Source 1]", "Unsupported [Source 1]"],
+            [],
             finding_verifications=[
                 FindingVerification(1, True, "high", [1], ""),
                 FindingVerification(2, False, "low", [1], "not found"),
             ],
         )
         text = _format_report(report)
-        self.assertIn("[verified: high]", text)
-        self.assertIn("(unverified)", text)
+        self.assertIn("[historical: supported; recorded confidence: high]", text)
+        self.assertIn("historical: unverified", text)
+        self.assertIn("not revalidated", text)
+        self.assertNotIn("[verified:", text)
 
     def test_insufficient_evidence_is_not_formatted_as_a_report(self):
         report = ResearchReport(
@@ -46,41 +45,6 @@ class TestMcpFormatting(unittest.TestCase):
     def test_missing_verification_is_disclosed(self):
         report = ResearchReport("q", "summary", ["Claim [Source 1]"], [])
         self.assertIn("verification was not performed", _format_report(report))
-
-
-class TestMcpResearch(unittest.IsolatedAsyncioTestCase):
-    async def test_missing_credentials_fails_before_network(self):
-        cfg = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
-        get_runtime().last_report = ResearchReport("old", "stale", [], [])
-        with mock.patch.dict(os.environ, {}, clear=True), \
-             mock.patch("sibyl.mcp_tools._get_config", return_value=cfg):
-            with self.assertRaisesRegex(ToolError, "requires an LLM provider key"):
-                await research("question")
-        self.assertIsNone(get_runtime().last_report)
-
-    async def test_per_call_flags_do_not_mutate_global_config(self):
-        cfg = Config(
-            providers=[Provider(model="deepseek/deepseek-v4-flash", api_key="k")],
-            fast=False,
-            verify_claims=True,
-        )
-        captured = {}
-
-        class FakeResearcher:
-            def __init__(self, config):
-                captured["config"] = config
-
-            async def research(self, query, **kwargs):
-                return ResearchReport(query, "summary", [], [])
-
-        with mock.patch("sibyl.mcp_tools._get_config", return_value=cfg), \
-             mock.patch("sibyl.researcher.Researcher", FakeResearcher):
-            await research("question", fast=True, verify=False)
-
-        self.assertFalse(cfg.fast)
-        self.assertTrue(cfg.verify_claims)
-        self.assertTrue(captured["config"].fast)
-        self.assertFalse(captured["config"].verify_claims)
 
 
 class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
@@ -151,9 +115,7 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             structured = asyncio.create_task(gather_bundle("question"))
             await asyncio.sleep(0)
             release.set()
-            legacy_result, structured_result = await asyncio.gather(
-                legacy, structured
-            )
+            legacy_result, structured_result = await asyncio.gather(legacy, structured)
 
         self.assertEqual(legacy_result, self.bundle.error)
         self.assertIs(structured_result, self.bundle)
@@ -190,13 +152,23 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertIs(second, recovered)
         self.assertEqual(retrieve.await_count, 2)
 
-    async def test_mcp_registers_fourteen_tools(self):
+    async def test_mcp_registers_research_and_legacy_tools(self):
         tools = await mcp_server.mcp.list_tools()
         names = {tool.name for tool in tools}
         structured_tool = next(tool for tool in tools if tool.name == "gather_bundle")
         loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
-        self.assertEqual(len(tools), 14)
+        self.assertEqual(len(tools), 12)
+        self.assertTrue(
+            {
+                "start_research",
+                "get_research",
+                "continue_research",
+                "complete_research",
+                "cancel_research",
+            }
+            <= names
+        )
         self.assertIn("gather_evidence", names)
         self.assertIn("gather_bundle", names)
         self.assertIn("gather_sources", names)
@@ -215,8 +187,9 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             set(
-                structured_tool.outputSchema["$defs"]["EvidenceSource"]
-                ["properties"]["content_origin"]["enum"]
+                structured_tool.outputSchema["$defs"]["EvidenceSource"]["properties"][
+                    "content_origin"
+                ]["enum"]
             ),
             {
                 "direct_fetch",
@@ -242,18 +215,6 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(structured["schema_version"], "1.0")
         self.assertEqual(structured["status"], "invalid_request")
         self.assertIsNone(structured["current_step"])
-
-    async def test_auto_profile_hides_tools_that_need_configuration(self):
-        config = Config(providers=[Provider(model="deepseek/deepseek-v4-flash")])
-        with mock.patch.dict(os.environ, {}, clear=True):
-            self.assertEqual(mcp_server._mcp_profile(config), "keyless")
-
-    async def test_auto_profile_enables_report_surface_with_credentials(self):
-        config = Config(
-            providers=[Provider(model="deepseek/deepseek-v4-flash", api_key="k")]
-        )
-        with mock.patch.dict(os.environ, {}, clear=True):
-            self.assertEqual(mcp_server._mcp_profile(config), "report")
 
 
 if __name__ == "__main__":

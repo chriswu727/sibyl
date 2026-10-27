@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Run the fixed offline retrieval-ranker regression set."""
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +9,6 @@ from pathlib import Path
 
 from sibyl.ranking import flashrank_relevance_scores, lexical_relevance_scores
 from sibyl.retrieval_eval import evaluate_retrieval_cases, load_retrieval_cases
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = ROOT / "evals" / "retrieval_ranker_cases.jsonl"
@@ -31,7 +31,9 @@ def main() -> int:
         cases = load_retrieval_cases(args.dataset)
         result = evaluate_retrieval_cases(cases, scorer)
     except Exception as exc:
-        print(json.dumps({"ranker": args.ranker, "error": str(exc)}, ensure_ascii=False))
+        print(
+            json.dumps({"ranker": args.ranker, "error": str(exc)}, ensure_ascii=False)
+        )
         return 2
 
     passed = (

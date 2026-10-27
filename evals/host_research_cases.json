@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0",
+  "method": "Host-assisted live MCP workflow. Questions and rubric fixed before this run; not a blind or independent benchmark.",
+  "rubric": {
+    "coverage": "0: misses the question; 1: partial answer with explicit gaps; 2: addresses every requested distinction.",
+    "support": "0: material unsupported claim; 1: bounded claims with source limitations; 2: each finding is supported by inspected passages.",
+    "source_quality": "0: only snippets/background; 1: one substantive primary/research source; 2: at least two relevant primary/research documents, without confusing one publisher with independence.",
+    "counterevidence": "0: absent; 1: attempted and limitations disclosed; 2: substantive evidence narrows or challenges the conclusion.",
+    "delivery": "0: workflow/export failure; 1: explicit abstention or partial report; 2: complete cited report with successful Markdown/JSON export."
+  },
+  "cases": [
+    {
+      "id": "idempotency",
+      "question": "Do idempotency keys make retries safe indefinitely? Compare the documented limits in Stripe and AWS guidance.",
+      "domains": ["docs.stripe.com", "aws.amazon.com"],
+      "queries": ["Stripe idempotent requests key retention 24 hours", "AWS builders library idempotent APIs late arriving requests intent limitations"],
+      "policy": "primary"
+    },
+    {
+      "id": "sqlite_wal",
+      "question": "Does SQLite WAL eliminate write contention, and what concurrency benefit does it actually provide?",
+      "domains": ["sqlite.org"],
+      "queries": ["SQLite WAL readers writer concurrency", "SQLite WAL SQLITE_BUSY only one writer limitations"],
+      "policy": "primary"
+    },
+    {
+      "id": "postgres_isolation",
+      "question": "How do PostgreSQL Repeatable Read and Serializable differ for concurrent transactions, and what must applications retry?",
+      "domains": ["postgresql.org"],
+      "queries": ["PostgreSQL repeatable read serializable transaction isolation", "PostgreSQL serialization failure retry whole transaction write skew"],
+      "policy": "primary"
+    },
+    {
+      "id": "flashattention",
+      "question": "Why can FlashAttention accelerate exact attention without changing attention into an approximation, and what limits generalizing its benchmark gains?",
+      "domains": ["arxiv.org", "papers.nips.cc"],
+      "queries": ["FlashAttention fast memory efficient exact attention IO awareness", "FlashAttention IO complexity exact attention hardware sequence length limitations"],
+      "policy": "academic"
+    },
+    {
+      "id": "rag",
+      "question": "How does retrieval-augmented generation combine parametric and retrieved knowledge, and why does retrieval not guarantee factual answers?",
+      "domains": ["arxiv.org", "aclanthology.org"],
+      "queries": ["Retrieval Augmented Generation knowledge intensive NLP tasks Lewis paper", "retrieval augmented generation factuality retrieval failure robustness limitations paper"],
+      "policy": "academic"
+    },
+    {
+      "id": "quantization",
+      "question": "Compare the mechanisms and scope of GPTQ and AWQ for low-bit language-model inference; what should not be inferred from their reported results?",
+      "domains": ["arxiv.org", "proceedings.mlsys.org"],
+      "queries": ["GPTQ accurate post training quantization generative pretrained transformers", "AWQ activation aware weight quantization LLM compression acceleration limitations"],
+      "policy": "academic"
+    },
+    {
+      "id": "semiconductor_2024",
+      "question": "What happened to global semiconductor sales in 2024, and how should a finalized annual figure be distinguished from forecasts or regional growth rates?",
+      "domains": ["semiconductors.org", "wsts.org"],
+      "queries": ["global semiconductor sales 2024 2025 SIA annual 19.1 percent", "WSTS 2024 semiconductor market actual results forecast comparison"],
+      "policy": "primary"
+    },
+    {
+      "id": "prompt_injection",
+      "question": "Why is retrieved web content a prompt-injection trust boundary, and which controls reduce risk without establishing immunity?",
+      "domains": ["owasp.org", "nist.gov"],
+      "queries": ["OWASP prompt injection indirect retrieved external content", "NIST generative AI prompt injection risk mitigations limitations"],
+      "policy": "primary"
+    },
+    {
+      "id": "ssrf",
+      "question": "Why is validating a URL string alone insufficient to prevent SSRF, particularly around redirects and DNS changes?",
+      "domains": ["cheatsheetseries.owasp.org", "owasp.org"],
+      "queries": ["OWASP SSRF prevention DNS pinning validate IP addresses", "OWASP SSRF redirect DNS rebinding validation limitations"],
+      "policy": "primary"
+    },
+    {
+      "id": "future_share",
+      "question": "Can public evidence establish NVIDIA's exact realized AI-chip market share in 2030? Distinguish projections from observed outcomes.",
+      "domains": ["investor.nvidia.com", "sec.gov"],
+      "queries": ["NVIDIA 2030 AI chip market share projection forecast", "NVIDIA forward looking statements risks actual results may differ"],
+      "policy": "primary",
+      "expected_behavior": "Do not state a future realized market share as known; disclose uncertainty or abstain."
+    }
+  ]
+}

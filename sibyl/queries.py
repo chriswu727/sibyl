@@ -1,12 +1,21 @@
 """Deterministic search-query variants."""
+
 from __future__ import annotations
 
 import re
 from typing import List
+from urllib.parse import urlsplit
 
-
-_TERM_RE = re.compile(r"[^\W_]+(?:['’][^\W_]+)?", re.UNICODE)
-_QUOTED_RE = re.compile(r'''["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)''')
+_TERM_RE = re.compile(
+    r"\bv?\d+(?:\.\d+)+(?:[a-z]+\d*)?(?:[-+][a-z0-9]+(?:[.-][a-z0-9]+)*)?(?!\w)"
+    r"|[^\W_]+(?:['’][^\W_]+)?",
+    re.UNICODE | re.IGNORECASE,
+)
+_SITE_RE = re.compile(r"""(?<![-\w])site:["']?([^\s"'()\[\]{},;]+)""", re.IGNORECASE)
+_QUOTED_RE = re.compile(r"""["“]([^"”]+)["”]|(?<!\w)'([^']{3,})'(?!\w)""")
+_SEARCH_OPERATOR_RE = re.compile(
+    r"(?<!\w)-?(?:site|filetype|intitle|inurl):|(?:^|\s)-\w", re.IGNORECASE
+)
 _QUESTION_WORDS = {"how", "what", "when", "where", "which", "who", "why"}
 _RELATIVE_CHAIN_RE = re.compile(
     r"\b(?:company|country|institution|organization|person)\s+"
@@ -58,14 +67,40 @@ _SEARCH_STOP_WORDS = _QUESTION_WORDS | {
 }
 
 
+def query_site_hosts(query: str) -> list[str]:
+    hosts = []
+    for value in _SITE_RE.findall(query):
+        try:
+            host = urlsplit(value if "://" in value else "https://" + value).hostname
+        except ValueError:
+            continue
+        if host:
+            hosts.append(host.rstrip(".").lower())
+    return list(dict.fromkeys(hosts))
+
+
+def focused_site_query(query: str, host: str) -> str:
+    focused = _SITE_RE.sub(" ", query)
+    focused = re.sub(r"\b(?:OR|AND)\b|[()\[\]{}\"']", " ", focused)
+    return f"{' '.join(focused.split())} site:{host}".strip()
+
+
+def _search_term_key(term: str) -> str:
+    normalized = term.casefold().replace("’", "'")
+    base = normalized.split("'", 1)[0]
+    return base if base in _QUESTION_WORDS else normalized
+
+
 def search_query_variants(query: str) -> List[str]:
     clean = " ".join(str(query or "").split())
     if not clean:
         return []
+    if _SEARCH_OPERATOR_RE.search(clean):
+        return [clean]
 
     terms = _TERM_RE.findall(clean)
     if not terms or not any(
-        term.casefold() in _QUESTION_WORDS for term in terms
+        _search_term_key(term) in _QUESTION_WORDS for term in terms
     ):
         return [clean]
 
@@ -76,9 +111,7 @@ def search_query_variants(query: str) -> List[str]:
             return [clean, quoted]
 
     focused_terms = [
-        term
-        for term in terms[1:]
-        if term.casefold() not in _SEARCH_STOP_WORDS
+        term for term in terms if _search_term_key(term) not in _SEARCH_STOP_WORDS
     ]
     focused = " ".join(focused_terms)
     if len(focused_terms) < 3 or focused.casefold() == clean.casefold():
@@ -91,8 +124,7 @@ def query_requires_decomposition(query: str) -> bool:
     if not clean:
         return False
     return bool(
-        _RELATIVE_CHAIN_RE.search(clean)
-        or _CONTEXTUAL_QUESTION_RE.search(clean)
+        _RELATIVE_CHAIN_RE.search(clean) or _CONTEXTUAL_QUESTION_RE.search(clean)
     )
 
 

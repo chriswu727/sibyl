@@ -1,7 +1,13 @@
 """Structured evidence protocol tests."""
+
 import unittest
 
-from sibyl.evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, SourceBundle
+from sibyl.evidence import (
+    BundleDiagnostics,
+    EvidencePassage,
+    EvidenceSource,
+    SourceBundle,
+)
 
 
 class TestSourceBundle(unittest.TestCase):
@@ -60,9 +66,7 @@ class TestSourceBundle(unittest.TestCase):
         self.assertEqual(data["diagnostics"]["evidence_sufficiency"], "not_assessed")
         self.assertEqual(data["diagnostics"]["sufficiency_reasons"], [])
         self.assertEqual(data["diagnostics"]["search_providers"], [])
-        self.assertIsNone(
-            data["diagnostics"]["max_source_query_term_coverage"]
-        )
+        self.assertIsNone(data["diagnostics"]["max_source_query_term_coverage"])
         self.assertEqual(data["diagnostics"]["metadata_fallbacks"], 0)
         self.assertEqual(data["diagnostics"]["query_complexity"], "not_assessed")
         self.assertEqual(data["diagnostics"]["recommended_action"], "not_assessed")

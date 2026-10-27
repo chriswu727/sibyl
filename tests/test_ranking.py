@@ -1,4 +1,5 @@
 """Dependency-free lexical relevance tests."""
+
 import sys
 import types
 import unittest
@@ -8,6 +9,7 @@ import sibyl.ranking as ranking
 from sibyl.ranking import (
     flashrank_relevance_scores,
     lexical_query_coverage,
+    lexical_query_terms,
     lexical_relevance_scores,
 )
 
@@ -75,7 +77,9 @@ class TestLexicalRelevance(unittest.TestCase):
         self.assertGreater(relevant, 0.5)
 
     def test_stopword_only_query_and_empty_documents_score_zero(self):
-        self.assertEqual(lexical_relevance_scores("the and of", [("title", "body")]), [0.0])
+        self.assertEqual(
+            lexical_relevance_scores("the and of", [("title", "body")]), [0.0]
+        )
         self.assertEqual(lexical_relevance_scores("query", []), [])
 
     def test_scores_are_deterministic(self):
@@ -84,6 +88,22 @@ class TestLexicalRelevance(unittest.TestCase):
             lexical_relevance_scores("alpha beta", documents),
             lexical_relevance_scores("alpha beta", documents),
         )
+
+    def test_decimal_versions_are_distinct_query_terms(self):
+        self.assertEqual(lexical_query_terms("Patch 0.7"), {"patch", "0.7"})
+        self.assertEqual(
+            lexical_query_terms("client v0.4.0-rc.1"), {"client", "v0.4.0-rc.1"}
+        )
+        self.assertEqual(lexical_query_terms("client 0.4.0b1"), {"client", "0.4.0b1"})
+        exact, wrong = lexical_relevance_scores(
+            "Patch 0.7 Crusader Strike",
+            [
+                ("Patch 0.7", "Crusader Strike changed in Patch 0.7."),
+                ("Patch 0.8", "Crusader Strike changed in Patch 0.8."),
+            ],
+        )
+        self.assertGreater(exact, wrong)
+        self.assertLess(lexical_query_coverage("0.7", ["0.8"]).score, 1)
 
 
 class TestLexicalCoverage(unittest.TestCase):
@@ -137,8 +157,10 @@ class TestFlashRankRelevance(unittest.TestCase):
         fake_module.RerankRequest = FakeRequest
         documents = [("First", "noise"), ("Second", "target")]
 
-        with mock.patch.dict(sys.modules, {"flashrank": fake_module}), \
-             mock.patch.object(ranking, "_flashrank_ranker", None):
+        with (
+            mock.patch.dict(sys.modules, {"flashrank": fake_module}),
+            mock.patch.object(ranking, "_flashrank_ranker", None),
+        ):
             first = flashrank_relevance_scores("target", documents)
             second = flashrank_relevance_scores("target", documents)
 
@@ -152,8 +174,10 @@ class TestFlashRankRelevance(unittest.TestCase):
         ranker = mock.Mock()
         ranker.rerank.return_value = [{"id": 0, "score": 0.5}]
 
-        with mock.patch.dict(sys.modules, {"flashrank": fake_module}), \
-             mock.patch("sibyl.ranking._get_flashrank_ranker", return_value=ranker):
+        with (
+            mock.patch.dict(sys.modules, {"flashrank": fake_module}),
+            mock.patch("sibyl.ranking._get_flashrank_ranker", return_value=ranker),
+        ):
             with self.assertRaisesRegex(ValueError, "every document"):
                 flashrank_relevance_scores("query", [("A", "a"), ("B", "b")])
 

@@ -1,7 +1,13 @@
 """Model-free live retrieval metric tests. No network."""
+
 import unittest
 
-from sibyl.evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, SourceBundle
+from sibyl.evidence import (
+    BundleDiagnostics,
+    EvidencePassage,
+    EvidenceSource,
+    SourceBundle,
+)
 from sibyl.live_retrieval_eval import LiveRetrievalCase, evaluate_live_retrieval
 
 
@@ -13,7 +19,19 @@ def bundle(
     recommended_action="synthesize",
 ):
     diagnostics = BundleDiagnostics(
-        1, 1, 1, 1, 0, 0, 0, 1, 10, 10, 7000, 7000, 125,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        1,
+        10,
+        10,
+        7000,
+        7000,
+        125,
         evidence_sufficiency=sufficiency,
         search_providers=["tavily"],
         max_source_query_term_coverage=0.75,
@@ -21,10 +39,19 @@ def bundle(
         query_complexity=query_complexity,
         recommended_action=recommended_action,
         refinement_searches=1,
+        substantive_sources=1,
+        substantive_domains=1,
     )
     passage = EvidencePassage("P1", "sb/S1/P1", text, "hash")
     source = EvidenceSource(
-        "S1", "https://example.com", "Source", "now", "hash", "web", len(text), [passage]
+        "S1",
+        "https://example.com",
+        "Source",
+        "now",
+        "hash",
+        "web",
+        len(text),
+        [passage],
     )
     return SourceBundle("1.6", "sb", "q", status, [source], diagnostics)
 
@@ -62,6 +89,8 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.cases[0].runs[0].recommended_action, "synthesize")
         self.assertEqual(result.cases[0].runs[0].refinement_searches, 1)
         self.assertEqual(result.cases[0].runs[0].refinement_failures, 0)
+        self.assertEqual(result.cases[0].runs[0].substantive_sources, 1)
+        self.assertEqual(result.cases[0].runs[0].substantive_domains, 1)
 
     async def test_safe_traps_do_not_distort_answer_readiness(self):
         cases = [
@@ -103,7 +132,9 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
         result = await evaluate_live_retrieval(
             cases,
             gather=gather,
-            progress=lambda done, total, case: progress.append((done, total, case.case_id)),
+            progress=lambda done, total, case: progress.append(
+                (done, total, case.case_id)
+            ),
         )
 
         self.assertEqual(result.status_ok_rate, 0.0)

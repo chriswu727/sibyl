@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Run the fixed contextual source-quality baseline evaluation."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,7 +12,6 @@ from sibyl.source_quality_eval import (
     load_source_quality_cases,
     source_type_prior_scores,
 )
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = ROOT / "evals" / "source_quality_cases.jsonl"

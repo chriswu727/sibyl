@@ -1,9 +1,9 @@
 """Structured evidence protocol shared by Sibyl retrieval consumers."""
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional
-
 
 BundleStatus = Literal["ok", "insufficient_evidence", "invalid_request", "failed"]
 EvidenceSufficiency = Literal["not_assessed", "sufficient", "limited", "insufficient"]
@@ -48,6 +48,7 @@ PublishedAtMethod = Literal[
     "meta_date",
     "json_ld_date_published",
     "time_date_published",
+    "article_date_text",
     "jina_published_time",
 ]
 
@@ -126,6 +127,7 @@ class BundleDiagnostics:
     recommended_action: RecommendedAction = "not_assessed"
     refinement_searches: int = 0
     refinement_failures: int = 0
+    substantive_domains: int = 0
 
 
 @dataclass(frozen=True)

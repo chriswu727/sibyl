@@ -1,4 +1,5 @@
 """Offline end-to-end retrieval pipeline regression tests."""
+
 import json
 import subprocess
 import sys
@@ -7,7 +8,6 @@ from pathlib import Path
 
 from sibyl.retrieval_eval import load_retrieval_cases
 from sibyl.retrieval_pipeline_eval import evaluate_pipeline_cases
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DATASET = ROOT / "evals" / "retrieval_ranker_cases.jsonl"

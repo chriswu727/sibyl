@@ -1,10 +1,11 @@
 """Model-free evaluation for fixed host-planned evidence loops."""
+
 from __future__ import annotations
 
 import asyncio
-from dataclasses import asdict, dataclass
 import re
 import unicodedata
+from dataclasses import asdict, dataclass
 from typing import Awaitable, Callable, Sequence
 
 from .api import gather_bundle

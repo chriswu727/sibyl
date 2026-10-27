@@ -1,4 +1,5 @@
 """Bounded evidence-loop tests. No network."""
+
 import asyncio
 import unittest
 from unittest import mock
@@ -47,8 +48,14 @@ class TestEvidenceLoopManager(unittest.IsolatedAsyncioTestCase):
             await release.wait()
             return bundle(query)
 
-        kwargs = dict(max_steps=2, max_sources=5, chars_per_source=1000,
-                      ranker="lexical", render_thin_pages=False, gather=gather)
+        kwargs = dict(
+            max_steps=2,
+            max_sources=5,
+            chars_per_source=1000,
+            ranker="lexical",
+            render_thin_pages=False,
+            gather=gather,
+        )
         first = asyncio.create_task(manager.start("What is Rust?", **kwargs))
         await started.wait()
         second = await manager.start("What is Python?", **kwargs)
@@ -66,10 +73,17 @@ class TestEvidenceLoopManager(unittest.IsolatedAsyncioTestCase):
             started.set()
             await asyncio.Event().wait()
 
-        task = asyncio.create_task(manager.start(
-            "What is Rust?", max_steps=2, max_sources=5, chars_per_source=1000,
-            ranker="lexical", render_thin_pages=False, gather=gather,
-        ))
+        task = asyncio.create_task(
+            manager.start(
+                "What is Rust?",
+                max_steps=2,
+                max_sources=5,
+                chars_per_source=1000,
+                ranker="lexical",
+                render_thin_pages=False,
+                gather=gather,
+            )
+        )
         await started.wait()
         task.cancel()
         with self.assertRaises(asyncio.CancelledError):
@@ -95,11 +109,11 @@ class TestEvidenceLoopManager(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.status, "ready")
         self.assertEqual(result.next_action, "synthesize")
         self.assertEqual(result.supporting_step_ids, ["E1"])
-        self.assertEqual(result.steps[0].bundle_id, result.current_step.bundle.bundle_id)
-        self.assertEqual(result.diagnostics.remaining_steps, 2)
-        gather.assert_awaited_once_with(
-            "What is Rust?", 10, 7000, "lexical", False
+        self.assertEqual(
+            result.steps[0].bundle_id, result.current_step.bundle.bundle_id
         )
+        self.assertEqual(result.diagnostics.remaining_steps, 2)
+        gather.assert_awaited_once_with("What is Rust?", 10, 7000, "lexical", False)
 
     async def test_complex_question_requires_host_supplied_atomic_steps(self):
         question = "In what year was the company that created CUDA founded?"
