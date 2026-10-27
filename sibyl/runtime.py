@@ -9,7 +9,7 @@ import math
 import os
 import time
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Awaitable, Callable, TypeVar
 
@@ -19,6 +19,7 @@ from .evidence import SourceBundle
 from .evidence_loop import EvidenceLoopManager
 from .observability import RuntimeMetrics
 from .report_models import ResearchReport
+from .storage import default_output_root
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class RuntimePolicy:
     tool_timeout: float = 60.0
     report_timeout: float = 600.0
     max_query_chars: int = 1000
-    output_root: Path = Path("reports")
+    output_root: Path = field(default_factory=default_output_root)
     monitor_port: int | None = None
 
     def __post_init__(self) -> None:
@@ -60,9 +61,7 @@ class SibylRuntime:
     def __init__(
         self, policy: RuntimePolicy | None = None, config: Config | None = None
     ):
-        self.policy = policy or RuntimePolicy(
-            output_root=Path(os.environ.get("SIBYL_OUTPUT_ROOT", "reports")).absolute()
-        )
+        self.policy = policy or RuntimePolicy()
         self._config = config
         self.bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
             30,

@@ -139,13 +139,14 @@ That policy matters more than a long system prompt: it tells the agent when evid
 
 ## MCP profiles and tools
 
-MCP report exports use `SIBYL_OUTPUT_ROOT` (default `reports/`).
+MCP report exports use the output root: `SIBYL_OUTPUT_ROOT` when set, otherwise
+the per-user data directory described under [shared research store](#shared-research-store).
 `save_report(output_dir=...)` selects a relative subdirectory of that root, not
 an absolute path. Stateful report operations reject overlapping calls.
 
 The default `agent` profile exposes eight tools with compact structured research
-briefs. The host must consume MCP `structuredContent`; text-only clients can use
-`--profile keyless` for full responses and twelve compatibility tools.
+briefs, returned in MCP `structuredContent` and mirrored as serialized JSON text.
+`--profile keyless` keeps readable full text responses and twelve compatibility tools.
 `--profile auto` is an alias for agent and never inspects model credentials.
 `report`, `finance` and `full` are no longer valid profiles.
 
@@ -162,7 +163,8 @@ briefs. The host must consume MCP `structuredContent`; text-only clients can use
 
 The keyless compatibility profile also includes `gather_evidence`,
 `gather_sources`, `quick_search` and `read_url`. Neither profile calls models.
-Read exact passages with `get_research(passage_id=...)` before assessing them.
+Read exact passages with `get_research(passage_ids=[...])` (up to twelve per call)
+before assessing them.
 `view="sources"` pages the complete saved catalog; use the current revision to
 reject stale pagination. `view="full"` returns the full compatible snapshot.
 See [Agent protocol](agent-protocol.md).
@@ -232,11 +234,16 @@ assess_research(job_id="...", revision=the_current_revision, question_id="Q1",
     "claim_id": "Q1.C1", "kind": "fact", "status": "disputed",
     "text": "The available sources disagree on the requested result.",
     "supporting_passage_ids": ["bundle/S1/P1"],
-    "challenging_passage_ids": ["other/S1/P2"]
+    "challenging_passage_ids": ["other/S1/P2"],
+    "quotes": [
+      {"passage_id": "bundle/S1/P1", "text": "exact text copied from P1"},
+      {"passage_id": "other/S1/P2", "text": "exact text copied from P2"}
+    ]
   }])
 ```
 
-Facts link exact evidence. Inferences and recommendations link `basis_claim_ids`
+Facts link exact evidence and quote it; Sibyl rejects a quote it cannot find in
+the cited passage. Inferences and recommendations link `basis_claim_ids`
 and explain their rationale; recommendations also declare criteria with origin
 `user` or `host_assumption`. Unknown information uses `status="unresolved"`
 with an explanation in `rationale`. Each assessment replaces the question's claim
@@ -375,7 +382,7 @@ operator approval; do not spend a subscription/API budget implicitly.
 |---|---|
 | Retrieval attempts | 8 per job, caller-selectable from 1 to 12 |
 | Selected report sources | 12 |
-| Simultaneous job workers | 2 |
+| Simultaneous job workers | 2 per research store, shared by every session using it |
 | Active execution time | 600 seconds across continuations; host thinking time excluded |
 | Checkpoint records | 64; explicit deletion required when full |
 | Checkpoint payload | 1 MiB per job, plus 64 KiB reserved for failure recovery metadata |
@@ -391,11 +398,79 @@ limits do not promise an exact dollar budget; external search pricing,
 provider retries and already-dispatched requests still matter.
 Cancelled requests may still be billed by the provider.
 
-The private database lives in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`.
-Only one runtime may own that directory at a time. Cancellation preserves the
-checkpoint; `cancel_research(job_id=..., delete=true)` removes it and reclaims
+The private database lives in `<output root>/.research/jobs.sqlite3`.
+Cancellation preserves the checkpoint; `cancel_research(job_id=..., delete=true)` removes it and reclaims
 history capacity, but does not remove exported files. SQLite deletion is not
 guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
+
+### Shared research store
+
+Without `SIBYL_OUTPUT_ROOT`, the output root is the per-user data directory:
+`$XDG_DATA_HOME/sibyl` (absolute values only, otherwise `~/.local/share/sibyl`)
+on Linux and other POSIX systems, `~/Library/Application Support/sibyl` on macOS,
+and `%LOCALAPPDATA%\sibyl` on Windows. A newly created root is private (0700).
+An explicit `SIBYL_OUTPUT_ROOT` always wins. Earlier versions defaulted to
+`./reports` in the host's working directory; that store is never moved, deleted
+or merged. The MCP server only warns when it finds one; set `SIBYL_OUTPUT_ROOT`
+to its absolute path to keep using it.
+
+Several local sessions (for example two agent windows, or two different hosts)
+can use one store at the same time. It is a shared research space for one
+trusted user, **not isolation between projects**: `get_research()` lists every
+retained job with only its ID, question, mode, status and revision, and any
+session can read a job's evidence, review ledger and report by ID.
+
+- Each runtime holds a private instance lock under `.research/instances/` for its
+  lifetime. The lock is taken before the runtime's ID is published, and a running
+  job records the instance that claimed it.
+- A job running in another live session is read-only: reads work and report
+  `running_elsewhere=true`, while `continue_research`, `assess_research`,
+  `complete_research` and `cancel_research` (including `delete=true`) fail with
+  `job_running_elsewhere`. Retry after that retrieval finishes. Cancelling
+  another session's retrieval is not supported.
+- When the owner exits or is killed, its lock is released and the job becomes an
+  orphan. Startup and the next change recover it to `interrupted`. Recovery,
+  claiming a job and every other write are conditional on the saved revision
+  inside an immediate SQLite transaction, so when sessions race exactly one wins.
+- If the owner lock cannot be checked (permissions, unexpected file type or I/O
+  errors) the job is not taken over and the change fails with `owner_unknown`.
+  Only an acquired lock or a missing lock file counts as an exited owner.
+- Job creation counts capacity inside the same transaction as the insert, so the
+  64-job limit holds across sessions. Deletion re-checks inside its transaction
+  that the job is not running.
+- The two job workers are a limit for the whole store: a claim counts running jobs
+  whose owners are alive. The 600-second active-execution budget belongs to each
+  job. Per-call concurrency (eight active calls), caches, search throttling and
+  PDF workers remain per process.
+- Stale instance lock files of exited runtimes are removed at startup. Do not
+  delete or replace lock files of running sessions: that removes their ownership.
+- The database uses SQLite WAL mode and needs a local filesystem, not a network
+  share. Store calls wait at most two seconds for another session's write and
+  block their own process while waiting. A write that times out fails with
+  `store_busy` before anything changes, including before a retrieval starts;
+  retrying the same request is safe. (Creating a job is a single write, so a
+  failed `start_research` never leaves a job behind.) If a retrieval already
+  finished but its result cannot be saved, the call fails with `result_pending`
+  instead. Do not repeat the retrieval: its session holds the result,
+  `get_research(job_id)` shows it with `unsaved_result=true` (keeping the stored
+  revision, so reload after it is saved before assessing), and a repeated
+  `continue_research` is refused until then.
+  Any later call in that session, on any job, retries the save. Other sessions
+  still see the job running meanwhile. If saving fails for another reason (for
+  example a full disk), the session releases its claim as `interrupted`, on that
+  call or its next one, so the job and its worker slot are not held. A cancel or
+  delete whose final write meets a busy store after stopping the local
+  retrieval says so; retrying it starts no retrieval. A held result that turns
+  out to exceed the checkpoint limit is logged as discarded while the prior
+  state is saved. If the session shuts down before the save succeeds, it logs
+  that the result was NOT saved and is lost; the job is then recovered as
+  `interrupted` without that evidence. A full database reports the SQLite error
+  itself, not a rollback error.
+- Runtimes of the previous version take an exclusive directory lock. On POSIX the
+  current version holds a shared lock on the same file, so the two generations
+  refuse to run on one directory together. Windows checks only at startup;
+  stop older runtimes before upgrading there. Windows locking has not yet been
+  verified with real multi-process runs.
 
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
 source passage IDs, timestamps, limitations, verification scope, and legacy model-call

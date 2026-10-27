@@ -9,7 +9,8 @@ Human-readable reports are optional outputs of the same research state.
 This checkout is an unreleased host-only source preview. Published 0.4.0b1 and
 0.3.0 still contain the old architecture. Use Python 3.11+ and a fresh environment
 with `python -m pip install -e .`. Default `sibyl-mcp` exposes eight tools with
-compact MCP `structuredContent`; text-only hosts use `--profile keyless`.
+compact MCP `structuredContent`, mirrored as JSON text; `--profile keyless` keeps
+readable text responses and twelve compatibility tools.
 See README.md and docs/agent-protocol.md.
 
 Sibyl never calls a generative model or reads subscription credentials. Reasoning
@@ -19,20 +20,23 @@ need no extra; `[report]` is PDF rendering only, with Pillow >=13.0.0.
 
 Read `research_plan.questions[].review` for host-authored conclusions and stable
 support/challenge links. Inspect gaps before reuse. Use
-`get_research(passage_id=...)` for exact evidence: briefs omit raw text.
+`get_research(passage_ids=[...])` for exact evidence: briefs omit raw text.
 Use `view="sources"` with the current revision to page the full catalog, and
 `view="full"` for the compatible snapshot. Each brief is self-contained, not a delta.
 
 ## Default workflow: host-assisted research
 
 1. Call `start_research(question, sub_questions=[...])`. Host mode is the default.
-2. Call `continue_research(job_id, query, question_id)` with focused questions. Follow leads,
-   investigate contradictions, and look for original sources.
+2. Find sources with your own web search when available and read them with
+   `continue_research(job_id, url=..., query=..., question_id=...)`; a query alone
+   uses keyless search. Follow leads, investigate contradictions, and look for
+   original sources.
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
 4. Call `assess_research` for each question with stable supporting/challenging
    passage IDs, atomic claims, a conclusion, and a counterevidence note. Facts cite
-   passages; reasoning cites basis_claim_ids with a rationale. Recommendations
+   passages and quote exact text from them (unverifiable quotes are rejected);
+   reasoning cites basis_claim_ids with a rationale. Recommendations
    declare criteria and their user/host_assumption origin. Unknowns remain
    unresolved with an explanation. See docs/research-claims.md. Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
@@ -42,7 +46,8 @@ Use `view="sources"` with the current revision to page the full catalog, and
 5. Optionally submit `complete_research(job_id, revision, claim_ids=[...],
    limitations=[...])`. New jobs render reports from recorded claims and their
    evidence, reasoning and criteria; omit summary/key_findings/analysis. Unknown
-   and disputed claims remain included. Old contract-1 jobs retain prose completion.
+   and disputed claims remain included. Old contract-1 jobs retain prose completion
+   through the keyless profile; the agent profile rejects undeclared arguments.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
 Agent failures retain `isError=true` and structured recovery. For `view="error"`,
@@ -113,9 +118,13 @@ the keyless compatibility profile.
 ## Operational boundaries
 
 One trusted local host owns a runtime. This is not a multi-tenant service.
-Checkpoints are private local files below `SIBYL_OUTPUT_ROOT/.research`.
-One runtime owns a research directory at a time. The default job allows eight
-retrieval attempts, two active job workers, 600 seconds of active execution,
+Checkpoints are private local files below `<output root>/.research`; the output
+root is `SIBYL_OUTPUT_ROOT`, or the per-user data directory when unset. Local
+sessions of one user share the store: a job running in another live session is
+read-only (`job_running_elsewhere`) until it finishes or its owner exits, and
+lock-check failures never count as an exited owner. The store is a shared research
+space, not project isolation. The default job allows eight retrieval attempts,
+two running jobs per store across sessions, 600 seconds of active execution,
 with no internal model attempts. Search-provider usage is not an exact monetary
 budget. Storage holds at most 64 jobs with a 1 MiB
 payload limit each. Explicit deletion reclaims history capacity.

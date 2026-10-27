@@ -37,7 +37,7 @@ disclosures. The persistent host-led job is the primary agent workflow.
 | Stored `depth` / `language` job fields | Preserve checkpoint shape; new MCP jobs do not expose model-effort or internal synthesis controls |
 | Old report fields such as `predictions`, `cross_analysis`, `model_used`, `charts`, `market_data_summary` | Keep historical JSON load/export compatibility; no removed producer is restored |
 | `FindingVerification` | Preserve recorded historical verdicts; rendering identifies them as historical, not fresh validation |
-| Claim contract 1 and prose completion | Existing host checkpoints retain their contract; new MCP jobs explicitly use claim contract 2 |
+| Claim contract 1 and prose completion | Existing host checkpoints retain their contract and finalize through the keyless profile; new MCP jobs explicitly use claim contract 2 |
 | `keyless` profile, Python retrieval exports and `last_report` fallback | Explicit supported compatibility, not a hidden autonomous mode |
 | Dated changelog, experiments, evaluation JSON and original-language evidence | Preserve provenance and failures; historical feature descriptions are not current product promises |
 
@@ -59,6 +59,10 @@ documentation look cleaner. Old model verdicts remain fallible recorded judgment
    Unsupported fields fail without echoing their values. Model environment
    variables do not enable model execution.
 4. Keep the old checkpoint directory private and stop its owner before backup.
+   The default output root is now the per-user data directory, not `./reports`.
+   Old stores are not moved or merged; set `SIBYL_OUTPUT_ROOT` to an old store's
+   absolute path to keep using it. Stop older runtimes before newer ones use the
+   same directory.
    Existing reports remain readable/exportable. To extend a historical autonomous
    investigation, explicitly create a new host job rather than converting it.
 5. Install only needed extras. Optional Tavily/Jina calls have their own disclosure
