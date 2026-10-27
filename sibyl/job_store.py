@@ -102,7 +102,8 @@ class JobStore:
     MAX_PAGES = 16384
     # Active retrievals across every runtime sharing this store, not per process.
     MAX_RUNNING = 2
-    BUSY_TIMEOUT = 5.0
+    # Store calls block the event loop while waiting, so keep this short.
+    BUSY_TIMEOUT = 2.0
     STALE_PENDING_SECONDS = 60.0
 
     def __init__(self, root: Path) -> None:

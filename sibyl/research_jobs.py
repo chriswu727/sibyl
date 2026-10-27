@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import logging
+import sqlite3
 import time
 from typing import TYPE_CHECKING, Any, cast
 
@@ -51,6 +52,9 @@ class ResearchJobs:
         self.closed = False
         # Finished retrievals whose checkpoint met a busy store; retried later.
         self._pending: dict[str, JobRecord] = {}
+        # Jobs this runtime still owns in the store although no task runs them,
+        # because releasing the claim failed; released on the next call.
+        self._stale_claims: set[str] = set()
 
     def _event(self, job: JobRecord, message: str) -> None:
         job["events"] = [
@@ -100,10 +104,41 @@ class ResearchJobs:
             except Exception:
                 logger.warning(
                     "Research result for job %s was NOT saved and has been discarded; "
-                    "the job will show as interrupted.",
+                    "its claim is released as interrupted.",
                     job_id,
                 )
+                self._stale_claims.add(job_id)
             del self._pending[job_id]
+
+    def _release_stale_claims(self) -> None:
+        """Release claims whose final checkpoint failed, so other sessions are not
+        blocked and the store-wide worker slot is freed."""
+        for job_id in list(self._stale_claims):
+            if job_id in self.tasks or job_id in self._pending:
+                continue
+            try:
+                job = self.store.get(job_id)
+                if (
+                    job["status"] == "running"
+                    and self.store.job_owner(job) == self.store.instance_id
+                ):
+                    self.store.recover(job, owner_exited=True)
+            except (StoreBusy, sqlite3.Error):
+                continue
+            except ValueError:
+                pass
+            self._stale_claims.discard(job_id)
+
+    def _maintain(self) -> None:
+        """Retry held results and claim releases for every job on any call."""
+        if self._pending:
+            self._flush_pending()
+        if self._stale_claims:
+            self._release_stale_claims()
+
+    def list_jobs(self) -> list[JobRecord]:
+        self._maintain()
+        return self.store.list_jobs()
 
     def _idle(self, job: JobRecord) -> JobRecord:
         """Return the job ready for a change, recovering it if its owner exited.
@@ -114,8 +149,8 @@ class ResearchJobs:
             raise ValueError("Research runtime is closed.")
         if job["job_id"] in self.tasks:
             raise CapacityError("Research job is busy.")
-        if job["job_id"] in self._pending:
-            self._flush_pending()
+        if self._pending or self._stale_claims:
+            self._maintain()
             if job["job_id"] in self._pending:
                 raise ResultPending(PENDING_RESULT_MESSAGE)
             job = self.store.get(job["job_id"])
@@ -148,6 +183,7 @@ class ResearchJobs:
         preferred_domains: list[str] | None = None,
         claim_contract_version: int = 1,
     ) -> dict[str, Any]:
+        self._maintain()
         self.runtime.validate_query(question)
         if mode != "host":
             raise ResearchRequestError(
@@ -184,20 +220,28 @@ class ResearchJobs:
                 "status": "awaiting_input",
                 "notebook": notebook.to_dict(),
                 "report": None,
-                "events": [],
+                # Part of the single creating transaction: a failed create
+                # leaves no job behind, so retrying never duplicates one.
+                "events": [
+                    {
+                        "message": "Research created; sources are untrusted data.",
+                        "time": time.time(),
+                    }
+                ],
                 "elapsed_seconds": 0.0,
             }
         )
-        self._event(job, "Research created; sources are untrusted data.")
-        self.store.save(job)
         return self.get(job["job_id"])
 
     def _load(self, job_id: str) -> tuple[JobRecord, ResearchNotebook]:
-        if job_id in self._pending:
-            self._flush_pending()
+        self._maintain()
         pending = self._pending.get(job_id)
         job = copy.deepcopy(pending) if pending else self.store.get(job_id)
         job["unsaved_result"] = pending is not None
+        if pending is not None:
+            # This runtime owns the job, so saving the held result writes
+            # exactly the next revision; show the revision callers must use.
+            job["revision"] += 1
         job["running_elsewhere"] = self.store.running_elsewhere(job)
         if (
             job["status"] == "running"
@@ -437,6 +481,13 @@ class ResearchJobs:
                 self._pending[job_id] = job
                 if not cancelled:
                     raise ResultPending(PENDING_RESULT_MESSAGE) from None
+            except Exception:
+                # The result could not be saved; release the claim now (or on
+                # the next call) so the job does not stay running elsewhere.
+                self._stale_claims.add(job_id)
+                self.tasks.pop(job_id, None)
+                self._release_stale_claims()
+                raise
             finally:
                 self.tasks.pop(job_id, None)
         return self.get(job_id)
@@ -590,6 +641,7 @@ class ResearchJobs:
         return self.get(job_id)
 
     async def cancel(self, job_id: str, delete: bool = False) -> dict[str, Any]:
+        self._maintain()
         task = self.tasks.get(job_id)
         if task is not None:
             task.cancel()
@@ -605,7 +657,16 @@ class ResearchJobs:
         if job["status"] != "completed":
             job["status"] = "cancelled"
             self._event(job, "Research cancelled by the caller.")
-            self.store.save(job)
+            try:
+                self.store.save(job)
+            except StoreBusy:
+                if task is None:
+                    raise
+                raise StoreBusy(
+                    "The local retrieval was stopped and recorded as interrupted, but "
+                    "the store was busy when marking the job cancelled. Retry "
+                    "cancel_research; no retrieval will run."
+                ) from None
         return self.get(job_id)
 
     async def close(self) -> None:

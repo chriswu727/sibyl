@@ -445,14 +445,21 @@ session can read a job's evidence, review ledger and report by ID.
 - Stale instance lock files of exited runtimes are removed at startup. Do not
   delete or replace lock files of running sessions: that removes their ownership.
 - The database uses SQLite WAL mode and needs a local filesystem, not a network
-  share. A write that waits more than five seconds fails with `store_busy`
-  before anything changes, including before a retrieval starts; retrying the
-  same request is safe. If a retrieval already finished but its result cannot be
-  saved, the call fails with `result_pending` instead. Do not repeat the
-  retrieval: its session holds the result, `get_research(job_id)` shows it with
-  `unsaved_result=true` and saves it once the store is free, and a repeated
-  `continue_research` is refused until then. Other sessions still see the job
-  running meanwhile. If the session shuts down before the save succeeds, it logs
+  share. Store calls wait at most two seconds for another session's write and
+  block their own process while waiting. A write that times out fails with
+  `store_busy` before anything changes, including before a retrieval starts;
+  retrying the same request is safe. (Creating a job is a single write, so a
+  failed `start_research` never leaves a job behind.) If a retrieval already
+  finished but its result cannot be saved, the call fails with `result_pending`
+  instead. Do not repeat the retrieval: its session holds the result,
+  `get_research(job_id)` shows it with `unsaved_result=true` and the revision it
+  will be saved at, and a repeated `continue_research` is refused until then.
+  Any later call in that session, on any job, retries the save. Other sessions
+  still see the job running meanwhile. If saving fails for another reason (for
+  example a full disk), the session releases its claim as `interrupted`, on that
+  call or its next one, so the job and its worker slot are not held. A cancel
+  whose final save meets a busy store after stopping the local retrieval says
+  so; retrying it starts no retrieval. If the session shuts down before the save succeeds, it logs
   that the result was NOT saved and is lost; the job is then recovered as
   `interrupted` without that evidence. A full database reports the SQLite error
   itself, not a rollback error.

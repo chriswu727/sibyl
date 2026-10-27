@@ -378,6 +378,8 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
             saved = await server.call_tool(read["tool"], read["arguments"])
         self.assertEqual(len(calls), 1)
         brief = saved.structuredContent
+        # The held view already shows the revision the saved job ends up with.
+        self.assertEqual(held.structuredContent["revision"], brief["revision"])
         self.assertFalse(brief["unsaved_result"])
         self.assertEqual(brief["latest_attempt"]["status"], "ok")
         stored = jobs.store.get(job["job_id"])
@@ -465,6 +467,92 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         stored = jobs.store.get(job["job_id"])
         self.assertEqual(stored["status"], "running")
         self.assertEqual(stored["owner"]["instance_id"], other.store.instance_id)
+
+    async def test_busy_creation_leaves_no_job_to_duplicate(self):
+        jobs = self.owner.research_jobs
+        blocker = self.block_store(jobs)
+        blocker.execute("BEGIN IMMEDIATE")
+        with mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1):
+            with self.assertRaises(StoreBusy):
+                jobs.start("Question", [], "host", 1, "en", 3)
+        blocker.execute("COMMIT")
+        self.assertEqual(jobs.store.list_jobs(), [])
+        transaction = JobStore.transaction
+        with mock.patch.object(
+            JobStore, "transaction", autospec=True, side_effect=transaction
+        ) as writes:
+            jobs.start("Question", [], "host", 1, "en", 3)
+        self.assertEqual(writes.call_count, 1)
+
+    async def test_failed_result_save_releases_the_claim(self):
+        jobs, other = self.owner.research_jobs, self.other.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        _, retrieve = self.counting_retriever()
+        full = sqlite3.OperationalError("database or disk is full")
+        with (
+            mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
+            mock.patch.object(jobs.store, "save", side_effect=full),
+        ):
+            with self.assertRaisesRegex(sqlite3.OperationalError, "full"):
+                await jobs.continue_job(job["job_id"], "query", question_id="Q0")
+        # Releasing needed a write too, so it waits for this session's next call.
+        self.assertTrue(other.get(job["job_id"])["running_elsewhere"])
+        jobs.list_jobs()
+        released = other.get(job["job_id"])
+        self.assertFalse(released["running_elsewhere"])
+        self.assertEqual(released["status"], "interrupted")
+        spare = [other.store.create(payload()) for _ in range(2)]
+        for record in spare:
+            other.store.claim(record)
+
+    async def test_held_result_is_saved_by_a_call_on_another_job(self):
+        jobs = self.owner.research_jobs
+        held = jobs.start("Held", [], "host", 1, "en", 3)
+        unrelated = jobs.start("Other", [], "host", 1, "en", 3)
+        blocker = self.block_store(jobs)
+        _, retrieve = self.counting_retriever(blocker)
+        with (
+            mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1),
+            mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
+        ):
+            with self.assertRaises(ResultPending):
+                await jobs.continue_job(held["job_id"], "query", question_id="Q0")
+        blocker.execute("COMMIT")
+        jobs.get(unrelated["job_id"])
+        stored = jobs.store.get(held["job_id"])
+        self.assertEqual(stored["status"], "awaiting_input")
+        self.assertEqual(len(stored["notebook"]["bundles"]), 1)
+
+    async def test_busy_cancel_says_the_local_retrieval_already_stopped(self):
+        jobs = self.owner.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        started = asyncio.Event()
+
+        async def blocked(*args, **kwargs):
+            started.set()
+            await asyncio.Event().wait()
+
+        save = jobs.store.save
+
+        def busy_when_cancelling(record, **kwargs):
+            if record["status"] == "cancelled":
+                raise StoreBusy("busy")
+            return save(record, **kwargs)
+
+        with mock.patch("sibyl.research_jobs.gather_source_bundle", blocked):
+            task = asyncio.create_task(
+                jobs.continue_job(job["job_id"], "query", question_id="Q0")
+            )
+            await asyncio.wait_for(started.wait(), 5)
+            with mock.patch.object(
+                jobs.store, "save", side_effect=busy_when_cancelling
+            ):
+                with self.assertRaisesRegex(StoreBusy, "stopped") as raised:
+                    await jobs.cancel(job["job_id"])
+            await asyncio.gather(task, return_exceptions=True)
+        self.assertEqual(raised.exception.code, "store_busy")
+        self.assertEqual(jobs.store.get(job["job_id"])["status"], "interrupted")
+        self.assertEqual((await jobs.cancel(job["job_id"]))["status"], "cancelled")
 
     async def test_transient_capacity_errors_carry_retry_guidance(self):
         server = create_server(self.other, agent_mode=True)

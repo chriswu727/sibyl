@@ -13,6 +13,8 @@
   retrieval that meets a busy store returns `result_pending`: the session keeps
   the result, `get_research` shows it as `unsaved_result` and saves it later,
   repeated retrieval is refused, and shutdown logs explicitly when it was lost.
+  Any call retries held results and releases claims whose final save failed;
+  job creation is a single write, so a busy `start_research` leaves no job.
 - Default the output root to the per-user data directory when
   `SIBYL_OUTPUT_ROOT` is unset. An older `./reports` store is never moved; the
   MCP server warns how to keep using it. Older exclusive runtimes and current
