@@ -20,19 +20,29 @@ paragraphs in this section are evidence history, not separate unfinished phases.
 
 ### Remaining implementation priorities
 
-1. Diagnose original-source discovery and readiness instability against retained
-   failures without changing frozen thresholds or hiding host-supplied URL rescues.
-2. Improve qualification/section coverage in bounded reading and make exact
-   claim-to-passage support reliable in real host use. Do not infer entailment
-   from structural validation; the latest SQLite sample still fails this criterion.
-3. Verify natural research, recovery, counterevidence, follow-ups, unknown delivery
-   and optional exports on supported host configurations. New model-backed runs
-   require fresh explicit consent. The 2026-10-27 Claude Code paired smoke used
-   its allowance; it showed working quote checks and native-search discovery but
-   also weaker source choice on one task and about five times the baseline cost.
-4. Retain the declared same-host/provider/budget comparison and a new full live
-   retrieval pass before the stable release decision. Then choose a fresh version,
-   verify distributions and reconcile public channels through the release runbook.
+The 2026-10-27 audit found the code serves an evidence recorder, not the agreed
+research-manager role, and the work now follows the
+[phased refactor](REFACTOR_GOALS.md#phased-refactor):
+
+0. Record the role and remove the keyless compatibility profile, contract-1 prose
+   completion, never-written report fields and dead code.
+1. Split the 890-line retrieval function into a bundle builder that also assesses
+   host-supplied URLs, and keyless discovery as one caller; batch URL reads.
+2. Return deterministic, reasoned search suggestions in every response.
+3. Classify primary/secondary/aggregator sources per claim and base readiness on
+   quoted claims instead of lexical query coverage (the source of false "ready"
+   results in the live gate).
+4. Check number/date/name consistency between claims and quotes, flag source
+   disagreements and require assessed counterevidence.
+5. Return deltas with inline passages, measured in real host use (the paired
+   smoke cost about five times its baseline), and share one report document
+   across formats.
+6. Freeze the replacement retrieval gate, then run the approved paired host
+   evaluation, choose a fresh version and follow the release runbook.
+
+New model-backed runs still require fresh explicit consent. Do not infer
+entailment from structural validation; the latest SQLite sample still fails
+exact qualification support.
 
 These are connected acceptance gaps in the same product, not permission to
 restore internal models, add an unrelated UI or ship another beta. The design,

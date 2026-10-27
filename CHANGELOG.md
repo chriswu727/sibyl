@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Record the revised product role: Sibyl manages the host's research loop
+  (plan, search guidance, reading, source assessment, claim checks), with
+  keyless search as a fallback, and the phased refactor that implements it. The
+  release gate for retrieval will move to host-supplied sources once a frozen
+  replacement is committed.
 - Hedge keyless general-web search: Mojeek and then Yahoo start when earlier
   providers fail or return nothing, or after 1.5 s, instead of each waiting for
   a fixed third of the 7 s budget. All attempts share the budget and the first
