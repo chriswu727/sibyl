@@ -1,0 +1,42 @@
+name: live retrieval gate
+
+# Model-free, keyless 66-case gate with frozen thresholds, run on a GitHub-hosted
+# runner so results do not depend on a developer machine's network. It uses
+# public search providers and costs no model usage. Results are uploaded as an
+# artifact; a failed gate still uploads its raw metrics.
+on:
+  workflow_dispatch:
+    inputs:
+      repeats:
+        description: Repeats per case
+        default: "3"
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
+          python -m pip install -e .
+      - name: Run the frozen live retrieval gate
+        env:
+          REPEATS: ${{ inputs.repeats }}
+        run: |
+          python scripts/eval_live_retrieval.py --repeats "$REPEATS" \
+            --output live-retrieval.json
+      - name: Upload raw metrics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: live-retrieval-${{ github.sha }}
+          path: live-retrieval.json
+          if-no-files-found: warn

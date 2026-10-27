@@ -100,7 +100,10 @@ changelog. This does not enforce the research-quality gates.
      --output evals/results/live-retrieval-YYYY-MM-DD.json
    ```
 
-   The live gate uses public websites and is intentionally not part of CI.
+   The live gate uses public websites and is intentionally not part of pull
+   request CI. To run it on a GitHub-hosted runner instead of a developer
+   network, dispatch the `live retrieval gate` workflow on `main` and commit its
+   uploaded JSON as the dated result.
    Retain every failed run; do not rerun until a favorable result or weaken
    thresholds. A stable release also
    needs the paired host-agent research evaluation with explicitly authorized
