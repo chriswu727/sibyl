@@ -28,6 +28,20 @@ from .source_policy import normalize_domains, source_kind
 
 logger = logging.getLogger(__name__)
 
+PENDING_RESULT_MESSAGE = (
+    "The retrieval finished, but the research store is busy, so its result is held "
+    "only by this session and is not saved yet. Do not repeat the retrieval: call "
+    "get_research(job_id) to read the result, which also saves it once the store "
+    "is free. If this session exits first, the result is lost and the job becomes "
+    "interrupted."
+)
+
+
+class ResultPending(CapacityError):
+    """A finished retrieval is held unsaved in this session; read, do not retry."""
+
+    code = "result_pending"
+
 
 class ResearchJobs:
     def __init__(self, runtime: SibylRuntime) -> None:
@@ -84,7 +98,11 @@ class ResearchJobs:
             except StoreBusy:
                 continue
             except Exception:
-                logger.warning("Dropped unsaved retrieval result for %s", job_id)
+                logger.warning(
+                    "Research result for job %s was NOT saved and has been discarded; "
+                    "the job will show as interrupted.",
+                    job_id,
+                )
             del self._pending[job_id]
 
     def _idle(self, job: JobRecord) -> JobRecord:
@@ -99,9 +117,7 @@ class ResearchJobs:
         if job["job_id"] in self._pending:
             self._flush_pending()
             if job["job_id"] in self._pending:
-                raise StoreBusy(
-                    "The last retrieval result is not saved yet because the research store is busy; retry shortly."
-                )
+                raise ResultPending(PENDING_RESULT_MESSAGE)
             job = self.store.get(job["job_id"])
         if job["status"] == "running":
             recovered = self.store.recover(
@@ -181,6 +197,7 @@ class ResearchJobs:
             self._flush_pending()
         pending = self._pending.get(job_id)
         job = copy.deepcopy(pending) if pending else self.store.get(job_id)
+        job["unsaved_result"] = pending is not None
         job["running_elsewhere"] = self.store.running_elsewhere(job)
         if (
             job["status"] == "running"
@@ -370,6 +387,7 @@ class ResearchJobs:
         job["notebook"] = notebook.to_dict()
         self._event(job, f"Retrieving evidence: {query}")
         self.store.claim(job)
+        cancelled = False
         started = time.monotonic()
         task = asyncio.current_task()
         assert task is not None
@@ -396,6 +414,7 @@ class ResearchJobs:
                 f"Retrieval finished: {bundle.status}; inspect evidence before writing.",
             )
         except asyncio.CancelledError:
+            cancelled = True
             notebook.finish_search(query, None)
             job["status"] = "interrupted"
             raise
@@ -413,9 +432,11 @@ class ResearchJobs:
                 self._checkpoint(job)
             except StoreBusy:
                 # Keep the finished result instead of losing it; it is saved on
-                # this session's next call or at shutdown.
+                # this session's next call or at shutdown. Never ask the host to
+                # retry the retrieval: that would search (and spend) again.
                 self._pending[job_id] = job
-                raise
+                if not cancelled:
+                    raise ResultPending(PENDING_RESULT_MESSAGE) from None
             finally:
                 self.tasks.pop(job_id, None)
         return self.get(job_id)
@@ -594,4 +615,11 @@ class ResearchJobs:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
         self._flush_pending()
+        for job_id in self._pending:
+            logger.warning(
+                "Research result for job %s was NOT saved: the research store stayed "
+                "busy. It is lost when this process exits; the job will show as "
+                "interrupted.",
+                job_id,
+            )
         self.store.close()

@@ -35,6 +35,7 @@ def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
             )
         },
         "running_elsewhere": snapshot.get("running_elsewhere", False),
+        "unsaved_result": snapshot.get("unsaved_result", False),
         "limitations": [
             note for note in snapshot["limitations"] if note not in plan_gaps
         ],

@@ -128,6 +128,10 @@ def error_result(
             "retry_later",
             "Another session held the research store; nothing was changed. Retry the same request shortly.",
         ),
+        "result_pending": (
+            "read_research",
+            "The retrieval already ran. Do not call continue_research again for it: call recovery.read to read the result held by this session, which saves it once the store is free. unsaved_result=true means it is not persisted yet and is lost if this session exits.",
+        ),
         "worker_capacity": (
             "retry_later",
             "Two jobs are already running across your sessions. Retry after one finishes; reading jobs still works.",

@@ -52,7 +52,10 @@ it is null if no saved job could be read. Common actions are `repair_assessment`
 runs the job: read it, and retry the change after that retrieval finishes.
 `check_storage` (`owner_unknown`) means the owner lock could not be checked, so
 the job was not taken over. `retry_later` covers `store_busy` (nothing was
-changed) and `worker_capacity` (two jobs already run across sessions);
+changed, no retrieval started) and `worker_capacity` (two jobs already run across
+sessions). `read_research` (`result_pending`) means a retrieval already ran but
+its result is not saved yet: never repeat it; call `recovery.read`, whose brief
+shows the held result with `unsaved_result=true` until it is persisted;
 `delete_finished_jobs` covers `history_full`. Other capacity errors keep
 `capacity_exceeded`. Generic failures ask the host to correct/inspect the request, not retry blindly.
 
@@ -75,6 +78,7 @@ Any profile can explicitly request `get_research(job_id, view="brief")`.
 | `schema_version`, `view` | `"1.0"`, `"brief"` |
 | `job_id`, `revision`, `question`, `mode`, `status` | Current checkpoint identity and lifecycle |
 | `running_elsewhere` | True while another live local session runs this job; it is read-only here until that retrieval finishes |
+| `unsaved_result` | True when this session holds a finished retrieval the busy store has not accepted yet; it is lost if the session exits first |
 | `research_plan` | Complete question-review ledger, gaps, next action, suggested queries, and assessment scope |
 | `sources` | Current `[Source N]` citation map with source/passage IDs, URLs, titles, timestamps, content origin and heuristic source kind; no raw text |
 | `source_catalog_count` | Count of retained source occurrences, including sources outside the selected citation window |

@@ -102,5 +102,6 @@ class JobRecord(JobPayload):
     revision: int
     # Present only while running: the runtime instance that claimed the job.
     owner: NotRequired[JobOwner]
-    # Read-time projection for views; never persisted.
+    # Read-time projections for views; never persisted.
     running_elsewhere: NotRequired[bool]
+    unsaved_result: NotRequired[bool]

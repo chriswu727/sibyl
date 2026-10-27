@@ -19,6 +19,7 @@ from sibyl.config import Config
 from sibyl.job_store import HistoryFull, JobStore, OwnerUnknown, StoreBusy
 from sibyl.mcp_server import create_server
 from sibyl.research_errors import ResearchRequestError
+from sibyl.research_jobs import ResultPending
 from sibyl.runtime import RuntimePolicy, SibylRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -322,44 +323,113 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(resumed["status"], "cancelled")
         self.assertFalse(resumed["running_elsewhere"])
 
-    async def test_busy_final_checkpoint_keeps_the_result_and_releases_later(self):
-        jobs = self.owner.research_jobs
-        job = jobs.start("Question", [], "host", 1, "en", 3)
+    def block_store(self, jobs):
+        """Hold the write lock from outside, as another session would."""
         blocker = sqlite3.connect(jobs.store.path, isolation_level=None)
+        self.addCleanup(blocker.close)
+        return blocker
+
+    def counting_retriever(self, blocker=None):
+        calls = []
 
         async def retrieve(*args, **kwargs):
-            blocker.execute("BEGIN IMMEDIATE")
+            calls.append(args)
+            if blocker is not None and not blocker.in_transaction:
+                blocker.execute("BEGIN IMMEDIATE")
             return evidence_bundle("busy", 2)
 
-        try:
-            with (
-                mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1),
-                mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
-            ):
-                with self.assertRaises(StoreBusy):
-                    await jobs.continue_job(job["job_id"], "query", question_id="Q0")
-            stored = jobs.store.get(job["job_id"])
-            self.assertEqual(stored["status"], "running")
+        return calls, retrieve
+
+    async def test_pending_result_guidance_never_repeats_the_retrieval(self):
+        jobs = self.owner.research_jobs
+        server = create_server(self.owner, agent_mode=True)
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        blocker = self.block_store(jobs)
+        calls, retrieve = self.counting_retriever(blocker)
+        arguments = {"job_id": job["job_id"], "query": "query", "question_id": "Q0"}
+        with (
+            mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1),
+            mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
+        ):
+            response = await server.call_tool("continue_research", arguments)
+            self.assertTrue(response.isError)
+            error = response.structuredContent
+            self.assertEqual(error["error"]["code"], "result_pending")
+            self.assertEqual(error["recovery"]["action"], "read_research")
+            self.assertIn("Do not", error["recovery"]["instructions"])
+            read = error["recovery"]["read"]
+            self.assertEqual(read["tool"], "get_research")
+            # Following the guidance while the store is still busy shows the
+            # held result and says it is not persisted.
+            held = await server.call_tool(read["tool"], read["arguments"])
+            self.assertFalse(held.isError)
+            self.assertTrue(held.structuredContent["unsaved_result"])
+            self.assertEqual(held.structuredContent["latest_attempt"]["status"], "ok")
             self.assertTrue(
                 self.other.research_jobs.get(job["job_id"])["running_elsewhere"]
             )
-            pending = jobs.get(job["job_id"])
-            self.assertEqual(pending["status"], "awaiting_input")
-            self.assertEqual(len(pending["evidence"]), 2)
-        finally:
+            # A blind retry is refused instead of searching again.
+            retried = await server.call_tool("continue_research", arguments)
+            self.assertEqual(
+                retried.structuredContent["error"]["code"], "result_pending"
+            )
             blocker.execute("COMMIT")
-            blocker.close()
-        released = jobs.get(job["job_id"])
+            saved = await server.call_tool(read["tool"], read["arguments"])
+        self.assertEqual(len(calls), 1)
+        brief = saved.structuredContent
+        self.assertFalse(brief["unsaved_result"])
+        self.assertEqual(brief["latest_attempt"]["status"], "ok")
         stored = jobs.store.get(job["job_id"])
         self.assertEqual(stored["status"], "awaiting_input")
         self.assertNotIn("owner", stored)
-        self.assertEqual(len(released["evidence"]), 2)
+        self.assertEqual(len(stored["notebook"]["bundles"]), 1)
         self.assertFalse(
             any("size limit" in event["message"] for event in stored["events"])
         )
         self.assertFalse(
             self.other.research_jobs.get(job["job_id"])["running_elsewhere"]
         )
+
+    async def test_busy_before_retrieval_is_safe_to_retry(self):
+        jobs = self.owner.research_jobs
+        server = create_server(self.owner, agent_mode=True)
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        calls, retrieve = self.counting_retriever()
+        arguments = {"job_id": job["job_id"], "query": "query", "question_id": "Q0"}
+        with mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve):
+            with mock.patch.object(JobStore, "claim", side_effect=StoreBusy("busy")):
+                response = await server.call_tool("continue_research", arguments)
+            self.assertEqual(response.structuredContent["error"]["code"], "store_busy")
+            self.assertEqual(
+                response.structuredContent["recovery"]["action"], "retry_later"
+            )
+            self.assertEqual(calls, [])
+            retried = await server.call_tool("continue_research", arguments)
+        self.assertFalse(retried.isError)
+        self.assertEqual(len(calls), 1)
+
+    async def test_shutdown_reports_a_result_it_could_not_save(self):
+        jobs = self.owner.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        blocker = self.block_store(jobs)
+        _, retrieve = self.counting_retriever(blocker)
+        with (
+            mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1),
+            mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
+        ):
+            with self.assertRaises(ResultPending):
+                await jobs.continue_job(job["job_id"], "query", question_id="Q0")
+            with self.assertLogs("sibyl.research_jobs", "WARNING") as logs:
+                await self.owner.aclose()
+        blocker.execute("COMMIT")
+        message = " ".join(logs.output)
+        self.assertIn("NOT saved", message)
+        self.assertIn("lost when this process exits", message)
+        self.assertIn(job["job_id"], message)
+        recovered = self.other.research_jobs.get(job["job_id"])
+        self.assertEqual(recovered["status"], "interrupted")
+        self.assertFalse(recovered["running_elsewhere"])
+        self.assertFalse(recovered["evidence"])
 
     async def test_transient_capacity_errors_carry_retry_guidance(self):
         server = create_server(self.other, agent_mode=True)
