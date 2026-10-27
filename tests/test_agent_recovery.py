@@ -7,12 +7,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import CallToolResult
 
 from sibyl.async_cache import CapacityError
 from sibyl.mcp_server import create_server
-from sibyl.report_models import ResearchReport
 from sibyl.runtime import RuntimePolicy, SibylRuntime
 from sibyl.storage import ArtifactStore
 
@@ -197,12 +195,37 @@ class TestAgentRecovery(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(list(self.root.glob("sibyl_*")), [])
         self.assertNotIn("artifacts", result)
 
+    async def finalized(self):
+        """A completed (partial) report through the public tools only."""
+        job = await self.call("start_research", question="What is the outcome?")
+        job = await self.call("assess_research", **self.review(job, [self.unknown()]))
+        done = await self.call(
+            "complete_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            allow_incomplete=True,
+        )
+        self.assertEqual(done["report"]["status"], "partial")
+        return job["job_id"]
+
+    async def test_export_requires_a_job_id(self):
+        result = await self.call("save_report", error=True, format="md")
+        self.assertEqual(result["error"]["code"], "invalid_parameters")
+        self.assertEqual(result["error"]["field"], "job_id")
+        rejected = await self.call(
+            "save_report", error=True, job_id=await self.finalized(), format="both"
+        )
+        self.assertEqual(rejected["error"]["field"], "format")
+        self.assertEqual(list(self.root.glob("sibyl_*")), [])
+
     async def test_pdf_failure_returns_failed_manifest_and_counts_failure(self):
-        self.runtime.last_report = ResearchReport("q", "summary", [], [])
+        job_id = await self.finalized()
         with patch(
             "sibyl.reporter.generate_pdf", side_effect=RuntimeError("token=SECRET")
         ):
-            result = await self.call("save_report", error=True, format="pdf")
+            result = await self.call(
+                "save_report", error=True, job_id=job_id, format="pdf"
+            )
         self.assertEqual(result["view"], "export")
         self.assertEqual(result["status"], "failed")
         self.assertEqual(result["artifacts"], [])
@@ -210,56 +233,65 @@ class TestAgentRecovery(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("SECRET", json.dumps(result))
         self.assertEqual(self.runtime.failed, 1)
 
-    async def test_combined_export_retains_only_real_successes(self):
-        self.runtime.last_report = ResearchReport(
-            "q", "summary", [], [], status="partial"
-        )
+    async def test_failed_pdf_export_keeps_only_real_successes(self):
+        job_id = await self.finalized()
+        saved = await self.call("save_report", job_id=job_id, format="md")
+        markdown = self.verify_artifact(saved["artifacts"][0])
         with patch(
             "sibyl.reporter.generate_pdf", side_effect=ImportError("token=SECRET")
         ):
-            result = await self.call("save_report", format="both")
-        self.assertEqual(result["status"], "partial")
+            result = await self.call(
+                "save_report", error=True, job_id=job_id, format="pdf"
+            )
+        self.assertEqual(result["status"], "failed")
         self.assertEqual(result["report_status"], "partial")
-        self.assertEqual(result["requested_formats"], ["pdf", "md"])
-        self.assertEqual([item["format"] for item in result["artifacts"]], ["md"])
-        self.verify_artifact(result["artifacts"][0])
+        self.assertEqual(result["requested_formats"], ["pdf"])
+        self.assertEqual(result["artifacts"], [])
+        self.assertEqual(result["failures"][0]["format"], "pdf")
+        self.assertEqual(self.verify_artifact(saved["artifacts"][0]), markdown)
+        self.assertEqual(list(self.root.glob("*.md")), [markdown])
         self.assertFalse(list(self.root.glob("*.json")))
         self.assertFalse(list(self.root.glob("*.pdf")))
         self.assertNotIn("SECRET", json.dumps(result))
 
     async def test_missing_renderer_path_is_not_reported_as_saved(self):
-        self.runtime.last_report = ResearchReport("q", "summary", [], [])
+        job_id = await self.finalized()
         with patch(
             "sibyl.reporter.generate_pdf", return_value=str(self.root / "missing.pdf")
         ):
-            result = await self.call("save_report", error=True, format="pdf")
+            result = await self.call(
+                "save_report", error=True, job_id=job_id, format="pdf"
+            )
         self.assertEqual(result["artifacts"], [])
         self.assertEqual(result["status"], "failed")
 
     async def test_markdown_failure_retains_an_already_saved_pdf(self):
-        self.runtime.last_report = ResearchReport("q", "summary", [], [])
+        job_id = await self.finalized()
 
         def render(report, directory):
             return str(
                 ArtifactStore(directory).write(b"%PDF-1.4\n%%EOF", "report", ".pdf")
             )
 
-        with (
-            patch("sibyl.reporter.generate_pdf", render),
-            patch(
-                "sibyl.reporter._report_to_markdown",
-                side_effect=RuntimeError("token=SECRET"),
-            ),
+        with patch("sibyl.reporter.generate_pdf", render):
+            saved = await self.call("save_report", job_id=job_id, format="pdf")
+        pdf = self.verify_artifact(saved["artifacts"][0])
+        with patch(
+            "sibyl.reporter._report_to_markdown",
+            side_effect=RuntimeError("token=SECRET"),
         ):
-            result = await self.call("save_report", format="both")
-        self.assertEqual(result["status"], "partial")
-        self.assertEqual([item["format"] for item in result["artifacts"]], ["pdf"])
-        self.verify_artifact(result["artifacts"][0])
+            result = await self.call(
+                "save_report", error=True, job_id=job_id, format="md"
+            )
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["artifacts"], [])
         self.assertEqual(result["failures"][0]["format"], "md")
+        self.assertEqual(self.verify_artifact(saved["artifacts"][0]), pdf)
+        self.assertFalse(list(self.root.glob("*.md")))
         self.assertNotIn("SECRET", json.dumps(result))
 
     async def test_renderer_cannot_confirm_paths_outside_the_store_or_symlinks(self):
-        self.runtime.last_report = ResearchReport("q", "summary", [], [])
+        job_id = await self.finalized()
         with tempfile.TemporaryDirectory() as directory:
             outside = Path(directory) / "external.pdf"
             outside.write_bytes(b"external data")
@@ -270,28 +302,19 @@ class TestAgentRecovery(unittest.IsolatedAsyncioTestCase):
                     self.subTest(path=path),
                     patch("sibyl.reporter.generate_pdf", return_value=str(path)),
                 ):
-                    result = await self.call("save_report", error=True, format="pdf")
+                    result = await self.call(
+                        "save_report", error=True, job_id=job_id, format="pdf"
+                    )
                 self.assertEqual(result["artifacts"], [])
                 self.assertNotIn(str(path), json.dumps(result))
 
     async def test_storage_capacity_is_explicit_without_fake_artifact(self):
-        self.runtime.last_report = ResearchReport("q", "summary", [], [])
+        job_id = await self.finalized()
         with patch(
             "sibyl.storage.ArtifactStore.write", side_effect=CapacityError("full")
         ):
-            result = await self.call("save_report", error=True, format="json")
+            result = await self.call(
+                "save_report", error=True, job_id=job_id, format="json"
+            )
         self.assertEqual(result["artifacts"], [])
         self.assertEqual(result["failures"][0]["code"], "capacity_exceeded")
-
-    async def test_legacy_profile_keeps_text_results_and_raised_errors(self):
-        self.runtime.last_report = ResearchReport("q", "summary", [], [])
-        legacy = create_server(self.runtime)
-        _, result = await legacy.call_tool("save_report", {"format": "md"})
-        self.assertIn("Markdown saved: ", result["result"])
-        self.assertTrue(
-            Path(result["result"].removeprefix("Markdown saved: ")).is_file()
-        )
-        with self.assertRaises(ToolError):
-            await legacy.call_tool(
-                "start_research", {"question": "q", "source_policy": "invalid"}
-            )
