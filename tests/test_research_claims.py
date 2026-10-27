@@ -152,12 +152,16 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
                 "save_report", {"job_id": job["job_id"], "format": format}
             )
         self.assertEqual(
-            json.loads(next(Path(self.directory.name).glob("*.json")).read_text())[
-                "claims"
-            ],
+            json.loads(
+                next(Path(self.directory.name).glob("*.json")).read_text(
+                    encoding="utf-8"
+                )
+            )["claims"],
             report["claims"],
         )
-        markdown = next(Path(self.directory.name).glob("*.md")).read_text()
+        markdown = next(Path(self.directory.name).glob("*.md")).read_text(
+            encoding="utf-8"
+        )
         self.assertIn("recommendation (supported)", markdown)
         self.assertIn("Criterion (user)", markdown)
         with self.assertRaisesRegex(ToolError, "immutable"):

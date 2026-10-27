@@ -285,6 +285,9 @@ class TestSharedJobStore(unittest.TestCase):
 class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.directory = tempfile.TemporaryDirectory()
+        # Cleanups run after asyncTearDown and in reverse order, so connections a
+        # test registers later are closed before Windows can delete the files.
+        self.addCleanup(self.directory.cleanup)
         policy = RuntimePolicy(output_root=Path(self.directory.name))
         self.owner = SibylRuntime(policy, Config())
         self.other = SibylRuntime(policy, Config())
@@ -292,7 +295,6 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         await self.owner.aclose()
         await self.other.aclose()
-        self.directory.cleanup()
 
     async def test_other_session_reads_but_cannot_change_a_running_job(self):
         jobs = self.owner.research_jobs

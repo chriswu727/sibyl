@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Run the test suite and the stdio research replay on Windows in CI. Output
+  directories now reject Windows rooted (`\tmp`) and drive-relative (`C:x`)
+  paths on every platform, which previously escaped the output root on Windows.
+  YAML configuration is decoded from bytes rather than the platform locale.
+  Windows has no POSIX file modes; files there inherit the directory's ACLs.
 - Retain a two-task Claude Code paired smoke (Sibyl plus built-in search versus
   built-in search only, one run each, not blinded): one win, one loss, about
   five times the cost; no superiority claim.

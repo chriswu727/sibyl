@@ -2,6 +2,7 @@
 
 import asyncio
 import gzip
+import os
 import stat
 import tempfile
 import unittest
@@ -133,7 +134,9 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
                 json_path = Path(exported["result"].removeprefix("JSON saved: "))
                 self.assertTrue(json_path.is_file())
                 self.assertNotEqual(json_path, md_path.with_suffix(".json"))
-                self.assertIn('"summary": "summary"', json_path.read_text())
+                self.assertIn(
+                    '"summary": "summary"', json_path.read_text(encoding="utf-8")
+                )
             finally:
                 await runtime.aclose()
 
@@ -147,7 +150,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             )
             files = list((Path(directory) / "nested").glob("*.md"))
             self.assertEqual(len(files), 1)
-            self.assertIn("summary", files[0].read_text())
+            self.assertIn("summary", files[0].read_text(encoding="utf-8"))
             with self.assertRaises(ToolError):
                 await server.call_tool(
                     "save_report", {"format": "md", "output_dir": "../escape"}
@@ -316,16 +319,16 @@ class TestArtifacts(unittest.TestCase):
             second = store.write(b"two", "report", ".md")
             self.assertNotEqual(first, second)
             self.assertEqual(first.read_bytes(), b"one")
-            self.assertEqual(stat.S_IMODE(first.stat().st_mode), 0o600)
             self.assertEqual(len(list(Path(directory).glob("sibyl_*"))), 2)
             self.assertFalse(list(Path(directory).glob(".sibyl-*")))
-            self.assertEqual(
-                stat.S_IMODE((Path(directory) / ".artifact.lock").stat().st_mode), 0o600
-            )
+            if os.name == "posix":  # Windows has no POSIX modes; profile ACLs apply.
+                lock = Path(directory) / ".artifact.lock"
+                self.assertEqual(stat.S_IMODE(first.stat().st_mode), 0o600)
+                self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
 
     def test_escape_and_symlink_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
-            for value in ("../escape", "/tmp"):
+            for value in ("../escape", "/tmp", "\\tmp", "C:escape", "C:/tmp"):
                 with self.assertRaises(ValueError):
                     ArtifactStore(directory, value)
             (Path(directory) / "link").symlink_to(Path(directory).parent)

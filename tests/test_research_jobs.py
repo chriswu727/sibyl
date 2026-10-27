@@ -202,13 +202,14 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
             "save_report", {"job_id": job["job_id"], "format": "json"}
         )
         path = next(Path(self.directory.name).glob("*.json"))
-        report = ResearchReport.from_dict(json.loads(path.read_text()))
+        report = ResearchReport.from_dict(json.loads(path.read_text(encoding="utf-8")))
         self.assertEqual(report.status, "partial")
         self.assertFalse(report.research_plan["ready_to_complete"])
         self.assertEqual(
             report.sources[0].passage_ids, completed["sources"][0]["passage_ids"]
         )
-        self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+        if os.name == "posix":  # Windows has no POSIX modes; profile ACLs apply.
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
         with self.assertRaises(ValueError):
             await self.jobs.continue_job(job["job_id"], "mutate completed")
 
@@ -345,10 +346,11 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
 
     async def test_store_is_private_and_shared_by_concurrent_runtimes(self):
         store = self.jobs.store
-        self.assertEqual(stat.S_IMODE(store.path.stat().st_mode), 0o600)
         lock = store.instances / f"{store.instance_id}.lock"
-        self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
-        self.assertEqual(stat.S_IMODE(store.instances.stat().st_mode), 0o700)
+        if os.name == "posix":  # Windows has no POSIX modes; profile ACLs apply.
+            self.assertEqual(stat.S_IMODE(store.path.stat().st_mode), 0o600)
+            self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
+            self.assertEqual(stat.S_IMODE(store.instances.stat().st_mode), 0o700)
         other = JobStore(self.policy.output_root)
         try:
             self.assertNotEqual(other.instance_id, store.instance_id)

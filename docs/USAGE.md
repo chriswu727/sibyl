@@ -408,7 +408,9 @@ guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
 Without `SIBYL_OUTPUT_ROOT`, the output root is the per-user data directory:
 `$XDG_DATA_HOME/sibyl` (absolute values only, otherwise `~/.local/share/sibyl`)
 on Linux and other POSIX systems, `~/Library/Application Support/sibyl` on macOS,
-and `%LOCALAPPDATA%\sibyl` on Windows. A newly created root is private (0700).
+and `%LOCALAPPDATA%\sibyl` on Windows. On POSIX a newly created root is private
+(0700) and store and export files are 0600; Windows has no POSIX modes, so files
+inherit the directory's ACLs (by default those of the user's profile).
 An explicit `SIBYL_OUTPUT_ROOT` always wins. Earlier versions defaulted to
 `./reports` in the host's working directory; that store is never moved, deleted
 or merged. The MCP server only warns when it finds one; set `SIBYL_OUTPUT_ROOT`

@@ -16,7 +16,8 @@ class Config:
 
     @classmethod
     def from_yaml(cls, path: str) -> Config:
-        with open(path) as stream:
+        # YAML detects UTF-8/16/32 from bytes, independent of the platform locale.
+        with open(path, "rb") as stream:
             data = yaml.safe_load(stream)
         if data is None:
             return cls()

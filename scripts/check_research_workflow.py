@@ -415,7 +415,7 @@ async def check(
                 restored.structuredContent["report"] == job["report"],
                 "Restart changed finalized report",
             )
-    exported = json.loads(next(directory.glob("*.json")).read_text())
+    exported = json.loads(next(directory.glob("*.json")).read_text(encoding="utf-8"))
     require(exported == job["report"], "JSON export changed the report")
     for source in exported["sources"]:
         for passage in source["evidence"]:
@@ -517,7 +517,7 @@ async def check_unknown_recovery(session: ClientSession, directory: Path) -> Non
             "Unknown artifact hash changed",
         )
         if format == "json":
-            report = json.loads(path.read_text())
+            report = json.loads(path.read_text(encoding="utf-8"))
             require(
                 report["claims"][0]["status"] == "unresolved" and not report["sources"],
                 "Unknown report invented source support",

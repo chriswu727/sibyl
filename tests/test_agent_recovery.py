@@ -115,7 +115,7 @@ class TestAgentRecovery(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(exported["failures"], [])
             paths.append(self.verify_artifact(exported["artifacts"][0]))
         self.assertNotEqual(paths[1], paths[0].with_suffix(".json"))
-        report = json.loads(paths[1].read_text())
+        report = json.loads(paths[1].read_text(encoding="utf-8"))
         self.assertEqual(report["status"], "partial")
         self.assertEqual(report["sources"], [])
         self.assertEqual(report["claims"][0]["status"], "unresolved")

@@ -6,7 +6,7 @@ import os
 import sys
 import tempfile
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from uuid import uuid4
 
 from .async_cache import CapacityError
@@ -51,7 +51,10 @@ class ArtifactStore:
         # A newly created root is private; existing directories keep their mode.
         base.mkdir(mode=0o700, parents=True, exist_ok=True)
         relative = Path(subdirectory)
-        if relative.is_absolute() or ".." in relative.parts:
+        # A Windows rooted ("\\tmp") or drive-relative ("C:x") path is not absolute
+        # but would leave the root. Reject both forms on every platform alike.
+        windows_anchor = PureWindowsPath(subdirectory).anchor
+        if relative.anchor or windows_anchor or ".." in relative.parts:
             raise ValueError("Output directory must be relative to SIBYL_OUTPUT_ROOT.")
         target = base / relative
         for component in (target, *target.parents):
