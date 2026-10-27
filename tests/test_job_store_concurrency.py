@@ -1,6 +1,7 @@
 """Shared research stores across real local processes. POSIX only: Windows
 locking paths are not exercised here and need a real Windows run."""
 
+import asyncio
 import errno
 import os
 import sqlite3
@@ -430,6 +431,40 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(recovered["status"], "interrupted")
         self.assertFalse(recovered["running_elsewhere"])
         self.assertFalse(recovered["evidence"])
+
+    async def test_cancel_does_not_overwrite_a_claim_made_while_it_waited(self):
+        jobs, other = self.owner.research_jobs, self.other.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        started = asyncio.Event()
+
+        async def blocked(*args, **kwargs):
+            started.set()
+            await asyncio.Event().wait()
+
+        checkpoint = jobs._checkpoint
+
+        def checkpoint_then_claim_elsewhere(record):
+            checkpoint(record)
+            # Another session claims the job right after this cancellation saves.
+            other.store.claim(other.store.get(record["job_id"]))
+
+        with (
+            mock.patch("sibyl.research_jobs.gather_source_bundle", blocked),
+            mock.patch.object(jobs, "_checkpoint", checkpoint_then_claim_elsewhere),
+        ):
+            task = asyncio.create_task(
+                jobs.continue_job(job["job_id"], "query", question_id="Q0")
+            )
+            await asyncio.wait_for(started.wait(), 5)
+            for delete in (False, True):
+                with self.subTest(delete=delete):
+                    with self.assertRaises(ResearchRequestError) as raised:
+                        await jobs.cancel(job["job_id"], delete)
+                    self.assertEqual(raised.exception.code, "job_running_elsewhere")
+            await asyncio.gather(task, return_exceptions=True)
+        stored = jobs.store.get(job["job_id"])
+        self.assertEqual(stored["status"], "running")
+        self.assertEqual(stored["owner"]["instance_id"], other.store.instance_id)
 
     async def test_transient_capacity_errors_carry_retry_guidance(self):
         server = create_server(self.other, agent_mode=True)

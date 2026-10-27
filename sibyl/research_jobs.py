@@ -590,14 +590,14 @@ class ResearchJobs:
         return self.get(job_id)
 
     async def cancel(self, job_id: str, delete: bool = False) -> dict[str, Any]:
-        job = self.store.get(job_id)
         task = self.tasks.get(job_id)
         if task is not None:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
-            job = self.store.get(job_id)
-        elif job["status"] == "running":
-            # Another session's retrieval cannot be cancelled from here.
+        # Load after any local cancellation: another session may have claimed
+        # the job meanwhile, and its retrieval cannot be cancelled from here.
+        job = self.store.get(job_id)
+        if job["status"] == "running":
             job = self._idle(job)
         if delete:
             self.store.delete(job_id)
