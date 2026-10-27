@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0",
+  "date": "2026-10-27",
+  "scope": "Explicitly authorized low-cost paired smoke on one host: two tasks, one run per condition. Not blinded, not repeated, not a release gate or a superiority result.",
+  "source_commit": "7b7ed9568d464fc5797fc157550d0f9dc531974c",
+  "host": {
+    "client": "Claude Code CLI",
+    "version": "2.1.311",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium",
+    "profile": "agent",
+    "search_provider": "keyless (Sibyl); built-in WebSearch/WebFetch for the host",
+    "server_model_calls": 0,
+    "authentication": "Host-managed cloud session credentials; no model key supplied to Sibyl",
+    "isolation": "Fresh temporary working and output directories per run; --strict-mcp-config with only Sibyl (condition A) or no MCP server (condition B); project settings only; shell, file read/write, notebook and sub-agent tools disallowed; no session persistence.",
+    "limits_per_run": {
+      "max_budget_usd": 2,
+      "timeout_seconds": 600
+    },
+    "usage_scope": "CLI-reported cumulative usage and cost per run, including cached context. Under a subscription these are quota indicators, not invoices."
+  },
+  "conditions": {
+    "A": "Sibyl agent profile plus the host's built-in WebSearch/WebFetch",
+    "B": "Built-in WebSearch/WebFetch only"
+  },
+  "prompt_suffixes": {
+    "A": " Use Sibyl to keep the evidence and save a concise Markdown report through it; tell me the outcome and the report path. Use at most four source retrievals. Do not run shell commands or read local files.",
+    "B": " Cite the sources you rely on with URLs. Use at most four source retrievals (searches or page fetches). Do not run shell commands or read local files."
+  },
+  "runs": [
+    {
+      "elapsed_seconds": 77.7,
+      "turns": 12,
+      "cli_reported_cost_usd": 0.3825,
+      "usage": {
+        "input_tokens": 20,
+        "cache_read_input_tokens": 500976,
+        "cache_creation_input_tokens": 63715,
+        "output_tokens": 7751
+      },
+      "tool_calls": {
+        "ToolSearch": 1,
+        "sibyl.start_research": 1,
+        "sibyl.continue_research": 3,
+        "sibyl.get_research": 3,
+        "sibyl.assess_research": 1,
+        "sibyl.complete_research": 1,
+        "sibyl.save_report": 1
+      },
+      "tool_errors": [],
+      "raw_trace_sha256": "b2cb499c9b3f804f44c4a41b0e796b19a1ba024b781876b7b2ce6105d4cea0d0",
+      "final_answer_sha256": "9b2080b82e2d54ff583e819988c2689fecb29f681fab8a7ec0ceb5c54faf33fc",
+      "prompt": "Research whether SQLite WAL is suitable for a local application with several reader processes and two occasional writers on one machine. I value simplicity, but I cannot afford silently lost writes. Investigate a limitation or counterargument before recommending anything. Do not invent performance measurements for my workload. Use Sibyl to keep the evidence and save a concise Markdown report through it; tell me the outcome and the report path. Use at most four source retrievals. Do not run shell commands or read local files.",
+      "task": "sqlite_wal_recommendation",
+      "condition": "sibyl_plus_native_search",
+      "sources_read": [
+        "https://www.sqlite.org/wal.html",
+        "https://www.sqlite.org/lockingv3.html",
+        "https://www.sqlite.org/pragma.html"
+      ],
+      "native_search_used": false,
+      "report_status": "partial",
+      "claims": 9,
+      "claims_with_verified_quotes": 7,
+      "unresolved_claims": 1,
+      "manual_review": {
+        "outcome": "Best answer of the four in this sample, with a disclosed gap.",
+        "observations": [
+          "All stored quotes were found verbatim in their cited passages; no quote was rejected during the run.",
+          "Surfaced the WAL-reset corruption bug (3.7.0 through 3.51.2, fixed in 3.51.3) that matches the user's two writers in separate processes, quoted from sqlite.org/wal.html.",
+          "Marked the exact synchronous=FULL and busy_timeout guarantees unresolved because the bounded pragma read did not reach them, and said so in the answer.",
+          "All three sources share one publisher; this is not independent corroboration."
+        ]
+      },
+      "run": "A1"
+    },
+    {
+      "elapsed_seconds": 34.9,
+      "turns": 4,
+      "cli_reported_cost_usd": 0.0681,
+      "usage": {
+        "input_tokens": 6,
+        "cache_read_input_tokens": 76449,
+        "cache_creation_input_tokens": 9538,
+        "output_tokens": 1787
+      },
+      "tool_calls": {
+        "ToolSearch": 1,
+        "WebFetch": 2
+      },
+      "tool_errors": [],
+      "raw_trace_sha256": "466e35a57533a0def2ac2c372d366f5ff457a46d9d397d8eab9ecb971fa258a9",
+      "final_answer_sha256": "4baafb35868d3d1a830cc19e7ab0981b6fa012d1db57e81bceba84a0bd5c2802",
+      "prompt": "Research whether SQLite WAL is suitable for a local application with several reader processes and two occasional writers on one machine. I value simplicity, but I cannot afford silently lost writes. Investigate a limitation or counterargument before recommending anything. Do not invent performance measurements for my workload. Cite the sources you rely on with URLs. Use at most four source retrievals (searches or page fetches). Do not run shell commands or read local files.",
+      "task": "sqlite_wal_recommendation",
+      "condition": "native_search_only",
+      "sources_read": [
+        "https://www.sqlite.org/wal.html",
+        "https://www.sqlite.org/lockingv3.html"
+      ],
+      "manual_review": {
+        "outcome": "Good practical answer that missed the material corruption bug.",
+        "observations": [
+          "The quoted lock-upgrade sentence ('fails and returns SQLITE_BUSY') was found on sqlite.org/lockingv3.html.",
+          "Did not mention the WAL-reset bug although it fetched sqlite.org/wal.html, where the section is present; WebFetch returns a model summary, which is consistent with but does not prove a lossy read.",
+          "Added useful advice absent from A1 (BEGIN IMMEDIATE, lock-upgrade failure) and labelled general-knowledge advice as such."
+        ]
+      },
+      "run": "B1"
+    },
+    {
+      "elapsed_seconds": 56.5,
+      "turns": 13,
+      "cli_reported_cost_usd": 0.2723,
+      "usage": {
+        "input_tokens": 20,
+        "cache_read_input_tokens": 440113,
+        "cache_creation_input_tokens": 41281,
+        "output_tokens": 5145
+      },
+      "tool_calls": {
+        "ToolSearch": 1,
+        "sibyl.start_research": 1,
+        "WebSearch": 1,
+        "sibyl.continue_research": 2,
+        "sibyl.get_research": 1,
+        "sibyl.assess_research": 3,
+        "sibyl.complete_research": 2,
+        "sibyl.save_report": 1
+      },
+      "tool_errors": [
+        {
+          "tool": "assess_research",
+          "code": "stale_revision"
+        },
+        {
+          "tool": "complete_research",
+          "code": "invalid_request"
+        }
+      ],
+      "raw_trace_sha256": "2d2d6a5f391928f03efbb55717cdaa0841bb83bd7b2445205df8a4240d00585e",
+      "final_answer_sha256": "1f999b6ea37217f99508748687f143f351d5e6720c8be7f3fabe728bd06b89a8",
+      "prompt": "Investigate the exact realized global market share NVIDIA will have in AI accelerators in 2030. Distinguish forecasts from observed outcomes. I want a short answer without invented numbers. Use Sibyl to keep the evidence and save a concise Markdown report through it; tell me the outcome and the report path. Use at most four source retrievals. Do not run shell commands or read local files.",
+      "task": "nvidia_2030_unknown",
+      "condition": "sibyl_plus_native_search",
+      "sources_read": [
+        "techradar.com (Morningstar forecast article, Sep 2025)",
+        "fool.com (Dec 2024 article)"
+      ],
+      "native_search_used": true,
+      "report_status": "partial",
+      "claims": 3,
+      "claims_with_verified_quotes": 2,
+      "unresolved_claims": 1,
+      "manual_review": {
+        "outcome": "Correct abstention, but less informative than the baseline.",
+        "observations": [
+          "Followed the intended pattern: native WebSearch for discovery, then Sibyl URL reads.",
+          "Did not invent a realized 2030 share; its two sources give no 2030 share figure, so it reported none.",
+          "Chose weaker sources than the baseline found and ran no counterevidence retrieval.",
+          "Recovered from a stale_revision rejection (reused revision across questions) and from passing legacy prose fields to complete_research on a claim-contract job."
+        ]
+      },
+      "run": "A2"
+    },
+    {
+      "elapsed_seconds": 20.8,
+      "turns": 3,
+      "cli_reported_cost_usd": 0.0611,
+      "usage": {
+        "input_tokens": 6,
+        "cache_read_input_tokens": 75989,
+        "cache_creation_input_tokens": 7831,
+        "output_tokens": 1000
+      },
+      "tool_calls": {
+        "ToolSearch": 1,
+        "WebSearch": 1
+      },
+      "tool_errors": [],
+      "raw_trace_sha256": "df93c2f568750d2a6d40dd522190e4f9c9fc0dcbdd6e4facae9b0cc728104c65",
+      "final_answer_sha256": "2ba76abb5080107746510bf1d77e3569b5b36f9f4f556c2dc24570da762419fd",
+      "prompt": "Investigate the exact realized global market share NVIDIA will have in AI accelerators in 2030. Distinguish forecasts from observed outcomes. I want a short answer without invented numbers. Cite the sources you rely on with URLs. Use at most four source retrievals (searches or page fetches). Do not run shell commands or read local files.",
+      "task": "nvidia_2030_unknown",
+      "condition": "native_search_only",
+      "sources_cited": [
+        "itiger.com",
+        "connect.cfauk.org",
+        "outlookbusiness.com",
+        "aimultiple.com"
+      ],
+      "manual_review": {
+        "outcome": "Correct abstention with more informative, mostly verifiable forecasts.",
+        "observations": [
+          "Spot check against the cited pages: BofA 85% to 75% (itiger.com), Morgan Stanley about 85% in March 2026 and Bloomberg Intelligence 70% to 75% through 2030 (aimultiple.com), and Susquehanna about 67% by 2030 (outlookbusiness.com) were found.",
+          "The conditional Google about 20% figure was not found in the extracted text of the cited pages.",
+          "Used a single search with no page fetch; figures come from search results of secondary summaries, which it disclosed."
+        ]
+      },
+      "run": "B2"
+    }
+  ],
+  "comparison": {
+    "sqlite_wal_recommendation": "A1 better: surfaced a material corruption bug that matches the user's setup, quote-verified every supported fact and disclosed an unresolved gap. B1 missed that bug.",
+    "nvidia_2030_unknown": "B2 better: both abstained correctly, but B2 reported several verifiable forecasts while A2 picked weaker sources and reported none.",
+    "cost": "Condition A used 4.5-5.6x the CLI-reported cost, 2.5-3x the time and 3-4x the turns of condition B."
+  },
+  "conclusion": "One win and one loss in a two-task, single-run, unblinded sample. Sibyl's verified quotes worked in real use without false rejections, and deep reading of a long primary document found a material risk the baseline missed. The cost is roughly five times higher, and answer quality still depends on which sources the host chooses. No superiority claim follows.",
+  "limitations": [
+    "Two purposively selected tasks, one run each; no repetition, so run-to-run variance is unknown.",
+    "Scored by the evaluator, a model of the same family as the host; not blinded.",
+    "One host and model; Codex was not available in the test container.",
+    "Raw traces, stores and reports were retained only in the ephemeral session container and are identified here by hash; they are not committed because they contain third-party page text.",
+    "Total CLI-reported spend including two connectivity checks was about 0.94 USD."
+  ],
+  "follow_up": [
+    "Agent profile complete_research no longer exposes legacy prose fields, and undeclared tool arguments are rejected instead of silently ignored (implemented with this record).",
+    "A repeated, blinded paired evaluation over more tasks and a second host is still required before any superiority claim."
+  ]
+}

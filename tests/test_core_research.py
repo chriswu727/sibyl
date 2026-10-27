@@ -76,7 +76,8 @@ async def main():
                 'question_id': 'Q0', 'status': 'supported',
                 'conclusion': 'Finding', 'counterevidence_note': 'Further investigation needed.',
                 'claims': [{'claim_id': 'Q0.C1', 'kind': 'fact', 'status': 'supported',
-                    'text': 'Finding', 'supporting_passage_ids': ['bundle/S1/P1']}]})
+                    'text': 'Finding', 'supporting_passage_ids': ['bundle/S1/P1'],
+                    'quotes': [{'passage_id': 'bundle/S1/P1', 'text': 'Actual evidence text.'}]}]})
             _, completed = await server.call_tool('complete_research', {
                 'job_id': job['job_id'], 'revision': reviewed['revision'],
                 'claim_ids': ['Q0.C1'],

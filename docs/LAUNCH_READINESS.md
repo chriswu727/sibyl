@@ -377,6 +377,35 @@ quality verdict has been established after those parsing changes.
 
 ## Claims supported now
 
+### Claude Code paired smoke, 2026-10-27
+
+The [retained record](../evals/results/host-claude-code-paired-2026-10-27.json)
+used Claude Code 2.1.311 with claude-sonnet-5-5 at medium effort on source
+[`7b7ed95`](https://github.com/chriswu727/sibyl/commit/7b7ed9568d464fc5797fc157550d0f9dc531974c),
+under explicit approval. The two tasks from the previous retest were each run once
+with Sibyl plus the host's built-in WebSearch/WebFetch, and once with built-in
+search only. Each run was isolated, limited to 2 USD and 600 seconds, and had no
+shell or file access. No human coached a run.
+
+- SQLite WAL recommendation: with Sibyl the host read three sqlite.org pages,
+  every supported fact carried a quote found verbatim in its passage, and it
+  surfaced the WAL-reset corruption bug that matches two writers in separate
+  processes. It left the exact `synchronous=FULL` guarantee unresolved. The
+  baseline fetched the same WAL page but did not mention that bug.
+- NVIDIA 2030 unknown: both runs refused to invent a realized share. With Sibyl
+  the host used built-in search for discovery and Sibyl URL reads, as intended,
+  but chose two weak sources and reported no forecast figure. The baseline
+  reported four forecasts, of which a spot check found three in the cited pages
+  and one not.
+- Cost: the Sibyl runs used 4.5 to 5.6 times the CLI-reported cost, 2.5 to 3 times
+  the time and 3 to 4 times the turns. One run recovered from `stale_revision`
+  and from passing legacy prose fields to `complete_research`; the agent profile
+  now hides those fields and rejects undeclared arguments.
+
+This is one win and one loss from two tasks, one run each, scored without
+blinding by a model of the host's family, on one host. It is not the declared
+paired comparison or a release gate, and supports no superiority claim.
+
 ### Structured-recovery host retest, 2026-10-26
 
 The [retained two-workflow record](../evals/results/host-agent-structured-retest-2026-10-26.json)

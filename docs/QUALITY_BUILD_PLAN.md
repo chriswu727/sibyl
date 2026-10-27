@@ -27,7 +27,9 @@ paragraphs in this section are evidence history, not separate unfinished phases.
    from structural validation; the latest SQLite sample still fails this criterion.
 3. Verify natural research, recovery, counterevidence, follow-ups, unknown delivery
    and optional exports on supported host configurations. New model-backed runs
-   require fresh explicit consent; both approved retest workflows have been used.
+   require fresh explicit consent. The 2026-10-27 Claude Code paired smoke used
+   its allowance; it showed working quote checks and native-search discovery but
+   also weaker source choice on one task and about five times the baseline cost.
 4. Retain the declared same-host/provider/budget comparison and a new full live
    retrieval pass before the stable release decision. Then choose a fresh version,
    verify distributions and reconcile public channels through the release runbook.

@@ -44,7 +44,10 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         response = await self.server.call_tool(name, kwargs)
         self.assertIsInstance(response, CallToolResult)
         self.assertFalse(response.isError)
-        self.assertIn("structuredContent", response.content[0].text)
+        # Text-only hosts receive the same payload as structuredContent.
+        self.assertEqual(
+            json.loads(response.content[0].text), response.structuredContent
+        )
         return response.structuredContent
 
     async def rejected(self, name, **arguments):
@@ -52,6 +55,9 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(response, CallToolResult)
         self.assertTrue(response.isError)
         self.assertEqual(response.structuredContent["view"], "error")
+        self.assertEqual(
+            json.loads(response.content[0].text), response.structuredContent
+        )
         return response.structuredContent
 
     async def test_agent_surface_and_compatible_default(self):
@@ -149,7 +155,14 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         before = json.dumps(job, sort_keys=True)
         brief = research_brief(job)
         self.assertEqual(brief["research_plan"], job["research_plan"])
-        self.assertEqual(brief["limitations"], job["limitations"])
+        gaps = [
+            f"{item['question_id']}: {gap}"
+            for item in brief["research_plan"]["questions"]
+            for gap in item["gaps"]
+        ]
+        self.assertTrue(gaps)
+        self.assertFalse(set(gaps) & set(brief["limitations"]))
+        self.assertEqual(set(brief["limitations"]) | set(gaps), set(job["limitations"]))
         self.assertEqual(brief["latest_attempt"], job["attempts"][-1])
         self.assertEqual(
             brief["sources"][0]["passage_ids"], job["sources"][0]["passage_ids"]
@@ -159,6 +172,27 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             "get_research", job_id=job["job_id"], passage_id=passage
         )
         self.assertEqual(loaded["passage"], job["evidence"][0]["evidence"][0])
+        second = job["evidence"][1]["evidence"][0]["citation_id"]
+        batch = await self.call(
+            "get_research", job_id=job["job_id"], passage_ids=[second, passage, second]
+        )
+        self.assertEqual(batch["revision"], job["revision"])
+        self.assertEqual(
+            [item["passage"]["citation_id"] for item in batch["passages"]],
+            [second, passage],
+        )
+        self.assertEqual(
+            batch["passages"][1],
+            {k: v for k, v in loaded.items() if k not in {"job_id", "revision"}},
+        )
+        for arguments in (
+            {"passage_ids": []},
+            {"passage_ids": [passage, "missing"]},
+            {"passage_ids": [f"id{i}" for i in range(13)]},
+            {"passage_ids": [passage], "passage_id": passage},
+            {"passage_ids": [passage], "view": "brief"},
+        ):
+            await self.rejected("get_research", job_id=job["job_id"], **arguments)
         self.assertEqual(loaded["content_origin"], job["evidence"][0]["content_origin"])
         self.assertIn("retrieved_at", loaded)
         self.assertIn("content_cluster_id", loaded)
@@ -202,13 +236,16 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
 
     async def test_finalized_partial_report_is_not_a_quality_pass(self):
         job = await self.retrieve(self.start())
-        result = await self.call(
+        # Legacy contract-1 jobs keep prose completion on the keyless profile.
+        _, result = await create_server(self.runtime).call_tool(
             "complete_research",
-            job_id=job["job_id"],
-            revision=job["revision"],
-            summary="Summary [Source 1]",
-            key_findings=["Finding [Source 1]"],
-            allow_incomplete=True,
+            {
+                "job_id": job["job_id"],
+                "revision": job["revision"],
+                "summary": "Summary [Source 1]",
+                "key_findings": ["Finding [Source 1]"],
+                "allow_incomplete": True,
+            },
         )
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["report"]["status"], "partial")
