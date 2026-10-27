@@ -29,7 +29,7 @@ Use `view="sources"` with the current revision to page the full catalog, and
 1. Call `start_research(question, sub_questions=[...])`. Host mode is the default.
 2. Find sources with your own web search when available and read them with
    `continue_research(job_id, url=..., query=..., question_id=...)`; a query alone
-   uses keyless search. Follow leads, investigate contradictions, and look for
+   falls back to keyless search, which public search sites often refuse. Follow leads, investigate contradictions, and look for
    original sources.
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
@@ -51,13 +51,13 @@ Use `view="sources"` with the current revision to page the full catalog, and
    stay readable and exportable.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
-Agent failures retain `isError=true` and structured recovery. For `view="error"`,
+Failures retain `isError=true` and structured recovery. For `view="error"`,
 inspect `error.code/field/claim_id`, `current_revision` and `recovery.read`; reload
 the current brief and repair rejected claims before finalizing. Never guess a
-revision. Agent exports return `view="export"` with confirmed `artifacts`
+revision. Exports return `view="export"` with confirmed `artifacts`
 (format/path/size_bytes/sha256) and `failures`. Only use listed artifact paths.
-Export status `saved` does not upgrade a partial `report_status`. Keyless keeps
-its text export/error responses. See docs/agent-protocol.md.
+Export status `saved` does not upgrade a partial `report_status`. See
+docs/agent-protocol.md.
 
 Use `source_policy="academic"` to enable scholarly discovery, and
 `preferred_domains` for topic-appropriate primary publishers. These are routing
@@ -73,8 +73,8 @@ New host jobs require per-question reviews and a substantive counterevidence
 investigation; use `allow_incomplete=true` only to deliver explicit gaps.
 Such reports have `report.status="partial"`; job `status="completed"` only means
 the report is finalized. Inspect report status and the review ledger before reuse.
-Legacy host checkpoints retain their previous completion behavior. Old autonomous
-records remain readable/exportable but cannot resume execution.
+Old contract-1 host checkpoints cannot be finalized. Old autonomous records remain
+readable/exportable but cannot resume execution.
 
 Text-PDF reads require `[pdf]` on POSIX. Preserve page markers and extraction
 warnings; a bounded extraction is not the complete paper. No OCR or automatic
