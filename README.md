@@ -53,8 +53,7 @@ before another agent can use it.
 
 ## Quick start
 
-Requires Python 3.11+ and a host supporting local stdio MCP. Agent-profile
-results arrive in `structuredContent` and as the same JSON text, so hosts that
+Requires Python 3.11+ and a host supporting local stdio MCP. Results arrive in `structuredContent` and as the same JSON text, so hosts that
 pass only text to the model still receive them. Install this source checkout in
 a fresh environment:
 
@@ -66,7 +65,7 @@ python -m venv .venv
 .venv/bin/sibyl-mcp --list-tools
 ```
 
-The last command should show `profile: agent` and eight tools. Add this to your
+The last command should list eight tools. Add this to your
 host's MCP configuration, replacing both paths with absolute local paths.
 `SIBYL_OUTPUT_ROOT` is optional; without it, research is stored in your per-user
 data directory and shared by your local sessions:
@@ -85,9 +84,9 @@ data directory and shared by your local sessions:
 ```
 
 On Windows, use `.venv\\Scripts\\sibyl-mcp.exe`. Configuration syntax varies by host;
-the example is for clients accepting `mcpServers` JSON. Integrations that want
-readable text can use `"args": ["--profile", "keyless"]` for the twelve-tool
-compatibility surface and full text responses. This is not a remote HTTP MCP endpoint.
+the example is for clients accepting `mcpServers` JSON. Results arrive as MCP
+`structuredContent` mirrored as JSON text. The former `--profile keyless` text
+surface was removed. This is not a remote HTTP MCP endpoint.
 
 No search key is required. Optional Tavily search has separate credentials and
 provider charges; subscription access to your agent does not pay for Tavily.
@@ -137,8 +136,7 @@ See the [claim contract and complete example](docs/research-claims.md).
 Reports are optional. For a new job, submit `complete_research` with the current
 revision and optional `claim_ids`, then `save_report(job_id=..., format="md")`.
 For JSON as well, call `save_report` again with `format="json"` and use its returned
-path. The legacy `format="both"` means PDF plus Markdown, not Markdown plus JSON.
-Agent exports return a machine-readable manifest with confirmed file paths,
+path. Exports return a machine-readable manifest with confirmed file paths,
 formats, sizes, hashes and per-format failures. Errors expose recovery instructions
 and the current saved revision when available; rejected claims are never silently
 accepted. See the [agent protocol](docs/agent-protocol.md#structured-recovery).
@@ -185,8 +183,8 @@ or the async Python `sibyl.gather_bundle` API. Neither generates an answer.
 
 LiteLLM, model-provider configuration, autonomous execution, generic model analysis,
 SWOT/timeline generation and finance/chart tools have been removed.
-The `report` extra now means PDF rendering only. Use `agent` (default) or
-`keyless`; old `report`, `finance` and `full` profiles are rejected.
+The `report` extra now means PDF rendering only. Sibyl serves one tool set; the
+old `keyless`, `report`, `finance` and `full` profiles are rejected.
 
 Install in a fresh virtual environment: upgrading a package does not uninstall
 its old transitive dependencies. Remove old model settings from `SIBYL_CONFIG`.

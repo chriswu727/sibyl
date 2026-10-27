@@ -22,7 +22,7 @@ class TestAgentRecovery(unittest.IsolatedAsyncioTestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)
         self.runtime = SibylRuntime(RuntimePolicy(output_root=self.root))
-        self.server = create_server(self.runtime, agent_mode=True)
+        self.server = create_server(self.runtime)
 
     async def asyncTearDown(self):
         await self.runtime.aclose()

@@ -39,7 +39,7 @@ bounded excerpts do not establish that an entire document has been inspected.
 
 ```mermaid
 flowchart TD
-    MCP[mcp_server: composition + profiles] --> CAT[mcp_catalog: request boundary]
+    MCP[mcp_server: composition + startup] --> CAT[mcp_catalog: request boundary]
     CAT --> RT[runtime: admission + lifecycle + state]
     RT --> TOOLS[mcp_tools / research_tools: application operations]
     RT --> MON[monitoring: authenticated loopback HTTP]
@@ -60,7 +60,7 @@ flowchart TD
 
 | Module | Owns |
 |---|---|
-| `mcp_server.py` | Server construction, profile selection, console startup |
+| `mcp_server.py` | Server construction and console startup |
 | `mcp_catalog.py` | Tool registration, runtime binding, public error boundary |
 | `mcp_errors.py` | Structured agent validation/revision recovery and safe exception projection |
 | `mcp_tools.py` | Tool schemas and application-level orchestration |
@@ -69,10 +69,9 @@ flowchart TD
 | `monitoring.py`, `observability.py` | Read-only authenticated HTTP lifecycle and bounded operational metrics |
 | `pdf_reader.py`, `pdf_worker.py` | Parser process supervision and isolated optional text-PDF extraction |
 | `async_cache.py` | Event-loop-local single-flight, TTL, capacity, waiter cancellation |
-| `evidence_loop.py` | Bounded evidence workflow state machine |
 | `retrieval.py` | Search/extraction/ranking coordination |
 | `retrieval_policy.py` | Deterministic query constraints, source identity, and evidence sufficiency rules |
-| `evidence.py` | Versioned source, passage, diagnostic, and loop contracts |
+| `evidence.py` | Versioned source, passage and diagnostic contracts |
 | `url_safety.py`, `safe_http.py` | Destination validation and DNS-pinned connections |
 | `scraper.py` | Redirects, bounded decoding, extraction, optional Jina fallback |
 | `report_models.py` | Report data contracts without importing an LLM SDK |
@@ -124,8 +123,8 @@ and linted; it is not fully strict-typed.
    30 seconds, with at most 64 cached bundles.
 6. The catalog returns known user-facing errors or an opaque provider-failure
    message. It does not serialize raw provider exceptions into MCP output.
-7. Server lifespan shutdown cancels runtime-owned tasks, drains cache tasks,
-   clears evidence loops, and releases the last report. Persistent jobs are
+7. Server lifespan shutdown cancels runtime-owned tasks and drains cache tasks.
+   Persistent jobs are
    interrupted and retained; startup never silently dispatches new work.
 
 Runtime events expose tool name, outcome, duration, and active-call count as JSON
@@ -140,14 +139,8 @@ their concurrency, cancellation, and overall deadlines.
 
 ## State and consistency
 
-Evidence loops use random IDs, a ten-minute TTL, a 64-entry cap, and per-loop
-locks. Initial retrieval holds the lock too, so capacity pruning cannot evict an
-active start. A cancelled/failed start removes its unfinished state.
-The limit is four retrieval steps; the host supplies the atomic query plan.
-
-Report exports are mutually exclusive within a runtime. MCP callers provide a
-completed job ID; the runtime retains a programmatic last_report fallback for
-existing Python integrations, but no MCP tool generates a report through a model.
+Report exports are mutually exclusive within a runtime. Callers provide a
+completed job ID; no tool generates a report through a model.
 
 New research jobs use a separate SQLite store, opened lazily below the output
 root (the per-user data directory unless `SIBYL_OUTPUT_ROOT` is set). Concurrent
@@ -225,7 +218,7 @@ cancellation, blocking optional libraries, and OS-level resource isolation.
 
 - **New MCP operation:** implement persistent-job handlers in `research_tools`
   and other tools in `mcp_tools`, register the schema in the
-  catalog, assign a profile, and add offline tool/serialization tests. Stateful
+  catalog, and add offline tool/serialization tests. Stateful
   report operations must join the runtime's exclusivity policy.
 - **New search provider:** add an adapter in `search`, preserve transparent
   provider provenance and fallback behavior, and test without external calls.
@@ -262,10 +255,11 @@ without a task broker, cloud deployment, or tenant identity system.
 **Fail-fast admission, not an unbounded queue.** A host can retry a busy call.
 Predictable resource limits matter more than accepting work that cannot finish.
 
-**Compatible contracts, explicit policy changes.** SourceBundle 1.6,
-EvidenceLoop 1.0, and the eight-tool agent catalog have explicit consumer contracts.
-The keyless compatibility profile exposes 12 tools. MCP output-directory
-confinement and final-consumer cancellation are intentional behavioral changes.
+**Explicit contracts, explicit policy changes.** SourceBundle 1.6 and the
+eight-tool catalog have explicit consumer contracts. The keyless compatibility
+profile and the evidence loop were removed before the first stable release (see
+[migration](MIGRATION.md)). MCP output-directory confinement and final-consumer
+cancellation are intentional behavioral changes.
 
 **Tests are evidence, not a guarantee.** Unit tests and real stdio smoke tests
 cover runtime and transport contracts. Offline retrieval fixtures prevent known

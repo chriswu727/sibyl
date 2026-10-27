@@ -22,7 +22,7 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             RuntimePolicy(output_root=Path(self.directory.name)), Config()
         )
         self.jobs = self.runtime.research_jobs
-        self.server = create_server(self.runtime, agent_mode=True)
+        self.server = create_server(self.runtime)
 
     async def asyncTearDown(self):
         await self.runtime.aclose()
@@ -60,7 +60,7 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         )
         return response.structuredContent
 
-    async def test_agent_surface_and_compatible_default(self):
+    async def test_single_tool_surface_and_full_view(self):
         self.assertEqual(
             {tool.name for tool in await self.server.list_tools()},
             {
@@ -79,8 +79,7 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(job["report"])
         self.assertNotIn("evidence", job)
         self.assertFalse(job["research_plan"]["ready_to_complete"])
-        default = create_server(self.runtime)
-        _, full = await default.call_tool("get_research", {"job_id": job["job_id"]})
+        full = await self.call("get_research", job_id=job["job_id"], view="full")
         self.assertIn("evidence", full)
         self.assertNotIn("view", full)
         self.assertEqual(
@@ -94,40 +93,31 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_tool_schemas_expose_choices_and_export_semantics(self):
-        for agent_mode in (False, True):
-            tools = {
-                tool.name: tool
-                for tool in await create_server(
-                    self.runtime, agent_mode=agent_mode
-                ).list_tools()
-            }
-            for name, field, choices in (
-                ("start_research", "source_policy", {"primary", "academic"}),
-                (
-                    "continue_research",
-                    "purpose",
-                    {"explore", "counterevidence", "follow_citation"},
-                ),
-                (
-                    "assess_research",
-                    "status",
-                    {"supported", "disputed", "unresolved"},
-                ),
-                ("save_report", "format", {"md", "json", "pdf", "both"}),
-            ):
-                self.assertEqual(
-                    set(tools[name].inputSchema["properties"][field]["enum"]),
-                    choices,
-                )
-            self.assertIn("does not create JSON", tools["save_report"].description)
-            self.assertIn("independent filename", tools["save_report"].description)
-            fields = tools["save_report"].outputSchema["properties"]
-            if agent_mode:
-                self.assertTrue(
-                    {"artifacts", "failures", "report_status"} <= fields.keys()
-                )
-            else:
-                self.assertEqual(set(fields), {"result"})
+        tools = {tool.name: tool for tool in await self.server.list_tools()}
+        for name, field, choices in (
+            ("start_research", "source_policy", {"primary", "academic"}),
+            (
+                "continue_research",
+                "purpose",
+                {"explore", "counterevidence", "follow_citation"},
+            ),
+            (
+                "assess_research",
+                "status",
+                {"supported", "disputed", "unresolved"},
+            ),
+            ("save_report", "format", {"md", "json", "pdf"}),
+        ):
+            self.assertEqual(
+                set(tools[name].inputSchema["properties"][field]["enum"]),
+                choices,
+            )
+        self.assertIn("job_id", tools["save_report"].inputSchema["required"])
+        description = " ".join(tools["save_report"].description.split())
+        self.assertIn("once per format", description)
+        self.assertIn("independent filename", description)
+        fields = tools["save_report"].outputSchema["properties"]
+        self.assertTrue({"artifacts", "failures", "report_status"} <= fields.keys())
 
     async def test_invalid_source_policy_does_not_create_a_job(self):
         error = await self.rejected(
@@ -236,16 +226,38 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
 
     async def test_finalized_partial_report_is_not_a_quality_pass(self):
         job = await self.retrieve(self.start())
-        # Legacy contract-1 jobs keep prose completion on the keyless profile.
-        _, result = await create_server(self.runtime).call_tool(
+        passage = job["sources"][0]["passage_ids"][0]
+        # No counterevidence round was run, so the research gate stays open.
+        job = await self.call(
+            "assess_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            question_id="Q0",
+            status="supported",
+            supporting_passage_ids=[passage],
+            conclusion="A bounded conclusion.",
+            counterevidence_note="No contrary source was searched for.",
+            claims=[
+                {
+                    "claim_id": "Q0.C1",
+                    "kind": "fact",
+                    "status": "supported",
+                    "text": "The source reports the focused evidence.",
+                    "supporting_passage_ids": [passage],
+                    "quotes": [{"passage_id": passage, "text": "Evidence focused"}],
+                }
+            ],
+        )
+        self.assertFalse(job["research_plan"]["ready_to_complete"])
+        refused = await self.rejected(
+            "complete_research", job_id=job["job_id"], revision=job["revision"]
+        )
+        self.assertEqual(refused["error"]["code"], "research_gaps")
+        result = await self.call(
             "complete_research",
-            {
-                "job_id": job["job_id"],
-                "revision": job["revision"],
-                "summary": "Summary [Source 1]",
-                "key_findings": ["Finding [Source 1]"],
-                "allow_incomplete": True,
-            },
+            job_id=job["job_id"],
+            revision=job["revision"],
+            allow_incomplete=True,
         )
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["report"]["status"], "partial")
@@ -294,6 +306,7 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         job = await self.retrieve(self.start())
         job = await self.retrieve(job, "counter", "counterevidence")
         refs = [source["passage_ids"][0] for source in job["sources"]]
+        quoted = await self.call("get_research", job_id=job["job_id"], passage_id=refs[0])
         reviewed = await self.call(
             "assess_research",
             job_id=job["job_id"],
@@ -303,6 +316,21 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             supporting_passage_ids=refs,
             conclusion="A bounded conclusion.",
             counterevidence_note="The contrary evidence does not overturn this narrower claim.",
+            claims=[
+                {
+                    "claim_id": "Q0.C1",
+                    "kind": "fact",
+                    "status": "supported",
+                    "text": "The first source reports the retrieved evidence.",
+                    "supporting_passage_ids": refs[:1],
+                    "quotes": [
+                        {
+                            "passage_id": refs[0],
+                            "text": quoted["passage"]["text"][:40].strip(),
+                        }
+                    ],
+                }
+            ],
         )
         self.assertTrue(reviewed["research_plan"]["ready_to_complete"])
         await self.retrieve(job, "fresh")

@@ -17,7 +17,7 @@ Sibyl is a local research MCP for an existing AI agent. The host plans and reaso
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-0f766e)](../pyproject.toml)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/chriswu727/sibyl/blob/main/LICENSE)
 
-[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Evidence-loop contract](https://github.com/chriswu727/sibyl/blob/main/docs/evidence-loop-1.0.md) · [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md) · [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
+[Install](#quick-start) · [SourceBundle contract](https://github.com/chriswu727/sibyl/blob/main/docs/source-bundle-1.6.md) · [Privacy](https://github.com/chriswu727/sibyl/blob/main/PRIVACY.md) · [Security](https://github.com/chriswu727/sibyl/blob/main/SECURITY.md) · [Changelog](https://github.com/chriswu727/sibyl/blob/main/CHANGELOG.md)
 
 </div>
 
@@ -27,24 +27,23 @@ Sibyl combines a research workflow with an inspectable evidence boundary:
 
 > Research produces evidence-linked conclusions and visible gaps. A report is optional; neither output is automatically true.
 
-The core path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states. For dependent questions, `gather_evidence()` adds a bounded, auditable sequence of atomic retrieval steps while leaving planning and synthesis to the host agent.
+The core path is a persistent research job: your agent finds sources with its own search, Sibyl reads them into the job, and the agent records evidence-linked claims, counterevidence and gaps. A report is optional. Every retrieval produces a typed, versioned `SourceBundle` carrying source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals and explicit failure states. Sibyl does not generate answers.
 
-Persistent jobs maintain agent research state without requiring a report. SourceBundle retrieval is shared by MCP, the inspection CLI and the Python API.
+`gather_bundle()` is the standalone keyless fallback search, for hosts without a search of their own. SourceBundle retrieval is shared by MCP, the inspection CLI and the Python API.
 
 | Mode | Tool | API key | Who reasons? | Best for |
 |---|---|---:|---|---|
-| Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
-| Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
-| Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
 | Persistent investigation | `start_research(mode="host")` | No | Your agent | Reusable research state and optional reports |
+| Fallback search | `gather_bundle()` | No | Your agent | Hosts without web search; machine-readable bundles |
+| Python library | `sibyl.gather_bundle()` / `sibyl.gather_sources()` | No | Your code | Pipelines and manual inspection |
 
 ## Quick start
 
 ### 1. Install the current source checkout
 
-This guide follows main, including the unreleased agent profile and research views.
+This guide follows main, including the unreleased tool set and research views.
 These additions are not in 0.4.0b1. The older 0.3.0 package does not
-provide the current CLI subcommands, capability profiles, or evidence-loop API.
+provide the current CLI subcommands or MCP tools.
 
 ```bash
 git clone https://github.com/chriswu727/sibyl.git
@@ -79,8 +78,7 @@ For clients that accept an MCP server configuration, replace the absolute path:
 {
   "mcpServers": {
     "sibyl": {
-      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
-      "args": ["--profile", "agent"]
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp"
     }
   }
 }
@@ -104,7 +102,7 @@ Verify the isolated installation:
 
 ```bash
 sibyl-mcp --version
-sibyl-mcp --profile agent --list-tools
+sibyl-mcp --list-tools
 ```
 
 ### 3. Use the keyless CLI or Python API
@@ -137,18 +135,18 @@ values. If the bundle does not contain the answer, retrieve again or say it was 
 
 That policy matters more than a long system prompt: it tells the agent when evidence is usable, what counts as independent support, and when to abstain.
 
-## MCP profiles and tools
+## MCP tools
 
 MCP report exports use the output root: `SIBYL_OUTPUT_ROOT` when set, otherwise
 the per-user data directory described under [shared research store](#shared-research-store).
 `save_report(output_dir=...)` selects a relative subdirectory of that root, not
 an absolute path. Stateful report operations reject overlapping calls.
 
-The default `agent` profile exposes eight tools with compact structured research
-briefs, returned in MCP `structuredContent` and mirrored as serialized JSON text.
-`--profile keyless` keeps readable full text responses and twelve compatibility tools.
-`--profile auto` is an alias for agent and never inspects model credentials.
-`report`, `finance` and `full` are no longer valid profiles.
+Sibyl exposes eight tools with compact structured research briefs, returned in
+MCP `structuredContent` and mirrored as serialized JSON text. The former keyless
+text profile and its `gather_evidence`, `gather_sources`, `quick_search` and
+`read_url` tools were removed; `--profile keyless` (or `report`, `finance`, `full`)
+exits with an error. `--profile agent` and `auto` are accepted for old configurations.
 
 | Tool | Result |
 |---|---|
@@ -159,11 +157,9 @@ briefs, returned in MCP `structuredContent` and mirrored as serialized JSON text
 | `complete_research` | Optional immutable host-authored report |
 | `save_report` | Markdown (default), JSON or optional PDF |
 | `cancel_research` | Cancel or explicitly remove checkpoint |
-| `gather_bundle` | Standalone SourceBundle 1.6 |
+| `gather_bundle` | Fallback keyless search returning a SourceBundle 1.6 |
 
-The keyless compatibility profile also includes `gather_evidence`,
-`gather_sources`, `quick_search` and `read_url`. Neither profile calls models.
-Read exact passages with `get_research(passage_ids=[...])` (up to twelve per call)
+No tool calls a model. Read exact passages with `get_research(passage_ids=[...])` (up to twelve per call)
 before assessing them.
 `view="sources"` pages the complete saved catalog; use the current revision to
 reject stale pagination. `view="full"` returns the full compatible snapshot.
@@ -271,12 +267,13 @@ complete_research(job_id="...", revision=the_current_revision,
 save_report(job_id="...", format="json")
 ```
 
-New MCP jobs use `claim_contract_version=2`. Omit the legacy summary/findings/analysis
-arguments; the report renders the host-authored claims, their premises, current
+Jobs use `claim_contract_version=2`; `complete_research` takes no prose
+arguments. The report renders the host-authored claims, their premises, current
 source citations, reasoning, criteria and assumptions. Unknown/disputed claims
 remain included even if not selected. A partial report can explicitly abstain
 without inventing sources. Unknown claim IDs, dependency cycles and stale
-revisions fail. An old checkpoint retains contract 1 and its prose-based completion.
+revisions fail. An old contract-1 checkpoint can no longer be finalized
+(`legacy_contract`); if it was already completed it stays readable and exportable.
 
 Completion normally requires current question reviews, resolved claim gaps and
 substantive counterevidence investigations. `allow_incomplete=true` permits delivery
@@ -478,17 +475,14 @@ session can read a job's evidence, review ledger and report by ID.
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
 source passage IDs, timestamps, limitations, verification scope, and legacy model-call
 counters when reading old records. New work makes no model calls. PDF export requires `[report]`; text-PDF input separately requires `[pdf]`.
-For Markdown and JSON, call `save_report` twice with `format="md"` and
-`format="json"`. The legacy `format="both"` means PDF plus Markdown only.
-Each export gets an independent filename; use its returned path, not a guessed
-path with another extension. If PDF-only export fails, the MCP call returns a
-tool error. With `format="both"`, a PDF failure is disclosed while a successful
-Markdown artifact is retained.
-The agent profile returns an [export manifest](agent-protocol.md#export-manifest-10)
+For Markdown and JSON, call `save_report(job_id=...)` twice with `format="md"`
+and `format="json"`. Each export gets an independent filename; use its returned
+path, not a guessed path with another extension. If a PDF export fails, the MCP
+call returns a tool error.
+Exports return an [export manifest](agent-protocol.md#export-manifest-10)
 with confirmed artifacts and per-format failures; `report_status` remains separate
 from export success. Failed calls also carry [structured recovery](agent-protocol.md#structured-recovery)
-instead of requiring the host to infer state from a text error. The keyless
-profile retains its text response format.
+instead of requiring the host to infer state from a text error.
 Input is extracted in an isolated child process without inherited credentials,
 then split into the same hashed passages as HTML. Scanned pages have no OCR;
 text order, columns, tables, and formulas still need source inspection.
@@ -498,15 +492,14 @@ Monitoring setup and recovery procedures are in [Operations](OPERATIONS.md).
 
 ## Recommended agent workflow
 
-For a non-trivial question, one broad retrieval call is rarely enough. `gather_evidence()` makes the loop explicit and bounded:
-
-1. Call `gather_evidence(question="...")`. Atomic questions may become `ready` immediately; dependent fact chains return `decompose_query` without wasting a broad retrieval.
-2. Continue with `gather_evidence(loop_id="...", query="one atomic query")` and follow `next_action`. Repeated and still-compound follow-ups are rejected.
-3. Inspect each returned `current_step.bundle`, including `content_origin`, `content_cluster_id`, sufficiency reasons, and passage citation IDs. Historical steps remain as compact summaries so evidence is not duplicated in the host context.
-4. Stop after at most four retrieval calls. When the evidence covers the original question, call `gather_evidence(loop_id="...", finish=true, supporting_step_ids=["E1", "E2"])`.
-5. Synthesize only when the loop returns `status="ready"`; selected supporting steps must individually have `recommended_action="synthesize"`.
-
-The loop expires after ten minutes and never invokes MCP sampling or a hidden Sibyl model. The calling host remains responsible for semantic planning and synthesis; Sibyl enforces the retrieval budget and evidence-state checks. For one focused query, `gather_bundle()` remains the simpler primitive.
+For a non-trivial question, one broad retrieval call is rarely enough. Use a
+persistent job: `start_research` with focused sub-questions, read the sources your
+own search finds with `continue_research(url=..., question_id=...)`, inspect exact
+passages, record claims with `assess_research`, investigate counterevidence and
+follow the gaps in `research_plan` before optionally completing a report. The
+earlier bounded `gather_evidence()` loop was removed with the keyless profile.
+For one focused lookup without a search tool, `gather_bundle()` remains the
+fallback.
 
 ## SourceBundle 1.6
 
@@ -597,7 +590,7 @@ Ranking is local by default:
 | `flashrank` | `pip install -e '.[rerank]'` | Optional local cross-encoder; falls back explicitly to lexical |
 | `none` | Built in | Preserves retrieval order and returns `null` scores |
 
-Matching `gather_evidence()`, `gather_bundle()`, and `gather_sources()` steps share in-flight work and reuse successful retrievals for 30 seconds within one MCP process. Failed retrievals are not cached.
+Matching `gather_bundle()` calls share in-flight work and reuse successful retrievals for 30 seconds within one MCP process. Failed retrievals are not cached.
 
 ## Truthful failure states
 
@@ -644,7 +637,9 @@ API base, subscription token or model profile is needed. Old model environment
 variables are ignored, not used to enable capabilities.
 
 `SIBYL_CONFIG` is optional and only accepts `search_engine`, `extractor`,
-`jina_fallback` and `js_render` for the compatibility `quick_search/read_url` tools.
+`jina_fallback` and `js_render`. Those settings applied to the removed
+`quick_search/read_url` tools; no current MCP tool reads them yet, and the
+retrieval refactor will decide whether URL reads use them.
 Unsupported legacy fields cause an actionable error without echoing values.
 Persistent research uses its explicit tool arguments and safe defaults.
 See [configuration example](../sibyl.yaml.example).
@@ -699,7 +694,7 @@ have offline coverage, not a new host-model measurement.
 
 The repository also contains an exploratory 30-question SimpleQA comparison: the measured host workflow answered 26/30 correctly and the configured one-shot workflow 5/30. This small, agent-graded, model/configuration-confounded experiment does not establish the quality of this new workflow or current models. Read the [method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md). A fresh comparison must use the same model, source access, budget, and realistic research questions; report coverage, citation support, contradictions, freshness, cost, and latency separately.
 
-The bounded evidence loop also has a [four-case keyless retrieval run](../evals/results/evidence-loop-keyless-2026-07-21.json) covering the previously missed World Cup river, CUDA founding year, Inception/Batman, and Qantas currency chains. All four fixed host plans reached `ready` and contained the expected answer. This is a single-repeat retrieval test with hand-authored atomic queries; it does not measure whether an arbitrary host can produce the plan or synthesize the final answer.
+The removed bounded evidence loop also has a historical [four-case keyless retrieval run](../evals/results/evidence-loop-keyless-2026-07-21.json) covering the previously missed World Cup river, CUDA founding year, Inception/Batman, and Qantas currency chains. All four fixed host plans reached `ready` and contained the expected answer. This is a single-repeat retrieval test with hand-authored atomic queries; it does not measure whether an arbitrary host can produce the plan or synthesize the final answer.
 
 ## Known limitations
 

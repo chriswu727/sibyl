@@ -173,7 +173,7 @@ class AgentMCP(FastMCP):
     async def _unknown_parameter(
         self, name: str, arguments: dict[str, Any]
     ) -> str | None:
-        """FastMCP drops undeclared arguments; the agent profile rejects them so a
+        """FastMCP drops undeclared arguments; Sibyl rejects them so a
         host never believes an ignored field (such as legacy prose) was used."""
         if not self._parameters:
             self._parameters = {

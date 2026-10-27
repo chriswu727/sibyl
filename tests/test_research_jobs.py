@@ -162,7 +162,7 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         job = self.jobs.store.get(snapshot["job_id"])
         job["mode"] = "autonomous"
         self.jobs.store.save(job)
-        server = create_server(self.runtime, agent_mode=True)
+        server = create_server(self.runtime)
         await server.call_tool("save_report", {"job_id": job["job_id"]})
         self.assertEqual(len(list(Path(self.directory.name).glob("*.md"))), 1)
 

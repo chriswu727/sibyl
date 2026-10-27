@@ -16,9 +16,7 @@ from typing import Awaitable, Callable, TypeVar
 from .async_cache import AsyncSingleFlightTTL, CapacityError
 from .config import Config
 from .evidence import SourceBundle
-from .evidence_loop import EvidenceLoopManager
 from .observability import RuntimeMetrics
-from .report_models import ResearchReport
 from .storage import default_output_root
 
 T = TypeVar("T")
@@ -69,8 +67,6 @@ class SibylRuntime:
             max_inflight=self.policy.max_active,
             operation_timeout=self.policy.tool_timeout,
         )
-        self.evidence_loops = EvidenceLoopManager()
-        self.last_report: ResearchReport | None = None
         self._report_lock = asyncio.Lock()
         self._lifecycle_lock = asyncio.Lock()
         self._tasks: set[asyncio.Task] = set()
@@ -222,8 +218,6 @@ class SibylRuntime:
         if self._research_jobs is not None:
             await self._research_jobs.close()
         await self.bundle_cache.aclose()
-        self.evidence_loops.clear()
-        self.last_report = None
 
 
 default_runtime = SibylRuntime()

@@ -8,9 +8,9 @@ Human-readable reports are optional outputs of the same research state.
 
 This checkout is an unreleased host-only source preview. Published 0.4.0b1 and
 0.3.0 still contain the old architecture. Use Python 3.11+ and a fresh environment
-with `python -m pip install -e .`. Default `sibyl-mcp` exposes eight tools with
-compact MCP `structuredContent`, mirrored as JSON text; `--profile keyless` keeps
-readable text responses and twelve compatibility tools.
+with `python -m pip install -e .`. `sibyl-mcp` exposes eight tools with compact
+MCP `structuredContent`, mirrored as JSON text. The former keyless compatibility
+profile was removed; `--profile keyless` now exits with an error.
 See README.md and docs/agent-protocol.md.
 
 Sibyl never calls a generative model or reads subscription credentials. Reasoning
@@ -46,8 +46,9 @@ Use `view="sources"` with the current revision to page the full catalog, and
 5. Optionally submit `complete_research(job_id, revision, claim_ids=[...],
    limitations=[...])`. New jobs render reports from recorded claims and their
    evidence, reasoning and criteria; omit summary/key_findings/analysis. Unknown
-   and disputed claims remain included. Old contract-1 jobs retain prose completion
-   through the keyless profile; the agent profile rejects undeclared arguments.
+   and disputed claims remain included. Undeclared arguments are rejected. Old
+   contract-1 jobs can no longer be finalized (`legacy_contract`); completed ones
+   stay readable and exportable.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
 Agent failures retain `isError=true` and structured recovery. For `view="error"`,
@@ -101,19 +102,14 @@ keeping its evidence; `delete=true` explicitly removes a checkpoint, not exports
 - Preserve the verification scope; citation checks do not establish entailment.
 - Preserve passage IDs, hashes, offsets, and provenance through export.
 
-## Evidence primitives
+## Fallback search
 
-- `gather_bundle(query)`: SourceBundle 1.6 with source/passages and diagnostics.
-- `gather_sources(query)`: readable rendering of that same bundle.
-- `gather_evidence(question)`: host-planned atomic loop, four-step ceiling,
-  ten-minute TTL. Follow its explicit next action.
-- `quick_search(query)`: search hits without full-page extraction.
-- `read_url(url)`: text from one public HTTP(S) page.
+- `gather_bundle(query)`: Sibyl's keyless search, returning SourceBundle 1.6 with
+  sources, passages and diagnostics. Use it only without a search of your own;
+  public search sites often refuse keyless requests.
 
-Use a primitive for a focused fact lookup; use persistent jobs for deeper research
-and reusable evidence-linked conclusions, with optional reports.
-Only gather_bundle is in the default agent profile; the other primitives require
-the keyless compatibility profile.
+The Python library also offers `sibyl.gather_bundle` and `sibyl.gather_sources`.
+Use persistent jobs for research and reusable evidence-linked conclusions.
 
 ## Operational boundaries
 

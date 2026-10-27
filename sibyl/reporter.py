@@ -268,8 +268,7 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
 
     def body(text, size=10):
         """Render markdown text preserving structure: ## headers become sub-
-        headings, bullets keep their marker, and **bold** renders inline (the LLM
-        emits real markdown — the old renderer flattened all of it to plain text)."""
+        headings, bullets keep their marker, and **bold** renders inline."""
         import re
 
         if not text:

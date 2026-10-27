@@ -9,7 +9,6 @@ from .dedup import canonical_url
 from .evidence import BundleDiagnostics, EvidencePassage, EvidenceSource, SourceBundle
 from .job_models import EvidenceReview, RetrievalAttempt
 from .report_models import Source
-from .scraper import WebPage
 from .source_policy import source_kind, source_priority
 from .temporal import period_match
 
@@ -136,27 +135,6 @@ class ResearchNotebook:
                         if position < len(group):
                             add(group[position])
         return selected
-
-    def pages(self) -> list[WebPage]:
-        return [
-            WebPage(
-                source.url,
-                source.title,
-                "\n\n".join(passage.text for passage in source.evidence),
-                content_origin=source.content_origin,
-                published_at=source.published_at,
-                published_at_method=source.published_at_method,
-                source_type=source.source_type,
-            )
-            for source in self.selected_sources()
-        ]
-
-    def has_ready_evidence(self) -> bool:
-        return any(
-            bundle.status == "ok"
-            and bundle.diagnostics.recommended_action == "synthesize"
-            for bundle in self.bundles
-        )
 
     def report_sources(self) -> list[Source]:
         return [

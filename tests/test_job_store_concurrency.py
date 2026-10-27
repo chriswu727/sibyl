@@ -351,7 +351,7 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
             await other.continue_job(job["job_id"], "query")
         self.assertEqual(raised.exception.code, "job_running_elsewhere")
         self.assertEqual(other.store.get(job["job_id"])["revision"], job["revision"])
-        server = create_server(self.other, agent_mode=True)
+        server = create_server(self.other)
         response = await server.call_tool(
             "assess_research",
             {
@@ -392,7 +392,7 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
 
     async def test_pending_result_guidance_never_repeats_the_retrieval(self):
         jobs = self.owner.research_jobs
-        server = create_server(self.owner, agent_mode=True)
+        server = create_server(self.owner)
         job = jobs.start("Question", [], "host", 1, "en", 3)
         blocker = self.block_store(jobs)
         calls, retrieve = self.counting_retriever(blocker)
@@ -458,7 +458,7 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
 
     async def test_busy_before_retrieval_is_safe_to_retry(self):
         jobs = self.owner.research_jobs
-        server = create_server(self.owner, agent_mode=True)
+        server = create_server(self.owner)
         job = jobs.start("Question", [], "host", 1, "en", 3)
         calls, retrieve = self.counting_retriever()
         arguments = {"job_id": job["job_id"], "query": "query", "question_id": "Q0"}
@@ -681,7 +681,7 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_store_busy_guidance_does_not_claim_nothing_changed(self):
-        server = create_server(self.other, agent_mode=True)
+        server = create_server(self.other)
         with mock.patch.object(JobStore, "create", side_effect=StoreBusy("busy")):
             response = await server.call_tool("start_research", {"question": "Q"})
         instructions = response.structuredContent["recovery"]["instructions"]
@@ -689,7 +689,7 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         self.assertIn("whether part of it already took effect", instructions)
 
     async def test_transient_capacity_errors_carry_retry_guidance(self):
-        server = create_server(self.other, agent_mode=True)
+        server = create_server(self.other)
         for error, code, action in (
             (StoreBusy("busy"), "store_busy", "retry_later"),
             (HistoryFull("full"), "history_full", "delete_finished_jobs"),
