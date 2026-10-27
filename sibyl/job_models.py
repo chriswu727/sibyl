@@ -30,6 +30,7 @@ class RetrievalAttempt(TypedDict):
     question_id: NotRequired[str]
     purpose: NotRequired[SearchPurpose]
     url: NotRequired[str]
+    urls: NotRequired[list[str]]
     parent_passage_id: NotRequired[str]
     rationale: NotRequired[str]
     based_on_revision: NotRequired[int]

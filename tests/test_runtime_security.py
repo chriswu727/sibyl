@@ -187,7 +187,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
         with (
             mock.patch("sibyl.mcp_tools.gather_source_bundle", new=search),
             mock.patch("sibyl.research_jobs.gather_source_bundle", new=search),
-            mock.patch("sibyl.research_jobs.read_source_bundle", new=read),
+            mock.patch("sibyl.research_jobs.read_sources", new=read),
         ):
             for name, arguments in (
                 ("gather_bundle", {"query": "x" * 10001}),

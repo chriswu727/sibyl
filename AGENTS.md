@@ -28,9 +28,10 @@ Use `view="sources"` with the current revision to page the full catalog, and
 
 1. Call `start_research(question, sub_questions=[...])`. Host mode is the default.
 2. Find sources with your own web search when available and read them with
-   `continue_research(job_id, url=..., query=..., question_id=...)`; a query alone
-   falls back to keyless search, which public search sites often refuse. Follow leads, investigate contradictions, and look for
-   original sources.
+   `continue_research(job_id, url=... or urls=[up to 5], query=..., question_id=...)`;
+   read sources are clustered, ranked and assessed like search results. A query
+   alone falls back to keyless search, which public search sites often refuse.
+   Follow leads, investigate contradictions, and look for original sources.
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
 4. Call `assess_research` for each question with stable supporting/challenging

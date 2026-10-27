@@ -210,8 +210,13 @@ continue_research(job_id="...", question_id="Q1", query="Inspect the original ex
 ```
 
 URL reads use the same safe-network boundary, timeout, worker, and retrieval budgets
-as search. Extracted text is bounded to 16,000 characters and split into hashed
-passages with offsets. Thin/unsupported pages add no evidence. Text PDFs require
+as search. One call may read up to five URLs (`urls=[...]`) for one retrieval
+step. Each page is read up to 60,000 characters and keeps at most 16,000 evidence
+characters in up to nine hashed passages with offsets. Read sources then go
+through the same content clustering, relevance ranking and sufficiency
+assessment as search results, so syndicated copies share a content cluster and
+`evidence_sufficiency` reports what the read actually supports; a read that
+yields sources is `ok` even when its evidence is `limited`. Thin/unsupported pages add no evidence. Text PDFs require
 the `[pdf]` extra and a POSIX host; page markers and truncation warnings are retained.
 Automatic reference-link crawling is not implemented. Parent links
 are host-declared; the server does not prove that a hyperlink existed in the parent.
@@ -331,7 +336,8 @@ domain is placed ahead of repeated hits before applying the URL fetch limit. Thi
 does not guarantee balanced coverage when the search provider has no matching results.
 
 Direct source-read failures retain the fetch reason (such as `HTTP 403` or an
-unsupported content type) in the attempt's `error`. No third-party rendering is
+unsupported content type) in the attempt's `error`; in a multi-URL read, failed
+URLs are listed in the sufficiency reasons while readable ones are kept. No third-party rendering is
 silently enabled. PDF failures (missing extra, encryption, no readable text,
 malformed input, or a resource limit) are explicit rather than inferred evidence.
 
@@ -637,9 +643,11 @@ API base, subscription token or model profile is needed. Old model environment
 variables are ignored, not used to enable capabilities.
 
 `SIBYL_CONFIG` is optional and only accepts `search_engine`, `extractor`,
-`jina_fallback` and `js_render`. Those settings applied to the removed
-`quick_search/read_url` tools; no current MCP tool reads them yet, and the
-retrieval refactor will decide whether URL reads use them.
+`jina_fallback` and `js_render`. `extractor`, `jina_fallback` and `js_render`
+apply to source reads through `continue_research(url=...)`; `jina_fallback` and
+`js_render` send the URL to Jina Reader, so they stay off unless you enable
+them. `search_engine` applied only to the removed `quick_search` tool and is
+currently unused.
 Unsupported legacy fields cause an actionable error without echoing values.
 Persistent research uses its explicit tool arguments and safe defaults.
 See [configuration example](../sibyl.yaml.example).

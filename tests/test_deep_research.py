@@ -16,7 +16,7 @@ from sibyl.mcp_server import create_server
 from sibyl.report_models import ResearchReport
 from sibyl.reporter import _report_to_markdown
 from sibyl.research_review import research_plan, review_question
-from sibyl.research_sources import read_source_bundle
+from sibyl.research_sources import read_source_bundle, read_sources
 from sibyl.research_state import ResearchBudgetExceeded, ResearchNotebook
 from sibyl.retrieval import gather_source_bundle
 from sibyl.runtime import RuntimePolicy, SibylRuntime
@@ -277,7 +277,13 @@ class TestDirectEvidence(unittest.IsolatedAsyncioTestCase):
                 page.url, "token retention expiry late retries"
             )
             second = await read_source_bundle(page.url, "other implementation material")
-        read.assert_awaited_with(page.url, max_chars=60000)
+        read.assert_awaited_with(
+            page.url,
+            max_chars=60000,
+            extractor="bs4",
+            jina_fallback=False,
+            js_render=False,
+        )
         evidence = first.sources[0].evidence
         self.assertTrue(
             any(
@@ -335,6 +341,82 @@ class TestDirectEvidence(unittest.IsolatedAsyncioTestCase):
         entities.assert_not_called()
         fallback.assert_not_called()
         self.assertEqual(scrape.call_args.args[0], [page.url])
+
+
+class TestHostSourceReads(unittest.IsolatedAsyncioTestCase):
+    """Host-supplied URLs get the same assessment as discovered sources."""
+
+    ORIGINAL = (
+        "The SQLite write-ahead log allows readers to continue while one writer "
+        "appends to the log. Only one writer may be active at a time. "
+    ) * 20
+
+    def pages(self, *items):
+        by_url = {page.url: page for page in items}
+
+        async def scrape(url, **kwargs):
+            return by_url[url]
+
+        return mock.patch("sibyl.research_sources.scrape_url", side_effect=scrape)
+
+    async def test_batch_read_ranks_clusters_and_assesses_sources(self):
+        original = WebPage("https://sqlite.org/wal.html", "WAL", self.ORIGINAL)
+        copy = WebPage("https://mirror.example/wal", "WAL copy", self.ORIGINAL)
+        other = WebPage(
+            "https://blog.example/locks",
+            "Locking",
+            "Database locking and unrelated deployment notes. " * 30,
+        )
+        with self.pages(original, copy, other):
+            bundle = await read_sources(
+                [original.url, copy.url, other.url], "one writer write-ahead log"
+            )
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(len(bundle.sources), 3)
+        clusters = {s.url: s.content_cluster_id for s in bundle.sources}
+        self.assertEqual(clusters[original.url], clusters[copy.url])
+        self.assertNotEqual(clusters[original.url], clusters[other.url])
+        self.assertEqual(bundle.diagnostics.duplicate_sources, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+        self.assertTrue(all(s.relevance_score is not None for s in bundle.sources))
+        self.assertNotEqual(bundle.sources[-1].url, original.url)
+        self.assertIn(
+            "Direct source read; host must assess support, freshness and completeness.",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+        for source in bundle.sources:
+            page = {p.url: p for p in (original, copy, other)}[source.url]
+            for passage in source.evidence:
+                self.assertEqual(
+                    passage.text, page.text[passage.start_char : passage.end_char]
+                )
+
+    async def test_single_read_reports_limited_sufficiency_honestly(self):
+        page = WebPage("https://sqlite.org/wal.html", "WAL", self.ORIGINAL)
+        with self.pages(page):
+            bundle = await read_sources([page.url], "one writer")
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "limited")
+        self.assertIn("single_domain", bundle.diagnostics.sufficiency_reasons)
+        self.assertTrue(bundle.sources[0].content_cluster_id)
+
+    async def test_partial_failure_keeps_successes_and_discloses_the_failure(self):
+        good = WebPage("https://sqlite.org/wal.html", "WAL", self.ORIGINAL)
+        blocked = WebPage("https://blocked.example/x", "", "", error="HTTP 403")
+        with self.pages(good, blocked):
+            bundle = await read_sources([good.url, blocked.url], "one writer")
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual([s.url for s in bundle.sources], [good.url])
+        self.assertIn("HTTP 403", bundle.diagnostics.sufficiency_reasons)
+        self.assertEqual(bundle.diagnostics.scrape_failures, 1)
+        self.assertEqual(bundle.error, "")
+
+    async def test_read_limits_are_enforced_before_fetching(self):
+        with mock.patch("sibyl.research_sources.scrape_url") as scrape:
+            for urls in ([], [f"https://e{i}.example" for i in range(6)]):
+                with self.assertRaises(ValueError):
+                    await read_sources(urls, "q")
+        scrape.assert_not_called()
 
 
 class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
@@ -654,7 +736,7 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         job = await self.retrieve(self.start(2))
         parent = job["sources"][0]["passage_ids"][0]
         with mock.patch(
-            "sibyl.research_jobs.read_source_bundle",
+            "sibyl.research_jobs.read_sources",
             mock.AsyncMock(return_value=evidence_bundle("paper", 1)),
         ) as read:
             job = await self.jobs.continue_job(
@@ -676,7 +758,7 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
     async def test_failed_direct_read_does_not_pass_counterevidence_gate(self):
         job = self.start()
         with mock.patch(
-            "sibyl.research_jobs.read_source_bundle",
+            "sibyl.research_jobs.read_sources",
             mock.AsyncMock(side_effect=ValueError("secret")),
         ):
             job = await self.jobs.continue_job(
@@ -760,15 +842,50 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(stale["current_revision"], job["revision"])
         self.assertEqual(stale["recovery"]["action"], "reload_research")
 
+    async def test_batch_read_is_one_step_with_every_url_recorded(self):
+        self.runtime._config = Config(extractor="trafilatura")
+        job = self.start(2)
+        urls = ["https://example.com/a?token=SECRET", "https://example.com/b"]
+        with mock.patch(
+            "sibyl.research_jobs.read_sources",
+            mock.AsyncMock(return_value=evidence_bundle("batch", 2)),
+        ) as read:
+            job = await self.jobs.continue_job(job["job_id"], "batch", urls=urls)
+        read.assert_awaited_once()
+        self.assertEqual(read.call_args.args[0], urls)
+        self.assertEqual(read.call_args.kwargs["extractor"], "trafilatura")
+        attempt = job["attempts"][-1]
+        self.assertEqual(job["remaining_steps"], 1)
+        self.assertEqual(len(attempt["urls"]), 2)
+        self.assertNotIn("SECRET", json.dumps(attempt))
+        self.assertEqual(attempt["url"], attempt["urls"][0])
+
+    async def test_too_many_urls_are_rejected_without_an_attempt(self):
+        server = create_server(self.runtime)
+        job = self.start()
+        with mock.patch("sibyl.research_jobs.read_sources") as read:
+            response = await server.call_tool(
+                "continue_research",
+                {
+                    "job_id": job["job_id"],
+                    "query": "q",
+                    "urls": [f"https://e{i}.example" for i in range(6)],
+                },
+            )
+        read.assert_not_called()
+        self.assertTrue(response.isError)
+        self.assertEqual(response.structuredContent["error"]["field"], "urls")
+        self.assertEqual(self.jobs.get(job["job_id"])["attempts"], [])
+
     async def test_cancel_direct_read_retains_attempt(self):
         entered = asyncio.Event()
 
-        async def wait(*args):
+        async def wait(*args, **kwargs):
             entered.set()
             await asyncio.Event().wait()
 
         job = self.start()
-        with mock.patch("sibyl.research_jobs.read_source_bundle", wait):
+        with mock.patch("sibyl.research_jobs.read_sources", wait):
             task = asyncio.create_task(
                 self.jobs.continue_job(job["job_id"], "q", url="https://example.com")
             )

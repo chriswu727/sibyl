@@ -34,7 +34,8 @@ fact lookup your own search is enough.
 Quick path:
 1. start_research(question, sub_questions=[...]).
 2. Find sources with your own web search when you have one, then read each into
-   the job: continue_research(job_id, url=..., query="what you need", question_id=...).
+   the job: continue_research(job_id, url=... or urls=[up to 5], query="what you
+   need", question_id=...).
    Only without a search of your own, continue_research(job_id, query=...) falls
    back to Sibyl's keyless search, which public search sites often refuse.
 3. get_research(job_id, passage_ids=[...]) returns exact passage text. Briefs omit

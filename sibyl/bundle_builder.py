@@ -203,7 +203,16 @@ async def build_bundle(
     preferred_hosts: List[str],
     multi_step_query: bool,
     started_at: float,
+    max_passages_per_source: int | None = None,
+    status_from_read: bool = False,
 ) -> SourceBundle:
+    """Assemble a SourceBundle from candidate pages.
+
+    Discovery passes status_from_read=False: the bundle is "ok" only when the
+    evidence is sufficient. Host-supplied reads pass True: a read that yields
+    sources is "ok" (it succeeded), while evidence_sufficiency still reports how
+    much the sources support the query.
+    """
     results = discovery.results
     urls = discovery.urls
     attempted_urls = discovery.attempted_urls
@@ -227,7 +236,10 @@ async def build_bundle(
     content_clusters = cluster_content([page.text for page in candidates])
     cluster_id_by_source_hash = {}
     passage_size = min(2500, max(500, effective_chars_per_source // 3))
-    max_passages_per_source = min(3, max(1, effective_chars_per_source // passage_size))
+    if max_passages_per_source is None:
+        max_passages_per_source = min(
+            3, max(1, effective_chars_per_source // passage_size)
+        )
 
     source_candidates = []
     ranking_documents = []
@@ -526,9 +538,10 @@ async def build_bundle(
         recommended_action = "synthesize"
     else:
         recommended_action = "refine_query"
-    bundle_status: BundleStatus = (
-        "ok" if evidence_sufficiency == "sufficient" else "insufficient_evidence"
+    succeeded = (
+        bool(prepared) if status_from_read else evidence_sufficiency == "sufficient"
     )
+    bundle_status: BundleStatus = "ok" if succeeded else "insufficient_evidence"
     bundle_id = _bundle_id(clean_query, bundle_status, fingerprints)
     retrieved_at = datetime.now(timezone.utc).isoformat()
     sources = []
