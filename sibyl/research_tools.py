@@ -107,8 +107,9 @@ async def continue_research(
     purpose="counterevidence" investigates alternatives; follow_citation needs
     parent_passage_id, a host-declared link. Returns an update: the new
     sources with their top passages inline (cut passages are marked truncated),
-    retrieval notes, the question's gaps and claim support, and
-    suggested_queries naming the next searches and why.
+    retrieval notes, the question's gaps and claim support, suggested_queries
+    naming the next searches and why, and before_answering: what to read before
+    answering (independent and counterevidence sources).
     """
     return await get_runtime().research_jobs.continue_job(
         job_id, query, url, question_id, purpose, parent_passage_id, rationale, urls
@@ -140,7 +141,9 @@ async def assess_research(
     inference/recommendation: basis_claim_ids plus rationale; recommendations add
     criteria with origin=user or host_assumption. Unknowns: status=unresolved with
     a rationale. follow_up_queries (at most four) record gaps to pursue.
-    Returns an update with the question's gaps, claim checks and next searches.
+    Returns an update with the question's gaps, claim checks, next searches,
+    before_answering steps and answer_material: the recorded claims with source
+    URLs, counterevidence status and open gaps, to write the user's answer from.
     """
     return get_runtime().research_jobs.assess(
         job_id,

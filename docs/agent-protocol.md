@@ -110,6 +110,8 @@ instead of the whole brief.
 | `retrieved` | Retrieval only: readable sources from this read with `citation` (null outside the report window), source fields, `passages` inline and `omitted_passage_ids` |
 | `question` | The question's plan item: gaps, `claim_support`, `counterevidence`, attempts and a review summary (status, conclusion, claim count) |
 | `open_questions` | IDs of every question that still has gaps |
+| `before_answering` | What to read for this question before answering, from its suggested searches: an independent, primary or corroborating source, a counterevidence read, or a statement about counterevidence read but not cited; empty when nothing is missing |
+| `answer_material` | Assessment only: the question's recorded claims as user-facing lines with supporting and challenging URLs (no Sibyl IDs), the counterevidence status and note, open gaps, and guidance to write the answer from them |
 | `ready_to_complete`, `next_action`, `suggested_queries` | As in `research_plan` |
 | `evidence_access` | Arguments for exact passage reads and the full brief |
 

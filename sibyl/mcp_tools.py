@@ -46,10 +46,17 @@ Quick path:
    and the reason from the question's gaps. Prefer them over improvised queries.
 3. Inline passages may be cut; get_research(job_id, passage_ids=[...]) returns
    exact full passage text. get_research(job_id) returns the full brief.
-4. Answer from what you read and cite passage IDs or URLs. Stop here if no
-   record or report is needed.
+4. Before answering, read sources from at least two independent publishers and
+   at least one counterevidence source (purpose="counterevidence"); each update's
+   before_answering lists what is still missing. Batch URLs: urls=[...] reads up
+   to five in one retrieval step.
+5. Answer from what you read. Cite URLs, never Sibyl claim or passage IDs; say
+   what the counterevidence showed and which gaps remain. After assess_research,
+   the update's answer_material lists the recorded claims with their URLs, the
+   counterevidence status and open gaps to write that answer from.
 
-Record findings (needed for reports): assess_research with atomic claims.
+Record findings with assess_research (atomic claims) before answering when the
+evidence matters, and always for reports.
 Supported or disputed facts cite passage IDs and quote exact text from them;
 Sibyl rejects quotes not found verbatim. Inferences and recommendations cite
 basis_claim_ids with a rationale; recommendations state criteria. Unknowns stay

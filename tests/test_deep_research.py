@@ -832,6 +832,15 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response["open_questions"], [])
         self.assertNotIn("retrieved", response)
         self.assertEqual(response["question"]["review"]["status"], "supported")
+        material = response["answer_material"]
+        self.assertIn("never Sibyl claim or passage IDs", material["guidance"])
+        claim = material["claims"][0]
+        self.assertEqual(claim["status"], "supported")
+        self.assertTrue(claim["supporting_urls"][0].startswith("https://"))
+        self.assertNotIn(support[0], json.dumps(material))
+        self.assertEqual(material["counterevidence"]["status"], "linked")
+        self.assertEqual(material["open_gaps"], [])
+        self.assertEqual(response["before_answering"], [])
 
     async def test_mcp_retrieval_returns_new_passages_inline(self):
         server = create_server(self.runtime)
@@ -863,6 +872,10 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
             full["passage"]["text"].startswith(first["passages"][0]["text"])
         )
         self.assertNotIn("sources", update)
+        self.assertNotIn("answer_material", update)
+        steps = " ".join(update["before_answering"])
+        self.assertIn('purpose="counterevidence"', steps)
+        self.assertIn("urls=[...]", steps)
 
     def test_inline_passages_share_a_bounded_budget(self):
         from sibyl.research_views import INLINE_CHARS, INLINE_PASSAGES, _inline_sources
