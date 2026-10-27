@@ -1,0 +1,175 @@
+{
+  "case_id": "rag",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.37239520000000004,
+  "judge_subtype": "success",
+  "pages_read": 11,
+  "pages_cited": 11,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"RAG models combine pre-trained parametric and non-parametric memory for language generation.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"The paper compares two formulations: same retrieved passages across the whole sequence vs. different passages per token.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"The survey describes RAG as merging LLM intrinsic knowledge with external databases, in response to hallucination, outdated knowledge and untraceable reasoning.\", \"url\": \"https://arxiv.org/abs/2312.10997\", \"label\": \"supported\"}, {\"claim\": \"RAG generated more specific, diverse and factual language than a parametric-only seq2seq baseline.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"RAG systems suffer from limitations inherent to information retrieval systems and from reliance on LLMs.\", \"url\": \"https://arxiv.org/abs/2401.05856\", \"label\": \"supported\"}, {\"claim\": \"The experience report draws on three case studies (research, education, biomedical), lists 7 failure points, and says validation is only feasible during operation.\", \"url\": \"https://arxiv.org/abs/2401.05856\", \"label\": \"supported\"}, {\"claim\": \"RAG is designed to reduce hallucinated responses, not to eliminate them.\", \"url\": \"https://arxiv.org/abs/2401.05856\", \"label\": \"partial\"}, {\"claim\": \"LMs don't robustly use long contexts; performance is highest when relevant info is at the beginning or end and degrades in the middle, even for long-context models.\", \"url\": \"https://arxiv.org/abs/2307.03172\", \"label\": \"supported\"}], \"uncited_claims\": 2, \"rubric\": {\"coverage\": 1, \"support\": 2, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Accurate and well-bounded. The page does say RAG aims to 'reduce' hallucination, but 'not eliminate' is the answer's own extension. The answer says the original abstract was cut off before the architecture, yet the given page text does include the seq2seq-plus-dense-Wikipedia-index description. It explicitly leaves gaps: knowledge conflicts and retriever errors are not evidenced, so the 'why' half is only partly covered. The inference paragraph is uncited but labeled as inference. Limitations are disclosed, but no substantive counterevidence is offered. The reference to an internal job ID is irrelevant.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Original RAG uses a pre-trained seq2seq model as parametric memory and a dense vector index of Wikipedia, accessed by a neural retriever, as non-parametric memory.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"There are two formulations: same passages for the whole output vs. different passages per token.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Motivation: LMs manipulate stored knowledge imprecisely; provenance and updating knowledge were open problems.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Even with relevant, accurate retrieved context, models can produce unsupported or contradicting statements, called faithfulness hallucination.\", \"url\": \"https://arxiv.org/pdf/2410.11414\", \"label\": \"partial\"}, {\"claim\": \"Only a weak, inconsistent link between retrieval quality and faithfulness; most common failure (28.4%) is evidence override in favor of parametric priors.\", \"url\": \"https://arxiv.org/pdf/2604.09174\", \"label\": \"partial\"}, {\"claim\": \"Models face a 'tug-of-war' between retrieved context and priors and frequently ignore conflicting retrieved content (Wu et al., 2024).\", \"url\": \"https://arxiv.org/pdf/2604.20854\", \"label\": \"unsupported\"}, {\"claim\": \"Models can over-comply with retrieved text, even a misconception, when it conflicts with parametric knowledge.\", \"url\": \"https://arxiv.org/html/2605.14473v2\", \"label\": \"supported\"}, {\"claim\": \"Conflicts can come from retrieval mismatch, stale documents, or adversarial injection.\", \"url\": \"https://arxiv.org/html/2605.14473v2\", \"label\": \"supported\"}], \"uncited_claims\": 3, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Covers both halves of the question, including conflicts in both directions (ignoring evidence and over-complying with it). On support: 2410.11414 names the phenomenon 'RAG Hallucination', not 'faithfulness hallucination'. For 2604.09174, the excerpt supports the claim that hallucination is driven less by retrieval accuracy and that strong retrieval co-occurs with unfaithful generation, but it does not contain the 28.4% figure. 2604.20854 discusses conflicts but does not state 'tug-of-war' or 'frequently ignore'; that phrasing appears in 2605.14473, citing ClashEval. Three claims (Barnett irrelevant docs, false-premise retrieval, 17–33% legal rates) are uncited and relayed from a search summary. These were openly disclosed, but they remain unverified. Limitations are disclosed, with no substantive narrowing evidence.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Original RAG's parametric memory is a pre-trained seq2seq generator; non-parametric memory is a dense vector index of Wikipedia accessed by a pre-trained neural retriever.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Two formulations: same passages for the whole output vs. different passages per token.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"State-of-the-art on three open-domain QA tasks and more specific, diverse, factual generation than a parametric-only baseline.\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Survey describes RAG as merging intrinsic knowledge with external databases, improving accuracy/credibility and enabling updated and domain-specific knowledge.\", \"url\": \"https://arxiv.org/abs/2312.10997\", \"label\": \"supported\"}, {\"claim\": \"Models do best when relevant info is at the start or end of long input; performance drops significantly in the middle, even for long-context models.\", \"url\": \"https://arxiv.org/abs/2307.03172\", \"label\": \"supported\"}, {\"claim\": \"Across six LLMs, some noise robustness, but models struggle significantly with negative rejection, information integration, and counterfactual/false information.\", \"url\": \"https://arxiv.org/abs/2309.01431\", \"label\": \"supported\"}, {\"claim\": \"Lexis+ AI and two Thomson Reuters tools still hallucinated 17–33% of the time, less than general-purpose chatbots; vendor claims were overstated.\", \"url\": \"https://arxiv.org/abs/2405.20362\", \"label\": \"supported\"}, {\"claim\": \"The knowledge-conflicts survey abstract only states the topic is surveyed, with no specific findings.\", \"url\": \"https://arxiv.org/abs/2403.08319\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 2, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Every cited claim matches the page text. It covers how the two knowledge sources are combined and several distinct failure reasons: context position, noise, refusal, integration, and counterfactual text. It also adds a deployed-system measurement from the legal study, which is an independent research group. The legal study directly challenges vendor claims of hallucination-free RAG. The RGB finding of partial noise robustness adds nuance. Gaps on parametric-vs-retrieved conflict resolution are explicitly disclosed. The direct-answer summary sentences are uncited.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "RAG models combine pre-trained parametric and non-parametric memory for language generation.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "The paper compares two formulations: same retrieved passages across the whole sequence vs. different passages per token.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "The survey describes RAG as merging LLM intrinsic knowledge with external databases, in response to hallucination, outdated knowledge and untraceable reasoning.",
+          "url": "https://arxiv.org/abs/2312.10997",
+          "label": "supported"
+        },
+        {
+          "claim": "RAG generated more specific, diverse and factual language than a parametric-only seq2seq baseline.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "RAG systems suffer from limitations inherent to information retrieval systems and from reliance on LLMs.",
+          "url": "https://arxiv.org/abs/2401.05856",
+          "label": "supported"
+        },
+        {
+          "claim": "The experience report draws on three case studies (research, education, biomedical), lists 7 failure points, and says validation is only feasible during operation.",
+          "url": "https://arxiv.org/abs/2401.05856",
+          "label": "supported"
+        },
+        {
+          "claim": "RAG is designed to reduce hallucinated responses, not to eliminate them.",
+          "url": "https://arxiv.org/abs/2401.05856",
+          "label": "partial"
+        },
+        {
+          "claim": "LMs don't robustly use long contexts; performance is highest when relevant info is at the beginning or end and degrades in the middle, even for long-context models.",
+          "url": "https://arxiv.org/abs/2307.03172",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 2,
+      "rubric": {
+        "coverage": 1,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Accurate and well-bounded. The page does say RAG aims to 'reduce' hallucination, but 'not eliminate' is the answer's own extension. The answer says the original abstract was cut off before the architecture, yet the given page text does include the seq2seq-plus-dense-Wikipedia-index description. It explicitly leaves gaps: knowledge conflicts and retriever errors are not evidenced, so the 'why' half is only partly covered. The inference paragraph is uncited but labeled as inference. Limitations are disclosed, but no substantive counterevidence is offered. The reference to an internal job ID is irrelevant."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Original RAG uses a pre-trained seq2seq model as parametric memory and a dense vector index of Wikipedia, accessed by a neural retriever, as non-parametric memory.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "There are two formulations: same passages for the whole output vs. different passages per token.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Motivation: LMs manipulate stored knowledge imprecisely; provenance and updating knowledge were open problems.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Even with relevant, accurate retrieved context, models can produce unsupported or contradicting statements, called faithfulness hallucination.",
+          "url": "https://arxiv.org/pdf/2410.11414",
+          "label": "partial"
+        },
+        {
+          "claim": "Only a weak, inconsistent link between retrieval quality and faithfulness; most common failure (28.4%) is evidence override in favor of parametric priors.",
+          "url": "https://arxiv.org/pdf/2604.09174",
+          "label": "partial"
+        },
+        {
+          "claim": "Models face a 'tug-of-war' between retrieved context and priors and frequently ignore conflicting retrieved content (Wu et al., 2024).",
+          "url": "https://arxiv.org/pdf/2604.20854",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Models can over-comply with retrieved text, even a misconception, when it conflicts with parametric knowledge.",
+          "url": "https://arxiv.org/html/2605.14473v2",
+          "label": "supported"
+        },
+        {
+          "claim": "Conflicts can come from retrieval mismatch, stale documents, or adversarial injection.",
+          "url": "https://arxiv.org/html/2605.14473v2",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 3,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Covers both halves of the question, including conflicts in both directions (ignoring evidence and over-complying with it). On support: 2410.11414 names the phenomenon 'RAG Hallucination', not 'faithfulness hallucination'. For 2604.09174, the excerpt supports the claim that hallucination is driven less by retrieval accuracy and that strong retrieval co-occurs with unfaithful generation, but it does not contain the 28.4% figure. 2604.20854 discusses conflicts but does not state 'tug-of-war' or 'frequently ignore'; that phrasing appears in 2605.14473, citing ClashEval. Three claims (Barnett irrelevant docs, false-premise retrieval, 17–33% legal rates) are uncited and relayed from a search summary. These were openly disclosed, but they remain unverified. Limitations are disclosed, with no substantive narrowing evidence."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Original RAG's parametric memory is a pre-trained seq2seq generator; non-parametric memory is a dense vector index of Wikipedia accessed by a pre-trained neural retriever.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Two formulations: same passages for the whole output vs. different passages per token.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "State-of-the-art on three open-domain QA tasks and more specific, diverse, factual generation than a parametric-only baseline.",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Survey describes RAG as merging intrinsic knowledge with external databases, improving accuracy/credibility and enabling updated and domain-specific knowledge.",
+          "url": "https://arxiv.org/abs/2312.10997",
+          "label": "supported"
+        },
+        {
+          "claim": "Models do best when relevant info is at the start or end of long input; performance drops significantly in the middle, even for long-context models.",
+          "url": "https://arxiv.org/abs/2307.03172",
+          "label": "supported"
+        },
+        {
+          "claim": "Across six LLMs, some noise robustness, but models struggle significantly with negative rejection, information integration, and counterfactual/false information.",
+          "url": "https://arxiv.org/abs/2309.01431",
+          "label": "supported"
+        },
+        {
+          "claim": "Lexis+ AI and two Thomson Reuters tools still hallucinated 17–33% of the time, less than general-purpose chatbots; vendor claims were overstated.",
+          "url": "https://arxiv.org/abs/2405.20362",
+          "label": "supported"
+        },
+        {
+          "claim": "The knowledge-conflicts survey abstract only states the topic is surveyed, with no specific findings.",
+          "url": "https://arxiv.org/abs/2403.08319",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Every cited claim matches the page text. It covers how the two knowledge sources are combined and several distinct failure reasons: context position, noise, refusal, integration, and counterfactual text. It also adds a deployed-system measurement from the legal study, which is an independent research group. The legal study directly challenges vendor claims of hallucination-free RAG. The RGB finding of partial noise robustness adds nuance. Gaps on parametric-vs-retrieved conflict resolution are explicitly disclosed. The direct-answer summary sentences are uncited."
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "case_id": "idempotency",
+  "condition": "deep_research",
+  "elapsed_seconds": 41.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.1433028,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 24777,
+    "cache_read_input_tokens": 58152,
+    "output_tokens": 3482,
+    "output_tokens_details": {
+      "thinking_tokens": 350
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 24777,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 8,
+      "outputTokens": 3482,
+      "cacheReadInputTokens": 58152,
+      "cacheCreationInputTokens": 24777,
+      "webSearchRequests": 0,
+      "costUSD": 0.1397592,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 350,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 24777,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 20221,
+      "outputTokens": 3043,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0035436,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1886,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 6
+  },
+  "final_answer": "**No. Idempotency keys make retries safe only for a bounded window, and neither Stripe nor AWS documents them as safe indefinitely.** Stripe says to stop retrying an unresolved operation after 24 hours. AWS says it is \"impractical to retain that knowledge indefinitely.\" AWS's EC2 docs I read give no numeric expiry for client tokens.\n\nI used six of the eight allowed retrievals. I did not use the deep-research skill's subagent and file workflow, because you ruled out shell commands and local files. I researched directly instead.\n\n**Stripe (API v1)**\n\n- Stripe keeps keys for at least 24 hours and may remove them after that. Reusing a removed key can run a new request.\n  - https://docs.stripe.com/api/idempotent_requests\n  - https://docs.stripe.com/error-low-level\n- Stripe tells you to limit retries of an unresolved operation to the first 24 hours, with the same key and parameters.\n  - https://docs.stripe.com/error-low-level\n- If the outcome is still unknown after 24 hours, Stripe says not to retry with the old key or a new one. Reconcile instead: retrieve the object, check the Dashboard, and use webhook events. If that doesn't settle it, contact Stripe support.\n  - https://docs.stripe.com/error-low-level\n- Keys can be up to 255 characters.\n  - https://docs.stripe.com/api/idempotent_requests\n- Reusing a key with different parameters returns an error.\n  - https://docs.stripe.com/api/idempotent_requests\n- Stripe saves a result only once endpoint execution begins. Validation failures and concurrent-request conflicts aren't saved, so you can retry those.\n  - https://docs.stripe.com/api/idempotent_requests\n- Once execution has begun, Stripe replays the saved response, including `500` errors. A saved `400` is replayed too.\n  - https://docs.stripe.com/api/idempotent_requests\n  - https://docs.stripe.com/error-low-level\n- A `500` leaves the outcome indeterminate. Stripe says not to retry with a new key until you've resolved what happened to the original.\n  - https://docs.stripe.com/error-low-level\n- Stripe's v2 API has different replay behavior and a 30-day window, so the 24-hour figure applies to v1 only.\n  - https://docs.stripe.com/error-low-level\n- I did not open the v2 page itself, so I haven't checked those v2 details.\n\n**AWS**\n\n- AWS prefers a caller-supplied request identifier. It aims to return a semantically equivalent response for the same identifier \"for some interval.\" That is an interval, not forever.\n  - https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- AWS says \"it's impractical to retain that knowledge indefinitely.\" For EC2 instances, it describes retention as the resource's lifetime plus an interval, and says retention varies by service.\n  - https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- This is a design article, not a service SLA. The EC2 developer guide page I read gives no numeric expiry for client tokens, so I can't give an AWS equivalent of Stripe's 24 hours.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- An EC2 client token is a case-sensitive string of up to 64 ASCII characters.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- Reusing a token with different parameters fails with `IdempotentParameterMismatch`, apart from Region or Availability Zone differences.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- EC2 idempotency is scoped to a Region, or to an Availability Zone for zonal requests. The same token in another Region or zone can run again.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- Only some EC2 actions support client tokens, so idempotency is not universal.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- For EC2 `5xx` responses, AWS recommends retrying \"with an appropriate backoff strategy.\" It says not to retry `4xx` responses, with one exception: a resource that is changing state might succeed on retry.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- AWS says \"APIs with side effects aren't safe to retry unless they provide idempotency.\" That makes idempotency necessary, but it doesn't make unlimited retries safe.\n  - https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter\n- AWS separately says retries cost the server capacity. It warns that independent retries at each layer can multiply load (its example is 243x). It advises limiting retries, for example with a local token bucket, and using backoff and jitter. This is a load argument, which idempotency doesn't address.\n  - https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter\n- The AWS idempotency article does not discuss retry limits or backoff.\n  - https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n\n**What the evidence doesn't settle**\n\n- I found no numeric token-retention period for AWS services. It varies by service, and I only checked EC2 and the Builders' Library articles.\n- This is a comparison of Stripe's explicit 24-hour guidance and AWS's less specific design guidance. They aren't like-for-like numeric limits.",
+  "final_answer_sha256": "5c7d559f018015432ff1b9365ea8b743ad593a89632a4eb15389c8778e94e08e",
+  "raw_stream_sha256": "a2e29a70148cacc753bd1e92bfed85dc8b8d381e6772e809ef2e6dbc78101ce7"
+}

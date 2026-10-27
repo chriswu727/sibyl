@@ -1,0 +1,125 @@
+{
+  "case_id": "adv02",
+  "kind": "trap",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "sibyl",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.3176712,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 10,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"No human has landed on or walked on Mars; NASA lists Mars population as 'Zero' and treats crewed missions as future goals\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"supported\"}, {\"claim\": \"NASA is working to send astronauts to Mars 'as early as the 2030s', with an example round-trip mission in 2039, and the page is being updated for Artemis changes\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"supported\"}, {\"claim\": \"Mars exploration has been robotic only; China's Tianwen-1 lander and Zhurong rover landed in May 2021\", \"url\": \"https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\", \"label\": \"unsupported\"}, {\"claim\": \"China plans its first crewed Mars mission around 2033 (per a 2021 article)\", \"url\": \"https://www.aljazeera.com/news/2021/6/24/china-plans-for-first-manned-mission-to-mars-in-2033\", \"label\": \"supported\"}, {\"claim\": \"SpaceX reportedly told investors in February 2026 that it would prioritize the Moon and attempt Mars later\", \"url\": \"https://starship-spacex.fandom.com/wiki/Mars_Missions\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies the false premise and does not invent an answer. The core claim is directly supported by the NASA page ('Population Zero'; 'inhabited entirely by robots'). The Zhurong claim is attributed to a Wikipedia page whose excerpt does not mention it, though the answer discloses that it did not open that page. The fandom page could not be read.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"As of 2022, NASA's crewed Mars surface mission was in early planning: a 30-day, two-person surface stay aimed at the late 2030s or early 2040s, subject to considerable change\", \"url\": \"https://www.space.com/nasa-plans-astronauts-mars-mission-30-days\", \"label\": \"supported\"}, {\"claim\": \"Crewed Mars missions exist only as concept studies and proposals, including NASA design reference missions, a Chinese plan for 2040–2060, and SpaceX aspirational plans\", \"url\": \"https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\", \"label\": \"partial\"}, {\"claim\": \"SpaceX's earlier aspirational dates such as 2024 were not met, and the section is marked 'needs update'\", \"url\": \"https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\", \"label\": \"unsupported\"}, {\"claim\": \"Mars has only been explored robotically, e.g. by the Ingenuity helicopter and the Zhurong rover\", \"url\": \"https://en.wikipedia.org/wiki/Indian_Mars_exploration_missions\", \"label\": \"unsupported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correctly identifies the false premise. However, the central claim that no human has been to Mars is not cited, and the answer openly calls it an inference from absence. The Wikipedia excerpt shows NASA DRMs and SpaceX Starship but no Chinese 2040–2060 plan, no 2024 SpaceX date, and no 'needs update' tag. The Indian Mars page does not mention Ingenuity or Zhurong.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"No human has walked on Mars, and no crewed Mars mission is currently funded or scheduled\", \"url\": \"https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\", \"label\": \"unsupported\"}, {\"claim\": \"No human has walked on Mars, and no crewed Mars mission is currently funded or scheduled\", \"url\": \"https://marsprogress.com/\", \"label\": \"supported\"}, {\"claim\": \"Only robots are at Mars now: two rovers on the ground and six orbiters\", \"url\": \"https://marsprogress.com/\", \"label\": \"supported\"}, {\"claim\": \"NASA's stated goal is astronauts to Mars in the 2030s with no firm date; other sources say the early 2040s or a delay to about 2039\", \"url\": \"https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814\", \"label\": \"partial\"}, {\"claim\": \"NASA's stated goal is astronauts to Mars in the 2030s with no firm date; other sources say the early 2040s or a delay to about 2039\", \"url\": \"https://www.universetoday.com/articles/2033-is-the-perfect-year-to-send-humans-to-mars-with-a-bonus-venus-flyby\", \"label\": \"partial\"}, {\"claim\": \"NASA's 2022 objectives describe a 30-day, two-person surface mission; other estimates involve much longer stays\", \"url\": \"https://www.space.com/nasa-plans-astronauts-mars-mission-30-days\", \"label\": \"partial\"}, {\"claim\": \"NASA's 2022 objectives describe a 30-day, two-person surface mission; other estimates involve much longer stays\", \"url\": \"https://interestingengineering.com/science/nasa-releases-50-key-objectives-to-tackle-on-its-first-human-mission-to-mars\", \"label\": \"partial\"}, {\"claim\": \"SpaceX had floated a 2028 crewed flight; in February 2026 it reportedly told investors it would prioritize the Moon, cancelling the uncrewed 2026 Mars landing plan\", \"url\": \"https://marsprogress.com/\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies the false premise. The marsprogress page directly supports the no-funded-crewed-mission claim and the count of two rovers and six orbiters. The Wikipedia page lists only concept studies and does not state the claim. The Conversation gives 2030s/2035 and Universe Today gives 2039, but neither gives both. The 30-day two-person mission is supported, but 'much longer stays' is not on those pages. On the SpaceX claim, marsprogress says 2028 cargo flights (not crewed) and a Moon-first shift in Feb 2026; the investors framing and the cancellation of a 2026 Mars landing are not stated.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "No human has landed on or walked on Mars; NASA lists Mars population as 'Zero' and treats crewed missions as future goals",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "NASA is working to send astronauts to Mars 'as early as the 2030s', with an example round-trip mission in 2039, and the page is being updated for Artemis changes",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "Mars exploration has been robotic only; China's Tianwen-1 lander and Zhurong rover landed in May 2021",
+          "url": "https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans",
+          "label": "unsupported"
+        },
+        {
+          "claim": "China plans its first crewed Mars mission around 2033 (per a 2021 article)",
+          "url": "https://www.aljazeera.com/news/2021/6/24/china-plans-for-first-manned-mission-to-mars-in-2033",
+          "label": "supported"
+        },
+        {
+          "claim": "SpaceX reportedly told investors in February 2026 that it would prioritize the Moon and attempt Mars later",
+          "url": "https://starship-spacex.fandom.com/wiki/Mars_Missions",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies the false premise and does not invent an answer. The core claim is directly supported by the NASA page ('Population Zero'; 'inhabited entirely by robots'). The Zhurong claim is attributed to a Wikipedia page whose excerpt does not mention it, though the answer discloses that it did not open that page. The fandom page could not be read."
+    },
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "As of 2022, NASA's crewed Mars surface mission was in early planning: a 30-day, two-person surface stay aimed at the late 2030s or early 2040s, subject to considerable change",
+          "url": "https://www.space.com/nasa-plans-astronauts-mars-mission-30-days",
+          "label": "supported"
+        },
+        {
+          "claim": "Crewed Mars missions exist only as concept studies and proposals, including NASA design reference missions, a Chinese plan for 2040–2060, and SpaceX aspirational plans",
+          "url": "https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans",
+          "label": "partial"
+        },
+        {
+          "claim": "SpaceX's earlier aspirational dates such as 2024 were not met, and the section is marked 'needs update'",
+          "url": "https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Mars has only been explored robotically, e.g. by the Ingenuity helicopter and the Zhurong rover",
+          "url": "https://en.wikipedia.org/wiki/Indian_Mars_exploration_missions",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correctly identifies the false premise. However, the central claim that no human has been to Mars is not cited, and the answer openly calls it an inference from absence. The Wikipedia excerpt shows NASA DRMs and SpaceX Starship but no Chinese 2040–2060 plan, no 2024 SpaceX date, and no 'needs update' tag. The Indian Mars page does not mention Ingenuity or Zhurong."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "No human has walked on Mars, and no crewed Mars mission is currently funded or scheduled",
+          "url": "https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans",
+          "label": "unsupported"
+        },
+        {
+          "claim": "No human has walked on Mars, and no crewed Mars mission is currently funded or scheduled",
+          "url": "https://marsprogress.com/",
+          "label": "supported"
+        },
+        {
+          "claim": "Only robots are at Mars now: two rovers on the ground and six orbiters",
+          "url": "https://marsprogress.com/",
+          "label": "supported"
+        },
+        {
+          "claim": "NASA's stated goal is astronauts to Mars in the 2030s with no firm date; other sources say the early 2040s or a delay to about 2039",
+          "url": "https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814",
+          "label": "partial"
+        },
+        {
+          "claim": "NASA's stated goal is astronauts to Mars in the 2030s with no firm date; other sources say the early 2040s or a delay to about 2039",
+          "url": "https://www.universetoday.com/articles/2033-is-the-perfect-year-to-send-humans-to-mars-with-a-bonus-venus-flyby",
+          "label": "partial"
+        },
+        {
+          "claim": "NASA's 2022 objectives describe a 30-day, two-person surface mission; other estimates involve much longer stays",
+          "url": "https://www.space.com/nasa-plans-astronauts-mars-mission-30-days",
+          "label": "partial"
+        },
+        {
+          "claim": "NASA's 2022 objectives describe a 30-day, two-person surface mission; other estimates involve much longer stays",
+          "url": "https://interestingengineering.com/science/nasa-releases-50-key-objectives-to-tackle-on-its-first-human-mission-to-mars",
+          "label": "partial"
+        },
+        {
+          "claim": "SpaceX had floated a 2028 crewed flight; in February 2026 it reportedly told investors it would prioritize the Moon, cancelling the uncrewed 2026 Mars landing plan",
+          "url": "https://marsprogress.com/",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies the false premise. The marsprogress page directly supports the no-funded-crewed-mission claim and the count of two rovers and six orbiters. The Wikipedia page lists only concept studies and does not state the claim. The Conversation gives 2030s/2035 and Universe Today gives 2039, but neither gives both. The 30-day two-person mission is supported, but 'much longer stays' is not on those pages. On the SpaceX claim, marsprogress says 2028 cargo flights (not crewed) and a Moon-first shift in Feb 2026; the investors framing and the cancellation of a 2026 Mars landing are not stated."
+    }
+  }
+}

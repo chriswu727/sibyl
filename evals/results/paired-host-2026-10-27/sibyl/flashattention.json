@@ -1,0 +1,58 @@
+{
+  "case_id": "flashattention",
+  "condition": "sibyl",
+  "elapsed_seconds": 51.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.18959379999999998,
+  "usage": {
+    "input_tokens": 14,
+    "cache_creation_input_tokens": 27966,
+    "cache_read_input_tokens": 126018,
+    "output_tokens": 6510,
+    "output_tokens_details": {
+      "thinking_tokens": 290
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 27966,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14,
+      "outputTokens": 6510,
+      "cacheReadInputTokens": 126018,
+      "cacheCreationInputTokens": 27966,
+      "webSearchRequests": 0,
+      "costUSD": 0.18959379999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 290,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 27966,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 3,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer:** FlashAttention gives the same attention output as standard attention, so it is not an approximation. It is faster because attention on a GPU is limited by memory traffic, not arithmetic. It restructures the computation to avoid writing the large N×N attention matrix to slow GPU memory (HBM). Its speedups don't transfer cleanly to other settings. They depend on the kernel, the GPU generation, the sequence length and the baseline being compared. I read only the authors' own papers, so these limits come from their reporting. I read no independent benchmarks, and none of these claims has a second source.\n\n**Why it is exact and faster**\n\n- It is an exact attention algorithm. It gets its speed by using tiling to cut reads and writes between HBM and on-chip SRAM.\n  - https://arxiv.org/abs/2205.14135\n- Instead of storing the full attention matrix, it processes blocks and computes the softmax incrementally. In the backward pass it recomputes attention on-chip rather than loading a stored matrix. The whole computation is fused into one CUDA kernel.\n  - https://ar5iv.labs.arxiv.org/html/2205.14135\n- It does more floating-point work than standard attention, because of the backward-pass recomputation. It is still faster because it makes far fewer HBM accesses. The paper says HBM accesses are the main factor in attention runtime, and that most Transformer operations are bottlenecked by memory access.\n  - https://ar5iv.labs.arxiv.org/html/2205.14135\n\n**What limits generalizing the benchmark gains**\n\n- The authors say each new attention variant needs a new hand-written CUDA kernel. They also say implementations \"may also not be transferrable across GPU architectures.\"\n  - https://ar5iv.labs.arxiv.org/html/2205.14135\n- Speedups depend on sequence length and on what you compare against. Beyond about 1K tokens, some approximate methods such as Linformer become faster. The gain from fewer HBM accesses also levels off once other costs dominate: past a block size of 256, runtime is limited by arithmetic and other factors.\n  - https://ar5iv.labs.arxiv.org/html/2205.14135\n- Efficiency changed across versions and GPUs. FlashAttention-1 reached only 25–40% of the theoretical maximum FLOPs/s, and FlashAttention-2 reached 50–73% on A100. On H100, FlashAttention-2 reached only 35% utilization, while FlashAttention-3 reached about 75% in FP16 using Hopper-specific features. This shows the kernels are tuned to the hardware.\n  - https://arxiv.org/abs/2307.08691\n  - https://arxiv.org/abs/2407.08608\n- Reported gains vary by workload. The headline results include a 15% end-to-end speedup on BERT-large (sequence length 512, against the MLPerf 1.1 record) and a 3× speedup on GPT-2 (sequence length 1K). A \"2–4×\" figure from one benchmark shouldn't be applied to another model or setup.\n  - https://ar5iv.labs.arxiv.org/html/2205.14135\n  - https://arxiv.org/abs/2307.08691\n\n**Not established by what I read**\n\n- I did not read the exact numerical behavior, such as floating-point differences from reordered summation. \"Exact\" here means mathematically equivalent, not necessarily bitwise identical. I did not check this.\n- I did not read any effect of head dimension, short sequences or non-NVIDIA hardware. Those would need independent benchmarks.\n\nSources:\n- [FlashAttention (arXiv abstract)](https://arxiv.org/abs/2205.14135)\n- [FlashAttention (full text, ar5iv)](https://ar5iv.labs.arxiv.org/html/2205.14135)\n- [FlashAttention-2](https://arxiv.org/abs/2307.08691)\n- [FlashAttention-3](https://arxiv.org/abs/2407.08608)",
+  "final_answer_sha256": "ac9b0929c13cabcd2ec34b29956119a2da05c2074ff55e82fbe62b91cff9b53d",
+  "raw_stream_sha256": "738bad1a95b541c4f2b574454dbe1f82cadceb315ac1e3281363951459ea0f59"
+}

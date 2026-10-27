@@ -1,0 +1,59 @@
+{
+  "case_id": "adv04",
+  "condition": "sibyl",
+  "elapsed_seconds": 26.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1176614,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 13052,
+    "cache_read_input_tokens": 47514,
+    "output_tokens": 1985,
+    "output_tokens_details": {
+      "thinking_tokens": 32
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13052,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 12746,
+      "outputTokens": 2521,
+      "cacheReadInputTokens": 47514,
+      "cacheCreationInputTokens": 13052,
+      "webSearchRequests": 1,
+      "costUSD": 0.1176614,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 32,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13052,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**No president signed an \"Antarctic Statehood Act\". The question rests on a false premise.** I found no evidence that such a law or bill exists, or that Antarctica is a U.S. state. The count of U.S. states is still 50.\n\nI used 3 of the 8 retrievals: 1 search and 2 page reads.\n\n**Claims**\n\n- A web search for \"Antarctic Statehood Act Antarctica 51st state\" returned no bill or law with that name. The results included only unrelated Antarctic laws, a speculative Quora thread, and Greenland statehood coverage.\n  - https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\n  - https://en.wikipedia.org/wiki/51st_state\n- The closest real item is a House bill to make Greenland the 51st state, introduced by Rep. Randy Fine. It is a proposal, not a law, and it concerns Greenland, not Antarctica.\n  - https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\n  - https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\n- The Wikipedia page on the \"51st state\" discusses Puerto Rico and other candidates. The text I read did not mention Antarctica.\n  - https://en.wikipedia.org/wiki/51st_state\n- The Antarctic Treaty, signed in 1959, prohibits \"the making of new territorial claims in Antarctica.\" That is a legal obstacle to any state claiming the continent. The same page says the U.S. made no territorial claim there.\n  - https://en.wikipedia.org/wiki/Antarctic_Treaty_System\n\n**Limits of this evidence**\n\n- Wikipedia is the only source for the treaty claims, and I did not corroborate them elsewhere.\n- I did not search the official Congress.gov record. My conclusion is based on absence, so it is not proof that no such bill was ever introduced.\n- The Greenland-bill details come from the search-result summaries. I did not open those articles.\n\nSources:\n- [51st state – Wikipedia](https://en.wikipedia.org/wiki/51st_state)\n- [Antarctic Treaty System – Wikipedia](https://en.wikipedia.org/wiki/Antarctic_Treaty_System)\n- [Quora thread on Antarctica as the 51st state](https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent)\n- [The Hill: Fine introduces Greenland bill](https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/)\n- [Newsweek: Greenland 51st state bill](https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217)",
+  "final_answer_sha256": "ccd407d117dd6ea8c2b5aeb4323da95895b3441502611c87ab485a63d8d85505",
+  "raw_stream_sha256": "59987fb0795f2c5bf46809c61a25222d7f4830931895bb7cead38ab3bdabe0ba"
+}

@@ -1,0 +1,115 @@
+{
+  "case_id": "real02",
+  "kind": "factual",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.14107920000000002,
+  "judge_subtype": "success",
+  "pages_read": 3,
+  "pages_cited": 5,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Ryan Kendall, the second Black Condor, died in Infinite Crisis #1 (December 2005).\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\", \"label\": \"unreachable\"}, {\"claim\": \"Ryan Kendall, the second Black Condor, died in Infinite Crisis #1 (December 2005).\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"partial\"}, {\"claim\": \"He was killed in an ambush by the Secret Society of Super Villains while with the Freedom Fighters, by a beam apparently fired by Sinestro.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"partial\"}, {\"claim\": \"He was killed in an ambush by the Secret Society of Super Villains while with the Freedom Fighters, by a beam apparently fired by Sinestro.\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\", \"label\": \"unreachable\"}, {\"claim\": \"He became a Black Lantern in Blackest Night and was resurrected by Batman in Dark Nights: Death Metal #5 (Prime Earth).\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(Prime_Earth)\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correct. Wikipedia supports Infinite Crisis #1, Sinestro, and the Society ambush. It does not state the December 2005 date or the beam detail. Both Fandom pages are unreachable.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"The DCU Guide page cites Infinite Crisis #1 as the reference for his death.\", \"url\": \"https://dcuguide.com/Black_Condor_(Ryan_Kendall)\", \"label\": \"supported\"}, {\"claim\": \"He was killed by Sinestro while serving with the Freedom Fighters, in an ambush by the Secret Society of Super Villains.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"He was killed by Sinestro while serving with the Freedom Fighters, in an ambush by the Society.\", \"url\": \"https://dcuguide.com/Black_Condor_(Ryan_Kendall)\", \"label\": \"supported\"}, {\"claim\": \"Death date was December 2005 and he was killed by a beam fired by Sinestro.\", \"url\": \"https://dcuguide.com/Black_Condor_(Ryan_Kendall)\", \"label\": \"unsupported\"}, {\"claim\": \"Death date was December 2005 and he was killed by a beam fired by Sinestro.\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\", \"label\": \"unreachable\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correct and well hedged. The claim about later appearances (Blackest Night, Death Metal) has no URL and is counted as uncited.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Kendall, the second Black Condor and a Freedom Fighters member, was killed by Sinestro in Infinite Crisis #1 during a Secret Society of Super Villains ambush.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"Comics Central lists 'Issue Died: Infinite Crisis #1'.\", \"url\": \"https://comicscentral.net/ryan-kendall-4005-76170/\", \"label\": \"supported\"}, {\"claim\": \"Sinestro's opening blast pierced him through the chest. Human Bomb and Phantom Lady also died, and the Society hung their bodies atop the Washington Monument.\", \"url\": \"https://comicscentral.net/ryan-kendall-4005-76170/\", \"label\": \"supported\"}, {\"claim\": \"He appeared after death in Nightwing and in Blackest Night as a Black Lantern.\", \"url\": \"https://comicscentral.net/ryan-kendall-4005-76170/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correct. Every cited claim is supported by the page texts provided.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Ryan Kendall, the second Black Condor, died in Infinite Crisis #1 (December 2005).",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Ryan Kendall, the second Black Condor, died in Infinite Crisis #1 (December 2005).",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "partial"
+        },
+        {
+          "claim": "He was killed in an ambush by the Secret Society of Super Villains while with the Freedom Fighters, by a beam apparently fired by Sinestro.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "partial"
+        },
+        {
+          "claim": "He was killed in an ambush by the Secret Society of Super Villains while with the Freedom Fighters, by a beam apparently fired by Sinestro.",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)",
+          "label": "unreachable"
+        },
+        {
+          "claim": "He became a Black Lantern in Blackest Night and was resurrected by Batman in Dark Nights: Death Metal #5 (Prime Earth).",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(Prime_Earth)",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correct. Wikipedia supports Infinite Crisis #1, Sinestro, and the Society ambush. It does not state the December 2005 date or the beam detail. Both Fandom pages are unreachable."
+    },
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "The DCU Guide page cites Infinite Crisis #1 as the reference for his death.",
+          "url": "https://dcuguide.com/Black_Condor_(Ryan_Kendall)",
+          "label": "supported"
+        },
+        {
+          "claim": "He was killed by Sinestro while serving with the Freedom Fighters, in an ambush by the Secret Society of Super Villains.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "He was killed by Sinestro while serving with the Freedom Fighters, in an ambush by the Society.",
+          "url": "https://dcuguide.com/Black_Condor_(Ryan_Kendall)",
+          "label": "supported"
+        },
+        {
+          "claim": "Death date was December 2005 and he was killed by a beam fired by Sinestro.",
+          "url": "https://dcuguide.com/Black_Condor_(Ryan_Kendall)",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Death date was December 2005 and he was killed by a beam fired by Sinestro.",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correct and well hedged. The claim about later appearances (Blackest Night, Death Metal) has no URL and is counted as uncited."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Kendall, the second Black Condor and a Freedom Fighters member, was killed by Sinestro in Infinite Crisis #1 during a Secret Society of Super Villains ambush.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "Comics Central lists 'Issue Died: Infinite Crisis #1'.",
+          "url": "https://comicscentral.net/ryan-kendall-4005-76170/",
+          "label": "supported"
+        },
+        {
+          "claim": "Sinestro's opening blast pierced him through the chest. Human Bomb and Phantom Lady also died, and the Society hung their bodies atop the Washington Monument.",
+          "url": "https://comicscentral.net/ryan-kendall-4005-76170/",
+          "label": "supported"
+        },
+        {
+          "claim": "He appeared after death in Nightwing and in Blackest Night as a Black Lantern.",
+          "url": "https://comicscentral.net/ryan-kendall-4005-76170/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correct. Every cited claim is supported by the page texts provided."
+    }
+  }
+}

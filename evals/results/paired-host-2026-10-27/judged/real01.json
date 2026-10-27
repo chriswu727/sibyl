@@ -1,0 +1,100 @@
+{
+  "case_id": "real01",
+  "kind": "factual",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "native",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.14269120000000002,
+  "judge_subtype": "success",
+  "pages_read": 3,
+  "pages_cited": 4,
+  "raw": "{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Aschoff studied medicine at the University of Bonn, where he joined the Burschenschaft Alemannia Bonn.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"After the Abitur he enrolled in medicine at Bonn, 'lacking a specific interest'.\", \"url\": \"https://www.nature.com/articles/24750\", \"label\": \"partial\"}, {\"claim\": \"After the Abitur he enrolled in medicine at Bonn, 'lacking a specific interest'.\", \"url\": \"https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\", \"label\": \"unreachable\"}, {\"claim\": \"He later moved on to Göttingen, Würzburg and Heidelberg; his scientific career began at Göttingen under Hermann Rein.\", \"url\": \"https://www.nature.com/articles/24750\", \"label\": \"supported\"}, {\"claim\": \"Wikidata lists Heidelberg University and the University of Freiburg as places where he was educated.\", \"url\": \"https://www.wikidata.org/wiki/Q75270\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly states Bonn. The Nature excerpt confirms medicine at Bonn but not the Abitur detail or the quote, so that claim is partial. The Auk page could not be read.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Aschoff enrolled in medicine at the University of Bonn after his Abitur, 'lacking a specific interest'.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"He moved to Göttingen in 1938 to work on thermoregulation physiology under Hermann Rein, received the venia legendi in 1944 and became a professor in 1949.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"An obituary places him later at Göttingen, Würzburg and Heidelberg.\", \"url\": \"https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\", \"label\": \"unreachable\"}, {\"claim\": \"Wikidata lists his education as Bonn, Heidelberg and Freiburg.\", \"url\": \"https://www.wikidata.org/wiki/Q75270\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly states Bonn, with hedging about other universities. The Auk page could not be read.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"He studied medicine at the University of Bonn, then moved to Göttingen where his scientific career began (Nature obituary by Daan and Gwinner).\", \"url\": \"https://www.nature.com/articles/24750\", \"label\": \"supported\"}, {\"claim\": \"After the Abitur he studied medicine at Bonn, 'lacking a specific interest'; Wikipedia lists Bonn as his education.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia cites the Nature obituary as a source for its biography section.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"unsupported\"}], \"uncited_claims\": 2, \"rubric\": {}, \"notes\": \"Correctly states Bonn. The Wikipedia excerpt shows only reference markers, not the reference list, so the claim that it cites Nature cannot be verified. Two claims have no URL: the Wikidata Heidelberg/Freiburg snippet and his later work in Göttingen, Würzburg and Heidelberg.\"}}}",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Aschoff studied medicine at the University of Bonn, where he joined the Burschenschaft Alemannia Bonn.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "After the Abitur he enrolled in medicine at Bonn, 'lacking a specific interest'.",
+          "url": "https://www.nature.com/articles/24750",
+          "label": "partial"
+        },
+        {
+          "claim": "After the Abitur he enrolled in medicine at Bonn, 'lacking a specific interest'.",
+          "url": "https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full",
+          "label": "unreachable"
+        },
+        {
+          "claim": "He later moved on to Göttingen, Würzburg and Heidelberg; his scientific career began at Göttingen under Hermann Rein.",
+          "url": "https://www.nature.com/articles/24750",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikidata lists Heidelberg University and the University of Freiburg as places where he was educated.",
+          "url": "https://www.wikidata.org/wiki/Q75270",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly states Bonn. The Nature excerpt confirms medicine at Bonn but not the Abitur detail or the quote, so that claim is partial. The Auk page could not be read."
+    },
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Aschoff enrolled in medicine at the University of Bonn after his Abitur, 'lacking a specific interest'.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "He moved to Göttingen in 1938 to work on thermoregulation physiology under Hermann Rein, received the venia legendi in 1944 and became a professor in 1949.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "An obituary places him later at Göttingen, Würzburg and Heidelberg.",
+          "url": "https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Wikidata lists his education as Bonn, Heidelberg and Freiburg.",
+          "url": "https://www.wikidata.org/wiki/Q75270",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly states Bonn, with hedging about other universities. The Auk page could not be read."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "He studied medicine at the University of Bonn, then moved to Göttingen where his scientific career began (Nature obituary by Daan and Gwinner).",
+          "url": "https://www.nature.com/articles/24750",
+          "label": "supported"
+        },
+        {
+          "claim": "After the Abitur he studied medicine at Bonn, 'lacking a specific interest'; Wikipedia lists Bonn as his education.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia cites the Nature obituary as a source for its biography section.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 2,
+      "rubric": {},
+      "notes": "Correctly states Bonn. The Wikipedia excerpt shows only reference markers, not the reference list, so the claim that it cites Nature cannot be verified. Two claims have no URL: the Wikidata Heidelberg/Freiburg snippet and his later work in Göttingen, Würzburg and Heidelberg."
+    }
+  }
+}

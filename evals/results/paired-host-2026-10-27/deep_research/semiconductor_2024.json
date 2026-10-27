@@ -1,0 +1,74 @@
+{
+  "case_id": "semiconductor_2024",
+  "condition": "deep_research",
+  "elapsed_seconds": 42.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.24965880000000004,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 17602,
+    "cache_read_input_tokens": 74102,
+    "output_tokens": 2685,
+    "output_tokens_details": {
+      "thinking_tokens": 299
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17602,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 43862,
+      "outputTokens": 4570,
+      "cacheReadInputTokens": 74102,
+      "cacheCreationInputTokens": 17602,
+      "webSearchRequests": 3,
+      "costUSD": 0.24124220000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 299,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 17602,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 78946,
+      "outputTokens": 1044,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0084166,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 606,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 3,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Global semiconductor sales hit a record in 2024. The Semiconductor Industry Association (SIA) first reported $627.6 billion, up 19.1% from $526.8 billion in 2023. WSTS (the World Semiconductor Trade Statistics body, which supplies SIA's data) later revised the final 2024 total to $630.5 billion. This was the first year above $600 billion. I used four of my eight retrievals.\n\n**Claims and sources**\n\n- SIA announced 2024 sales of $627.6B on Feb 7, 2025, up 19.1% from $526.8B in 2023. https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n- That was the first time annual sales exceeded $600B. https://x.com/SIAAmerica/status/1887958734183219214 and https://www.trendforce.com/news/2025/02/08/news-global-semiconductor-sales-hit-record-high-at-600b-in-2024-set-for-double-digit-growth-in-2025/\n- SIA's page says WSTS later updated the 2024 year-end total to $630.5B. It doesn't give a growth rate for the revised figure. https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n- The 2025 SIA Factbook also gives $630.5B. https://www.semiconductors.org/wp-content/uploads/2025/05/2025-SIA-Factbook-FINAL-1.pdf\n- The SIA figures are WSTS monthly data, compiled as three-month moving averages. https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n- Growth by region in 2024 was very uneven:\n  - Americas: +44.8%\n  - China: +18.3%\n  - Asia Pacific/All Others: +12.5%\n  - Japan: −0.4%\n  - Europe: −8.1%\n\n  https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n- Memory rose 78.9% to $165.1B (DRAM +82.6%), and logic was the largest category at $212.6B. SIA credited AI demand. These figures came from a search summary of SIA's release, not a page I read. https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n- The forecasts for 2024 and later years were different numbers, and they moved over time:\n  - Spring 2024 WSTS forecast for 2024: +16.0%.\n  - Fall 2024 WSTS forecast for 2024: +19.0%, about $627B.\n  - Spring 2025 WSTS forecast for 2025: +11.2%, to $700.9B.\n  - Spring 2025 WSTS forecast for 2026: $760.7B.\n  - Later 2025 revisions: +15.4% (August 2025) and then +22.5%, to $772.2B (December 2025).\n\n  Sources: https://www.wsts.org/esraCMS/extension/esrapdf/generate/12151, https://www.wsts.org/esraCMS/extension/esrapdf/generate/12461, https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf, https://www.eusemiconductors.eu/sites/default/files/ESIA_WSTS_PR_AuFc2025.pdf\n\n**How to tell them apart**\n\n- **Finalized annual figure:** This is realized, global sales for the full year, reported by SIA/WSTS as an actual. Several versions exist, so cite the one you use. The figure is $627.6B in the February 2025 release and $630.5B in the later WSTS-updated total. The 19.1% growth rate belongs to the first figure only.\n- **Forecast:** WSTS and SIA publish forecasts for later periods, and those numbers are revised each spring and fall. A 2024 forecast such as 16.0% or 19.0% isn't the 2024 result, and the 2025 and 2026 figures haven't been finalized.\n- **Regional growth rate:** This applies to one region only. Europe fell 8.1% while the Americas rose 44.8%, and neither is the global growth rate.\n\n**What I couldn't establish**\n\n- A 19.7% growth figure for 2024 came up in my search and I couldn't confirm it. I couldn't read the Spring 2025 WSTS PDF, because it returned as unreadable binary. So I can't give a verified growth rate for the revised $630.5B total. Dividing $630.5B by $526.8B gives about 19.7%, but that assumes 2023 wasn't also revised.\n- I didn't verify a Wikipedia claim that 2025 sales reached $791.7B.",
+  "final_answer_sha256": "21c5c4cb0dec514e7688e73f3855badf8831de1d45cda18850fb4e12c811283e",
+  "raw_stream_sha256": "5aa213849d0a0775a67279bb6b7e933d18acf42367d6e9326f03f7e1c3cd808c"
+}

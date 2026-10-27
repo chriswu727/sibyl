@@ -1,0 +1,73 @@
+{
+  "case_id": "rag",
+  "condition": "deep_research",
+  "elapsed_seconds": 31.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 15,
+  "cli_reported_cost_usd": 0.1070928,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 15734,
+    "cache_read_input_tokens": 51919,
+    "output_tokens": 3397,
+    "output_tokens_details": {
+      "thinking_tokens": 411
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15734,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 8,
+      "outputTokens": 3397,
+      "cacheReadInputTokens": 51919,
+      "cacheCreationInputTokens": 15734,
+      "webSearchRequests": 0,
+      "costUSD": 0.10211390000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 411,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15734,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 26329,
+      "outputTokens": 4692,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0049789,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3482,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 12
+  },
+  "final_answer": "**Direct answer:** RAG pairs a model's parametric knowledge (facts stored in its weights) with non-parametric knowledge (documents fetched at query time). The model conditions its output on both. Retrieval doesn't guarantee factual answers because each step can fail. The retriever may return the wrong or noisy passages. The model may use the passages poorly or be misled by them. It may also fail to say \"I don't know\" when the passages don't contain the answer. I only read abstracts, so the evidence is thinner on the exact mechanisms of failure and on how models resolve conflicts between the two knowledge sources.\n\nI made six page reads out of the eight allowed. Six earlier attempts failed URL validation and returned nothing.\n\n**How RAG combines the two knowledge sources**\n- The original RAG model's parametric memory is a pre-trained seq2seq generator. Its non-parametric memory is a dense vector index of Wikipedia, accessed by a pre-trained neural retriever. https://arxiv.org/abs/2005.11401\n- The original paper compares two formulations: one conditions on the same retrieved passages for the whole output, and the other can use different passages for each token. https://arxiv.org/abs/2005.11401\n- The original paper reports state-of-the-art results on three open-domain QA tasks. It also reports more specific, diverse and factual generation than a parametric-only baseline. https://arxiv.org/abs/2005.11401\n- A later survey describes RAG as merging the LLM's intrinsic knowledge with external databases. It says this targets hallucination, outdated knowledge and opaque reasoning. https://arxiv.org/abs/2312.10997\n- The survey says retrieval improves accuracy and credibility, especially on knowledge-intensive tasks. It also says retrieval allows updated and domain-specific knowledge. https://arxiv.org/abs/2312.10997\n\n**Why retrieval doesn't guarantee factual answers**\n- Position in the context matters. Models do best when relevant information is at the start or end of a long input. Performance drops significantly when it is in the middle, even for long-context models. https://arxiv.org/abs/2307.03172\n- In a benchmark of six LLMs, models showed some robustness to noisy retrieved documents. They still \"struggle significantly\" with refusing to answer when retrieved content is insufficient. https://arxiv.org/abs/2309.01431\n- The same benchmark found the models also struggle with combining evidence across several documents. https://arxiv.org/abs/2309.01431\n- The same benchmark found the models also struggle with resisting false (counterfactual) information in retrieved text. https://arxiv.org/abs/2309.01431\n- Commercial RAG legal research tools (Lexis+ AI and two Thomson Reuters/Westlaw tools) still hallucinated. They did so less often than general-purpose chatbots, in roughly one-sixth to one-third of responses. https://arxiv.org/abs/2405.20362\n- That study concludes vendors' claims of eliminating hallucination were exaggerated. https://arxiv.org/abs/2405.20362\n\n**What the evidence doesn't establish**\n- I couldn't establish how models behave when parametric knowledge and retrieved context conflict. The one source I fetched on this (https://arxiv.org/abs/2403.08319) gave only an abstract saying the topic is surveyed, with no findings.\n- I couldn't establish why the legal tools' error rates persist. The abstract page didn't say.\n- I couldn't establish what the survey lists as RAG's specific challenges. The abstract page didn't say. https://arxiv.org/abs/2312.10997\n- The question doesn't rest on a false premise. \"Retrieval doesn't guarantee factuality\" is supported. The legal-tool figures come from one domain and from the study's snapshot of those tools.\n\nSources:\n- [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)\n- [Lost in the Middle](https://arxiv.org/abs/2307.03172)\n- [Benchmarking Large Language Models in Retrieval-Augmented Generation](https://arxiv.org/abs/2309.01431)\n- [Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools](https://arxiv.org/abs/2405.20362)\n- [Knowledge conflicts survey](https://arxiv.org/abs/2403.08319)\n- [Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997)",
+  "final_answer_sha256": "e78359ab18687cf3d452c05695963c13988f6aac006d03d85824b93796558b81",
+  "raw_stream_sha256": "1719b68f4f5f086f9e826fa541166cff88192ce7f59eda1d0a12e777fdb08d3b"
+}

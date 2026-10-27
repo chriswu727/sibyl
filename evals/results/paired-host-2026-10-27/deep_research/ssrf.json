@@ -1,0 +1,73 @@
+{
+  "case_id": "ssrf",
+  "condition": "deep_research",
+  "elapsed_seconds": 28.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.0941057,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14673,
+    "cache_read_input_tokens": 33637,
+    "output_tokens": 2609,
+    "output_tokens_details": {
+      "thinking_tokens": 254
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14673,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 2609,
+      "cacheReadInputTokens": 33637,
+      "cacheCreationInputTokens": 14673,
+      "webSearchRequests": 0,
+      "costUSD": 0.0881577,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 254,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14673,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 35555,
+      "outputTokens": 4785,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.005948,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3049,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 4
+  },
+  "final_answer": "**Direct answer:** A URL string is only a claim about where a request might go. SSRF depends on where the request actually goes. That is decided later, by DNS resolution and by any redirects the HTTP client follows. Checking the string once, up front, doesn't cover either step. A redirect can move the request from an approved host to an internal one. DNS can send a hostname to an internal IP, or return a different IP between your check and the connection. Effective defenses check the resolved IP at connection time, connect only to that validated address, and disable or re-check redirects.\n\nI used four retrievals (three pages read, one blocked). Two things I didn't find: PortSwigger doesn't cover DNS rebinding, and I found no source that measures how common these bypasses are in practice.\n\n**Claims and sources**\n\n- **Claim:** URL strings are hard to validate, and parser differences can be abused.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- **Claim:** Blocklists are bypass-prone and are a last resort. For example, alternative IP encodings such as `2130706433`, `017700000001` and `127.1` can evade a filter that blocks \"127.0.0.1\".\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n  - https://portswigger.net/web-security/ssrf\n- **Claim:** An allowlisted host with an open redirect can send the request to an internal target. The string check passes, but the redirected request lands on the back end. This works only if the client follows redirects.\n  - https://portswigger.net/web-security/ssrf\n- **Claim:** Redirects can bypass input validation, so redirect-following should be disabled. The same destination policy should apply to retries and fallback connections.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- **Claim:** A hostname can resolve to an internal address. An attacker can register a domain that points to 127.0.0.1, and a hostname-based allowlist can be fooled by hosts like `expected-host.evil-host`.\n  - https://portswigger.net/web-security/ssrf\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- **Claim:** There is a gap between validation and connection. A second, unchecked DNS lookup between the two can bypass the checks. Domain allowlisting alone does not prevent DNS rebinding, and checking DNS answers separately from the connection doesn't either.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- **Claim:** Rebinding works by having the attacker's DNS server return a very short TTL, so the answer isn't cached. A later lookup of the same name then returns an internal IP.\n  - https://en.wikipedia.org/wiki/DNS_rebinding\n  - The Wikipedia page describes the browser attack. Applying the same mechanism to a server-side fetcher is my inference. OWASP's TOCTOU warning supports it.\n- **Claim:** The recommended fix is to validate the resolved IPs against permitted networks and connect only to those validated addresses. The client should keep the original hostname for the Host header, SNI and certificate checks.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- **Claim:** DNS pinning is a related defense, but it isn't complete. It can break some dynamic DNS setups and doesn't stop every variant. The Wikipedia page describes it for browsers.\n  - https://en.wikipedia.org/wiki/DNS_rebinding\n- **Claim:** Defense in depth helps: network segmentation and firewall rules, and IMDSv2 in cloud environments. DNS monitoring is only a supplement.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n**Method note:** The deep-research skill is built around subagents that write notes to disk. Your \"no shell commands, eight retrievals\" limits conflicted with that, so I ran the research directly. No report file was created.\n\nSources:\n- [OWASP SSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)\n- [PortSwigger: SSRF](https://portswigger.net/web-security/ssrf)\n- [Wikipedia: DNS rebinding](https://en.wikipedia.org/wiki/DNS_rebinding)",
+  "final_answer_sha256": "92ad7e7dd3e91c4a79ea9d4423e9b8092b4bb3ad0e229f9f8228706a5f56753f",
+  "raw_stream_sha256": "1a0460650d1d2fc0191f0930eaac95f9cb407bb296e7703bb759f7ac733fc4ab"
+}

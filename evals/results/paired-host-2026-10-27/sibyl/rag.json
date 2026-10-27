@@ -1,0 +1,58 @@
+{
+  "case_id": "rag",
+  "condition": "sibyl",
+  "elapsed_seconds": 37.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1437719,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 20920,
+    "cache_read_input_tokens": 76119,
+    "output_tokens": 5246,
+    "output_tokens_details": {
+      "thinking_tokens": 161
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 20920,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 10,
+      "outputTokens": 5246,
+      "cacheReadInputTokens": 76119,
+      "cacheCreationInputTokens": 20920,
+      "webSearchRequests": 0,
+      "costUSD": 0.1437719,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 161,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 20920,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer:** RAG pairs a pre-trained language model (parametric memory, the knowledge stored in its weights) with an external document store (non-parametric memory). The model generates its answer conditioned on passages retrieved from that store. Retrieval doesn't guarantee factual answers because the retrieval step and the generation step can each fail. The evidence below supports \"reduces hallucination,\" not \"eliminates it.\"\n\nI read only four arXiv abstract pages (4 of the 8 allowed retrievals), so the evidence is thin and all from one domain. It says nothing about how often RAG answers are wrong. I also didn't read about retrieved text that conflicts with what the model already knows, or about retrievers returning wrong documents. The original paper's abstract was cut off right where it describes the architecture, so I can't quote the specific retriever-plus-generator design.\n\n**How RAG combines the two kinds of knowledge**\n\n- The original RAG paper defines RAG as models that combine pre-trained parametric and non-parametric memory for language generation.\n  - https://arxiv.org/abs/2005.11401\n- That paper compares two formulations. One conditions on the same retrieved passages across the whole generated sequence. The other can use different passages per token.\n  - https://arxiv.org/abs/2005.11401\n- A later survey describes RAG as merging the LLM's intrinsic knowledge with external databases. It presents this as a response to hallucination, outdated knowledge and untraceable reasoning.\n  - https://arxiv.org/abs/2312.10997\n- In the original paper, RAG models generated more specific, diverse and factual language than a parametric-only seq2seq baseline. That is an improvement over the baseline, not a guarantee.\n  - https://arxiv.org/abs/2005.11401\n\n**Why retrieval doesn't guarantee factual answers**\n\n- RAG systems suffer from limitations inherent to information retrieval systems and from reliance on LLMs.\n  - https://arxiv.org/abs/2401.05856\n- That experience report draws on three case studies (research, education and biomedical). It lists 7 failure points, and it says a RAG system can only be validated while it is operating.\n  - https://arxiv.org/abs/2401.05856\n- RAG is designed to reduce hallucinated responses, not to eliminate them.\n  - https://arxiv.org/abs/2401.05856\n- Language models don't robustly use information in long contexts. Performance is often highest when the relevant information is at the beginning or end, and it degrades significantly when it sits in the middle, even for explicitly long-context models. So putting the right passage in the prompt doesn't ensure the model uses it.\n  - https://arxiv.org/abs/2307.03172\n\n**Inference (mine, from the claims above):** The model can still answer wrongly even when the right passage is retrieved, because it may not use that passage well. The retriever can also miss the right passage in the first place, and the survey and the failure-points report both list retrieval limits.\n\nThe Sibyl job (868f6fd9359c4d41be792a3047a52e66) has these claims recorded. I didn't finalize a report. Q1 still has no counterevidence read and no independent non-arXiv source.\n\nSources:\n- https://arxiv.org/abs/2005.11401\n- https://arxiv.org/abs/2312.10997\n- https://arxiv.org/abs/2401.05856\n- https://arxiv.org/abs/2307.03172",
+  "final_answer_sha256": "79fc1e25db036b1b9c11f842d71508ac2f95217cce3674e988be1ffb429c66ff",
+  "raw_stream_sha256": "368aa4c8b53fd82a943593f9e149e9367158e67dc16a2dc46677a8419dae2773"
+}

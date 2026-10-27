@@ -1,0 +1,73 @@
+{
+  "case_id": "rag",
+  "condition": "native",
+  "elapsed_seconds": 23.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.08276030000000001,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3801,
+    "cache_read_input_tokens": 5902,
+    "output_tokens": 1316,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3801,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13723,
+      "outputTokens": 2827,
+      "cacheReadInputTokens": 5902,
+      "cacheCreationInputTokens": 3801,
+      "webSearchRequests": 1,
+      "costUSD": 0.0815102,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3801,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 5081,
+      "outputTokens": 1484,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0012501,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1198,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 1,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** RAG pairs a language model's built-in (parametric) knowledge with a separate store of documents (non-parametric). A retriever fetches passages for the query, and the generator conditions on them while also using its own weights. Retrieval doesn't guarantee factual answers because each step can fail. The retriever can return irrelevant, stale, or false-premise-matching documents. The generator can also ignore good evidence, or trust bad evidence over what it correctly knows.\n\n**Claims and support**\n\nNote: the failure-mode claims below come from a search-result summary, not from my reading the papers. I read only the original RAG paper's abstract page.\n\n- The original RAG design uses a pre-trained seq2seq model as parametric memory and a dense vector index of Wikipedia, accessed by a neural retriever, as non-parametric memory.\n  https://arxiv.org/abs/2005.11401\n\n- There are two formulations. One conditions on the same retrieved passages for the whole output, and the other can use different passages for each token.\n  https://arxiv.org/abs/2005.11401\n\n- The motivation was that plain language models handle stored knowledge imprecisely. Providing provenance and updating their knowledge were open problems.\n  https://arxiv.org/abs/2005.11401\n\n- Even with relevant, accurate retrieved context, models can produce statements that are unsupported by or contradict it. This is called a faithfulness hallucination.\n  https://arxiv.org/pdf/2410.11414\n\n- One study found only a weak, inconsistent link between retrieval quality and generation faithfulness. In that study, the most common failure, at 28.4%, was \"evidence override\": the model ignores retrieved evidence in favor of its parametric priors.\n  https://arxiv.org/pdf/2604.09174\n\n- Models face a \"tug-of-war\" between retrieved context and internal priors, and frequently ignore retrieved content that conflicts with parametric knowledge (reported from Wu et al., 2024).\n  https://arxiv.org/pdf/2604.20854\n\n- The opposite failure also occurs: the model over-complies with retrieved text, even a misconception, when it conflicts with what the model knows.\n  https://arxiv.org/html/2605.14473v2\n\n- Conflicts can come from retrieval mismatch, stale documents, or adversarial injection.\n  https://arxiv.org/html/2605.14473v2\n\n- Irrelevant retrieved documents can reduce model performance (reported from Barnett et al., 2024). Retrievers can also fetch documents that match a false premise.\n  Both claims come through the search summary, which relayed them from secondary sources. I didn't open those papers.\n\n- One source reports hallucination rates of 17–33% in legal RAG tools. I couldn't trace this to the primary study, so treat it as unverified.\n  See the search results summary.\n\n**Limits of the evidence**\n- Percentages such as 28.4% come from one study with its own models and setup. They aren't general rates.\n- Several cited papers are recent preprints, and I haven't verified that they've been peer reviewed.\n\nSources:\n- https://arxiv.org/abs/2005.11401\n- https://arxiv.org/pdf/2410.11414\n- https://arxiv.org/pdf/2604.09174\n- https://arxiv.org/pdf/2604.20854\n- https://arxiv.org/html/2605.14473v2",
+  "final_answer_sha256": "1bd7f61076ba2d8f3900ad8d333117765de4f5c2fcc598498ff046f3452d9fc8",
+  "raw_stream_sha256": "ba8c4752aeeb174bd208930ac8d209431d4c8fffde68d5b5afa81bacaf0aaf64"
+}

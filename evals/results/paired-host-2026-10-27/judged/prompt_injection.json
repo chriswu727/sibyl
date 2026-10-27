@@ -1,0 +1,175 @@
+{
+  "case_id": "prompt_injection",
+  "kind": "research",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.5269592,
+  "judge_subtype": "success",
+  "pages_read": 15,
+  "pages_cited": 16,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"LLMs do not segregate instructions from external data and treat both as user-provided input; OWASP names attacker-controlled websites and files as indirect injection sources.\", \"url\": \"https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Unit 42 calls the problem structural because the model cannot reliably distinguish instructions from data within one context stream.\", \"url\": \"https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\", \"label\": \"partial\"}, {\"claim\": \"Delivery methods seen in the wild include visible plaintext, CSS hiding, HTML attribute cloaking, runtime JavaScript assembly and invisible characters.\", \"url\": \"https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\", \"label\": \"partial\"}, {\"claim\": \"Least privilege with the model's own API tokens and function-level permissions, plus user approval for privileged actions such as sending or deleting email.\", \"url\": \"https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Unit 42 calls the separation 'spotlighting' and says that instruction hierarchy and adversarial training reduce the threat only 'to some extent'.\", \"url\": \"https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\", \"label\": \"unsupported\"}, {\"claim\": \"'The Attacker Moves Second' (Nasr et al.) bypassed all 12 published defenses it tested, mostly above 90% success.\", \"url\": \"https://workos.com/blog/ai-agent-governance-prompt-injection-surface-not-model\", \"label\": \"unsupported\"}, {\"claim\": \"Anthropic's attack success rate fell from 31.5% with no safeguards to 0.5% with the full safeguard stack (Opus 4.8).\", \"url\": \"https://winbuzzer.com/2026/06/02/anthropic-reveals-315-browser-agent-hijack-rate-xcxwbn/\", \"label\": \"partial\"}, {\"claim\": \"A later report says Opus 5 with Auto Mode reached 0% browser prompt-injection success; the figure is vendor-reported and specific to the test set.\", \"url\": \"https://creati.ai/ai-news/2026-07-25/anthropic-says-claude-opus-5-with-auto-mode-drove-browser-prompt-injection-success-to-zero-in-in/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Covers why web content is a trust boundary, the controls, and why none gives immunity. Several claims point to URLs that do not contain them: the Nasr result is cited to the WorkOS page, which does not mention it; 'spotlighting' and 'to some extent' are not in the Unit 42 excerpt; the 0.5% figure is not on the WinBuzzer page. The answer flags most of these as snippet-based. Counterevidence is substantive: Unit 42 knows of no confirmed ad-checker bypass, vendor near-zero results are caveated, and an instruction-free steering paper is cited. The two OWASP URLs are from one publisher; Unit 42 is an independent research source.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"LLM-integrated applications blur the line between data and instructions, and attackers can plant prompts in content likely to be retrieved, exploiting the application remotely.\", \"url\": \"https://arxiv.org/abs/2302.12173\", \"label\": \"supported\"}, {\"claim\": \"Greshake et al. demonstrated attacks on Bing GPT-4 Chat and synthetic apps (data theft, worming, API manipulation, ecosystem contamination); retrieved prompts can act like arbitrary code execution; effective mitigations were lacking.\", \"url\": \"https://arxiv.org/abs/2302.12173\", \"label\": \"supported\"}, {\"claim\": \"The application must preserve the trust boundary because the model cannot enforce it; harm occurs when the agent may use a credential or tool after reading the payload.\", \"url\": \"https://dev.to/lukaswalter/indirect-prompt-injection-is-a-trust-boundary-problem\", \"label\": \"unreachable\"}, {\"claim\": \"OWASP mitigations: constrain behavior, validate output formats, input/output filtering, least privilege, human approval, segregate and label external content, adversarial testing.\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Anthropic uses three layers: RL training to refuse injections, classifiers that scan untrusted content, and continuous red teaming.\", \"url\": \"https://www.anthropic.com/research/prompt-injection-defenses\", \"label\": \"supported\"}, {\"claim\": \"Under Anthropic's adaptive attacker, attack success was about 1.4% for Opus 4.5 and 1.9-2.4% for other models with safeguards, versus roughly 8-14% without.\", \"url\": \"https://www.anthropic.com/research/prompt-injection-defenses\", \"label\": \"unsupported\"}, {\"claim\": \"CaMeL separates control and data flows so untrusted data cannot change program flow, uses capabilities against exfiltration, and solves 77% of AgentDojo tasks with provable security versus 84% undefended.\", \"url\": \"https://arxiv.org/abs/2503.18813\", \"label\": \"supported\"}, {\"claim\": \"Anthropic says a 1% success rate still represents meaningful risk, that no browser agent is immune, and that the problem is far from solved.\", \"url\": \"https://www.anthropic.com/research/prompt-injection-defenses\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Strong primary sources: Greshake, CaMeL, OWASP 2025 and Anthropic. The specific ASR figures (1.4%, 1.9-2.4%, 8-14%) do not appear in the Anthropic page text, which mentions only 1%. The answer labels them vendor self-reported but does not flag them as unverified, so this is a material unsupported number. The dev.to page could not be read; the answer discloses it as secondary. Counterevidence is substantive: CaMeL's provable-security claim is narrowed by its scope and utility cost, and the answer discloses the gap on real-world prevalence.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Injected text need not be human-visible, and RAG and fine-tuning do not fully mitigate prompt injection.\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Trusted prompts and untrusted web or email text are concatenated into one token stream; there is 'no known reliable way' to have an LLM follow instructions in one category of text while safely applying them to another.\", \"url\": \"https://simonwillison.net/2025/Apr/11/camel/\", \"label\": \"supported\"}, {\"claim\": \"Severity depends on business context and model agency; example of a summarized webpage with hidden instructions that inserts an image link and exfiltrates the conversation.\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"OWASP mitigation list: constrain behavior, validate outputs, filter inputs and outputs, least privilege, segregate external content, adversarial testing.\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"CaMeL design: a privileged LLM plans from the user request only, a quarantined LLM handles untrusted data without tool access, and capability tags track provenance.\", \"url\": \"https://simonwillison.net/2025/Apr/11/camel/\", \"label\": \"supported\"}, {\"claim\": \"Willison's 'lethal trifecta': remove one of private data access, untrusted content exposure, or external communication.\", \"url\": \"https://simonwillison.net/2025/Apr/11/camel/\", \"label\": \"unsupported\"}, {\"claim\": \"'The Attacker Moves Second' argues that evaluation against static strings or weak optimization is flawed and that defenses must face adaptive attackers.\", \"url\": \"https://arxiv.org/abs/2510.09023\", \"label\": \"supported\"}, {\"claim\": \"CaMeL's authors say prompt injection is 'not fully solved', and the design requires users to codify and maintain security policies.\", \"url\": \"https://simonwillison.net/2025/Apr/11/camel/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Most claims are well supported by inspected passages. The lethal-trifecta claim is not on the cited page; the answer discloses this. The answer calls the >90% bypass figure unverified, but the arXiv abstract does state it. Sources are OWASP, the Nasr et al. abstract, and Willison's blog quoting the DeepMind paper; the blog is secondary but quotes the primary text. Counterevidence is mainly limitations of the defenses. The answer explicitly found nothing that narrows the premise and does not engage vendor near-zero results or real-world prevalence data.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "LLMs do not segregate instructions from external data and treat both as user-provided input; OWASP names attacker-controlled websites and files as indirect injection sources.",
+          "url": "https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Unit 42 calls the problem structural because the model cannot reliably distinguish instructions from data within one context stream.",
+          "url": "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
+          "label": "partial"
+        },
+        {
+          "claim": "Delivery methods seen in the wild include visible plaintext, CSS hiding, HTML attribute cloaking, runtime JavaScript assembly and invisible characters.",
+          "url": "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
+          "label": "partial"
+        },
+        {
+          "claim": "Least privilege with the model's own API tokens and function-level permissions, plus user approval for privileged actions such as sending or deleting email.",
+          "url": "https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Unit 42 calls the separation 'spotlighting' and says that instruction hierarchy and adversarial training reduce the threat only 'to some extent'.",
+          "url": "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "'The Attacker Moves Second' (Nasr et al.) bypassed all 12 published defenses it tested, mostly above 90% success.",
+          "url": "https://workos.com/blog/ai-agent-governance-prompt-injection-surface-not-model",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Anthropic's attack success rate fell from 31.5% with no safeguards to 0.5% with the full safeguard stack (Opus 4.8).",
+          "url": "https://winbuzzer.com/2026/06/02/anthropic-reveals-315-browser-agent-hijack-rate-xcxwbn/",
+          "label": "partial"
+        },
+        {
+          "claim": "A later report says Opus 5 with Auto Mode reached 0% browser prompt-injection success; the figure is vendor-reported and specific to the test set.",
+          "url": "https://creati.ai/ai-news/2026-07-25/anthropic-says-claude-opus-5-with-auto-mode-drove-browser-prompt-injection-success-to-zero-in-in/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Covers why web content is a trust boundary, the controls, and why none gives immunity. Several claims point to URLs that do not contain them: the Nasr result is cited to the WorkOS page, which does not mention it; 'spotlighting' and 'to some extent' are not in the Unit 42 excerpt; the 0.5% figure is not on the WinBuzzer page. The answer flags most of these as snippet-based. Counterevidence is substantive: Unit 42 knows of no confirmed ad-checker bypass, vendor near-zero results are caveated, and an instruction-free steering paper is cited. The two OWASP URLs are from one publisher; Unit 42 is an independent research source."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "LLM-integrated applications blur the line between data and instructions, and attackers can plant prompts in content likely to be retrieved, exploiting the application remotely.",
+          "url": "https://arxiv.org/abs/2302.12173",
+          "label": "supported"
+        },
+        {
+          "claim": "Greshake et al. demonstrated attacks on Bing GPT-4 Chat and synthetic apps (data theft, worming, API manipulation, ecosystem contamination); retrieved prompts can act like arbitrary code execution; effective mitigations were lacking.",
+          "url": "https://arxiv.org/abs/2302.12173",
+          "label": "supported"
+        },
+        {
+          "claim": "The application must preserve the trust boundary because the model cannot enforce it; harm occurs when the agent may use a credential or tool after reading the payload.",
+          "url": "https://dev.to/lukaswalter/indirect-prompt-injection-is-a-trust-boundary-problem",
+          "label": "unreachable"
+        },
+        {
+          "claim": "OWASP mitigations: constrain behavior, validate output formats, input/output filtering, least privilege, human approval, segregate and label external content, adversarial testing.",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Anthropic uses three layers: RL training to refuse injections, classifiers that scan untrusted content, and continuous red teaming.",
+          "url": "https://www.anthropic.com/research/prompt-injection-defenses",
+          "label": "supported"
+        },
+        {
+          "claim": "Under Anthropic's adaptive attacker, attack success was about 1.4% for Opus 4.5 and 1.9-2.4% for other models with safeguards, versus roughly 8-14% without.",
+          "url": "https://www.anthropic.com/research/prompt-injection-defenses",
+          "label": "unsupported"
+        },
+        {
+          "claim": "CaMeL separates control and data flows so untrusted data cannot change program flow, uses capabilities against exfiltration, and solves 77% of AgentDojo tasks with provable security versus 84% undefended.",
+          "url": "https://arxiv.org/abs/2503.18813",
+          "label": "supported"
+        },
+        {
+          "claim": "Anthropic says a 1% success rate still represents meaningful risk, that no browser agent is immune, and that the problem is far from solved.",
+          "url": "https://www.anthropic.com/research/prompt-injection-defenses",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Strong primary sources: Greshake, CaMeL, OWASP 2025 and Anthropic. The specific ASR figures (1.4%, 1.9-2.4%, 8-14%) do not appear in the Anthropic page text, which mentions only 1%. The answer labels them vendor self-reported but does not flag them as unverified, so this is a material unsupported number. The dev.to page could not be read; the answer discloses it as secondary. Counterevidence is substantive: CaMeL's provable-security claim is narrowed by its scope and utility cost, and the answer discloses the gap on real-world prevalence."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Injected text need not be human-visible, and RAG and fine-tuning do not fully mitigate prompt injection.",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Trusted prompts and untrusted web or email text are concatenated into one token stream; there is 'no known reliable way' to have an LLM follow instructions in one category of text while safely applying them to another.",
+          "url": "https://simonwillison.net/2025/Apr/11/camel/",
+          "label": "supported"
+        },
+        {
+          "claim": "Severity depends on business context and model agency; example of a summarized webpage with hidden instructions that inserts an image link and exfiltrates the conversation.",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP mitigation list: constrain behavior, validate outputs, filter inputs and outputs, least privilege, segregate external content, adversarial testing.",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "CaMeL design: a privileged LLM plans from the user request only, a quarantined LLM handles untrusted data without tool access, and capability tags track provenance.",
+          "url": "https://simonwillison.net/2025/Apr/11/camel/",
+          "label": "supported"
+        },
+        {
+          "claim": "Willison's 'lethal trifecta': remove one of private data access, untrusted content exposure, or external communication.",
+          "url": "https://simonwillison.net/2025/Apr/11/camel/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "'The Attacker Moves Second' argues that evaluation against static strings or weak optimization is flawed and that defenses must face adaptive attackers.",
+          "url": "https://arxiv.org/abs/2510.09023",
+          "label": "supported"
+        },
+        {
+          "claim": "CaMeL's authors say prompt injection is 'not fully solved', and the design requires users to codify and maintain security policies.",
+          "url": "https://simonwillison.net/2025/Apr/11/camel/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Most claims are well supported by inspected passages. The lethal-trifecta claim is not on the cited page; the answer discloses this. The answer calls the >90% bypass figure unverified, but the arXiv abstract does state it. Sources are OWASP, the Nasr et al. abstract, and Willison's blog quoting the DeepMind paper; the blog is secondary but quotes the primary text. Counterevidence is mainly limitations of the defenses. The answer explicitly found nothing that narrows the premise and does not engage vendor near-zero results or real-world prevalence data."
+    }
+  }
+}

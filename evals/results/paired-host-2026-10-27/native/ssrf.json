@@ -1,0 +1,72 @@
+{
+  "case_id": "ssrf",
+  "condition": "native",
+  "elapsed_seconds": 25.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.037332500000000005,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3201,
+    "cache_read_input_tokens": 5897,
+    "output_tokens": 1794,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3201,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 4,
+      "outputTokens": 1794,
+      "cacheReadInputTokens": 5897,
+      "cacheCreationInputTokens": 3201,
+      "webSearchRequests": 0,
+      "costUSD": 0.0313417,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3201,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 35503,
+      "outputTokens": 4881,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0059908,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3519,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 3
+  },
+  "final_answer": "**Direct answer:** A URL string only tells you what the request claims to be. SSRF depends on where the server's HTTP client actually connects, and three things can make that differ from what the string suggests:\n- The string can be parsed differently by different components.\n- A redirect can move the request after you've validated it.\n- DNS can return a different address at connection time than it did at check time.\n\nValidating the string is therefore a useful first filter, but it isn't enough. You also need to enforce the policy on the resolved IP at connection time, and you need to control redirects.\n\n**Claims and sources**\n\n1. Complete user-supplied URLs are hard to validate, so OWASP advises against accepting them. Instead, accept a host or IP, check it against an allowlist, and build the rest of the request yourself.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n2. Parsers can disagree about the host in the same string. For example, `http://example.com\\@evil.com` is read as `example.com` by WHATWG and as `evil.com` by Python's `urllib`. A validator and an HTTP client that parse differently can be exploited this way.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n   - PortSwigger describes similar whitelist bypasses using embedded credentials and fragments: https://portswigger.net/web-security/ssrf\n\n3. Redirects: an allowed URL can redirect to a disallowed one if the client follows redirects. This bypasses input validation. OWASP recommends disabling redirect following. PortSwigger shows an open redirect on an allowed domain being used to reach an internal back-end.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n   - https://portswigger.net/web-security/ssrf\n\n4. A hostname can resolve to an internal address, because an attacker can register a domain that resolves to 127.0.0.1. A check on the hostname string alone won't catch this.\n   - https://portswigger.net/web-security/ssrf\n\n5. DNS changes between check and use (a TOCTOU gap): OWASP says domain allowlisting alone doesn't prevent DNS rebinding, and a second, unchecked DNS lookup between validation and connection can bypass the checks. The mitigation is to resolve the name, check the IPs against permitted networks, and connect only to those validated addresses. You keep the original hostname for the Host header, SNI and certificate verification. The same policy should cover retries and fallbacks.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n6. Rebinding works by having an attacker-controlled DNS server return a very short TTL, so the next lookup returns a different IP, possibly an internal one. A name-based check still passes while the destination has changed. Wikipedia describes this for browsers and the same-origin policy. Applying it to server-side SSRF checks follows from the OWASP TOCTOU point above. The Wikipedia page doesn't discuss SSRF itself.\n   - https://en.wikipedia.org/wiki/DNS_rebinding\n\n7. Deny-lists are bypass-prone, for example through alternative IP encodings of 127.0.0.1. OWASP prefers allowlists and treats deny-lists as a last resort.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n   - https://portswigger.net/web-security/ssrf\n\n**Limits of the evidence:** I read only three pages and didn't test any of this. The PortSwigger page, as summarized, doesn't cover DNS rebinding. The rebinding mechanism comes from Wikipedia, and I connected it to SSRF through OWASP's TOCTOU guidance.",
+  "final_answer_sha256": "bece3b786d2e52f78dbfa264ef4b271c29e523ee454bb92e28a5d77a29cf6a2c",
+  "raw_stream_sha256": "74f86e558c301ff5f6bfe4976ace6986b00f568146b78c9db1f2c17fad249622"
+}

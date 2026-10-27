@@ -1,0 +1,175 @@
+{
+  "case_id": "quantization",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.5825792000000001,
+  "judge_subtype": "success",
+  "pages_read": 13,
+  "pages_cited": 16,
+  "raw": "```json\n{\"answers\": {\n\"X\": {\n\"verdict\": \"n/a\",\n\"claims\": [\n{\"claim\": \"GPTQ is a one-shot weight quantizer based on approximate second-order information that reaches 3-4 bit weights with negligible accuracy loss on 175B models.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"},\n{\"claim\": \"AWQ finds salient channels from the activation distribution, scales them with an equivalent transformation, and uses no backpropagation or reconstruction.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"},\n{\"claim\": \"AWQ picks its scale with a single hyperparameter alpha set by a fast grid search, and it also applies weight clipping.\", \"url\": \"https://arxiv.org/html/2306.00978v5\", \"label\": \"partial\"},\n{\"claim\": \"AWQ says it is orthogonal to GPTQ and can be combined with it to improve INT2 results.\", \"url\": \"https://arxiv.org/html/2306.00978v5\", \"label\": \"unsupported\"},\n{\"claim\": \"The AWQ authors claim in related work that GPTQ's reconstruction 'leads to an over-fitting issue' and sometimes needs a reorder trick.\", \"url\": \"https://arxiv.org/html/2306.00978v5\", \"label\": \"partial\"},\n{\"claim\": \"AWQ's main metric is WikiText-2 perplexity with an RTN baseline, and its data-efficiency result (16 vs 192 sequences) covers only OPT-6.7B INT3-g128.\", \"url\": \"https://arxiv.org/html/2306.00978v5\", \"label\": \"unsupported\"},\n{\"claim\": \"In an independent evaluation, AWQ W3 on LLaMA2-7B scored 69.63 against 66.41 for RTN and 73.32 for FP16, and at W2 both scored 0.00.\", \"url\": \"https://arxiv.org/html/2402.18158v2\", \"label\": \"unsupported\"},\n{\"claim\": \"Larger models tolerate weight quantization better, and longer texts (4k+ tokens) lose more accuracy under weight-only quantization.\", \"url\": \"https://arxiv.org/html/2402.18158v2\", \"label\": \"supported\"}\n],\n\"uncited_claims\": 1,\n\"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 2},\n\"notes\": \"Covers mechanisms, scope and non-inferences well, and discloses gaps. Several specific numbers and claims are not in the cited excerpts: the INT2 combination, the 16-vs-192 calibration result, and the W2/W3 scores. The 'multi-step math vs commonsense' claim is only partly backed by Table 1. The bullet about speedups not being matched-hardware has no URL.\"\n},\n\"Y\": {\n\"verdict\": \"n/a\",\n\"claims\": [\n{\"claim\": \"GPTQ targets 3-4 bits with negligible loss and reports 'reasonable accuracy' at 2-bit and ternary.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"},\n{\"claim\": \"AWQ uses no backpropagation or reconstruction, which the authors say lets it generalize to instruction-tuned and multimodal models without overfitting calibration data.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"},\n{\"claim\": \"On Qwen2.5-32B, WikiText-2 perplexity was about 6.84 for AWQ and 6.90-6.97 for GPTQ.\", \"url\": \"https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks\", \"label\": \"unsupported\"},\n{\"claim\": \"AWQ scored 51.8% vs about 46% for GPTQ on HumanEval, and 75.7% vs 81.8% GSM8K strict-match, mainly because of format failures.\", \"url\": \"https://computingforgeeks.com/gguf-vs-awq-vs-gptq/\", \"label\": \"partial\"},\n{\"claim\": \"A quantized-reasoning-model study found AWQ on par with GPTQ at 4/3-bit and more robust to calibration data.\", \"url\": \"https://arxiv.org/pdf/2504.04823\", \"label\": \"unreachable\"},\n{\"claim\": \"A PTQ benchmark shows AWQ generally ahead at 4-bit and GPTQ better at 2-bit on some models.\", \"url\": \"https://arxiv.org/pdf/2502.13178\", \"label\": \"unsupported\"},\n{\"claim\": \"On an H200 with vLLM, AWQ ran at 68/741 tok/s and GPTQ at 277/712 tok/s with the default and Marlin kernels.\", \"url\": \"https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks\", \"label\": \"unsupported\"},\n{\"claim\": \"On a 24GB GPU, GPTQ calibration took 433 s and AWQ took 1,661 s.\", \"url\": \"https://computingforgeeks.com/gguf-vs-awq-vs-gptq/\", \"label\": \"supported\"}\n],\n\"uncited_claims\": 3,\n\"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 1, \"counterevidence\": 1},\n\"notes\": \"Primary sources were read only as abstracts, and the key comparative numbers rest on search summaries that the cited page excerpts don't contain: the JarvisLabs perplexity and throughput figures, the PTQ-Bench ranking, and HumanEval. The answer discloses this limitation. The GPTAQ independence point is not evidenced in that excerpt. Three non-inference bullets lack URLs.\"\n},\n\"Z\": {\n\"verdict\": \"n/a\",\n\"claims\": [\n{\"claim\": \"GPTQ is one-shot and second-order, quantizes 175B models in about four GPU hours, and reaches 3-4 bits with little loss.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"},\n{\"claim\": \"GPTQ builds on OBQ, quantizes in a fixed order with 128-column block updates, and uses a Cholesky reformulation with 1% dampening.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2210.17323\", \"label\": \"partial\"},\n{\"claim\": \"GPTQ calibrates on 128 random 2048-token C4 segments.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2210.17323\", \"label\": \"unsupported\"},\n{\"claim\": \"About 0.1-1% of weights are salient, keeping them in FP16 is hardware-inefficient, and the best scale in the ablation is s=2.\", \"url\": \"https://arxiv.org/html/2306.00978\", \"label\": \"partial\"},\n{\"claim\": \"AWQ is demonstrated at INT2 only when combined with GPTQ, and RTN fails completely at INT2.\", \"url\": \"https://arxiv.org/html/2306.00978\", \"label\": \"unsupported\"},\n{\"claim\": \"GPTQ's speedups come from reduced memory movement, activations stay unquantized, and there is no computational reduction.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2210.17323\", \"label\": \"partial\"},\n{\"claim\": \"AWQ claims GPTQ may overfit calibration, citing OPT-6.7B INT3-g128 PubMed/Enron perplexity shifts and 16 vs 192 calibration sequences.\", \"url\": \"https://arxiv.org/html/2306.00978\", \"label\": \"partial\"},\n{\"claim\": \"GPTQ at 2-bit g128 reached perplexity 375 on Gemma-1 7B vs 10.4 for FP16, per the CDQuant paper.\", \"url\": \"https://arxiv.org/pdf/2406.17542\", \"label\": \"unsupported\"}\n],\n\"uncited_claims\": 0,\n\"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 2},\n\"notes\": \"This is the strongest primary-source use: GPTQ full text via ar5iv, AWQ HTML, and CDQuant. It correctly narrows the overfitting claim to AWQ's own setting and grounds the speedup limits in GPTQ's limitations section. Still, several specific details are absent from the excerpts: the C4 calibration setup, the INT2-with-GPTQ result, s=2, the 2.2-bit overhead, and the CDQuant numbers. Unreadable sources are disclosed.\"\n}\n}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "GPTQ is a one-shot weight quantizer based on approximate second-order information that reaches 3-4 bit weights with negligible accuracy loss on 175B models.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ finds salient channels from the activation distribution, scales them with an equivalent transformation, and uses no backpropagation or reconstruction.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ picks its scale with a single hyperparameter alpha set by a fast grid search, and it also applies weight clipping.",
+          "url": "https://arxiv.org/html/2306.00978v5",
+          "label": "partial"
+        },
+        {
+          "claim": "AWQ says it is orthogonal to GPTQ and can be combined with it to improve INT2 results.",
+          "url": "https://arxiv.org/html/2306.00978v5",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The AWQ authors claim in related work that GPTQ's reconstruction 'leads to an over-fitting issue' and sometimes needs a reorder trick.",
+          "url": "https://arxiv.org/html/2306.00978v5",
+          "label": "partial"
+        },
+        {
+          "claim": "AWQ's main metric is WikiText-2 perplexity with an RTN baseline, and its data-efficiency result (16 vs 192 sequences) covers only OPT-6.7B INT3-g128.",
+          "url": "https://arxiv.org/html/2306.00978v5",
+          "label": "unsupported"
+        },
+        {
+          "claim": "In an independent evaluation, AWQ W3 on LLaMA2-7B scored 69.63 against 66.41 for RTN and 73.32 for FP16, and at W2 both scored 0.00.",
+          "url": "https://arxiv.org/html/2402.18158v2",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Larger models tolerate weight quantization better, and longer texts (4k+ tokens) lose more accuracy under weight-only quantization.",
+          "url": "https://arxiv.org/html/2402.18158v2",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Covers mechanisms, scope and non-inferences well, and discloses gaps. Several specific numbers and claims are not in the cited excerpts: the INT2 combination, the 16-vs-192 calibration result, and the W2/W3 scores. The 'multi-step math vs commonsense' claim is only partly backed by Table 1. The bullet about speedups not being matched-hardware has no URL."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "GPTQ targets 3-4 bits with negligible loss and reports 'reasonable accuracy' at 2-bit and ternary.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ uses no backpropagation or reconstruction, which the authors say lets it generalize to instruction-tuned and multimodal models without overfitting calibration data.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "On Qwen2.5-32B, WikiText-2 perplexity was about 6.84 for AWQ and 6.90-6.97 for GPTQ.",
+          "url": "https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks",
+          "label": "unsupported"
+        },
+        {
+          "claim": "AWQ scored 51.8% vs about 46% for GPTQ on HumanEval, and 75.7% vs 81.8% GSM8K strict-match, mainly because of format failures.",
+          "url": "https://computingforgeeks.com/gguf-vs-awq-vs-gptq/",
+          "label": "partial"
+        },
+        {
+          "claim": "A quantized-reasoning-model study found AWQ on par with GPTQ at 4/3-bit and more robust to calibration data.",
+          "url": "https://arxiv.org/pdf/2504.04823",
+          "label": "unreachable"
+        },
+        {
+          "claim": "A PTQ benchmark shows AWQ generally ahead at 4-bit and GPTQ better at 2-bit on some models.",
+          "url": "https://arxiv.org/pdf/2502.13178",
+          "label": "unsupported"
+        },
+        {
+          "claim": "On an H200 with vLLM, AWQ ran at 68/741 tok/s and GPTQ at 277/712 tok/s with the default and Marlin kernels.",
+          "url": "https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks",
+          "label": "unsupported"
+        },
+        {
+          "claim": "On a 24GB GPU, GPTQ calibration took 433 s and AWQ took 1,661 s.",
+          "url": "https://computingforgeeks.com/gguf-vs-awq-vs-gptq/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 3,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 1,
+        "counterevidence": 1
+      },
+      "notes": "Primary sources were read only as abstracts, and the key comparative numbers rest on search summaries that the cited page excerpts don't contain: the JarvisLabs perplexity and throughput figures, the PTQ-Bench ranking, and HumanEval. The answer discloses this limitation. The GPTAQ independence point is not evidenced in that excerpt. Three non-inference bullets lack URLs."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "GPTQ is one-shot and second-order, quantizes 175B models in about four GPU hours, and reaches 3-4 bits with little loss.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "GPTQ builds on OBQ, quantizes in a fixed order with 128-column block updates, and uses a Cholesky reformulation with 1% dampening.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "GPTQ calibrates on 128 random 2048-token C4 segments.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2210.17323",
+          "label": "unsupported"
+        },
+        {
+          "claim": "About 0.1-1% of weights are salient, keeping them in FP16 is hardware-inefficient, and the best scale in the ablation is s=2.",
+          "url": "https://arxiv.org/html/2306.00978",
+          "label": "partial"
+        },
+        {
+          "claim": "AWQ is demonstrated at INT2 only when combined with GPTQ, and RTN fails completely at INT2.",
+          "url": "https://arxiv.org/html/2306.00978",
+          "label": "unsupported"
+        },
+        {
+          "claim": "GPTQ's speedups come from reduced memory movement, activations stay unquantized, and there is no computational reduction.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "AWQ claims GPTQ may overfit calibration, citing OPT-6.7B INT3-g128 PubMed/Enron perplexity shifts and 16 vs 192 calibration sequences.",
+          "url": "https://arxiv.org/html/2306.00978",
+          "label": "partial"
+        },
+        {
+          "claim": "GPTQ at 2-bit g128 reached perplexity 375 on Gemma-1 7B vs 10.4 for FP16, per the CDQuant paper.",
+          "url": "https://arxiv.org/pdf/2406.17542",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "This is the strongest primary-source use: GPTQ full text via ar5iv, AWQ HTML, and CDQuant. It correctly narrows the overfitting claim to AWQ's own setting and grounds the speedup limits in GPTQ's limitations section. Still, several specific details are absent from the excerpts: the C4 calibration setup, the INT2-with-GPTQ result, s=2, the 2.2-bit overhead, and the CDQuant numbers. Unreadable sources are disclosed."
+    }
+  }
+}

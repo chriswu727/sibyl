@@ -1,0 +1,59 @@
+{
+  "case_id": "sqlite_wal",
+  "condition": "sibyl",
+  "elapsed_seconds": 29.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.10015190000000002,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 16896,
+    "cache_read_input_tokens": 66879,
+    "output_tokens": 2586,
+    "output_tokens_details": {
+      "thinking_tokens": 165
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 16896,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 10,
+      "outputTokens": 2586,
+      "cacheReadInputTokens": 66879,
+      "cacheCreationInputTokens": 16896,
+      "webSearchRequests": 0,
+      "costUSD": 0.10015190000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 165,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 16896,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__get_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** No. WAL doesn't eliminate write contention. SQLite still allows only one writer at a time in WAL mode. What WAL adds is that readers and a writer no longer block each other, so reads and a write can run at the same time.\n\n**Claims and sources**\n\n- There can be only one writer at a time in WAL mode, so writers still contend with each other. The docs say: \"since there is only one WAL file, there can only be one writer at a time.\"\n  https://www.sqlite.org/wal.html\n\n- The concurrency benefit is that \"readers do not block writers and a writer does not block readers. Reading and writing can proceed concurrently.\" SQLite also lists faster performance in most scenarios, more sequential disk I/O and fewer fsync() calls.\n  https://www.sqlite.org/wal.html\n\n- The no-blocking property is only \"mostly true.\" Some cases can still return SQLITE_BUSY, for example when another connection has the database open in exclusive locking mode. The docs say applications should be prepared for this.\n  https://www.sqlite.org/wal.html\n\n- WAL has costs. All processes must be on the same host, so it won't work over a network filesystem. If readers always overlap, checkpoints can't complete and the WAL file grows without bound.\n  https://www.sqlite.org/wal.html\n\n**Limits of the evidence**\n\n- Everything comes from one source, the official SQLite WAL documentation. That is authoritative for this question, but it is not independent corroboration.\n- My attempt to read a second SQLite page (the locking documentation) timed out. I found no source that disagrees, but I did not complete a counterevidence check.\n- I did not verify how a second writer behaves when it hits the lock, such as the busy-timeout behavior. The page I read doesn't establish that, so I make no claim about it.\n\nSources:\n- https://www.sqlite.org/wal.html",
+  "final_answer_sha256": "7db7f4cf792ffb391b8fc3c64d19f1606bdd78043bb9eac6ae7019062a57bc43",
+  "raw_stream_sha256": "9dba0014d436a988289d171f5ee34d679bc77b7e72f725fa9cb06f49f2896313"
+}

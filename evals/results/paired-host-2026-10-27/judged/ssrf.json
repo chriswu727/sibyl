@@ -1,0 +1,175 @@
+{
+  "case_id": "ssrf",
+  "kind": "research",
+  "label_map": {
+    "X": "native",
+    "Y": "sibyl",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.2616952,
+  "judge_subtype": "success",
+  "pages_read": 4,
+  "pages_cited": 5,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"OWASP advises against accepting full user URLs; accept host/IP, allowlist it, build the request server-side\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Parsers disagree on host (e.g. example.com\\\\@evil.com: WHATWG vs urllib); validator/client parse differentials are exploitable\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Whitelist bypasses via embedded credentials and fragments\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Followed redirects bypass input validation; OWASP recommends disabling redirect following\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"supported\"}, {\"claim\": \"Open redirect on an allowed domain used to reach internal back-end\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Attacker can register a domain resolving to 127.0.0.1, defeating hostname string checks\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Domain allowlisting alone doesn't prevent rebinding; second unchecked lookup bypasses checks; connect only to validated IPs keeping Host/SNI/cert hostname; apply to retries\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Rebinding uses attacker DNS with very short TTL so a later lookup returns a different (internal) IP\", \"url\": \"https://en.wikipedia.org/wiki/DNS_rebinding\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Covers parsing, redirects and DNS. The OWASP excerpt only says DNS resolution can bind a legit domain to an internal IP. It does not contain the TOCTOU, connect-to-validated-IP or SNI details, the backslash parser example, or 'avoid full URLs' advice. The deny-list claim (#7) was not scored because of the 8-claim cap; PortSwigger supports it. Limits are honestly disclosed, including that the Wikipedia link to SSRF is an inference. No challenging evidence.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Allowed domain with open redirect plus redirect-following client sends request to internal URL\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"OWASP: disable redirect-following or input validation can be bypassed\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"supported\"}, {\"claim\": \"http->https switch during redirect has bypassed some anti-SSRF filters\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Common resolve-check-fetch pattern assumes same resolution both times\", \"url\": \"https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\", \"label\": \"supported\"}, {\"claim\": \"Attacker DNS returns public IP with TTL 0 first, then 169.254.169.254 on the second lookup\", \"url\": \"https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\", \"label\": \"supported\"}, {\"claim\": \"Second lookup happens inside requests.get() after socket.gethostbyname() check\", \"url\": \"https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\", \"label\": \"supported\"}, {\"claim\": \"OWASP: 'Domain allowlisting alone does not prevent DNS rebinding'; second unchecked lookup bypasses checks\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Userinfo, fragments, look-alike subdomains, (double) URL encoding, and alt IP forms 2130706433/017700000001/127.1 bypass filters\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The quoted OWASP sentence is not in the excerpt. Only the general DNS-binding risk appears, so the claim is partial. The OWASP resolve-once/SNI/retries fix claim was not scored (cap) and is also absent from the excerpt. The behradtaher claims (egress proxy, IMDSv2 limits, resolver caching caveat) were not scored but are supported. The caveats narrow the claim, but the answer admits no counterevidence search.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"URL strings are hard to validate and parser differences can be abused\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Allowlisted host with open redirect sends request to internal target if client follows redirects\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Redirects can bypass input validation so disable redirect-following; same policy for retries/fallbacks\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Domain registered to resolve to 127.0.0.1; allowlist fooled by expected-host.evil-host\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Second unchecked DNS lookup between validation and connection bypasses checks; domain allowlisting alone doesn't prevent rebinding\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Rebinding: attacker DNS returns very short TTL so later lookup returns internal IP\", \"url\": \"https://en.wikipedia.org/wiki/DNS_rebinding\", \"label\": \"supported\"}, {\"claim\": \"Fix: validate resolved IPs, connect only to them, keep original hostname for Host/SNI/cert\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"unsupported\"}, {\"claim\": \"DNS pinning is incomplete: may break dynamic DNS and not stop all attacks\", \"url\": \"https://en.wikipedia.org/wiki/DNS_rebinding\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Thorough coverage. The OWASP excerpt lacks the TOCTOU, connect-to-validated-IP, SNI and retries content. The blocklist and defense-in-depth/IMDSv2 claims were not scored (cap); PortSwigger supports the encodings, and IMDSv2 is not in the OWASP excerpt. The DNS pinning limitations and the disclosed gaps (no prevalence data, Wikipedia covers browsers only) count as attempted counterevidence. The method note about tooling is irrelevant to the question.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "OWASP advises against accepting full user URLs; accept host/IP, allowlist it, build the request server-side",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Parsers disagree on host (e.g. example.com\\@evil.com: WHATWG vs urllib); validator/client parse differentials are exploitable",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Whitelist bypasses via embedded credentials and fragments",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Followed redirects bypass input validation; OWASP recommends disabling redirect following",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Open redirect on an allowed domain used to reach internal back-end",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Attacker can register a domain resolving to 127.0.0.1, defeating hostname string checks",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Domain allowlisting alone doesn't prevent rebinding; second unchecked lookup bypasses checks; connect only to validated IPs keeping Host/SNI/cert hostname; apply to retries",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Rebinding uses attacker DNS with very short TTL so a later lookup returns a different (internal) IP",
+          "url": "https://en.wikipedia.org/wiki/DNS_rebinding",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Covers parsing, redirects and DNS. The OWASP excerpt only says DNS resolution can bind a legit domain to an internal IP. It does not contain the TOCTOU, connect-to-validated-IP or SNI details, the backslash parser example, or 'avoid full URLs' advice. The deny-list claim (#7) was not scored because of the 8-claim cap; PortSwigger supports it. Limits are honestly disclosed, including that the Wikipedia link to SSRF is an inference. No challenging evidence."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Allowed domain with open redirect plus redirect-following client sends request to internal URL",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP: disable redirect-following or input validation can be bypassed",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "supported"
+        },
+        {
+          "claim": "http->https switch during redirect has bypassed some anti-SSRF filters",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Common resolve-check-fetch pattern assumes same resolution both times",
+          "url": "https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/",
+          "label": "supported"
+        },
+        {
+          "claim": "Attacker DNS returns public IP with TTL 0 first, then 169.254.169.254 on the second lookup",
+          "url": "https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/",
+          "label": "supported"
+        },
+        {
+          "claim": "Second lookup happens inside requests.get() after socket.gethostbyname() check",
+          "url": "https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP: 'Domain allowlisting alone does not prevent DNS rebinding'; second unchecked lookup bypasses checks",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Userinfo, fragments, look-alike subdomains, (double) URL encoding, and alt IP forms 2130706433/017700000001/127.1 bypass filters",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The quoted OWASP sentence is not in the excerpt. Only the general DNS-binding risk appears, so the claim is partial. The OWASP resolve-once/SNI/retries fix claim was not scored (cap) and is also absent from the excerpt. The behradtaher claims (egress proxy, IMDSv2 limits, resolver caching caveat) were not scored but are supported. The caveats narrow the claim, but the answer admits no counterevidence search."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "URL strings are hard to validate and parser differences can be abused",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Allowlisted host with open redirect sends request to internal target if client follows redirects",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Redirects can bypass input validation so disable redirect-following; same policy for retries/fallbacks",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Domain registered to resolve to 127.0.0.1; allowlist fooled by expected-host.evil-host",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Second unchecked DNS lookup between validation and connection bypasses checks; domain allowlisting alone doesn't prevent rebinding",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Rebinding: attacker DNS returns very short TTL so later lookup returns internal IP",
+          "url": "https://en.wikipedia.org/wiki/DNS_rebinding",
+          "label": "supported"
+        },
+        {
+          "claim": "Fix: validate resolved IPs, connect only to them, keep original hostname for Host/SNI/cert",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "DNS pinning is incomplete: may break dynamic DNS and not stop all attacks",
+          "url": "https://en.wikipedia.org/wiki/DNS_rebinding",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Thorough coverage. The OWASP excerpt lacks the TOCTOU, connect-to-validated-IP, SNI and retries content. The blocklist and defense-in-depth/IMDSv2 claims were not scored (cap); PortSwigger supports the encodings, and IMDSv2 is not in the OWASP excerpt. The DNS pinning limitations and the disclosed gaps (no prevalence data, Wikipedia covers browsers only) count as attempted counterevidence. The method note about tooling is irrelevant to the question."
+    }
+  }
+}

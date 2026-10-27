@@ -1,0 +1,59 @@
+{
+  "case_id": "real01",
+  "condition": "sibyl",
+  "elapsed_seconds": 26.8,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1256389,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 14930,
+    "cache_read_input_tokens": 68669,
+    "output_tokens": 1700,
+    "output_tokens_details": {
+      "thinking_tokens": 24
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14930,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13441,
+      "outputTokens": 2217,
+      "cacheReadInputTokens": 68669,
+      "cacheCreationInputTokens": 14930,
+      "webSearchRequests": 1,
+      "costUSD": 0.1256389,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 24,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14930,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Answer: Jürgen Aschoff studied medicine at the University of Bonn.**\n\n- He studied medicine at the University of Bonn, then moved to the University of Göttingen, where his scientific career began. This comes from the Nature obituary by Daan and Gwinner. https://www.nature.com/articles/24750\n- After the Abitur, he studied medicine at the University of Bonn, \"lacking a specific interest\" by his own account. Wikipedia gives this and lists Bonn as his education. https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n- Wikipedia also cites the Nature obituary as a source for its biography section. That means the two sources are not fully independent. https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n\nA search-result snippet said Wikidata lists Heidelberg and Freiburg as places he was educated. I did not open the Wikidata page. Nothing I read contradicts Bonn as the place he studied medicine. He later worked in Göttingen, Würzburg and Heidelberg.\n\nSources:\n- https://www.nature.com/articles/24750\n- https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+  "final_answer_sha256": "b6a7d73426f1ae313b871e246bd425db1eaff5fd82773ae4810e401a5345af42",
+  "raw_stream_sha256": "e0b887afbf605b19b94b9bd512f29eea5edbf6de6b05dcc707ad9e6e10e51a50"
+}

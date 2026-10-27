@@ -1,0 +1,73 @@
+{
+  "case_id": "sqlite_wal",
+  "condition": "deep_research",
+  "elapsed_seconds": 27.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.09266920000000001,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 15572,
+    "cache_read_input_tokens": 33628,
+    "output_tokens": 2278,
+    "output_tokens_details": {
+      "thinking_tokens": 284
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15572,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 2278,
+      "cacheReadInputTokens": 33628,
+      "cacheCreationInputTokens": 15572,
+      "webSearchRequests": 0,
+      "costUSD": 0.0884428,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 284,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15572,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 17729,
+      "outputTokens": 4907,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0042264,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2110,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 3
+  },
+  "final_answer": "**Direct answer:** No. WAL doesn't eliminate write contention. SQLite in WAL mode still allows only one writer at a time. What WAL adds is that readers and writers no longer block each other. It also makes commits cheaper, so each write holds the lock for a shorter time.\n\nI used three of the eight retrievals. They were all official SQLite pages, which is enough to answer the question. I did not look for independent benchmarks, so I can't give measured throughput numbers.\n\n**Claims and sources**\n\n- WAL lets readers and a writer run at the same time. Neither blocks the other.\n  - https://www.sqlite.org/wal.html\n\n- The SQLite docs hedge that \"writers don't block readers\" is only \"mostly true\". The page doesn't spell out the exceptions in the part I read. Checkpoint and recovery behavior is the likely area, but that is my inference.\n  - https://www.sqlite.org/wal.html\n\n- WAL permits only one writer at a time, because there is one WAL file. Writers still contend with each other.\n  - https://www.sqlite.org/wal.html\n\n- SQLite supports many simultaneous read transactions but only one write transaction.\n  - https://www.sqlite.org/lang_transaction.html\n\n- A second writer gets `SQLITE_BUSY`. This also happens when a read transaction tries to upgrade to a write while another connection has modified or is modifying the database. `BEGIN IMMEDIATE` can fail with `SQLITE_BUSY` if another write transaction is active. Starting with `BEGIN IMMEDIATE` avoids the upgrade failure; that advice is my inference from the definitions, not something the page recommends.\n  - https://www.sqlite.org/lang_transaction.html\n\n- In WAL mode, `EXCLUSIVE` and `IMMEDIATE` behave the same.\n  - https://www.sqlite.org/lang_transaction.html\n\n- Stock WAL doesn't give concurrent writers. The experimental `BEGIN CONCURRENT` branch does. It works in `wal` or `wal2` mode and uses optimistic page-level conflict detection. A conflict fails the commit with `SQLITE_BUSY_SNAPSHOT`, and commits are still serialized. This is a separate branch, not standard SQLite.\n  - https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md\n\n- WAL is faster \"in most scenarios\". Each write goes to the log once instead of twice, writes are sequential, and there are fewer `fsync()` calls. That shortens how long the single write lock is held.\n  - https://www.sqlite.org/wal.html\n\n- WAL has costs:\n  - It may be about 1–2% slower for mostly-read workloads.\n  - Read performance degrades as the WAL file grows.\n  - An occasional commit that triggers a checkpoint is much slower.\n  - https://www.sqlite.org/wal.html\n\n- Checkpoint starvation: if there is always at least one active reader, checkpoints can't complete and the WAL file grows without bound.\n  - https://www.sqlite.org/wal.html\n\n- Large transactions: before 3.11.0 (2016), WAL was worse for transactions over about 100 MB. From 3.11.0 on, it handles large transactions as efficiently as rollback mode.\n  - https://www.sqlite.org/wal.html\n\n- WAL requires all processes to be on the same host and does not work over network filesystems.\n  - https://www.sqlite.org/wal.html\n\n**Not established by these sources**\n\n- Real-world throughput gains under write-heavy load. The docs say \"faster in most scenarios\" but give no figures.\n- Exact `SQLITE_BUSY_SNAPSHOT` behavior in plain WAL. The transaction page doesn't cover it, and the rescode page would.\n\nSources:\n- [SQLite: Write-Ahead Logging](https://www.sqlite.org/wal.html)\n- [SQLite: Transaction](https://www.sqlite.org/lang_transaction.html)\n- [SQLite: BEGIN CONCURRENT](https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md)",
+  "final_answer_sha256": "55159696d9f2567177cbbf536226d27ec492c14c9cec5613e19e36de516a7583",
+  "raw_stream_sha256": "afaf6d5a2f9f6e5d945e19337898201c49c67d9c75bc34e1723055ab6e44c9c0"
+}

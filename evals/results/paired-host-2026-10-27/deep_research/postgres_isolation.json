@@ -1,0 +1,73 @@
+{
+  "case_id": "postgres_isolation",
+  "condition": "deep_research",
+  "elapsed_seconds": 32.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.09471360000000001,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 15198,
+    "cache_read_input_tokens": 33853,
+    "output_tokens": 2649,
+    "output_tokens_details": {
+      "thinking_tokens": 227
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15198,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 2649,
+      "cacheReadInputTokens": 33853,
+      "cacheCreationInputTokens": 15198,
+      "webSearchRequests": 0,
+      "costUSD": 0.09067929999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 227,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15198,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 20868,
+      "outputTokens": 3895,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.004034299999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1590,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 3
+  },
+  "final_answer": "**Direct answer:** Repeatable Read in PostgreSQL gives each transaction a single snapshot. It aborts a transaction only when it hits a concurrent-update conflict. Serializable works the same way but also tracks read/write dependencies between transactions. It aborts a transaction if the outcome couldn't match any serial order. That catches anomalies Repeatable Read allows, such as write skew. At both levels the application must be ready to retry the whole transaction after a serialization failure (SQLSTATE `40001`). Serializable will raise these failures more often and less predictably.\n\nI skipped the skill's subagent and file-writing workflow. Your constraints (no shell, no local files, at most eight retrievals) ruled it out, so I read three official PostgreSQL pages directly.\n\n**Claims and sources**\n\n- Repeatable Read queries see a snapshot from the start of the transaction's first non-transaction-control statement, not from the start of each statement.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- At Repeatable Read, if a concurrent transaction committed an update or delete to a row you try to modify or lock, you get `ERROR: could not serialize access due to concurrent update`.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- Repeatable Read is not guaranteed to match any serial execution. The docs say enforcing business rules at this level is unlikely to work without careful use of explicit locks.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- Serializable behaves like Repeatable Read, plus it monitors for conditions that would make concurrent transactions inconsistent with every serial order. It rolls one back with `could not serialize access due to read/write dependencies among transactions`.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- Serializable uses predicate locks (SIReadLock). They don't block and can't cause deadlocks. They may be promoted to page or relation level, which can raise the rate of serialization failures.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- Serializable doesn't always avoid errors that wouldn't occur in a true serial run. The docs give unique-constraint violations from overlapping inserts as an example.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- Applications at either level must be prepared to retry transactions that fail with serialization failures.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n- Serialization failures always carry SQLSTATE `40001` (`serialization_failure`), and the error message text varies.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n  https://www.postgresql.org/docs/current/errcodes-appendix.html\n- You must retry the complete transaction, including the logic that decides which SQL and values to use. PostgreSQL has no automatic retry because it can't guarantee correctness.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n- Retrying `40001` unconditionally is recommended. It may also be advisable to retry deadlocks (`40P01`).\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n- Unique violations (`23505`) and exclusion violations (`23P01`) are sometimes appropriate to retry. They need more care because they may be persistent errors rather than transient ones.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n- A retry isn't guaranteed to succeed. Under high contention it may take many attempts, and a conflicting prepared transaction can block progress.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n- The Repeatable Read section says only updating transactions might need retries, and read-only transactions never have serialization conflicts. That sentence appears only there. In the Serializable section, the docs say data read in a non-deferrable transaction isn't known to be valid until it commits, even if the transaction is read-only. `SERIALIZABLE READ ONLY DEFERRABLE` avoids this by blocking until it has a safe snapshot.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n\n**Gaps in the evidence**\n\n- The retrieved text for the Repeatable Read section doesn't name the SQLSTATE for the concurrent-update error. The error-handling page says all serialization errors at both levels use `40001`, and I rely on that page for it.\n- The retrieval tool summarizes pages, so the quotes above are as that tool reported them, not read from the raw page.\n- I didn't check the docs for a specific PostgreSQL version. These are the \"current\" docs as of today.\n\nSources:\n- [PostgreSQL docs: Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)\n- [PostgreSQL docs: Serialization Failure Handling](https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html)\n- [PostgreSQL docs: Error Codes appendix](https://www.postgresql.org/docs/current/errcodes-appendix.html)",
+  "final_answer_sha256": "36844db700916327c9fd51595375c7774fd673d1c922ae7179dcb045b2fd0eb3",
+  "raw_stream_sha256": "bb6b52eb32c1988ab10a3d76e405559c054080ecf42fb6ec2d8f89e2fb0b8c66"
+}

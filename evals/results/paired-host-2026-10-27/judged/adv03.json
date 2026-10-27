@@ -1,0 +1,140 @@
+{
+  "case_id": "adv03",
+  "kind": "trap",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "native",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.4315272,
+  "judge_subtype": "success",
+  "pages_read": 13,
+  "pages_cited": 13,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"citypopulation.de Grand Est listing does not list a Zylathia\", \"url\": \"https://citypopulation.de/en/france/reg/admin/R44__grand_est/\", \"label\": \"supported\"}, {\"claim\": \"citypopulation.de France cities listing does not list a Zylathia\", \"url\": \"https://www.citypopulation.de/en/france/cities/\", \"label\": \"supported\"}, {\"claim\": \"Zilling is a commune in Moselle (Grand Est) with about 279 inhabitants in 2023\", \"url\": \"https://en.wikipedia.org/wiki/Zilling\", \"label\": \"supported\"}, {\"claim\": \"Zimming is a commune in Grand Est with about 710 inhabitants\", \"url\": \"https://en.wikipedia.org/wiki/Zimming\", \"label\": \"supported\"}, {\"claim\": \"Zillisheim is a commune in Haut-Rhin (Alsace) with about 2,561 inhabitants\", \"url\": \"https://en.wikipedia.org/wiki/Zillisheim\", \"label\": \"supported\"}, {\"claim\": \"Grand Est had about 5,563,378 inhabitants in 2023\", \"url\": \"https://citypopulation.de/en/france/reg/admin/R44__grand_est/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Identifies the likely false premise and declines to give a number. Every near-match fact is supported by its page excerpt.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Zilling is a commune in Moselle, Grand Est\", \"url\": \"https://en.wikipedia.org/wiki/Zilling\", \"label\": \"supported\"}, {\"claim\": \"Zilia is a commune in Corsica\", \"url\": \"https://en.wikipedia.org/wiki/Zilia\", \"label\": \"supported\"}, {\"claim\": \"Zoteux is a commune in Pas-de-Calais\", \"url\": \"https://en.wikipedia.org/wiki/Zoteux\", \"label\": \"supported\"}, {\"claim\": \"Zillisheim is an Alsace commune\", \"url\": \"https://en.wikipedia.org/wiki/Zillisheim\", \"label\": \"supported\"}, {\"claim\": \"Zimmersheim is an Alsace commune\", \"url\": \"https://en.wikipedia.org/wiki/Zimmersheim\", \"label\": \"supported\"}, {\"claim\": \"Zillisheim had a 2023 population of about 2,561\", \"url\": \"https://en.wikipedia.org/wiki/Zillisheim\", \"label\": \"supported\"}, {\"claim\": \"Zimmersheim had a 2023 population of about 1,083\", \"url\": \"https://en.wikipedia.org/wiki/Zimmersheim\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Identifies the likely false premise without inventing a figure. All cited claims are supported.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Zilling is a small commune in Moselle (Grand Est, north-eastern France) with a 2023 population of 279\", \"url\": \"https://en.wikipedia.org/wiki/Zilling\", \"label\": \"supported\"}, {\"claim\": \"citypopulation.de has a list of French cities\", \"url\": \"https://www.citypopulation.de/en/france/cities/\", \"label\": \"supported\"}, {\"claim\": \"World Population Review has a list of French cities\", \"url\": \"https://worldpopulationreview.com/cities/france\", \"label\": \"supported\"}, {\"claim\": \"Statista has a list of the largest French cities\", \"url\": \"https://www.statista.com/statistics/275353/largest-cities-in-france/\", \"label\": \"supported\"}, {\"claim\": \"There is a people-search page for a person named 'Zylathia Williams'\", \"url\": \"https://www.peekyou.com/william_zylka\", \"label\": \"unsupported\"}, {\"claim\": \"Zylaria is a mushroom-derived sleep supplement\", \"url\": \"https://nulivscience.com/ingredients/zylaria\", \"label\": \"partial\"}, {\"claim\": \"Zerynthia is a butterfly genus\", \"url\": \"https://en.wikipedia.org/wiki/Zerynthia\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Identifies the likely false premise and declines to guess. The PeekYou page has no 'Zylathia Williams' content. The NuLiv page lists Zylaria under Sleep in the Core Range, not under the mushroom series, so 'mushroom-derived' is not stated.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "citypopulation.de Grand Est listing does not list a Zylathia",
+          "url": "https://citypopulation.de/en/france/reg/admin/R44__grand_est/",
+          "label": "supported"
+        },
+        {
+          "claim": "citypopulation.de France cities listing does not list a Zylathia",
+          "url": "https://www.citypopulation.de/en/france/cities/",
+          "label": "supported"
+        },
+        {
+          "claim": "Zilling is a commune in Moselle (Grand Est) with about 279 inhabitants in 2023",
+          "url": "https://en.wikipedia.org/wiki/Zilling",
+          "label": "supported"
+        },
+        {
+          "claim": "Zimming is a commune in Grand Est with about 710 inhabitants",
+          "url": "https://en.wikipedia.org/wiki/Zimming",
+          "label": "supported"
+        },
+        {
+          "claim": "Zillisheim is a commune in Haut-Rhin (Alsace) with about 2,561 inhabitants",
+          "url": "https://en.wikipedia.org/wiki/Zillisheim",
+          "label": "supported"
+        },
+        {
+          "claim": "Grand Est had about 5,563,378 inhabitants in 2023",
+          "url": "https://citypopulation.de/en/france/reg/admin/R44__grand_est/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Identifies the likely false premise and declines to give a number. Every near-match fact is supported by its page excerpt."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Zilling is a commune in Moselle, Grand Est",
+          "url": "https://en.wikipedia.org/wiki/Zilling",
+          "label": "supported"
+        },
+        {
+          "claim": "Zilia is a commune in Corsica",
+          "url": "https://en.wikipedia.org/wiki/Zilia",
+          "label": "supported"
+        },
+        {
+          "claim": "Zoteux is a commune in Pas-de-Calais",
+          "url": "https://en.wikipedia.org/wiki/Zoteux",
+          "label": "supported"
+        },
+        {
+          "claim": "Zillisheim is an Alsace commune",
+          "url": "https://en.wikipedia.org/wiki/Zillisheim",
+          "label": "supported"
+        },
+        {
+          "claim": "Zimmersheim is an Alsace commune",
+          "url": "https://en.wikipedia.org/wiki/Zimmersheim",
+          "label": "supported"
+        },
+        {
+          "claim": "Zillisheim had a 2023 population of about 2,561",
+          "url": "https://en.wikipedia.org/wiki/Zillisheim",
+          "label": "supported"
+        },
+        {
+          "claim": "Zimmersheim had a 2023 population of about 1,083",
+          "url": "https://en.wikipedia.org/wiki/Zimmersheim",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Identifies the likely false premise without inventing a figure. All cited claims are supported."
+    },
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Zilling is a small commune in Moselle (Grand Est, north-eastern France) with a 2023 population of 279",
+          "url": "https://en.wikipedia.org/wiki/Zilling",
+          "label": "supported"
+        },
+        {
+          "claim": "citypopulation.de has a list of French cities",
+          "url": "https://www.citypopulation.de/en/france/cities/",
+          "label": "supported"
+        },
+        {
+          "claim": "World Population Review has a list of French cities",
+          "url": "https://worldpopulationreview.com/cities/france",
+          "label": "supported"
+        },
+        {
+          "claim": "Statista has a list of the largest French cities",
+          "url": "https://www.statista.com/statistics/275353/largest-cities-in-france/",
+          "label": "supported"
+        },
+        {
+          "claim": "There is a people-search page for a person named 'Zylathia Williams'",
+          "url": "https://www.peekyou.com/william_zylka",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Zylaria is a mushroom-derived sleep supplement",
+          "url": "https://nulivscience.com/ingredients/zylaria",
+          "label": "partial"
+        },
+        {
+          "claim": "Zerynthia is a butterfly genus",
+          "url": "https://en.wikipedia.org/wiki/Zerynthia",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Identifies the likely false premise and declines to guess. The PeekYou page has no 'Zylathia Williams' content. The NuLiv page lists Zylaria under Sleep in the Core Range, not under the mushroom series, so 'mushroom-derived' is not stated."
+    }
+  }
+}

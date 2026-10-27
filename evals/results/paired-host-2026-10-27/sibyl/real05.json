@@ -1,0 +1,59 @@
+{
+  "case_id": "real05",
+  "condition": "sibyl",
+  "elapsed_seconds": 24.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1318403,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 15847,
+    "cache_read_input_tokens": 65263,
+    "output_tokens": 2105,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15847,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13608,
+      "outputTokens": 2471,
+      "cacheReadInputTokens": 65263,
+      "cacheCreationInputTokens": 15847,
+      "webSearchRequests": 1,
+      "costUSD": 0.1318403,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15847,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**DOI: 10.1515/cllt-2021-0018** (https://doi.org/10.1515/cllt-2021-0018)\n\nThis is the DOI of the published journal article by Martijn van der Klis and Jos Tellings. The arXiv preprint of the same paper has a separate DOI, 10.48550/arXiv.2012.04946.\n\nClaims and sources:\n\n- The published article is in *Corpus Linguistics and Linguistic Theory* 18(3), pp. 627–665 (2022), and its DOI is 10.1515/cllt-2021-0018.\n  - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/ (I read this page; the citation line reads \"18(3):627–665. doi: 10.1515/cllt-2021-0018\")\n  - https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en (the publisher URL contains the DOI; this page returned HTTP 202 when I tried to read it, so I did not confirm its content)\n\n- The arXiv preprint, arXiv:2012.04946, has its own arXiv-issued DOI. Its page also lists the journal DOI as a related DOI.\n  - https://arxiv.org/abs/2012.04946\n\n- The authors are Martijn van der Klis and Jos Tellings, both at Utrecht University.\n  - https://arxiv.org/abs/2012.04946\n  - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/\n\nLimits of the evidence: I didn't find any source that gives a conflicting DOI. I did not run a dedicated counterevidence search. The journal DOI rests on the PMC page, plus the arXiv listing and the publisher URL pattern. I could not read the publisher page directly.",
+  "final_answer_sha256": "a2542661247951a318b7f24b31e4bc71422989ca75e854baf22ae2d1a6d8d5c0",
+  "raw_stream_sha256": "70b1e4b9e4bc10ee6a440017a7f2d4c7723e7584eec3a5a38c431f22f24e2a7b"
+}

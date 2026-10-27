@@ -1,0 +1,76 @@
+{
+  "case_id": "ssrf",
+  "condition": "sibyl",
+  "elapsed_seconds": 55.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1788353,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 20096,
+    "cache_read_input_tokens": 91155,
+    "output_tokens": 3823,
+    "output_tokens_details": {
+      "thinking_tokens": 91
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 20096,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13422,
+      "outputTokens": 4992,
+      "cacheReadInputTokens": 91155,
+      "cacheCreationInputTokens": 20096,
+      "webSearchRequests": 1,
+      "costUSD": 0.1762635,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 91,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 20096,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 18383,
+      "outputTokens": 1467,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0025718,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 731,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebFetch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "WebSearch": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** A URL string check only tests what the input says. SSRF depends on where the server actually connects. Two things can change that destination after the check passes:\n- A redirect can send the request somewhere the check never saw.\n- DNS can return a different address when the server connects than it did when the server validated.\n\nThe check therefore has to be enforced at connection time, on the IP address actually used. I found no source that disputes this. Each point below rests on one source, and the two DNS-rebinding sources are one OWASP page and one blog post.\n\n**Redirects**\n- An application can validate that a URL is on an allowed domain, then request it. If that domain has an open redirect and the HTTP client follows redirects, the request goes to an internal URL the attacker chose.\n  - https://portswigger.net/web-security/ssrf\n- OWASP says to disable redirect-following in the web client. Otherwise the input validation can be bypassed.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- Switching from `http:` to `https:` during a redirect has reportedly bypassed some anti-SSRF filters.\n  - https://portswigger.net/web-security/ssrf\n\n**DNS changes (rebinding / time-of-check to time-of-use)**\n- The common pattern is to resolve the hostname, check the IP against a blocklist, then fetch. It assumes the hostname resolves the same way both times.\n  - https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\n- An attacker-controlled DNS server can return a public IP with a TTL of 0 for the first lookup, which passes the check. On the second lookup, when the HTTP library connects, it returns `169.254.169.254` (the cloud metadata address).\n  - https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\n- The second lookup often happens inside the HTTP library, for example when `requests.get()` resolves the name again after `socket.gethostbyname()` has already checked it.\n  - https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\n- OWASP states that \"Domain allowlisting alone does not prevent DNS rebinding.\" It also warns that a second, unchecked DNS lookup between validation and connection can bypass the checks.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n**The string itself is also unreliable**\n- Hand-written URL checks can be fooled by userinfo (`user:pass@host`), fragments, look-alike subdomains, and URL encoding or double-encoding. Blocklists can be bypassed with alternative IP forms such as `2130706433`, `017700000001` and `127.1`.\n  - https://portswigger.net/web-security/ssrf\n- OWASP says deny-lists are bypass-prone and parsers can disagree about which host a string names.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n**What works instead**\n- Resolve once, validate the IP, then connect only to that IP. Keep the original hostname for the `Host` header, SNI and certificate checks. Apply the same policy to retries and fallbacks, and disable redirects.\n  - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- Alternatively, route requests through an egress proxy that resolves and connects in one step (Stripe's Smokescreen is one example). Network controls also help: block access to the metadata IP, and use AWS IMDSv2, which stops simple GET-only SSRF but not every case.\n  - https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\n\n**Caveats**\n- Rebinding doesn't always work on the first try. Some resolvers cache regardless of TTL, so attackers may need repeated attempts.\n  - https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/\n- I did not complete a separate counterevidence search. I used 4 of the 8 allowed retrievals.\n\nSources:\n- https://portswigger.net/web-security/ssrf\n- https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- https://behradtaher.dev/DNS-Rebinding-Attacks-Against-SSRF-Protections/",
+  "final_answer_sha256": "ff77acde296851bfae8b0c78c5bb1f71d9180ad05b1bd0638a16fd79a06797b2",
+  "raw_stream_sha256": "570d39fa6b4d00c98f1a6a15bffe9519b0ceb344d2795383ea788790250f5c12"
+}

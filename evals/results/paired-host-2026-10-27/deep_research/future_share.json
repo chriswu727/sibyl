@@ -1,0 +1,74 @@
+{
+  "case_id": "future_share",
+  "condition": "deep_research",
+  "elapsed_seconds": 48.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.2508468,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 17799,
+    "cache_read_input_tokens": 55050,
+    "output_tokens": 3239,
+    "output_tokens_details": {
+      "thinking_tokens": 335
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17799,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 42107,
+      "outputTokens": 5742,
+      "cacheReadInputTokens": 55050,
+      "cacheCreationInputTokens": 17799,
+      "webSearchRequests": 3,
+      "costUSD": 0.24833499999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 335,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 17799,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 8773,
+      "outputTokens": 3269,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0025118000000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2415,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 3,
+    "WebFetch": 1
+  },
+  "final_answer": "**Direct answer:** No. Public evidence cannot establish NVIDIA's exact realized AI-chip market share in 2030. Today is 2026-10-27, so 2030 hasn't happened. Any 2030 figure is a projection, and the 2030 outcome can't be observed yet. Even for past years, \"exact\" share is out of reach, because no one publishes a standard denominator for the AI-chip market.\n\nI used four of my eight retrievals: three searches and one page read. Most share figures come from third-party analyst sites, not primary data.\n\n**Observed (company-reported, hard data)**\n\n- NVIDIA reported Q2 FY2027 (quarter ended July 26, 2026) revenue of $96.2B and Data Center revenue of $89.0B, up 117% year over year.\n  - https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000073/q2fy27pr.htm\n  - https://themodelpress.com/news/2026/10/nvidia-q2-fiscal-2027-results\n- Q3 FY2027 revenue guidance is $108B ±2%, and it assumes no China data center compute revenue. This is guidance, not an outcome.\n  - https://gpuinsights.net/nvidia-data-center-revenue-q2-fy2027/\n- These figures are NVIDIA's own revenue. They don't give a market share, because they have no agreed denominator.\n\n**Estimates of past or current share (analyst-derived, not exact)**\n\n- One analyst site estimates NVIDIA's revenue share at 75% in 2022, 86% in 2023, 87% in 2024 and 81% in 2025.\n  - https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n- The same site says the market-size denominator, AMD revenue and custom-silicon revenue are its own estimates, based on TrendForce and TSMC capacity data.\n  - https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n- That page is internally inconsistent. For example, its 2025 share is 81% in the table but 80–90% in the summary.\n  - https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n- Other sources give a range of roughly 80–90% for the data center accelerator market. AMD is put at about 5–7% in 2025, and custom ASICs at roughly $15B.\n  - https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\n  - https://siliconanalysts.com/analysis/amd-vs-nvidia-ai-gpu-market-share-2026\n- Market-size definitions differ by roughly 5×. One firm puts the 2025 AI accelerator market at $33B, while another uses about $160B. That alone makes \"exact\" share impossible.\n  - https://www.kaisoresearch.com/blog/ai-accelerators-market-431b-by\n  - https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n- By units, JPMorgan forecasts NVIDIA plus AMD GPUs at about 58% of 2026 accelerator shipments, down from 68% in 2025. Unit share and revenue share differ.\n  - https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\n\n**Projections (not outcomes)**\n\n- The same analyst site projects NVIDIA at 75% in 2026, with a \"floor\" of 65–70%. Its forecasts stop at 2026 and include nothing for 2027–2030.\n  - https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n- I found no authoritative, sourced 2030 NVIDIA share forecast. Searches returned mostly stock price targets.\n  - https://www.fool.com/investing/2026/07/14/where-will-nvidia-stock-be-in-2030/\n  - https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets/\n- Market-size projections for 2030 are broad:\n  - AI capex of $3–4T by 2030.\n  - TSMC's view implies an addressable AI data center chip market of about $825B.\n  - A market CAGR of 29% through 2030.\n  - https://www.fool.com/investing/2026/10/25/nvidia-ceo-jensen-huang-reaffirms-his-4-trillion-p/\n- Commentators say NVIDIA's share may have peaked, with pressure from AMD and custom chips from Broadcom and the hyperscalers. Others argue a more chip-heavy build-out would offset any share loss. These are opinions, not data.\n  - https://www.fool.com/investing/2026/07/14/where-will-nvidia-stock-be-in-2030/\n\n**What would settle it:** NVIDIA's FY2031 and calendar-2030 filings, together with competitors' 2030 filings (AMD, Broadcom, and the cloud providers' custom-silicon disclosures). Even then, share would depend on whichever market definition an analyst chose, so it would remain an estimate.\n\n**Limits:** I did not find or read sell-side or tracker reports from Morgan Stanley, Bernstein, IDC, Gartner or TrendForce, which may hold paywalled 2030 forecasts. Most share figures above come from low-authority aggregator sites, so treat them as rough.\n\nSources:\n- [NVIDIA Q2 FY2027 8-K](https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000073/q2fy27pr.htm)\n- [The Model Press, Q2 FY2027 results](https://themodelpress.com/news/2026/10/nvidia-q2-fiscal-2027-results)\n- [GPU Insights, Q2 FY2027 data center split](https://gpuinsights.net/nvidia-data-center-revenue-q2-fy2027/)\n- [Silicon Analysts, NVIDIA AI accelerator market share](https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026)\n- [Silicon Analysts, AMD vs NVIDIA](https://siliconanalysts.com/analysis/amd-vs-nvidia-ai-gpu-market-share-2026)\n- [Command Linux, AI GPU market share](https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/)\n- [Kaiso Research, AI accelerators market](https://www.kaisoresearch.com/blog/ai-accelerators-market-431b-by)\n- [Motley Fool, NVIDIA in 2030](https://www.fool.com/investing/2026/07/14/where-will-nvidia-stock-be-in-2030/)\n- [Motley Fool, Jensen Huang $4T projection](https://www.fool.com/investing/2026/10/25/nvidia-ceo-jensen-huang-reaffirms-his-4-trillion-p/)\n- [FXOpen, NVIDIA price targets](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets/)",
+  "final_answer_sha256": "77232f10ab9c39b3a879355dcdceba3b1269604a36fa44db476e11282b143b7f",
+  "raw_stream_sha256": "83caf05019e4b50c86980d6b9251bab5dcfcb3aca22d8f742842be4a387bdd11"
+}

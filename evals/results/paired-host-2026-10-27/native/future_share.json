@@ -1,0 +1,56 @@
+{
+  "case_id": "future_share",
+  "condition": "native",
+  "elapsed_seconds": 22.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.1321984,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 4737,
+    "cache_read_input_tokens": 5904,
+    "output_tokens": 1750,
+    "output_tokens_details": {
+      "thinking_tokens": 63
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4737,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 27140,
+      "outputTokens": 3838,
+      "cacheReadInputTokens": 5904,
+      "cacheCreationInputTokens": 4737,
+      "webSearchRequests": 2,
+      "costUSD": 0.1321984,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 63,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 4737,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**Direct answer:** No. Today is 2026-10-27, so 2030 hasn't happened. No public source can report an observed, exact 2030 share for NVIDIA. Only projections exist, and they disagree. Even for past years, \"AI-chip market share\" has no single agreed figure, because it depends on how analysts define the market.\n\n**Observed (2024–2026, estimates by third parties, not audited figures)**\n\n- NVIDIA's 2026 share of AI accelerator revenue is estimated at about 70–85%. The estimates vary by source and by what they count.\n  https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n  https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\n\n- NVIDIA's share is estimated to have peaked near 87% in 2024 and to have fallen since.\n  https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n\n- The definition changes the number. One source counts only merchant vendors (NVIDIA, AMD, Intel) and puts NVIDIA at 87.4% in Q1 2026. Counting custom ASICs lowers it.\n  https://axis-intelligence.com/ai-chip-market-share/\n\n- Custom ASICs (Google TPU, AWS Trainium, Microsoft Maia, Meta MTIA) are estimated at roughly 12–20% of revenue. By shipments they are larger: TrendForce projects ASIC-based AI servers at 27.8% of 2026 shipments. ASIC chips are mostly used in-house and are not sold, so revenue share is hard to measure.\n  https://axis-intelligence.com/ai-chip-market-share/\n  https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\n\n- AMD is estimated at about 5–8% of the market.\n  https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n\n**Projections for 2030 (not observed outcomes)**\n\n- Bloomberg Intelligence expects NVIDIA to hold 70–75% through 2030, with AMD at a minimum of about 10%.\n  https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/\n\n- Kearney, as cited by Celadon Research, projects a fall from about 90% in 2025 to 70% by 2030. I read this secondhand and did not check Kearney's original report.\n  https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026\n\n- Northwise Project, a low-authority site, gives 62% for NVIDIA in 2030, with AMD at 26% and ASICs at 12%.\n  https://northwiseproject.com/research/ai-accelerator-market-forecast-2030\n\n- The projections span roughly 62–75%. They use different definitions and assumptions, and some come from weak sources. The range itself shows that a single \"exact\" 2030 figure can't be established.\n\n**Conclusion:** The question assumes an exact realized 2030 figure exists in public evidence. It doesn't. Even when 2030 data arrives, the result will be an estimate that depends on definitions: revenue or units, merchant chips only or including captive ASICs, and whether China is included.\n\nSources:\n- [Silicon Analysts](https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026)\n- [Tom's Hardware](https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia)\n- [Axis Intelligence](https://axis-intelligence.com/ai-chip-market-share/)\n- [Bloomberg Intelligence](https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/)\n- [Celadon Research](https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026)\n- [Northwise Project](https://northwiseproject.com/research/ai-accelerator-market-forecast-2030)",
+  "final_answer_sha256": "bd6f944b8fde0b3c79c727161a3b309c94f1ebde6ebb3461f3903d186da360da",
+  "raw_stream_sha256": "e9f532591ebc3540da80f1fbe0a3b42f3768def527b0dda9a51a701f0daa2c48"
+}

@@ -1,0 +1,74 @@
+{
+  "case_id": "prompt_injection",
+  "condition": "deep_research",
+  "elapsed_seconds": 36.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.15112150000000002,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 15957,
+    "cache_read_input_tokens": 53253,
+    "output_tokens": 3019,
+    "output_tokens_details": {
+      "thinking_tokens": 327
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15957,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13980,
+      "outputTokens": 3954,
+      "cacheReadInputTokens": 53253,
+      "cacheCreationInputTokens": 15957,
+      "webSearchRequests": 1,
+      "costUSD": 0.14665330000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 327,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15957,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 24287,
+      "outputTokens": 4079,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0044682,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2606,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 5
+  },
+  "final_answer": "**Direct answer:** Retrieved web content is a trust boundary because an LLM application puts trusted instructions (system prompt, user request) and untrusted third-party text (web pages) into one natural-language context. The model has no reliable way to tell data from commands. Anyone who can publish a page the agent might read can therefore try to steer it, and the agent acts with the user's tools and permissions. Controls such as training, classifiers, least privilege, human approval and architectural separation lower the odds or the damage. None of the sources I found shows that any of them prevents prompt injection entirely.\n\nI used six retrievals out of eight. Sources are mostly vendor and standards material plus one preprint abstract, so treat the quantitative figures as self-reported.\n\n**Why it is a trust boundary**\n\n- LLM-integrated applications blur the line between data and instructions. Attackers can plant prompts in content the application is likely to retrieve, such as web pages, and exploit it remotely with no direct access.\n  - https://arxiv.org/abs/2302.12173\n- That paper demonstrated attacks on Bing's GPT-4-powered Chat and on synthetic GPT-4 apps. The attacks included data theft, self-propagating injections, manipulation of API calls, and contamination of the information ecosystem. The authors said retrieved prompts can act like arbitrary code execution, and that effective mitigations were lacking at the time.\n  - https://arxiv.org/abs/2302.12173\n- Search-result summaries describe it as a trust-boundary failure. The application has to preserve the boundary because the model can't enforce it. Harm happens when the agent is allowed to use a credential, tool or permission after reading the payload. This comes from a search-results summary and a blog post I did not open, so it is secondary.\n  - https://dev.to/lukaswalter/indirect-prompt-injection-is-a-trust-boundary-problem\n- OWASP says prompt injection is possible because of the nature of generative AI.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n\n**Controls that reduce risk**\n\n- OWASP lists these mitigations:\n  - constrain model behavior through the system prompt;\n  - validate output formats with deterministic code;\n  - filter inputs and outputs;\n  - enforce least privilege, keeping sensitive functions in application code;\n  - require human approval for high-risk actions;\n  - segregate and label untrusted external content;\n  - run regular adversarial testing, treating the model as an untrusted user.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Anthropic describes three layers for its browser agent: reinforcement-learning training to refuse injections, classifiers that scan untrusted content, and continuous red teaming.\n  - https://www.anthropic.com/research/prompt-injection-defenses\n- Under Anthropic's internal adaptive attacker, attack success was about 1.4% for Opus 4.5 and 1.9–2.4% for the other tested models with safeguards. Without safeguards it was roughly 8–14%. This is vendor self-reported.\n  - https://www.anthropic.com/research/prompt-injection-defenses\n- Architectural separation is a stronger approach. CaMeL keeps the trusted query's control and data flows apart so untrusted data can't change program flow, and it uses capabilities to block unauthorized data exfiltration. It claims \"provable security\" on the tasks it completes, but the abstract doesn't state the scope of that guarantee. It solved 77% of AgentDojo tasks versus 84% for an undefended system, so it costs some utility.\n  - https://arxiv.org/abs/2503.18813\n- A search summary also mentions a dual-LLM design, in which a quarantined model extracts facts from untrusted content. I did not verify that against a primary source.\n  - https://dev.to/lukaswalter/indirect-prompt-injection-is-a-trust-boundary-problem\n\n**Why none gives immunity**\n\n- OWASP says it is unclear whether fool-proof prevention exists, given how models work. It presents its measures as ways to reduce impact.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Anthropic says even a 1% success rate \"still represents meaningful risk.\" It also says \"No browser agent is immune\" and that the problem is \"far from a solved problem.\"\n  - https://www.anthropic.com/research/prompt-injection-defenses\n- The CaMeL guarantee covers only tasks the system completes, and it drops some tasks. It is a mitigation with trade-offs, not a general immunity claim.\n  - https://arxiv.org/abs/2503.18813\n\n**Gaps**\n\n- I could not confirm how common injection is on real web pages. A 2026 preprint on this exists, but I only saw its title in search results.\n  - https://arxiv.org/abs/2604.27202\n- The first OWASP page I tried didn't mention prompt injection, so I used the LLM01 page instead.\n\nSources:\n- [Greshake et al., indirect prompt injection](https://arxiv.org/abs/2302.12173)\n- [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)\n- [Anthropic prompt injection defenses](https://www.anthropic.com/research/prompt-injection-defenses)\n- [CaMeL](https://arxiv.org/abs/2503.18813)\n- [Indirect Prompt Injection Is a Trust Boundary Problem (DEV)](https://dev.to/lukaswalter/indirect-prompt-injection-is-a-trust-boundary-problem)\n- [Indirect Prompt Injection in the Wild (arXiv 2604.27202)](https://arxiv.org/abs/2604.27202)",
+  "final_answer_sha256": "43028bf6d3910aac38b70bd9f0b61776f61f0fb320599c42935f85c365e641fb",
+  "raw_stream_sha256": "3b942fc5bc32b862f61bafe2faa2f0cab1d049ba75287386df6aadeb263ffeaa"
+}

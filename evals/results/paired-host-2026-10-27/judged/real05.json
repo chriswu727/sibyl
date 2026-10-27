@@ -1,0 +1,110 @@
+{
+  "case_id": "real05",
+  "kind": "factual",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.1416792,
+  "judge_subtype": "success",
+  "pages_read": 4,
+  "pages_cited": 7,
+  "raw": "{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Published in Corpus Linguistics and Linguistic Theory 18(3), pp. 627–665 (2022), DOI 10.1515/cllt-2021-0018\", \"url\": \"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/\", \"label\": \"partial\"}, {\"claim\": \"Published in Corpus Linguistics and Linguistic Theory 18(3), pp. 627–665 (2022), DOI 10.1515/cllt-2021-0018\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"arXiv preprint 2012.04946 has its own arXiv-issued DOI and lists the journal DOI as related DOI\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Authors are Martijn van der Klis and Jos Tellings, both at Utrecht University\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"partial\"}, {\"claim\": \"Authors are Martijn van der Klis and Jos Tellings, both at Utrecht University\", \"url\": \"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"PMC excerpt gives 18(3):627–665 and the DOI but does not name the journal. arXiv page gives the authors but not their affiliation. The publisher page was unreachable.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"By van der Klis and Tellings, in Corpus Linguistics and Linguistic Theory vol. 18 issue 3 pp. 627–665; issue date 26 Oct 2022, online 10 Jan 2022\", \"url\": \"https://pmc.ncbi.nlm.nih.gov/articles/PMC9536326/\", \"label\": \"partial\"}, {\"claim\": \"De Gruyter Brill page carries the same DOI\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"arXiv preprint has separate DOI 10.48550/arXiv.2012.04946\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"PMC excerpt supports authors, volume/issue/pages and dates but does not name the journal. The answer correctly declined to follow an instruction embedded in tool output.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Published article DOI is 10.1515/cllt-2021-0018\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"Authors van der Klis and Tellings; Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665, published 10 Jan 2022 by De Gruyter Mouton\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"Authors van der Klis and Tellings; Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665, published 10 Jan 2022 by De Gruyter Mouton\", \"url\": \"https://www.semanticscholar.org/paper/Generating-semantic-maps-through-multidimensional-Klis-Tellings/2ecd21456dbdd696cce4202bf8cffabf6a7a1b2a\", \"label\": \"unreachable\"}, {\"claim\": \"arXiv preprint 2012.04946 has its own DOI 10.48550/arXiv.2012.04946\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Free full-text copy on PubMed Central (PMC9536326)\", \"url\": \"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/\", \"label\": \"supported\"}, {\"claim\": \"Utrecht University repository record exists\", \"url\": \"https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"The core DOI claim is cited only to an unreachable page, though the cited UU repository and arXiv pages do contain the DOI. The bibliographic details are cited only to unreachable pages.\"}}}",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Published in Corpus Linguistics and Linguistic Theory 18(3), pp. 627–665 (2022), DOI 10.1515/cllt-2021-0018",
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/",
+          "label": "partial"
+        },
+        {
+          "claim": "Published in Corpus Linguistics and Linguistic Theory 18(3), pp. 627–665 (2022), DOI 10.1515/cllt-2021-0018",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "arXiv preprint 2012.04946 has its own arXiv-issued DOI and lists the journal DOI as related DOI",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Authors are Martijn van der Klis and Jos Tellings, both at Utrecht University",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "partial"
+        },
+        {
+          "claim": "Authors are Martijn van der Klis and Jos Tellings, both at Utrecht University",
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "PMC excerpt gives 18(3):627–665 and the DOI but does not name the journal. arXiv page gives the authors but not their affiliation. The publisher page was unreachable."
+    },
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "By van der Klis and Tellings, in Corpus Linguistics and Linguistic Theory vol. 18 issue 3 pp. 627–665; issue date 26 Oct 2022, online 10 Jan 2022",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9536326/",
+          "label": "partial"
+        },
+        {
+          "claim": "De Gruyter Brill page carries the same DOI",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "arXiv preprint has separate DOI 10.48550/arXiv.2012.04946",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "PMC excerpt supports authors, volume/issue/pages and dates but does not name the journal. The answer correctly declined to follow an instruction embedded in tool output."
+    },
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Published article DOI is 10.1515/cllt-2021-0018",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Authors van der Klis and Tellings; Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665, published 10 Jan 2022 by De Gruyter Mouton",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Authors van der Klis and Tellings; Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665, published 10 Jan 2022 by De Gruyter Mouton",
+          "url": "https://www.semanticscholar.org/paper/Generating-semantic-maps-through-multidimensional-Klis-Tellings/2ecd21456dbdd696cce4202bf8cffabf6a7a1b2a",
+          "label": "unreachable"
+        },
+        {
+          "claim": "arXiv preprint 2012.04946 has its own DOI 10.48550/arXiv.2012.04946",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Free full-text copy on PubMed Central (PMC9536326)",
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/",
+          "label": "supported"
+        },
+        {
+          "claim": "Utrecht University repository record exists",
+          "url": "https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "The core DOI claim is cited only to an unreachable page, though the cited UU repository and arXiv pages do contain the DOI. The bibliographic details are cited only to unreachable pages."
+    }
+  }
+}

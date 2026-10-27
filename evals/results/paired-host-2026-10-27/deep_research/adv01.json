@@ -1,0 +1,74 @@
+{
+  "case_id": "adv01",
+  "condition": "deep_research",
+  "elapsed_seconds": 32.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.14070120000000003,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 14298,
+    "cache_read_input_tokens": 70941,
+    "output_tokens": 2290,
+    "output_tokens_details": {
+      "thinking_tokens": 239
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14298,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13678,
+      "outputTokens": 3144,
+      "cacheReadInputTokens": 70941,
+      "cacheCreationInputTokens": 14298,
+      "webSearchRequests": 1,
+      "costUSD": 0.1330821,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 239,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14298,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 72726,
+      "outputTokens": 693,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0076191,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 443,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 3,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** The question rests on a false premise. Einstein never won a Nobel Prize for general relativity. He received the 1921 Nobel Prize in Physics, which was awarded in 1922, for his services to theoretical physics and especially his discovery of the law of the photoelectric effect.\n\nI used three retrievals out of eight. Two came from the official Nobel Prize site and returned 403 errors. One was a PDF that came back as unreadable. The claims below therefore rest mainly on search-result summaries rather than on pages I read in full.\n\n**Claims and sources**\n\n- Einstein's prize was the 1921 Nobel Prize in Physics.\n  - https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/\n  - https://arxiv.org/pdf/2112.13519\n\n- The 1921 prize was held in reserve because the committee found no nominee met the criteria in Nobel's will. The Royal Swedish Academy of Sciences voted on 9 November 1922 to award it to Einstein.\n  - https://arxiv.org/pdf/2112.13519\n  - https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305\n\n- The citation reads \"for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect.\" It does not mention relativity.\n  - https://nobel-prize.net/en/topics/einstein-and-the-prize/\n  - https://www.kroneckerwallis.com/the-photoelectric-effect-why-einstein-won-the-nobel-prize/\n\n- The committee avoided honouring relativity directly because it was still considered controversial or uncertain.\n  - https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/\n  - https://arxiv.org/pdf/2112.13519\n\n- A 2022 *Annalen der Physik* article argues that the prize was for the *law* of the photoelectric effect, not for a theory of it. It also says a committee member's misunderstanding of relativity was not the reason relativity was passed over.\n  - https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305\n\n**Caveat:** The search summary also said Max Planck nominated Einstein for general relativity and that Einstein's Nobel lecture was on relativity. I found no source I could read in full for either point, so I'm treating them as unverified. They don't change the answer.\n\nSources:\n- [Einstein and the Prize (nobel-prize.net)](https://nobel-prize.net/en/topics/einstein-and-the-prize/)\n- [The Photoelectric Effect: Why Einstein Won the Nobel Prize (Kronecker Wallis)](https://www.kroneckerwallis.com/the-photoelectric-effect-why-einstein-won-the-nobel-prize/)\n- [Friedman, \"The 100th Anniversary of Einstein's Nobel Prize: Facts and Fiction,\" *Annalen der Physik* (2022)](https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305)\n- [Palash Pal, \"The incredibly strange story of Einstein's Nobel prize\" (arXiv)](https://arxiv.org/pdf/2112.13519)\n- [Space Daily summary](https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/)",
+  "final_answer_sha256": "470a30d188a090d35168896bdc0208b56afcbaf7fee8a8ce27681cefb0c3b157",
+  "raw_stream_sha256": "f9cab27bd1f54c11848a7b84bba088628b67955162ac3151304e6052ca9dd293"
+}

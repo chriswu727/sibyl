@@ -1,0 +1,56 @@
+{
+  "case_id": "adv03",
+  "condition": "native",
+  "elapsed_seconds": 13.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.1048959,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3096,
+    "cache_read_input_tokens": 5879,
+    "output_tokens": 791,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3096,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28227,
+      "outputTokens": 1547,
+      "cacheReadInputTokens": 5879,
+      "cacheCreationInputTokens": 3096,
+      "webSearchRequests": 2,
+      "costUSD": 0.1048959,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3096,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**I can't give a population for Zylathia, because I found no evidence that a city by that name exists in France.** The question may rest on a false premise. Two searches turned up no place called \"Zylathia\", and I can't prove a negative from search results alone.\n\n- A search for \"Zylathia city France\" returned no place with that name. The closest matches were real communes with different names, such as Zilling (Moselle, Grand Est), Zilia (Corsica) and Zoteux (Pas-de-Calais). https://en.wikipedia.org/wiki/Zilling https://en.wikipedia.org/wiki/Zilia https://en.wikipedia.org/wiki/Zoteux\n- A search of eastern France (Grand Est, Alsace, Lorraine, Franche-Comté) also found no \"Zylathia\". The nearest names were the Alsace communes Zillisheim and Zimmersheim. https://en.wikipedia.org/wiki/Zillisheim https://en.wikipedia.org/wiki/Zimmersheim\n- The search summaries gave 2023 populations of about 2,561 for Zillisheim and 1,083 for Zimmersheim. I didn't open those pages to check, and neither place is the one you asked about. https://en.wikipedia.org/wiki/Zillisheim https://en.wikipedia.org/wiki/Zimmersheim\n\n\"Zylathia\" may be a misspelling or a fictional place. If you give me another spelling, or say where you came across the name, I can search again.\n\nSources:\n- [Zilling](https://en.wikipedia.org/wiki/Zilling)\n- [Zilia](https://en.wikipedia.org/wiki/Zilia)\n- [Zoteux](https://en.wikipedia.org/wiki/Zoteux)\n- [Zillisheim](https://en.wikipedia.org/wiki/Zillisheim)\n- [Zimmersheim](https://en.wikipedia.org/wiki/Zimmersheim)",
+  "final_answer_sha256": "b72ed7a68be1a81100c763e827673b1ddfccbc6fb3c2c31ed825100473ddc34c",
+  "raw_stream_sha256": "7120deb16f1ed06597864e49bd0bffe9a3388d76d87dd5e7a36a565a1711c666"
+}

@@ -1,0 +1,72 @@
+{
+  "case_id": "flashattention",
+  "condition": "native",
+  "elapsed_seconds": 42.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.07014240000000001,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 5574,
+    "cache_read_input_tokens": 23300,
+    "output_tokens": 2924,
+    "output_tokens_details": {
+      "thinking_tokens": 69
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5574,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 10,
+      "outputTokens": 2924,
+      "cacheReadInputTokens": 23300,
+      "cacheCreationInputTokens": 5574,
+      "webSearchRequests": 0,
+      "costUSD": 0.053886,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 69,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 5574,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 137029,
+      "outputTokens": 5107,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0162564,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2825,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 8
+  },
+  "final_answer": "**Direct answer:** FlashAttention is faster because standard attention is limited by memory traffic, not arithmetic. It computes the same softmax(QKᵀ)V but never writes the N×N score matrix to GPU high-bandwidth memory (HBM). Block-wise processing in on-chip SRAM, plus a running softmax normalization, keeps the result exact. The reported gains are hard to generalize because they depend on the GPU generation, the kernel implementation, the workload (sequence length, precision, model), and the baseline. Much of the headline speedup also comes from successive kernel rewrites, not from the original idea alone.\n\n**Why it is exact but faster**\n\n- The paper describes FlashAttention as an \"IO-aware exact attention algorithm.\" It reduces HBM–SRAM reads and writes by tiling, and it computes the same attention output rather than an approximation.\n  https://arxiv.org/abs/2205.14135\n\n- Softmax is kept exact by tracking a running row maximum and a running normalizer for each row. When a new block raises the maximum, earlier partial sums and outputs are rescaled by an exponential correction factor. Theorem 1 says the algorithm returns softmax(QKᵀ)V using O(N) extra memory.\n  https://arxiv.org/html/2205.14135\n\n- The backward pass stores only the output and the softmax statistics. It recomputes the attention blocks on-chip. This costs extra FLOPs, but the lower memory traffic makes it faster overall.\n  https://arxiv.org/html/2205.14135\n\n- Standard attention needs Θ(Nd + N²) HBM accesses. FlashAttention needs Θ(N²d²/M), where d is the head dimension and M is the SRAM size. The paper reports up to 9× fewer accesses. It also proves that no exact algorithm can asymptotically beat this across the full range of SRAM sizes.\n  https://arxiv.org/html/2205.14135\n\n**Reported gains**\n\n- The original paper reports a 15% end-to-end speedup on BERT-large (sequence length 512) over the MLPerf 1.1 record. It reports 3× on GPT-2 (sequence length 1K) and 2.4× on Long Range Arena (sequence length 1K–4K).\n  https://arxiv.org/abs/2205.14135\n\n- The original paper also reports quality gains from longer context, such as 0.7 better GPT-2 perplexity and the first better-than-chance results on Path-X and Path-256. These come from the longer context that the memory savings make affordable. They are not a property of exactness.\n  https://arxiv.org/abs/2205.14135\n\n**What limits generalizing the gains**\n\n- Kernel quality matters as much as the algorithm. FlashAttention-1 reached only 25–40% of theoretical peak FLOPs/s because of poor work partitioning across thread blocks and warps. FlashAttention-2 changed the partitioning and got about 2× faster, reaching 50–73% of peak on A100. A speedup figure therefore depends on which version and which kernel is being compared.\n  https://arxiv.org/abs/2307.08691\n\n- Hardware dependence is strong. FlashAttention-2 was evaluated on A100 GPUs. FlashAttention-3 uses Hopper-specific features (asynchronous Tensor Core and TMA operations, warp specialization, FP8 support). It reports 1.5–2.0× over FlashAttention-2 on H100, up to 740 TFLOPs/s in FP16 (about 75% utilization). The abstract does not say how it performs on other GPUs.\n  https://arxiv.org/abs/2407.08608\n\n- The original authors say implementations \"may not be transferrable across GPU architectures.\" Each new attention variant also needs its own low-level CUDA kernel.\n  https://arxiv.org/html/2205.14135\n\n- The IO-optimality proof applies to a single GPU. Multi-GPU data transfer was left as future work.\n  https://arxiv.org/html/2205.14135\n\n- Low precision changes the \"exact\" claim in practice. FlashAttention-3's FP8 path relies on block quantization and incoherent processing. Its reported error is 2.6× lower than a baseline FP8 attention, so it is not error-free. This is a floating-point numerical-error question, separate from the algorithmic exactness of the FP16/BF16 path.\n  https://arxiv.org/abs/2407.08608\n\n**Gaps in the evidence**\n\n- I did not read the final ~73K characters of the original paper's HTML. Any additional limitations or ablations there are not covered.\n- I did not retrieve the full FlashAttention-2 and FlashAttention-3 papers, only their abstracts. I have no data here on how the gains vary with sequence length or head dimension, or on how they compare with other fused-attention baselines.\n- All the speedup numbers are the authors' own. I did not find or check independent replications.\n\nSources:\n- https://arxiv.org/abs/2205.14135\n- https://arxiv.org/html/2205.14135\n- https://arxiv.org/abs/2307.08691\n- https://arxiv.org/abs/2407.08608",
+  "final_answer_sha256": "557c96936f4bcf2d1c23cf9b9422c1986793d14b1a4e2b725b9836cf9a9be82c",
+  "raw_stream_sha256": "ec941f6f33f65756ee22c70f121beaa43dc1ecd916b4f5bf7c3c3916934f5396"
+}

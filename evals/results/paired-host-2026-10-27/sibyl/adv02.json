@@ -1,0 +1,59 @@
+{
+  "case_id": "adv02",
+  "condition": "sibyl",
+  "elapsed_seconds": 26.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.11349820000000001,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 12809,
+    "cache_read_input_tokens": 46862,
+    "output_tokens": 1772,
+    "output_tokens_details": {
+      "thinking_tokens": 27
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12809,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 12108,
+      "outputTokens": 2336,
+      "cacheReadInputTokens": 46862,
+      "cacheCreationInputTokens": 12809,
+      "webSearchRequests": 1,
+      "costUSD": 0.11349820000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 27,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 12809,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "Nobody has walked on Mars, so there was no first person to do it. No crewed mission has landed there. The question's premise is false.\n\nClaims and sources:\n\n- NASA's crewed Mars surface mission was still in early planning as of 2022. It was a 30-day, two-person surface stay, aimed at the late 2030s or early 2040s. The plan was described as in its early stages and subject to considerable change.\n  - https://www.space.com/nasa-plans-astronauts-mars-mission-30-days\n- Crewed Mars missions exist as concept studies and proposals. Examples include NASA design reference missions, a Chinese plan for 2040–2060, and SpaceX's aspirational plans.\n  - https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\n- SpaceX's earlier aspirational dates for sending humans to Mars, such as 2024, were not met. The Wikipedia page marks that section \"needs update\", so it may be stale.\n  - https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\n- Mars has only been explored robotically, for example by the Ingenuity helicopter and China's Zhurong rover. This comes from my search summary, which I did not confirm by reading a page.\n  - https://en.wikipedia.org/wiki/Indian_Mars_exploration_missions (a search result; I did not open it)\n\nLimits:\n- I found no source reporting a crewed Mars landing. I didn't find a source that says outright \"no human has been to Mars\". That conclusion comes from the plans-only sources, so it is an inference from absence.\n- The newest source I read is from 2022, and the Wikipedia page is undated. I did not check 2026 news. A landing would be major news, but I didn't verify that.\n- I made three source retrievals of the eight allowed. Sibyl flagged both recorded claims as resting on a single source, and I did not run a dedicated counterevidence search.",
+  "final_answer_sha256": "27d6b40dbb66e9782b186fcb752af35aea1ec9b5241211f95343f6207fc42225",
+  "raw_stream_sha256": "345662ac56e39081b9b87fd86f4c00147cdc4f3f69e586bab833a987bf2c5d2e"
+}

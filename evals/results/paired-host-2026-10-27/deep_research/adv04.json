@@ -1,0 +1,57 @@
+{
+  "case_id": "adv04",
+  "condition": "deep_research",
+  "elapsed_seconds": 20.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1598997,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14687,
+    "cache_read_input_tokens": 33637,
+    "output_tokens": 1286,
+    "output_tokens_details": {
+      "thinking_tokens": 138
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14687,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 25569,
+      "outputTokens": 2665,
+      "cacheReadInputTokens": 33637,
+      "cacheCreationInputTokens": 14687,
+      "webSearchRequests": 2,
+      "costUSD": 0.1598997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 138,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14687,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2
+  },
+  "final_answer": "**No U.S. president signed an \"Antarctic Statehood Act.\" No such law turned up in my searches, and Antarctica is not a U.S. state. The U.S. has 50 states.** The question rests on a false premise.\n\nI used two searches and didn't spawn subagents. The skill's directory and file steps would have needed shell commands, which you ruled out.\n\n**Claims and sources**\n\n- A search for \"Antarctic Statehood Act\" and \"Antarctica 51st state\" found no bill or law by that name. The only hit was a speculative Quora thread asking what would happen if Antarctica became the 51st state.\n  - [Quora thread](https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent)\n  - [Wikipedia: 51st state](https://en.wikipedia.org/wiki/51st_state)\n- The \"51st state\" statehood bill in the news is about Greenland, not Antarctica. Rep. Randy Fine introduced the \"Greenland Annexation and Statehood Act.\"\n  - [The Hill](https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/)\n  - [Newsweek](https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217)\n- The U.S. Antarctic law the search turned up is the Antarctic Conservation Act (1978), which concerns environmental protection, not statehood.\n  - [Wikipedia: Antarctic Conservation Act](https://en.wikipedia.org/wiki/Antarctic_Conservation_Act)\n- The 1959 Antarctic Treaty, Article IV, freezes territorial claims. It says no new claim, or enlargement of an existing claim, may be asserted while the treaty is in force. That would bar the U.S. from annexing Antarctica.\n  - [Antarctic Treaty Secretariat](https://www.ats.aq/e/peaceful.html)\n  - [U.S. State Department](https://2009-2017.state.gov/t/avc/trty/193967.htm)\n  - [The Conversation](https://theconversation.com/explainer-keeping-conflict-on-ice-with-the-antarctic-treaty-2197)\n- Seven countries hold existing claims: Argentina, Australia, Chile, France, New Zealand, Norway and the UK. The U.S. is not among them. It only reserves a \"basis of claim.\"\n  - [The Conversation](https://theconversation.com/explainer-keeping-conflict-on-ice-with-the-antarctic-treaty-2197)\n\n**Limits of this evidence:** Search results show an absence of evidence, not proof that nothing exists. They were consistent, though, and the treaty and the 50-state count both contradict the premise.",
+  "final_answer_sha256": "4e9c7fa566c32f9598edb8719a5a7d95bbdb97056e87215493b220a4355284b8",
+  "raw_stream_sha256": "055eabc43828601e0d21da4351648ac3cdbfa33f1b3c53462bf35267417b6c9a"
+}

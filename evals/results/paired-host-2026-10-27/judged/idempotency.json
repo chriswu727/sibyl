@@ -1,0 +1,175 @@
+{
+  "case_id": "idempotency",
+  "kind": "research",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "native",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.2734792,
+  "judge_subtype": "success",
+  "pages_read": 7,
+  "pages_cited": 7,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Stripe retains v1 idempotency keys for at least 24 hours and can remove them after that; reusing a removed key can execute a new request.\", \"url\": \"https://docs.stripe.com/error-low-level\", \"label\": \"supported\"}, {\"claim\": \"Stripe says to limit retries of an unresolved operation to the first 24 hours, using the same key and parameters.\", \"url\": \"https://docs.stripe.com/error-low-level\", \"label\": \"supported\"}, {\"claim\": \"If the outcome is still unknown after 24 hours, Stripe says not to retry with the old key or a new one. Instead, reconcile using the object, the Dashboard and webhooks, then contact support.\", \"url\": \"https://docs.stripe.com/error-low-level\", \"label\": \"supported\"}, {\"claim\": \"Stripe API v2 has different replay behavior and a 30-day window, so the 24-hour figure applies to v1 only.\", \"url\": \"https://docs.stripe.com/error-low-level\", \"label\": \"supported\"}, {\"claim\": \"AWS says it is impractical to retain knowledge of a request indefinitely, and it describes EC2 retention as resource lifetime plus an interval.\", \"url\": \"https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\", \"label\": \"unsupported\"}, {\"claim\": \"An EC2 client token is a case-sensitive string of up to 64 ASCII characters. Reuse with different parameters gives IdempotentParameterMismatch, and idempotency is scoped to a Region or Availability Zone.\", \"url\": \"https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\", \"label\": \"unsupported\"}, {\"claim\": \"For EC2, retry 5xx responses with backoff and do not retry 4xx, except that a resource changing state might succeed on retry.\", \"url\": \"https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\", \"label\": \"supported\"}, {\"claim\": \"AWS says APIs with side effects aren't safe to retry unless idempotent. Independent retries at each layer can multiply load 243x, so retries should be limited with a token bucket, backoff and jitter.\", \"url\": \"https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"The Stripe findings are well grounded in two Stripe pages. The central AWS limit claim ('impractical to retain indefinitely', 'for some interval', lifetime plus interval) is not in the Builders' Library excerpt, which is cut off before the late-arriving-requests section. The EC2 token details are also not in the EC2 excerpt, which contains only the retry table. The retry-load argument from a separate AWS article substantively narrows 'safe indefinitely'. The answer discloses that it has no AWS numeric limit.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Stripe v1 can prune keys once they are at least 24 hours old, and reuse after pruning is treated as a new request.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"Stripe keys are up to 255 characters, and Stripe suggests V4 UUIDs or other high-entropy strings.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"In v1, Stripe saves the first response once execution begins and replays it on retries, including 500 errors. Requests that fail validation or conflict with a concurrent request are not saved.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"In v1, only POST requests take idempotency keys, because GET and DELETE are idempotent by definition.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"AWS says retaining request knowledge indefinitely is impractical, that old identifiers could collide with much later requests, and that EC2 retention is resource lifetime plus an interval.\", \"url\": \"https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\", \"label\": \"unsupported\"}, {\"claim\": \"The ECS RunTask client-token TTL is 24 hours or resource lifetime plus one hour, whichever is lower. ECS token length limits are 36 or 64 characters, and a mismatch gives ConflictException.\", \"url\": \"https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html\", \"label\": \"unsupported\"}, {\"claim\": \"EC2 tokens are up to 64 ASCII characters and scoped to a Region or AZ. A mismatch gives IdempotentParameterMismatch, and only some actions use client tokens.\", \"url\": \"https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\", \"label\": \"unsupported\"}, {\"claim\": \"AWS says to retry 5xx errors with backoff and not to retry 4xx errors.\", \"url\": \"https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The Stripe claims are all supported by the API reference page. The key AWS comparison number (ECS RunTask 24h TTL) is not on the cited ECS page, whose excerpt contains only the retry table. The Builders' Library retention claims are also outside the excerpt, and so are the EC2 token details. The answer discloses unverified DynamoDB figures and unread Stripe pages but presents the ECS figure as confirmed. It missed Stripe's explicit 24-hour stop-and-reconcile guidance.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Stripe may delete v1 keys once they are at least 24 hours old, and reuse after deletion is treated as a new request. The 24 hours is a minimum, not guaranteed retention.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"Stripe saves the status code and body of the first request once execution begins, and retries return it, including 500 errors.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"Stripe does not save results for validation failures or concurrent-request conflicts, so those requests can be retried.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"Stripe keys are up to 255 characters, and Stripe suggests V4 UUIDs.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"In API v2, retries don't repeat successful operations, and Stripe completes failed or partial work when it can.\", \"url\": \"https://docs.stripe.com/api/idempotent_requests\", \"label\": \"supported\"}, {\"claim\": \"AWS returns a parameter-mismatch validation error when a seen token arrives with different parameters, and stores the original parameters with the token.\", \"url\": \"https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\", \"label\": \"unsupported\"}, {\"claim\": \"The AWS article has a section on late-arriving requests and the life span of client request identifiers, so AWS treats token lifetime as a design limit.\", \"url\": \"https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\", \"label\": \"partial\"}, {\"claim\": \"The AWS SDK and CLI generate a client token and reuse it across retries for idempotent operations.\", \"url\": \"https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 1, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The answer calls itself partial and gives no AWS retention figure. The Stripe claims are supported. The AWS parameter-mismatch and SDK token-reuse claims are not in the Builders' Library excerpt. The section-title claim is only partly visible in the table of contents ('Late arriving requests'). The EC2/ECS retry-table claim (not listed above because of the 8-claim cap) is supported. The answer properly declines to rely on snippet-only ECS and EC2 figures. It missed Stripe's explicit 24-hour retry limit and reconcile guidance. It discloses that it had no counter-sources.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Stripe retains v1 idempotency keys for at least 24 hours and can remove them after that; reusing a removed key can execute a new request.",
+          "url": "https://docs.stripe.com/error-low-level",
+          "label": "supported"
+        },
+        {
+          "claim": "Stripe says to limit retries of an unresolved operation to the first 24 hours, using the same key and parameters.",
+          "url": "https://docs.stripe.com/error-low-level",
+          "label": "supported"
+        },
+        {
+          "claim": "If the outcome is still unknown after 24 hours, Stripe says not to retry with the old key or a new one. Instead, reconcile using the object, the Dashboard and webhooks, then contact support.",
+          "url": "https://docs.stripe.com/error-low-level",
+          "label": "supported"
+        },
+        {
+          "claim": "Stripe API v2 has different replay behavior and a 30-day window, so the 24-hour figure applies to v1 only.",
+          "url": "https://docs.stripe.com/error-low-level",
+          "label": "supported"
+        },
+        {
+          "claim": "AWS says it is impractical to retain knowledge of a request indefinitely, and it describes EC2 retention as resource lifetime plus an interval.",
+          "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "An EC2 client token is a case-sensitive string of up to 64 ASCII characters. Reuse with different parameters gives IdempotentParameterMismatch, and idempotency is scoped to a Region or Availability Zone.",
+          "url": "https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "For EC2, retry 5xx responses with backoff and do not retry 4xx, except that a resource changing state might succeed on retry.",
+          "url": "https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html",
+          "label": "supported"
+        },
+        {
+          "claim": "AWS says APIs with side effects aren't safe to retry unless idempotent. Independent retries at each layer can multiply load 243x, so retries should be limited with a token bucket, backoff and jitter.",
+          "url": "https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "The Stripe findings are well grounded in two Stripe pages. The central AWS limit claim ('impractical to retain indefinitely', 'for some interval', lifetime plus interval) is not in the Builders' Library excerpt, which is cut off before the late-arriving-requests section. The EC2 token details are also not in the EC2 excerpt, which contains only the retry table. The retry-load argument from a separate AWS article substantively narrows 'safe indefinitely'. The answer discloses that it has no AWS numeric limit."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Stripe v1 can prune keys once they are at least 24 hours old, and reuse after pruning is treated as a new request.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "Stripe keys are up to 255 characters, and Stripe suggests V4 UUIDs or other high-entropy strings.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "In v1, Stripe saves the first response once execution begins and replays it on retries, including 500 errors. Requests that fail validation or conflict with a concurrent request are not saved.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "In v1, only POST requests take idempotency keys, because GET and DELETE are idempotent by definition.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "AWS says retaining request knowledge indefinitely is impractical, that old identifiers could collide with much later requests, and that EC2 retention is resource lifetime plus an interval.",
+          "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The ECS RunTask client-token TTL is 24 hours or resource lifetime plus one hour, whichever is lower. ECS token length limits are 36 or 64 characters, and a mismatch gives ConflictException.",
+          "url": "https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "EC2 tokens are up to 64 ASCII characters and scoped to a Region or AZ. A mismatch gives IdempotentParameterMismatch, and only some actions use client tokens.",
+          "url": "https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "AWS says to retry 5xx errors with backoff and not to retry 4xx errors.",
+          "url": "https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The Stripe claims are all supported by the API reference page. The key AWS comparison number (ECS RunTask 24h TTL) is not on the cited ECS page, whose excerpt contains only the retry table. The Builders' Library retention claims are also outside the excerpt, and so are the EC2 token details. The answer discloses unverified DynamoDB figures and unread Stripe pages but presents the ECS figure as confirmed. It missed Stripe's explicit 24-hour stop-and-reconcile guidance."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Stripe may delete v1 keys once they are at least 24 hours old, and reuse after deletion is treated as a new request. The 24 hours is a minimum, not guaranteed retention.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "Stripe saves the status code and body of the first request once execution begins, and retries return it, including 500 errors.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "Stripe does not save results for validation failures or concurrent-request conflicts, so those requests can be retried.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "Stripe keys are up to 255 characters, and Stripe suggests V4 UUIDs.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "In API v2, retries don't repeat successful operations, and Stripe completes failed or partial work when it can.",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "label": "supported"
+        },
+        {
+          "claim": "AWS returns a parameter-mismatch validation error when a seen token arrives with different parameters, and stores the original parameters with the token.",
+          "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The AWS article has a section on late-arriving requests and the life span of client request identifiers, so AWS treats token lifetime as a design limit.",
+          "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "label": "partial"
+        },
+        {
+          "claim": "The AWS SDK and CLI generate a client token and reuse it across retries for idempotent operations.",
+          "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 1,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The answer calls itself partial and gives no AWS retention figure. The Stripe claims are supported. The AWS parameter-mismatch and SDK token-reuse claims are not in the Builders' Library excerpt. The section-title claim is only partly visible in the table of contents ('Late arriving requests'). The EC2/ECS retry-table claim (not listed above because of the 8-claim cap) is supported. The answer properly declines to rely on snippet-only ECS and EC2 figures. It missed Stripe's explicit 24-hour retry limit and reconcile guidance. It discloses that it had no counter-sources."
+    }
+  }
+}

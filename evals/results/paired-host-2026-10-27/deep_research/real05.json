@@ -1,0 +1,57 @@
+{
+  "case_id": "real05",
+  "condition": "deep_research",
+  "elapsed_seconds": 20.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.1131579,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13412,
+    "cache_read_input_tokens": 33839,
+    "output_tokens": 1479,
+    "output_tokens_details": {
+      "thinking_tokens": 286
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13412,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13828,
+      "outputTokens": 1847,
+      "cacheReadInputTokens": 33839,
+      "cacheCreationInputTokens": 13412,
+      "webSearchRequests": 1,
+      "costUSD": 0.1131579,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 286,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13412,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1
+  },
+  "final_answer": "**The DOI is 10.1515/cllt-2021-0018** (https://doi.org/10.1515/cllt-2021-0018).\n\nI ran one web search, not the full multi-agent workflow, because this is a single factual lookup. I did not open the pages themselves. The claims below rest on search-result titles, URLs and summaries.\n\n**Claims and sources**\n\n- The published article's DOI is 10.1515/cllt-2021-0018. The De Gruyter Brill URL for the article contains this DOI.\n  - https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\n\n- The authors are Martijn van der Klis and Jos Tellings. The paper appeared in *Corpus Linguistics and Linguistic Theory* 18(3), 2022, pp. 627–665, published 10 January 2022 by De Gruyter Mouton. The search summary gave these details, and I did not check them on the page.\n  - https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\n  - https://www.semanticscholar.org/paper/Generating-semantic-maps-through-multidimensional-Klis-Tellings/2ecd21456dbdd696cce4202bf8cffabf6a7a1b2a\n\n- There is also an arXiv preprint (2012.04946), which has its own DOI, 10.48550/arXiv.2012.04946. Use the journal DOI above if you want to cite the published version.\n  - https://arxiv.org/abs/2012.04946\n\n- A free full-text copy is on PubMed Central (PMC9536326), and there are Utrecht University repository records.\n  - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/\n  - https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489\n\n**Caveat:** I did not fetch the De Gruyter page to confirm the DOI on its landing page. The match comes from the DOI in the URL and from the search summary.\n\nSources:\n- [De Gruyter Brill article page](https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en)\n- [arXiv preprint](https://arxiv.org/abs/2012.04946)\n- [Semantic Scholar](https://www.semanticscholar.org/paper/Generating-semantic-maps-through-multidimensional-Klis-Tellings/2ecd21456dbdd696cce4202bf8cffabf6a7a1b2a)\n- [PubMed Central](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/)\n- [Utrecht University repository](https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489)",
+  "final_answer_sha256": "cb7c164501e4a2f49f2321fa9ea9bd228546e2707ad6b0401c734fc049ff0f88",
+  "raw_stream_sha256": "8552031fb5954299826033a9b5282cddf8488206f171ec0c20bef63bb6b5c060"
+}

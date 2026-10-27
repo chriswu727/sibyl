@@ -1,0 +1,165 @@
+{
+  "case_id": "future_share",
+  "kind": "research",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "sibyl",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.5444472,
+  "judge_subtype": "success",
+  "pages_read": 14,
+  "pages_cited": 16,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"NVIDIA Q2 FY2027 revenue $96.2B, Data Center $89.0B, up 117% YoY\", \"url\": \"https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000073/q2fy27pr.htm\", \"label\": \"unreachable\"}, {\"claim\": \"NVIDIA Q2 FY2027 revenue $96.2B, Data Center $89.0B, up 117% YoY\", \"url\": \"https://themodelpress.com/news/2026/10/nvidia-q2-fiscal-2027-results\", \"label\": \"supported\"}, {\"claim\": \"Q3 FY2027 guidance $108B ±2%, assumes no China data center compute revenue\", \"url\": \"https://gpuinsights.net/nvidia-data-center-revenue-q2-fy2027/\", \"label\": \"supported\"}, {\"claim\": \"Silicon Analysts estimates NVIDIA revenue share 75% (2022), 86% (2023), 87% (2024), 81% (2025); denominator is own estimate based on TrendForce/TSMC data; table 81% vs summary 80–90%\", \"url\": \"https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\", \"label\": \"supported\"}, {\"claim\": \"~80–90% share; AMD ~5–7% in 2025; custom ASICs ~$15B\", \"url\": \"https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\", \"label\": \"partial\"}, {\"claim\": \"2025 AI accelerator market $33B per one firm vs ~$160B per another\", \"url\": \"https://www.kaisoresearch.com/blog/ai-accelerators-market-431b-by\", \"label\": \"supported\"}, {\"claim\": \"JPMorgan forecasts NVIDIA+AMD GPUs at ~58% of 2026 accelerator shipments, down from 68% in 2025\", \"url\": \"https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\", \"label\": \"unsupported\"}, {\"claim\": \"2030 projections: $3–4T capex, ~$825B TAM, 29% CAGR through 2030\", \"url\": \"https://www.fool.com/investing/2026/10/25/nvidia-ceo-jensen-huang-reaffirms-his-4-trillion-p/\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 1, \"counterevidence\": 2}, \"notes\": \"The answer separates observed figures, estimates and projections clearly. The JPMorgan unit-share claim does not appear on the cited commandlinux page, which counts as a material unsupported claim. The $3–4T capex figure is on the cited Fool page. The $825B figure is on the other Fool page, not this one. The 29% CAGR comes from Kaiso (through 2035), not from the cited page. The SEC filing could not be read. Most sources are aggregators or a single-author site, and Silicon Analysts is cited twice as if it were two sources. The answer does well at flagging inconsistent definitions and denominators.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"NVIDIA currently has an estimated 85–92% share of the AI accelerator market\", \"url\": \"https://www.fool.com/investing/2026/04/22/prediction-this-ai-chip-stock-will-become-the-next/\", \"label\": \"supported\"}, {\"claim\": \"Silicon Analysts: 87% (2024 peak), 81% (2025), 75% projected 2026; own estimates based on earnings plus TrendForce/TSMC data\", \"url\": \"https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\", \"label\": \"supported\"}, {\"claim\": \"NVIDIA floor likely 65–70% even in the most competitive scenario; no 2030 figure given\", \"url\": \"https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\", \"label\": \"supported\"}, {\"claim\": \"2026 revenue-share estimates of 70–86% depending on custom silicon; TrendForce 27.8% of AI server shipments for ASICs in 2026\", \"url\": \"https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\", \"label\": \"supported\"}, {\"claim\": \"Scenario of ~80%→65% by 2030; Kearney 70% by 2030; Celadon 65–70% by 2028\", \"url\": \"https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026\", \"label\": \"partial\"}, {\"claim\": \"Analysts expect TSMC revenue of ~$311.5B by 2030\", \"url\": \"https://www.fool.com/investing/2026/04/22/prediction-this-ai-chip-stock-will-become-the-next/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 1, \"counterevidence\": 1}, \"notes\": \"The answer covers the realized-versus-projected distinction. Most claims match the cited pages. The 80%→65% by 2030 scenario is not on the Celadon page, but the answer says it did not verify it. It is open about its limits. It leaks internal process references ('Sibyl', 'Q2.C2') into the answer. It relies on few sources, all secondary, and none from a primary tracker. Its evidence on definitional disagreement is thinner than X's or Z's.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"NVIDIA 2026 AI accelerator revenue share estimated ~70–85%\", \"url\": \"https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\", \"label\": \"partial\"}, {\"claim\": \"NVIDIA share peaked near 87% in 2024 and has fallen since\", \"url\": \"https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\", \"label\": \"supported\"}, {\"claim\": \"Merchant-only (NVIDIA/AMD/Intel) definition puts NVIDIA at 87.4% in Q1 2026; including custom ASICs lowers it\", \"url\": \"https://axis-intelligence.com/ai-chip-market-share/\", \"label\": \"supported\"}, {\"claim\": \"Custom ASICs ~12–20% of revenue; TrendForce projects ASIC servers at 27.8% of 2026 shipments; ASICs mostly used in-house\", \"url\": \"https://axis-intelligence.com/ai-chip-market-share/\", \"label\": \"partial\"}, {\"claim\": \"AMD estimated at ~5–8% of the market\", \"url\": \"https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\", \"label\": \"supported\"}, {\"claim\": \"Bloomberg Intelligence expects NVIDIA at 70–75% through 2030, AMD at least ~10%\", \"url\": \"https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/\", \"label\": \"unreachable\"}, {\"claim\": \"Kearney (via Celadon) projects decline from ~90% in 2025 to 70% by 2030\", \"url\": \"https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026\", \"label\": \"supported\"}, {\"claim\": \"Northwise gives NVIDIA 62%, AMD 26%, ASICs 12% in 2030\", \"url\": \"https://northwiseproject.com/research/ai-accelerator-market-forecast-2030\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 1, \"counterevidence\": 2}, \"notes\": \"The answer separates observed estimates from 2030 projections clearly. It shows concretely that the share depends on definitions: the merchant-only 87.4% versus ASIC shipment share. The Northwise 62/26/12 split is not in the page excerpt, which is a material unsupported claim. The Bloomberg Intelligence page could not be read, yet the answer treats it as its most authoritative 2030 forecast. The 12–20% ASIC revenue range is not on the cited pages. Sources are mostly secondary, and Kearney is only cited second-hand.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "NVIDIA Q2 FY2027 revenue $96.2B, Data Center $89.0B, up 117% YoY",
+          "url": "https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000073/q2fy27pr.htm",
+          "label": "unreachable"
+        },
+        {
+          "claim": "NVIDIA Q2 FY2027 revenue $96.2B, Data Center $89.0B, up 117% YoY",
+          "url": "https://themodelpress.com/news/2026/10/nvidia-q2-fiscal-2027-results",
+          "label": "supported"
+        },
+        {
+          "claim": "Q3 FY2027 guidance $108B ±2%, assumes no China data center compute revenue",
+          "url": "https://gpuinsights.net/nvidia-data-center-revenue-q2-fy2027/",
+          "label": "supported"
+        },
+        {
+          "claim": "Silicon Analysts estimates NVIDIA revenue share 75% (2022), 86% (2023), 87% (2024), 81% (2025); denominator is own estimate based on TrendForce/TSMC data; table 81% vs summary 80–90%",
+          "url": "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026",
+          "label": "supported"
+        },
+        {
+          "claim": "~80–90% share; AMD ~5–7% in 2025; custom ASICs ~$15B",
+          "url": "https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/",
+          "label": "partial"
+        },
+        {
+          "claim": "2025 AI accelerator market $33B per one firm vs ~$160B per another",
+          "url": "https://www.kaisoresearch.com/blog/ai-accelerators-market-431b-by",
+          "label": "supported"
+        },
+        {
+          "claim": "JPMorgan forecasts NVIDIA+AMD GPUs at ~58% of 2026 accelerator shipments, down from 68% in 2025",
+          "url": "https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "2030 projections: $3–4T capex, ~$825B TAM, 29% CAGR through 2030",
+          "url": "https://www.fool.com/investing/2026/10/25/nvidia-ceo-jensen-huang-reaffirms-his-4-trillion-p/",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 1,
+        "counterevidence": 2
+      },
+      "notes": "The answer separates observed figures, estimates and projections clearly. The JPMorgan unit-share claim does not appear on the cited commandlinux page, which counts as a material unsupported claim. The $3–4T capex figure is on the cited Fool page. The $825B figure is on the other Fool page, not this one. The 29% CAGR comes from Kaiso (through 2035), not from the cited page. The SEC filing could not be read. Most sources are aggregators or a single-author site, and Silicon Analysts is cited twice as if it were two sources. The answer does well at flagging inconsistent definitions and denominators."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "NVIDIA currently has an estimated 85–92% share of the AI accelerator market",
+          "url": "https://www.fool.com/investing/2026/04/22/prediction-this-ai-chip-stock-will-become-the-next/",
+          "label": "supported"
+        },
+        {
+          "claim": "Silicon Analysts: 87% (2024 peak), 81% (2025), 75% projected 2026; own estimates based on earnings plus TrendForce/TSMC data",
+          "url": "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026",
+          "label": "supported"
+        },
+        {
+          "claim": "NVIDIA floor likely 65–70% even in the most competitive scenario; no 2030 figure given",
+          "url": "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026",
+          "label": "supported"
+        },
+        {
+          "claim": "2026 revenue-share estimates of 70–86% depending on custom silicon; TrendForce 27.8% of AI server shipments for ASICs in 2026",
+          "url": "https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/",
+          "label": "supported"
+        },
+        {
+          "claim": "Scenario of ~80%→65% by 2030; Kearney 70% by 2030; Celadon 65–70% by 2028",
+          "url": "https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026",
+          "label": "partial"
+        },
+        {
+          "claim": "Analysts expect TSMC revenue of ~$311.5B by 2030",
+          "url": "https://www.fool.com/investing/2026/04/22/prediction-this-ai-chip-stock-will-become-the-next/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 1,
+        "counterevidence": 1
+      },
+      "notes": "The answer covers the realized-versus-projected distinction. Most claims match the cited pages. The 80%→65% by 2030 scenario is not on the Celadon page, but the answer says it did not verify it. It is open about its limits. It leaks internal process references ('Sibyl', 'Q2.C2') into the answer. It relies on few sources, all secondary, and none from a primary tracker. Its evidence on definitional disagreement is thinner than X's or Z's."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "NVIDIA 2026 AI accelerator revenue share estimated ~70–85%",
+          "url": "https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia",
+          "label": "partial"
+        },
+        {
+          "claim": "NVIDIA share peaked near 87% in 2024 and has fallen since",
+          "url": "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026",
+          "label": "supported"
+        },
+        {
+          "claim": "Merchant-only (NVIDIA/AMD/Intel) definition puts NVIDIA at 87.4% in Q1 2026; including custom ASICs lowers it",
+          "url": "https://axis-intelligence.com/ai-chip-market-share/",
+          "label": "supported"
+        },
+        {
+          "claim": "Custom ASICs ~12–20% of revenue; TrendForce projects ASIC servers at 27.8% of 2026 shipments; ASICs mostly used in-house",
+          "url": "https://axis-intelligence.com/ai-chip-market-share/",
+          "label": "partial"
+        },
+        {
+          "claim": "AMD estimated at ~5–8% of the market",
+          "url": "https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026",
+          "label": "supported"
+        },
+        {
+          "claim": "Bloomberg Intelligence expects NVIDIA at 70–75% through 2030, AMD at least ~10%",
+          "url": "https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Kearney (via Celadon) projects decline from ~90% in 2025 to 70% by 2030",
+          "url": "https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026",
+          "label": "supported"
+        },
+        {
+          "claim": "Northwise gives NVIDIA 62%, AMD 26%, ASICs 12% in 2030",
+          "url": "https://northwiseproject.com/research/ai-accelerator-market-forecast-2030",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 1,
+        "counterevidence": 2
+      },
+      "notes": "The answer separates observed estimates from 2030 projections clearly. It shows concretely that the share depends on definitions: the merchant-only 87.4% versus ASIC shipment share. The Northwise 62/26/12 split is not in the page excerpt, which is a material unsupported claim. The Bloomberg Intelligence page could not be read, yet the answer treats it as its most authoritative 2030 forecast. The 12–20% ASIC revenue range is not on the cited pages. Sources are mostly secondary, and Kearney is only cited second-hand."
+    }
+  }
+}

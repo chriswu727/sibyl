@@ -1,0 +1,74 @@
+{
+  "case_id": "flashattention",
+  "condition": "deep_research",
+  "elapsed_seconds": 55.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 10,
+  "cli_reported_cost_usd": 0.2063693,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 18814,
+    "cache_read_input_tokens": 54329,
+    "output_tokens": 4146,
+    "output_tokens_details": {
+      "thinking_tokens": 636
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 18814,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13347,
+      "outputTokens": 5523,
+      "cacheReadInputTokens": 54329,
+      "cacheCreationInputTokens": 18814,
+      "webSearchRequests": 1,
+      "costUSD": 0.17261289999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 636,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 18814,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 308924,
+      "outputTokens": 5728,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.033756400000000006,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2992,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 6,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer.** FlashAttention computes the same softmax(QKᵀ)V as standard attention. It changes the order of operations and where intermediates live. That cuts reads and writes to GPU high-bandwidth memory (HBM), which is the real bottleneck, and the arithmetic stays exact. The reported gains don't generalize cleanly. They depend on the GPU, the kernel version, sequence length, precision, and the baseline.\n\nI used 7 of my 8 retrievals. Three arXiv PDF fetches returned unreadable binary, so I used ar5iv HTML copies and one search instead. I did not read the FlashAttention-2 paper directly. The GitHub repo returned 403. I did the research myself rather than through subagents, because your tool-use limit made delegation risky.\n\n**Why it is exact, not approximate**\n\n- Tiling splits Q, K and V into blocks. Softmax is computed incrementally with a running max and normalizer, so the partial results combine into the exact softmax.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- Theorem 1 of the paper says the algorithm returns softmax(QKᵀ)V with O(N²d) FLOPs and O(N) extra memory.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- The forward pass stores only the output and the softmax statistics, not the N×N matrix. The backward pass recomputes attention on-chip. This adds FLOPs but reduces HBM traffic.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n\n**Why it is faster**\n\n- Runtime is dominated by HBM accesses, not FLOPs. The paper's Figure 2 compares 40.3 GB with 4.4 GB of HBM reads and writes, and 41.7 ms with 7.3 ms of runtime.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- HBM accesses fall from Θ(Nd + N²) to Θ(N²d²/M), where M is the SRAM size. The paper also gives a lower bound showing no exact algorithm can asymptotically beat this over a range of SRAM sizes.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- Secondary sources say attention is memory-bound and that FLOPs are the same either way. They are consistent with the paper's argument, but I did not verify them against a primary source.\n  https://www.gmicloud.ai/en/blog/flashattention-inference-speedup\n\n**Reported gains**\n\n- Original paper:\n  - BERT-large trained about 15% faster than the MLPerf 1.1 record.\n  - GPT-2 was up to 3× faster than HuggingFace.\n  - Long Range Arena was up to 2.4× faster.\n  - Attention alone was up to 7.6× faster on GPT-2.\n  - Memory use was up to 20× lower.\n\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- FlashAttention-3 on H100:\n  - Forward pass is 1.5–2.0× faster than FlashAttention-2.\n  - It reaches up to 740 TFLOPs/s, about 75% of the H100's theoretical peak.\n  - FlashAttention-2 reached only about 35% utilization on H100.\n\n  https://ar5iv.labs.arxiv.org/html/2407.08608\n\n**What limits generalizing the benchmark gains**\n\n- **Kernel engineering and architecture.** The authors say each new attention variant needs a hand-written CUDA kernel. They also say it may not transfer across GPU architectures.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- **Single-GPU scope.** Optimality is shown for a single GPU. Multi-GPU IO is left for future work.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- **Hardware specificity.** FlashAttention-3's gains rely on Hopper features: TMA, WGMMA and warp specialization. The authors say the techniques should transfer to other accelerators, but the results are Hopper-specific.\n  https://ar5iv.labs.arxiv.org/html/2407.08608\n- **Version, precision and mask dependence.** FlashAttention-3's FP8 kernel is not persistent. It trails cuDNN at small sequence lengths and with causal masking, and is roughly at par at head dimensions 128 and 256 without causal masking.\n  https://ar5iv.labs.arxiv.org/html/2407.08608\n- **Baseline dependence.** The \"up to\" figures vary by baseline. For GPT-2 the paper reports 3× against HuggingFace but only about 1.7–1.8× against Megatron-LM. BERT's ~15% is against an already highly optimized MLPerf entry.\n  https://ar5iv.labs.arxiv.org/html/2205.14135\n- **Sequence length.** Gains are smaller at short sequences, where the N×N matrix is cheap to move. One secondary blog claims standard attention can match FlashAttention-2 below about 256 tokens. That is a single secondary claim, so treat it as unverified.\n  https://www.gmicloud.ai/en/blog/flashattention-inference-speedup\n- **Workload type.** The same secondary sources say gains shrink for workloads that are already compute-bound. They also say decoding with a short query is bound by loading the KV cache, which is a different regime from training. I did not verify either claim against a primary source.\n  https://www.gmicloud.ai/en/blog/flashattention-inference-speedup\n- **Memory bandwidth.** A search summary said the FlashAttention repo states that speedup depends on memory bandwidth. I could not open the repo (403), so this is unconfirmed.\n\n**False premise check.** None. \"Exact\" is accurate. Floating-point rounding differs slightly from the standard implementation because the operation order differs. FlashAttention-3 reports FP16 RMSE of 1.9e-4, versus 3.2e-4 for the standard implementation. FlashAttention-3's FP8 mode is lower-precision and not bit-identical.\nhttps://ar5iv.labs.arxiv.org/html/2407.08608\n\n**Gaps.** I did not read the FlashAttention-2 paper, independent third-party benchmarks, or the repo's own caveats.\n\nSources:\n- [FlashAttention (ar5iv)](https://ar5iv.labs.arxiv.org/html/2205.14135)\n- [FlashAttention-3 (ar5iv)](https://ar5iv.labs.arxiv.org/html/2407.08608)\n- [GMI Cloud blog](https://www.gmicloud.ai/en/blog/flashattention-inference-speedup)",
+  "final_answer_sha256": "07322828b4409576016e1a945d6a11fb6b09e365acad7af1dbc2e4b6c9e224b3",
+  "raw_stream_sha256": "c2c447867b67a65be06a1beec4eec46107c119cbc7aa8b576edeba01e6fe558c"
+}
