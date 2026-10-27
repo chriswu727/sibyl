@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Host-source retrieval gate: the release retrieval gate now reads each of the
+  66 cases' three frozen host-search URLs instead of searching, with the same six
+  thresholds; `scripts/eval_live_retrieval.py --host-sources` and the
+  `live retrieval gate` workflow (`gate=host_sources`) run it. The protocol was
+  committed before its first run. Keyless discovery stays tracked but no longer
+  blocks release.
 - One report document: Markdown, plain-text and PDF reports now render the same
   sections in the same order from a shared document, and the PDF table of
   contents lists exactly the rendered sections. Markdown and text reports now

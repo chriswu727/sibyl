@@ -1,10 +1,16 @@
 #!/usr/bin/env python
-"""Run the model-free live launch gate against public web retrieval."""
+"""Run a model-free live retrieval gate: keyless discovery, or frozen host sources.
+
+With --host-sources, each case reads its frozen URL list (the host-supplied
+primary path) instead of searching; thresholds are unchanged. See
+docs/LAUNCH_READINESS.md for the frozen protocol.
+"""
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -13,6 +19,7 @@ from pathlib import Path
 
 from sibyl import __version__
 from sibyl.live_retrieval_eval import LiveRetrievalCase, evaluate_live_retrieval
+from sibyl.research_sources import read_sources
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASETS = [
@@ -36,6 +43,7 @@ def load_cases(paths, limit=0):
                     gold=item["gold"],
                     aliases=item.get("aliases", []),
                     case_type=item.get("type", ""),
+                    urls=item.get("urls", []),
                 )
             )
     return cases[:limit] if limit else cases
@@ -44,6 +52,11 @@ def load_cases(paths, limit=0):
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", action="append", type=Path)
+    parser.add_argument(
+        "--host-sources",
+        type=Path,
+        help="Read each case's frozen URLs from this JSONL file instead of searching.",
+    )
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--concurrency", type=int, default=2)
@@ -58,7 +71,9 @@ def main() -> int:
     parser.add_argument("--max-p95-latency-ms", type=int, default=30000)
     args = parser.parse_args()
 
-    datasets = args.dataset or DEFAULT_DATASETS
+    datasets = (
+        [args.host_sources] if args.host_sources else (args.dataset or DEFAULT_DATASETS)
+    )
     cases = load_cases(datasets, args.limit)
 
     def report_progress(done, total, case_result):
@@ -84,6 +99,7 @@ def main() -> int:
                 concurrency=args.concurrency,
                 max_sources=args.max_sources,
                 progress=report_progress,
+                read=read_sources if args.host_sources else None,
             )
         )
     except Exception as exc:
@@ -101,15 +117,18 @@ def main() -> int:
     output = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "sibyl_version": __version__,
-        "metric_version": "2",
-        "configured_search_provider": os.environ.get("SIBYL_SEARCH_PROVIDER", "keyless")
-        .strip()
-        .lower(),
+        "metric_version": "host-source-1" if args.host_sources else "2",
+        "configured_search_provider": "host_supplied"
+        if args.host_sources
+        else os.environ.get("SIBYL_SEARCH_PROVIDER", "keyless").strip().lower(),
         "datasets": [
             str(path.resolve().relative_to(ROOT))
             if path.resolve().is_relative_to(ROOT)
             else str(path)
             for path in datasets
+        ],
+        "dataset_sha256": [
+            hashlib.sha256(path.read_bytes()).hexdigest() for path in datasets
         ],
         "repeats": args.repeats,
         **result.to_dict(),

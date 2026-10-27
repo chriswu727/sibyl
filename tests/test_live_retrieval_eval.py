@@ -174,3 +174,53 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestHostSourceRetrievalEval(unittest.IsolatedAsyncioTestCase):
+    async def test_reads_use_frozen_urls_and_the_sufficiency_readiness_rule(self):
+        calls = []
+
+        async def read(urls, question):
+            calls.append((urls, question))
+            # A read is "ok" whenever a page was readable; readiness still
+            # needs sufficient evidence.
+            return bundle(
+                "The answer is Dimorphos.",
+                status="ok",
+                sufficiency="sufficient" if "1" in urls[0] else "partial",
+            )
+
+        cases = [
+            LiveRetrievalCase(
+                "a", "Which moonlet?", "Dimorphos", [], urls=["https://e/1"]
+            ),
+            LiveRetrievalCase(
+                "b", "Which moonlet again?", "Dimorphos", [], urls=["https://e/2"]
+            ),
+        ]
+        result = await evaluate_live_retrieval(cases, read=read)
+        self.assertEqual(calls[0], (["https://e/1"], "Which moonlet?"))
+        runs = [case.runs[0] for case in result.cases]
+        self.assertEqual([run.status for run in runs], ["ok", "insufficient_evidence"])
+        self.assertEqual([run.read_status for run in runs], ["ok", "ok"])
+        self.assertEqual(result.answer_coverage, 1.0)
+        self.assertEqual(result.answerable_ready_rate, 0.5)
+        self.assertEqual(result.ready_answer_precision, 1.0)
+
+    async def test_trap_read_is_safe_only_without_sufficient_unrefuted_evidence(self):
+        async def read(urls, question):
+            return bundle("Einstein won in 1921.", sufficiency="sufficient")
+
+        trap = LiveRetrievalCase(
+            "t", "Relativity Nobel year?", "NO_ANSWER", ["photoelectric"], urls=["u"]
+        )
+        result = await evaluate_live_retrieval([trap], read=read)
+        self.assertEqual(result.trap_safe_rate, 0.0)
+
+    async def test_case_without_urls_fails_safely(self):
+        from sibyl.research_sources import read_sources
+
+        case = LiveRetrievalCase("e", "q", "x", [], urls=[])
+        result = await evaluate_live_retrieval([case], read=read_sources)
+        self.assertEqual(result.cases[0].runs[0].status, "failed")
+        self.assertEqual(result.answer_coverage, 0.0)

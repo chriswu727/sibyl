@@ -722,6 +722,9 @@ python scripts/eval_retrieval_pipeline.py --ranker lexical
 python scripts/eval_source_quality.py
 python scripts/eval_live_retrieval.py --repeats 3 \
   --output evals/results/live-retrieval-YYYY-MM-DD.json
+python scripts/eval_live_retrieval.py --repeats 3 \
+  --host-sources evals/host_source_cases.jsonl \
+  --output evals/results/host-source-retrieval-YYYY-MM-DD.json
 ```
 
 The first four commands check offline contracts without public-web or model calls;
@@ -732,6 +735,9 @@ answerable runs containing both `ok` and expected evidence, ready-state precisio
 and p50/p95 latency. It records configured and actual provider paths, plus
 per-provider request outcomes (HTTP status, exception or cancellation). Save
 dated results; public search and publisher availability vary between runs.
+With `--host-sources`, each case instead reads its three frozen host-search URLs
+and counts as ready only with sufficient evidence (metric `host-source-1`); this
+is the release gate, under the [frozen protocol](LAUNCH_READINESS.md#host-source-retrieval-gate-protocol).
 
 The latest retained full keyless gate is the [2026-10-27 hedged-search run](../evals/results/live-retrieval-hedged-2026-10-27.json):
 66 cases, three repeats, 100% trap-safe handling and 10.1 s p95 latency, but 74.1%

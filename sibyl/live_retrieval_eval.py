@@ -1,4 +1,4 @@
-"""Live, model-free evaluation for keyless retrieval."""
+"""Live, model-free retrieval evaluation: keyless discovery or host-supplied sources."""
 
 from __future__ import annotations
 
@@ -22,6 +22,8 @@ class LiveRetrievalCase:
     gold: str
     aliases: List[str]
     case_type: str = ""
+    # Host-supplied source URLs, frozen before any run; empty for discovery.
+    urls: List[str] = field(default_factory=list)
 
     @property
     def expects_answer(self) -> bool:
@@ -55,6 +57,8 @@ class LiveRetrievalRun:
     substantive_domains: int = 0
     # Provider -> request outcome (HTTP status, exception or cancellation) -> count.
     search_attempts: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    # Host reads only: the read's own status before the readiness rule applies.
+    read_status: str = ""
 
 
 @dataclass(frozen=True)
@@ -129,8 +133,23 @@ def evaluate_bundle(
     case: LiveRetrievalCase,
     bundle: SourceBundle,
     search_attempts: Sequence[Dict[str, Any]] = (),
+    host_read: bool = False,
 ) -> LiveRetrievalRun:
+    """Score one bundle.
+
+    A discovery bundle is "ok" only when its evidence is sufficient. A host read
+    is "ok" whenever a page was readable, so for reads the same readiness rule is
+    applied here: the run counts as ok only with sufficient evidence, and the
+    read's own status is kept in read_status.
+    """
     evidence = _bundle_evidence(bundle)
+    status = bundle.status
+    if host_read:
+        status = (
+            "ok"
+            if bundle.diagnostics.evidence_sufficiency == "sufficient"
+            else "insufficient_evidence"
+        )
     answer_candidates = [case.gold, *case.aliases] if case.expects_answer else []
     answer_in_evidence = any(
         _contains_candidate(evidence, candidate) for candidate in answer_candidates
@@ -141,10 +160,11 @@ def evaluate_bundle(
         else False
     )
     safe_trap_outcome = not case.expects_answer and (
-        bundle.status != "ok" or refutation_in_evidence
+        status != "ok" or refutation_in_evidence
     )
     return LiveRetrievalRun(
-        status=bundle.status,
+        status=status,
+        read_status=bundle.status if host_read else "",
         evidence_sufficiency=bundle.diagnostics.evidence_sufficiency,
         answer_in_evidence=answer_in_evidence,
         refutation_in_evidence=refutation_in_evidence,
@@ -188,7 +208,9 @@ async def evaluate_live_retrieval(
     max_sources: int = 10,
     gather: Callable[..., Awaitable[SourceBundle]] = gather_bundle,
     progress: Callable[[int, int, LiveRetrievalCaseResult], None] | None = None,
+    read: Callable[[List[str], str], Awaitable[SourceBundle]] | None = None,
 ) -> LiveRetrievalEvalResult:
+    """Evaluate discovery with gather, or each case's frozen URLs with read."""
     if not cases:
         raise ValueError("At least one live retrieval case is required.")
     if repeats < 1:
@@ -205,7 +227,11 @@ async def evaluate_live_retrieval(
                 started = time.monotonic()
                 try:
                     with record_search_attempts() as attempts:
-                        bundle = await gather(case.question, max_sources=max_sources)
+                        bundle = (
+                            await read(case.urls, case.question)
+                            if read is not None
+                            else await gather(case.question, max_sources=max_sources)
+                        )
                 except Exception as exc:
                     runs.append(
                         LiveRetrievalRun(
@@ -220,7 +246,9 @@ async def evaluate_live_retrieval(
                         )
                     )
                     continue
-            runs.append(evaluate_bundle(case, bundle, attempts))
+            runs.append(
+                evaluate_bundle(case, bundle, attempts, host_read=read is not None)
+            )
         outcomes = {
             (run.status, run.answer_in_evidence, run.safe_trap_outcome) for run in runs
         }
