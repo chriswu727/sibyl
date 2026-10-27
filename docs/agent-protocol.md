@@ -149,6 +149,8 @@ bytes. If the stored passages do not cover a needed section, call
 `continue_research(job_id, url=..., query="the specific missing issue", question_id=...)`.
 This uses another retrieval attempt, extracts at most 60,000 characters through the
 same safe reader, and returns at most nine passages / 16,000 evidence characters.
+Pass `urls=[...]` to read up to five sources in one attempt; they are clustered,
+ranked and assessed together like search results.
 Omitted sections, extraction truncation and unreadable PDF pages remain limitations.
 Changing the selected spans changes their bundle-scoped identities, even when the
 underlying extracted-source hash is unchanged; old stored passages remain accessible.

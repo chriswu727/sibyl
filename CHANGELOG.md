@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Host-supplied sources now get the same assessment as Sibyl's own search
+  results: `continue_research` URL reads go through the shared bundle builder
+  (content clustering, relevance ranking, sufficiency), and `urls=[...]` reads
+  up to five sources in one retrieval step. The 60,000-character read and
+  16,000-character / nine-passage evidence budget per source are unchanged. A
+  read that yields sources stays `ok`; `evidence_sufficiency` reports how much
+  it supports. `SIBYL_CONFIG` `extractor`, `jina_fallback` and `js_render` now
+  apply to these reads. Bundle assembly was split out of keyless discovery.
 - Remove legacy surfaces before the first stable release: the keyless MCP
   compatibility profile with its text responses and `gather_sources`,
   `gather_evidence`, `quick_search` and `read_url` tools; the evidence loop and

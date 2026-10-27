@@ -93,18 +93,21 @@ async def continue_research(
     purpose: Literal["explore", "counterevidence", "follow_citation"] = "explore",
     parent_passage_id: str = "",
     rationale: str = "",
+    urls: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Read a source URL or run a keyless search into the job.
+    """Read source URLs into the job, or fall back to a keyless search.
 
-    Prefer URLs found with your own web search: pass url plus a query naming what
-    you need from the page (bounded 60000-character read, at most 16000 evidence
-    characters; omitted text stays unread). Without your own search, pass query
-    alone. Link each call to question_id and give a short rationale; each call uses
-    one retrieval step. purpose="counterevidence" investigates alternatives;
-    follow_citation needs parent_passage_id, a host-declared link.
+    Prefer URLs found with your own web search: pass url (or up to five urls)
+    plus a query naming what you need. Each page is read up to 60000 characters
+    and keeps at most 16000 evidence characters; omitted text stays unread. Read
+    sources are ranked, deduplicated and assessed like search results. Only
+    without a search of your own, pass query alone. Link each call to question_id
+    with a short rationale; each call uses one retrieval step.
+    purpose="counterevidence" investigates alternatives; follow_citation needs
+    parent_passage_id, a host-declared link.
     """
     return await get_runtime().research_jobs.continue_job(
-        job_id, query, url, question_id, purpose, parent_passage_id, rationale
+        job_id, query, url, question_id, purpose, parent_passage_id, rationale, urls
     )
 
 

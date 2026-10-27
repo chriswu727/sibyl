@@ -22,7 +22,7 @@ from .report_models import ResearchReport
 from .research_claims import render_claims
 from .research_errors import ResearchRequestError
 from .research_review import evidence_index, questions, research_plan, review_question
-from .research_sources import read_source_bundle
+from .research_sources import MAX_READ_URLS, read_sources
 from .research_state import ResearchBudgetExceeded, ResearchNotebook
 from .retrieval import gather_source_bundle
 from .source_policy import normalize_domains, source_kind
@@ -381,20 +381,26 @@ class ResearchJobs:
         purpose: str = "explore",
         parent_passage_id: str = "",
         rationale: str = "",
+        urls: list[str] | None = None,
     ) -> dict[str, Any]:
+        sources = list(dict.fromkeys([*([url] if url else []), *(urls or [])]))
         job = self._idle(self.store.get(job_id))
         if job["mode"] != "host":
             raise ResearchRequestError(
                 "Autonomous execution has been removed. Read or export the saved job; start a new host research job to continue investigating."
             )
         self.runtime.validate_query(query)
-        if not query.strip() and not url:
+        if not query.strip() and not sources:
             raise ValueError(
                 "Host-assisted research requires a focused query or source URL."
             )
+        if len(sources) > MAX_READ_URLS:
+            raise ResearchRequestError(
+                f"Read at most {MAX_READ_URLS} source URLs per call.", field="urls"
+            )
         if purpose not in {"explore", "counterevidence", "follow_citation"}:
             raise ValueError("Unknown investigation purpose.")
-        if len(url) > 2000:
+        if any(len(item) > 2000 for item in sources):
             raise ValueError("Source URL is too long.")
         if len(rationale) > 1000:
             raise ResearchRequestError(
@@ -416,7 +422,7 @@ class ResearchJobs:
             raise ValueError("Choose a question_id from the research plan.")
         if parent_passage_id and parent_passage_id not in evidence_index(notebook):
             raise ValueError("Parent passage must belong to this investigation.")
-        if purpose == "follow_citation" and (not url or not parent_passage_id):
+        if purpose == "follow_citation" and (not sources or not parent_passage_id):
             raise ValueError("Citation following requires a URL and parent passage ID.")
         query = query.strip() or plan_questions[question_id]
         previous_question = next(
@@ -429,7 +435,12 @@ class ResearchJobs:
             {
                 "question_id": question_id,
                 "purpose": cast(SearchPurpose, purpose),
-                "url": display_url(url) if url else "",
+                "url": display_url(sources[0]) if sources else "",
+                **(
+                    {"urls": [display_url(item) for item in sources]}
+                    if len(sources) > 1
+                    else {}
+                ),
                 "parent_passage_id": parent_passage_id,
                 "rationale": rationale.strip(),
                 "based_on_revision": job["revision"],
@@ -449,8 +460,14 @@ class ResearchJobs:
         self.tasks[job_id] = task
         try:
             bundle = await asyncio.wait_for(
-                read_source_bundle(url, query)
-                if url
+                read_sources(
+                    sources,
+                    query,
+                    extractor=self.runtime.config.extractor,
+                    jina_fallback=self.runtime.config.jina_fallback,
+                    js_render=self.runtime.config.js_render,
+                )
+                if sources
                 else gather_source_bundle(
                     query,
                     max_sources=8,
