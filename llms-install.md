@@ -40,9 +40,9 @@ For hosts accepting `mcpServers` JSON, replace the paths:
 ```
 
 Windows uses `.venv\\Scripts\\sibyl-mcp.exe`. Your host must launch local stdio
-servers and consume MCP `structuredContent`. For text-only hosts add
-`"args": ["--profile", "keyless"]`; it returns full text and twelve compatibility
-tools. The default `agent` surface has eight:
+servers. Agent-profile results arrive in MCP `structuredContent` and as the same
+serialized JSON text. For readable text responses and the twelve compatibility
+tools add `"args": ["--profile", "keyless"]`. The default `agent` surface has eight:
 `start_research`, `continue_research`, `get_research`, `assess_research`,
 `complete_research`, `save_report`, `cancel_research`, `gather_bundle`.
 

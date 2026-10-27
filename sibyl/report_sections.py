@@ -1,5 +1,7 @@
 """Shared presentation of evidence-linked report conclusions."""
 
+import re
+
 from .report_models import FindingVerification, ResearchReport
 
 CLAIM_SECTION_TITLE = "Evidence-linked conclusions"
@@ -18,7 +20,26 @@ def legacy_verdict_tag(verdict: FindingVerification) -> str:
     return f"[historical: {support}; recorded confidence: {verdict.confidence}]"
 
 
-def claim_report_body(report: ResearchReport) -> str:
-    return report.analysis or "\n\n".join(
+# Quotes are untrusted source text and always sit mid-line after this prefix, so
+# only inline Markdown (emphasis, code, links, images, HTML, entities) can apply.
+_QUOTE_LINE = re.compile(r'^(Quote \[Source \d+\]: ")(.*)(")$')
+_MARKDOWN_INLINE = re.compile(r"([\\`*_\[\]<>!~|&])")
+
+
+def markdown_literal(text: str) -> str:
+    """Escape inline Markdown so source text renders as written."""
+    return _MARKDOWN_INLINE.sub(r"\\\1", text)
+
+
+def claim_report_body(report: ResearchReport, markdown: bool = False) -> str:
+    body = report.analysis or "\n\n".join(
         dict.fromkeys([report.summary, *report.key_findings])
+    )
+    if not markdown or not report.claims:
+        return body
+    return "\n".join(
+        match[1] + markdown_literal(match[2]) + match[3]
+        if (match := _QUOTE_LINE.match(line))
+        else line
+        for line in body.split("\n")
     )

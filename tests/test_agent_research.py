@@ -44,7 +44,10 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         response = await self.server.call_tool(name, kwargs)
         self.assertIsInstance(response, CallToolResult)
         self.assertFalse(response.isError)
-        self.assertIn("structuredContent", response.content[0].text)
+        # Text-only hosts receive the same payload as structuredContent.
+        self.assertEqual(
+            json.loads(response.content[0].text), response.structuredContent
+        )
         return response.structuredContent
 
     async def rejected(self, name, **arguments):
@@ -52,6 +55,9 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(response, CallToolResult)
         self.assertTrue(response.isError)
         self.assertEqual(response.structuredContent["view"], "error")
+        self.assertEqual(
+            json.loads(response.content[0].text), response.structuredContent
+        )
         return response.structuredContent
 
     async def test_agent_surface_and_compatible_default(self):

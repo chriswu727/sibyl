@@ -39,14 +39,24 @@ The host chooses queries, reads sources and judges what they support. Sibyl
 retrieves, preserves state, checks reference integrity and enforces budgets.
 It does not decide truth for the host or run an autonomous researcher.
 
+### When to use it
+
+Use Sibyl when a conclusion must be checked or reused: a decision that needs
+cited evidence, a comparison that should include counterevidence, an
+investigation spanning several questions or sessions, findings handed to
+someone else, or a report. For a quick fact lookup, your agent's own search is
+enough. Sibyl adds steps; it pays off when the evidence trail matters.
+
 The default MCP surface has **eight tools**, compact structured briefs and
 on-demand passage reads. A research result does not need to become a long report
 before another agent can use it.
 
 ## Quick start
 
-Requires Python 3.11+ and a host supporting local stdio MCP and
-`structuredContent`. Install this source checkout in a fresh environment:
+Requires Python 3.11+ and a host supporting local stdio MCP. Agent-profile
+results arrive in `structuredContent` and as the same JSON text, so hosts that
+pass only text to the model still receive them. Install this source checkout in
+a fresh environment:
 
 ```bash
 git clone https://github.com/chriswu727/sibyl.git
@@ -73,9 +83,9 @@ host's MCP configuration, replacing both paths with absolute local paths:
 ```
 
 On Windows, use `.venv\\Scripts\\sibyl-mcp.exe`. Configuration syntax varies by host;
-the example is for clients accepting `mcpServers` JSON. Text-only integrations
-can use `"args": ["--profile", "keyless"]` for the twelve-tool compatibility surface
-and full text responses. This is not a remote HTTP MCP endpoint.
+the example is for clients accepting `mcpServers` JSON. Integrations that want
+readable text can use `"args": ["--profile", "keyless"]` for the twelve-tool
+compatibility surface and full text responses. This is not a remote HTTP MCP endpoint.
 
 No search key is required. Optional Tavily search has separate credentials and
 provider charges; subscription access to your agent does not pay for Tavily.

@@ -23,9 +23,13 @@ The agent profile exposes eight tools:
 - `cancel_research`: cancel work or explicitly delete a local checkpoint.
 - `gather_bundle`: standalone retrieval; it does not add evidence to a job.
 
-The six research operations return domain JSON in MCP `structuredContent` and
-a short text pointer. The host must actually consume `structuredContent`; a
-text-only integration should use `--profile keyless`. `gather_bundle` keeps the
+The six research operations return domain JSON in MCP `structuredContent`, and
+the text content carries the same JSON serialized compactly, as the MCP
+specification recommends. Success results, structured errors and export
+manifests all follow this rule, so a host that passes only text to the model
+loses nothing. `--profile keyless` keeps readable text responses instead.
+Large views such as `view="full"` can exceed a host's tool-output limit; prefer
+briefs, batch passage reads and catalog pages. `gather_bundle` keeps the
 SourceBundle contract; the agent profile omits its large output schema from the
 tool listing to save host context, and the payload is unchanged. `save_report` returns an export manifest in the agent
 profile and the existing text response in the keyless profile. Failures remain

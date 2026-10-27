@@ -52,7 +52,7 @@ def _report_to_markdown(report: ResearchReport) -> str:
                 "",
                 CLAIM_SECTION_NOTICE,
                 "",
-                claim_report_body(report),
+                claim_report_body(report, markdown=True),
                 "",
             ]
         )

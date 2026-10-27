@@ -9,7 +9,8 @@ Human-readable reports are optional outputs of the same research state.
 This checkout is an unreleased host-only source preview. Published 0.4.0b1 and
 0.3.0 still contain the old architecture. Use Python 3.11+ and a fresh environment
 with `python -m pip install -e .`. Default `sibyl-mcp` exposes eight tools with
-compact MCP `structuredContent`; text-only hosts use `--profile keyless`.
+compact MCP `structuredContent`, mirrored as JSON text; `--profile keyless` keeps
+readable text responses and twelve compatibility tools.
 See README.md and docs/agent-protocol.md.
 
 Sibyl never calls a generative model or reads subscription credentials. Reasoning

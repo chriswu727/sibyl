@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Agent-profile results, errors and export manifests now also carry their
+  structuredContent as serialized JSON text, as the MCP specification recommends
+  for hosts that pass only text to the model.
+- Escape inline Markdown in quoted source text in Markdown reports; JSON keeps
+  the matched text unescaped and stored passages are unchanged.
+- State when to use Sibyl (checked or reusable conclusions) versus a quick
+  lookup with the host's own search in server instructions and the README.
 - Require supported and disputed fact claims to quote exact text from their cited
   passages; reject quotes not found verbatim (ignoring case, fullwidth ASCII,
   accent encoding, spacing and typographic variants, never superscripts or other

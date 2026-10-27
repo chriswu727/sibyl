@@ -144,8 +144,8 @@ MCP report exports use `SIBYL_OUTPUT_ROOT` (default `reports/`).
 an absolute path. Stateful report operations reject overlapping calls.
 
 The default `agent` profile exposes eight tools with compact structured research
-briefs. The host must consume MCP `structuredContent`; text-only clients can use
-`--profile keyless` for full responses and twelve compatibility tools.
+briefs, returned in MCP `structuredContent` and mirrored as serialized JSON text.
+`--profile keyless` keeps readable full text responses and twelve compatibility tools.
 `--profile auto` is an alias for agent and never inspects model credentials.
 `report`, `finance` and `full` are no longer valid profiles.
 

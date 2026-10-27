@@ -4,19 +4,18 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import json
 from contextlib import asynccontextmanager
 from functools import wraps
 from typing import get_type_hints
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult
 from pydantic import BaseModel
 
 from .async_cache import CapacityError
 from .evidence import SourceBundle
-from .mcp_errors import AgentMCP, SafeToolError
+from .mcp_errors import AgentMCP, SafeToolError, json_text
 from .report_exports import ExportManifest, ReportExportError
 from .research_errors import ResearchRequestError
 from .research_state import ResearchBudgetExceeded
@@ -142,20 +141,16 @@ class ToolCatalog:
                             # Same SourceBundle payload; the large schema stays in docs.
                             payload = result.to_dict()
                             return CallToolResult(
-                                content=[
-                                    TextContent(
-                                        type="text",
-                                        text=json.dumps(payload, ensure_ascii=False),
-                                    )
-                                ],
+                                content=[json_text(payload)],
                                 structuredContent=payload,
                             )
                         if isinstance(result, ExportManifest):
                             if not agent_mode:
                                 return result.text()
+                            payload = result.model_dump(mode="json")
                             return CallToolResult(
-                                content=[TextContent(type="text", text=result.text())],
-                                structuredContent=result.model_dump(mode="json"),
+                                content=[json_text(payload)],
+                                structuredContent=payload,
                             )
                         if agent_mode and function.__name__ in {
                             "start_research",
@@ -171,12 +166,7 @@ class ToolCatalog:
                             ):
                                 result = research_brief(result)
                             return CallToolResult(
-                                content=[
-                                    TextContent(
-                                        type="text",
-                                        text="Research result in structuredContent. Read status, research_plan and limitations; completion is not a factual verification.",
-                                    )
-                                ],
+                                content=[json_text(result)],
                                 structuredContent=result,
                             )
                         return result

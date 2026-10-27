@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
@@ -13,6 +14,13 @@ from pydantic import ValidationError
 from .report_exports import ReportExportError
 from .research_errors import ResearchRequestError
 from .runtime import SibylRuntime
+
+
+def json_text(payload: dict[str, Any]) -> TextContent:
+    """Serialized structuredContent for hosts that only pass text to the model."""
+    return TextContent(
+        type="text", text=json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    )
 
 
 class SafeToolError(ToolError):
@@ -33,10 +41,11 @@ def error_result(
         if isinstance(cause, SafeToolError):
             error = cause.error
             if isinstance(error, ReportExportError):
+                payload = error.manifest.model_dump(mode="json")
                 return CallToolResult(
                     isError=True,
-                    content=[TextContent(type="text", text=error.manifest.text())],
-                    structuredContent=error.manifest.model_dump(mode="json"),
+                    content=[json_text(payload)],
+                    structuredContent=payload,
                 )
             break
         if isinstance(cause, ValidationError):
@@ -124,14 +133,7 @@ def error_result(
         action, instructions = actions[error.code]
         result["recovery"].update(action=action, instructions=instructions)
     return CallToolResult(
-        isError=True,
-        content=[
-            TextContent(
-                type="text",
-                text=f"{error.code}: {error}. Recovery details in structuredContent.",
-            )
-        ],
-        structuredContent=result,
+        isError=True, content=[json_text(result)], structuredContent=result
     )
 
 
