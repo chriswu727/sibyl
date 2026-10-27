@@ -445,8 +445,11 @@ session can read a job's evidence, review ledger and report by ID.
 - Stale instance lock files of exited runtimes are removed at startup. Do not
   delete or replace lock files of running sessions: that removes their ownership.
 - The database uses SQLite WAL mode and needs a local filesystem, not a network
-  share. A write that waits more than five seconds fails with a retryable
-  capacity error instead of corrupting state.
+  share. A write that waits more than five seconds fails with `store_busy` and
+  changes nothing; retry it. If a finished retrieval cannot be saved for that
+  reason, its session keeps the result and saves it on its next call or at
+  shutdown. Until then other sessions still see the job running. A full database
+  reports the SQLite error itself, not a rollback error.
 - Runtimes of the previous version take an exclusive directory lock. On POSIX the
   current version holds a shared lock on the same file, so the two generations
   refuse to run on one directory together. Windows checks only at startup;

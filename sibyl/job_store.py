@@ -40,6 +40,24 @@ _HELD = (
 )
 
 
+class StoreBusy(CapacityError):
+    """Another session held the database too long; nothing was written. Retry."""
+
+    code = "store_busy"
+
+
+class CheckpointTooLarge(CapacityError):
+    code = "capacity_exceeded"
+
+
+class HistoryFull(CapacityError):
+    code = "history_full"
+
+
+class WorkerCapacity(CapacityError):
+    code = "worker_capacity"
+
+
 class RevisionConflict(ResearchRequestError):
     def __init__(self) -> None:
         super().__init__(
@@ -106,18 +124,27 @@ class JobStore:
                     "CREATE TABLE IF NOT EXISTS jobs "
                     "(id TEXT PRIMARY KEY, payload TEXT NOT NULL, revision INTEGER NOT NULL, updated REAL NOT NULL)"
                 )
-            for job in self.list_jobs():
-                if job["status"] == "running":
-                    try:
-                        self.recover(job)
-                    except OwnerUnknown:
-                        logger.warning(
-                            "Skipped recovery of %s: owner unknown", job["job_id"]
-                        )
+            self._recover_orphans()
             self._remove_stale_instance_locks()
         except BaseException:
             self.close()
             raise
+
+    def _recover_orphans(self) -> None:
+        """Best-effort start-up recovery; a job left running is retried on access."""
+        try:
+            jobs = self.list_jobs()
+        except StoreBusy:
+            logger.warning("Skipped start-up recovery: research store busy")
+            return
+        for job in jobs:
+            if job["status"] != "running":
+                continue
+            try:
+                self.recover(job)
+            except (CapacityError, ValueError) as exc:
+                # Owner unknown, store busy, or deleted by another session.
+                logger.warning("Skipped recovery of %s: %s", job["job_id"], exc)
 
     @staticmethod
     def _private_file(path: Path, flags: int = os.O_CREAT) -> int:
@@ -305,7 +332,9 @@ class JobStore:
             try:
                 yield connection
             except BaseException:
-                connection.execute("ROLLBACK")
+                # SQLite may already have rolled back (for example on a full disk).
+                if connection.in_transaction:
+                    connection.execute("ROLLBACK")
                 raise
             connection.execute("COMMIT")
         except sqlite3.OperationalError as exc:
@@ -316,8 +345,8 @@ class JobStore:
     @staticmethod
     def _raise_busy(exc: sqlite3.OperationalError) -> NoReturn:
         if "locked" in str(exc) or "busy" in str(exc):
-            raise CapacityError(
-                "The research store is busy in another session; retry shortly."
+            raise StoreBusy(
+                "The research store is busy in another session; nothing was changed. Retry shortly."
             ) from None
         raise exc
 
@@ -327,7 +356,7 @@ class JobStore:
         with self.transaction() as connection:
             count = connection.execute("SELECT count(*) FROM jobs").fetchone()[0]
             if count >= self.MAX_JOBS:
-                raise CapacityError(
+                raise HistoryFull(
                     "Research history is full. Delete a finished job before starting another."
                 )
             connection.execute(
@@ -391,6 +420,10 @@ class JobStore:
             (encoded, job["revision"] + 1, time.time(), job["job_id"], job["revision"]),
         )
         if cursor.rowcount != 1:
+            if not connection.execute(
+                "SELECT 1 FROM jobs WHERE id=?", (job["job_id"],)
+            ).fetchone():
+                raise ValueError("Research job not found.")
             raise RevisionConflict()
 
     def save(self, job: JobRecord, *, recovery: bool = False) -> None:
@@ -426,7 +459,7 @@ class JobStore:
                 except OwnerUnknown:
                     active += 1
             if active >= self.MAX_RUNNING:
-                raise CapacityError(
+                raise WorkerCapacity(
                     "Research worker capacity reached across sessions; wait for a running job to finish."
                 )
             self._write(connection, job, encoded)
@@ -486,7 +519,9 @@ class JobStore:
             self.RECOVERY_RESERVE_BYTES if recovery else 0
         )
         if len(encoded.encode("utf-8")) > limit:
-            raise CapacityError("Research checkpoint exceeds the 1 MiB storage limit.")
+            raise CheckpointTooLarge(
+                "Research checkpoint exceeds the 1 MiB storage limit."
+            )
         return encoded
 
     def close(self) -> None:

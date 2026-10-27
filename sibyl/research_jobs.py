@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import copy
+import logging
 import time
 from typing import TYPE_CHECKING, Any, cast
 
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
     from .runtime import SibylRuntime
 
 from .async_cache import CapacityError
-from .job_store import JobStore
+from .job_store import CheckpointTooLarge, JobStore, StoreBusy, WorkerCapacity
 from .privacy import display_url
 from .report_audit import citation_errors
 from .report_models import ResearchReport
@@ -24,6 +26,8 @@ from .research_state import ResearchBudgetExceeded, ResearchNotebook
 from .retrieval import gather_source_bundle
 from .source_policy import normalize_domains, source_kind
 
+logger = logging.getLogger(__name__)
+
 
 class ResearchJobs:
     def __init__(self, runtime: SibylRuntime) -> None:
@@ -31,6 +35,8 @@ class ResearchJobs:
         self.store = JobStore(runtime.policy.output_root)
         self.tasks: dict[str, asyncio.Task[Any]] = {}
         self.closed = False
+        # Finished retrievals whose checkpoint met a busy store; retried later.
+        self._pending: dict[str, JobRecord] = {}
 
     def _event(self, job: JobRecord, message: str) -> None:
         job["events"] = [
@@ -41,7 +47,7 @@ class ResearchJobs:
     def _checkpoint(self, job: JobRecord) -> None:
         try:
             self.store.save(job)
-        except CapacityError:
+        except CheckpointTooLarge:
             retained = self.store.get(job["job_id"])
             previous = retained["notebook"]
             current = job["notebook"]
@@ -71,6 +77,16 @@ class ResearchJobs:
                 "Checkpoint size limit reached; prior evidence and consumed budgets retained."
             ) from None
 
+    def _flush_pending(self) -> None:
+        for job_id, job in list(self._pending.items()):
+            try:
+                self._checkpoint(job)
+            except StoreBusy:
+                continue
+            except Exception:
+                logger.warning("Dropped unsaved retrieval result for %s", job_id)
+            del self._pending[job_id]
+
     def _idle(self, job: JobRecord) -> JobRecord:
         """Return the job ready for a change, recovering it if its owner exited.
 
@@ -80,6 +96,13 @@ class ResearchJobs:
             raise ValueError("Research runtime is closed.")
         if job["job_id"] in self.tasks:
             raise CapacityError("Research job is busy.")
+        if job["job_id"] in self._pending:
+            self._flush_pending()
+            if job["job_id"] in self._pending:
+                raise StoreBusy(
+                    "The last retrieval result is not saved yet because the research store is busy; retry shortly."
+                )
+            job = self.store.get(job["job_id"])
         if job["status"] == "running":
             recovered = self.store.recover(
                 job, owner_exited=self.store.job_owner(job) == self.store.instance_id
@@ -154,7 +177,10 @@ class ResearchJobs:
         return self.get(job["job_id"])
 
     def _load(self, job_id: str) -> tuple[JobRecord, ResearchNotebook]:
-        job = self.store.get(job_id)
+        if job_id in self._pending:
+            self._flush_pending()
+        pending = self._pending.get(job_id)
+        job = copy.deepcopy(pending) if pending else self.store.get(job_id)
         job["running_elsewhere"] = self.store.running_elsewhere(job)
         if (
             job["status"] == "running"
@@ -303,7 +329,7 @@ class ResearchJobs:
                 "Retrieval rationale must be at most 1000 characters."
             )
         if len(self.tasks) >= 2:
-            raise CapacityError("Research worker capacity reached.")
+            raise WorkerCapacity("Research worker capacity reached.")
         remaining = self.runtime.policy.report_timeout - job["elapsed_seconds"]
         if remaining <= 0:
             raise ResearchBudgetExceeded("Research wall-time budget exhausted.")
@@ -385,6 +411,11 @@ class ResearchJobs:
             job["elapsed_seconds"] += time.monotonic() - started
             try:
                 self._checkpoint(job)
+            except StoreBusy:
+                # Keep the finished result instead of losing it; it is saved on
+                # this session's next call or at shutdown.
+                self._pending[job_id] = job
+                raise
             finally:
                 self.tasks.pop(job_id, None)
         return self.get(job_id)
@@ -562,4 +593,5 @@ class ResearchJobs:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        self._flush_pending()
         self.store.close()

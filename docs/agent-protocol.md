@@ -51,7 +51,10 @@ it is null if no saved job could be read. Common actions are `repair_assessment`
 `wait_for_other_session` (`job_running_elsewhere`) means another live local session
 runs the job: read it, and retry the change after that retrieval finishes.
 `check_storage` (`owner_unknown`) means the owner lock could not be checked, so
-the job was not taken over. Generic failures ask the host to correct/inspect the request, not retry blindly.
+the job was not taken over. `retry_later` covers `store_busy` (nothing was
+changed) and `worker_capacity` (two jobs already run across sessions);
+`delete_finished_jobs` covers `history_full`. Other capacity errors keep
+`capacity_exceeded`. Generic failures ask the host to correct/inspect the request, not retry blindly.
 
 A rejected assessment is atomic: it does not save claims or increment the
 revision. Reload the brief, repair the indicated claim, and resubmit the complete

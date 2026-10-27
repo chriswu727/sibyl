@@ -124,6 +124,18 @@ def error_result(
             "start_new_research",
             "Completed reports cannot be changed. Read/export this job, or explicitly start a new investigation.",
         ),
+        "store_busy": (
+            "retry_later",
+            "Another session held the research store; nothing was changed. Retry the same request shortly.",
+        ),
+        "worker_capacity": (
+            "retry_later",
+            "Two jobs are already running across your sessions. Retry after one finishes; reading jobs still works.",
+        ),
+        "history_full": (
+            "delete_finished_jobs",
+            "The research store holds its maximum number of jobs. Delete a finished job explicitly with cancel_research(delete=true) before starting another.",
+        ),
         "job_running_elsewhere": (
             "wait_for_other_session",
             "Another live session is running this job. Read it freely; retry the change after that retrieval finishes. It cannot be cancelled from here.",

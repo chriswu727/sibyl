@@ -74,7 +74,7 @@ class ToolCatalog:
                         if isinstance(exc, ResearchRequestError)
                         else ResearchRequestError(
                             str(exc),
-                            code="capacity_exceeded"
+                            code=getattr(exc, "code", "capacity_exceeded")
                             if isinstance(exc, CapacityError)
                             else "budget_exhausted",
                         )

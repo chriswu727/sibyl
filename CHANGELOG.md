@@ -8,7 +8,10 @@
   the owner's lock is free, and lock-check failures (`owner_unknown`) never
   count as an exited owner. Claims, recovery, creation and deletion are
   conditional immediate transactions; the two-job worker limit now applies to
-  the whole store. SQLite uses WAL mode on a local filesystem.
+  the whole store. SQLite uses WAL mode on a local filesystem. Busy stores,
+  full history and worker capacity have distinct retryable error codes; a
+  finished retrieval that meets a busy store is kept and saved later instead of
+  being reported as an oversized checkpoint.
 - Default the output root to the per-user data directory when
   `SIBYL_OUTPUT_ROOT` is unset. An older `./reports` store is never moved; the
   MCP server warns how to keep using it. Older exclusive runtimes and current

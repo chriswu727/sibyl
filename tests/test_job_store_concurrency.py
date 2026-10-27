@@ -3,6 +3,7 @@ locking paths are not exercised here and need a real Windows run."""
 
 import errno
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -11,9 +12,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from research_fixtures import evidence_bundle
+
 from sibyl.async_cache import CapacityError
 from sibyl.config import Config
-from sibyl.job_store import JobStore, OwnerUnknown
+from sibyl.job_store import HistoryFull, JobStore, OwnerUnknown, StoreBusy
 from sibyl.mcp_server import create_server
 from sibyl.research_errors import ResearchRequestError
 from sibyl.runtime import RuntimePolicy, SibylRuntime
@@ -228,6 +231,32 @@ class TestSharedJobStore(unittest.TestCase):
         finally:
             os.close(legacy)
 
+    def test_startup_recovery_tolerates_races_and_busy_store(self):
+        self.store().create(payload("running"))
+        for failure in (
+            ValueError("Research job not found."),
+            StoreBusy("busy"),
+            OwnerUnknown(),
+        ):
+            with mock.patch.object(JobStore, "recover", side_effect=failure):
+                self.store()
+        with mock.patch.object(JobStore, "list_jobs", side_effect=StoreBusy("busy")):
+            self.store()
+
+    def test_full_database_error_is_not_masked_by_rollback(self):
+        store = self.store()
+        with mock.patch.object(JobStore, "MAX_PAGES", 12):
+            with self.assertRaisesRegex(sqlite3.OperationalError, "full"):
+                for _ in range(JobStore.MAX_JOBS):
+                    store.create({**payload(), "question": "x" * 4000})
+
+    def test_claim_after_concurrent_delete_reports_missing_job(self):
+        one, two = self.store(), self.store()
+        job = one.create(payload())
+        two.delete(job["job_id"])
+        with self.assertRaisesRegex(ValueError, "not found"):
+            one.claim(job)
+
 
 @unittest.skipUnless(os.name == "posix", "POSIX flock semantics")
 class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
@@ -292,6 +321,59 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
         resumed = await other.cancel(job["job_id"])
         self.assertEqual(resumed["status"], "cancelled")
         self.assertFalse(resumed["running_elsewhere"])
+
+    async def test_busy_final_checkpoint_keeps_the_result_and_releases_later(self):
+        jobs = self.owner.research_jobs
+        job = jobs.start("Question", [], "host", 1, "en", 3)
+        blocker = sqlite3.connect(jobs.store.path, isolation_level=None)
+
+        async def retrieve(*args, **kwargs):
+            blocker.execute("BEGIN IMMEDIATE")
+            return evidence_bundle("busy", 2)
+
+        try:
+            with (
+                mock.patch.object(JobStore, "BUSY_TIMEOUT", 0.1),
+                mock.patch("sibyl.research_jobs.gather_source_bundle", retrieve),
+            ):
+                with self.assertRaises(StoreBusy):
+                    await jobs.continue_job(job["job_id"], "query", question_id="Q0")
+            stored = jobs.store.get(job["job_id"])
+            self.assertEqual(stored["status"], "running")
+            self.assertTrue(
+                self.other.research_jobs.get(job["job_id"])["running_elsewhere"]
+            )
+            pending = jobs.get(job["job_id"])
+            self.assertEqual(pending["status"], "awaiting_input")
+            self.assertEqual(len(pending["evidence"]), 2)
+        finally:
+            blocker.execute("COMMIT")
+            blocker.close()
+        released = jobs.get(job["job_id"])
+        stored = jobs.store.get(job["job_id"])
+        self.assertEqual(stored["status"], "awaiting_input")
+        self.assertNotIn("owner", stored)
+        self.assertEqual(len(released["evidence"]), 2)
+        self.assertFalse(
+            any("size limit" in event["message"] for event in stored["events"])
+        )
+        self.assertFalse(
+            self.other.research_jobs.get(job["job_id"])["running_elsewhere"]
+        )
+
+    async def test_transient_capacity_errors_carry_retry_guidance(self):
+        server = create_server(self.other, agent_mode=True)
+        for error, code, action in (
+            (StoreBusy("busy"), "store_busy", "retry_later"),
+            (HistoryFull("full"), "history_full", "delete_finished_jobs"),
+        ):
+            with mock.patch.object(JobStore, "create", side_effect=error):
+                response = await server.call_tool(
+                    "start_research", {"question": "Question"}
+                )
+            self.assertTrue(response.isError)
+            self.assertEqual(response.structuredContent["error"]["code"], code)
+            self.assertEqual(response.structuredContent["recovery"]["action"], action)
 
 
 if __name__ == "__main__":
