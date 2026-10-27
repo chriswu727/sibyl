@@ -8,10 +8,11 @@ import re
 import time
 import unicodedata
 from dataclasses import asdict, dataclass, field
-from typing import Awaitable, Callable, List, Sequence
+from typing import Any, Awaitable, Callable, Dict, List, Sequence
 
 from .api import gather_bundle
 from .evidence import SourceBundle
+from .search import record_search_attempts
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,8 @@ class LiveRetrievalRun:
     refinement_failures: int = 0
     substantive_sources: int = 0
     substantive_domains: int = 0
+    # Provider -> request outcome (HTTP status, exception or cancellation) -> count.
+    search_attempts: Dict[str, Dict[str, int]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -109,9 +112,23 @@ def _bundle_evidence(bundle: SourceBundle) -> str:
     )
 
 
+def summarize_search_attempts(
+    attempts: Sequence[Dict[str, Any]],
+) -> Dict[str, Dict[str, int]]:
+    summary: Dict[str, Dict[str, int]] = {}
+    for attempt in attempts:
+        outcomes = summary.setdefault(str(attempt["provider"]), {})
+        outcome = str(attempt["outcome"])
+        outcomes[outcome] = outcomes.get(outcome, 0) + 1
+    return {
+        provider: dict(sorted(o.items())) for provider, o in sorted(summary.items())
+    }
+
+
 def evaluate_bundle(
     case: LiveRetrievalCase,
     bundle: SourceBundle,
+    search_attempts: Sequence[Dict[str, Any]] = (),
 ) -> LiveRetrievalRun:
     evidence = _bundle_evidence(bundle)
     answer_candidates = [case.gold, *case.aliases] if case.expects_answer else []
@@ -151,6 +168,7 @@ def evaluate_bundle(
         refinement_failures=bundle.diagnostics.refinement_failures,
         substantive_sources=bundle.diagnostics.substantive_sources,
         substantive_domains=bundle.diagnostics.substantive_domains,
+        search_attempts=summarize_search_attempts(search_attempts),
     )
 
 
@@ -186,7 +204,8 @@ async def evaluate_live_retrieval(
             async with semaphore:
                 started = time.monotonic()
                 try:
-                    bundle = await gather(case.question, max_sources=max_sources)
+                    with record_search_attempts() as attempts:
+                        bundle = await gather(case.question, max_sources=max_sources)
                 except Exception as exc:
                     runs.append(
                         LiveRetrievalRun(
@@ -201,7 +220,7 @@ async def evaluate_live_retrieval(
                         )
                     )
                     continue
-            runs.append(evaluate_bundle(case, bundle))
+            runs.append(evaluate_bundle(case, bundle, attempts))
         outcomes = {
             (run.status, run.answer_in_evidence, run.safe_trap_outcome) for run in runs
         }

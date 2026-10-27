@@ -9,8 +9,11 @@ import re
 import threading
 import time
 import weakref
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from urllib.parse import parse_qs, quote, quote_plus, unquote, urlparse
 
 import httpx
@@ -33,6 +36,8 @@ _HEADERS = {"User-Agent": "Sibyl/0.4 (+https://github.com/chriswu727/sibyl)"}
 _SEARCH_BATCH_TIMEOUT_SECONDS = 8.0
 _GENERAL_WEB_TIMEOUT_SECONDS = 7.0
 _TAVILY_TIMEOUT_SECONDS = 2.0
+# A slower general-web provider keeps running when the next one is started.
+_GENERAL_WEB_HEDGE_SECONDS = 1.5
 _SEARCH_PROVIDERS = {"keyless", "tavily"}
 _logger = logging.getLogger(__name__)
 
@@ -64,9 +69,49 @@ def _get_provider_gate(provider: str) -> _ProviderGate:
         return gates.setdefault(provider, _ProviderGate())
 
 
+_search_attempts: ContextVar[Optional[List[Dict[str, Any]]]] = ContextVar(
+    "sibyl_search_attempts", default=None
+)
+
+
+@contextmanager
+def record_search_attempts() -> Iterator[List[Dict[str, Any]]]:
+    """Collect provider request outcomes in this context, for evaluation only."""
+    attempts: List[Dict[str, Any]] = []
+    token = _search_attempts.set(attempts)
+    try:
+        yield attempts
+    finally:
+        _search_attempts.reset(token)
+
+
 async def _paced_get(provider, min_interval, client, url, **kwargs):
-    await _get_provider_gate(provider).wait(min_interval)
-    return await client.get(url, **kwargs)
+    attempts = _search_attempts.get()
+    if attempts is None:
+        await _get_provider_gate(provider).wait(min_interval)
+        return await client.get(url, **kwargs)
+    started = time.monotonic()
+    sent: Optional[float] = None
+    outcome = "cancelled"
+    try:
+        await _get_provider_gate(provider).wait(min_interval)
+        sent = time.monotonic()
+        response = await client.get(url, **kwargs)
+        outcome = str(response.status_code)
+        return response
+    except Exception as exc:
+        outcome = type(exc).__name__
+        raise
+    finally:
+        ended = time.monotonic()
+        attempts.append(
+            {
+                "provider": provider,
+                "outcome": outcome if sent is not None else f"{outcome}_while_paced",
+                "wait_ms": round(((sent or ended) - started) * 1000),
+                "request_ms": round((ended - sent) * 1000) if sent is not None else 0,
+            }
+        )
 
 
 async def _serialized_get(provider, min_interval, client, url, **kwargs):
@@ -326,24 +371,46 @@ async def _search_general_web(
     *,
     timeout: float = _GENERAL_WEB_TIMEOUT_SECONDS,
 ) -> List[SearchResult]:
-    """Search DuckDuckGo HTML, then fail over to Mojeek and Yahoo."""
+    """Search DuckDuckGo HTML, hedged with Mojeek and then Yahoo.
+
+    Each fallback starts when every earlier provider has failed or returned
+    nothing, or after a hedge delay, while earlier attempts keep running. All
+    attempts share the whole deadline, and the first non-empty result wins.
+    """
     providers = (search_duckduckgo, search_mojeek, search_yahoo)
-    deadline = asyncio.get_running_loop().time() + timeout
-    for index, provider in enumerate(providers):
-        remaining = deadline - asyncio.get_running_loop().time()
-        if remaining <= 0:
-            break
-        # Reserve time for every fallback, including provider pacing/queue waits.
-        attempt_timeout = remaining / (len(providers) - index)
-        try:
-            results = await asyncio.wait_for(
-                provider(query, max_results, client=client), timeout=attempt_timeout
-            )
-        except Exception:
-            continue
-        if results:
-            return results
-    return []
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + timeout
+    hedge = min(_GENERAL_WEB_HEDGE_SECONDS, timeout / len(providers))
+    tasks: List[asyncio.Task] = []
+    try:
+        for index in range(len(providers) + 1):
+            if index < len(providers):
+                if deadline - loop.time() <= 0:
+                    break
+                provider = providers[index]
+                tasks.append(
+                    asyncio.create_task(provider(query, max_results, client=client))
+                )
+                until = min(deadline, loop.time() + hedge)
+            else:
+                until = deadline
+            while True:
+                for task in tasks:
+                    if task.done() and not task.cancelled() and not task.exception():
+                        if results := task.result():
+                            return results
+                running = [task for task in tasks if not task.done()]
+                remaining = until - loop.time()
+                if not running or remaining <= 0:
+                    break
+                await asyncio.wait(
+                    running, timeout=remaining, return_when=asyncio.FIRST_COMPLETED
+                )
+        return []
+    finally:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 async def _search_configured_general_web(

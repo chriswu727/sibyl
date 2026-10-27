@@ -17,6 +17,7 @@ from sibyl.search import (
     _search_configured_general_web,
     _search_general_web,
     fetch_wikipedia_extract,
+    record_search_attempts,
     search_crossref,
     search_duckduckgo,
     search_google_news,
@@ -443,6 +444,55 @@ class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(results[0].url, "https://y.com")
         self.assertEqual(cancelled, ["ddg", "mojeek"])
         yahoo.assert_awaited_once()
+
+    async def test_slow_provider_is_hedged_without_waiting_for_its_timeout(self):
+        cancelled = asyncio.Event()
+
+        async def hanging(*args, **kwargs):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+
+        mojeek = mock.AsyncMock(
+            return_value=[SearchResult("M", "https://m.com", "s", "web")]
+        )
+        started = asyncio.get_running_loop().time()
+        with (
+            mock.patch("sibyl.search._GENERAL_WEB_HEDGE_SECONDS", 0.05),
+            mock.patch("sibyl.search.search_duckduckgo", hanging),
+            mock.patch("sibyl.search.search_mojeek", mojeek),
+        ):
+            results = await _search_general_web("q", timeout=5.0)
+        self.assertEqual(results[0].url, "https://m.com")
+        self.assertLess(asyncio.get_running_loop().time() - started, 1.0)
+        self.assertTrue(cancelled.is_set())
+
+    async def test_earlier_provider_answering_after_the_hedge_still_wins(self):
+        async def late_ddg(*args, **kwargs):
+            await asyncio.sleep(0.1)
+            return [SearchResult("D", "https://d.com", "s", "web")]
+
+        async def hanging(*args, **kwargs):
+            await asyncio.Event().wait()
+
+        with (
+            mock.patch("sibyl.search._GENERAL_WEB_HEDGE_SECONDS", 0.02),
+            mock.patch("sibyl.search.search_duckduckgo", late_ddg),
+            mock.patch("sibyl.search.search_mojeek", hanging),
+            mock.patch("sibyl.search.search_yahoo", hanging),
+        ):
+            results = await _search_general_web("q", timeout=5.0)
+        self.assertEqual(results[0].url, "https://d.com")
+
+    async def test_provider_request_outcomes_are_recorded_only_when_asked(self):
+        client = _client_returning(status=403)
+        self.assertEqual(await search_mojeek("q", client=client), [])
+        with record_search_attempts() as attempts:
+            await search_mojeek("q", client=client)
+        self.assertEqual(len(attempts), 1)
+        self.assertEqual(attempts[0]["provider"], "mojeek")
+        self.assertEqual(attempts[0]["outcome"], "403")
 
     async def test_cancellation_does_not_start_fallback(self):
         started = asyncio.Event()

@@ -673,8 +673,9 @@ transport tests use local loopback only. `eval_live_retrieval.py` runs 66
 natural-language and adversarial questions against the public web without an LLM.
 Metric version 2 measures answer coverage, safe trap handling, run-to-run stability,
 answerable runs containing both `ok` and expected evidence, ready-state precision,
-and p50/p95 latency. It records configured and actual provider paths. Save dated
-results; public search and publisher availability vary between runs.
+and p50/p95 latency. It records configured and actual provider paths, plus
+per-provider request outcomes (HTTP status, exception or cancellation). Save
+dated results; public search and publisher availability vary between runs.
 
 The latest retained full keyless gate is the [2026-10-27 GitHub-runner run](../evals/results/live-retrieval-github-runner-2026-10-27.json):
 66 cases, three repeats, 100% trap-safe handling and 8.2 s p95 latency, but 72.2%

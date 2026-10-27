@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Hedge keyless general-web search: Mojeek and then Yahoo start when earlier
+  providers fail or return nothing, or after 1.5 s, instead of each waiting for
+  a fixed third of the 7 s budget. All attempts share the budget and the first
+  non-empty result wins. The live retrieval gate now records each provider's
+  request outcomes (HTTP status, exception or cancellation) per run.
 - Add a manually dispatched `live retrieval gate` workflow that runs the frozen
   66-case keyless gate on a GitHub-hosted runner and uploads its raw metrics.
   Raise dependency floors to certifi 2026.10.23 and click 8.5.
