@@ -165,24 +165,31 @@ ANSWER_GUIDANCE = (
 )
 
 
-def _before_answering(
-    item: dict[str, Any], suggestions: list[dict[str, Any]]
-) -> list[str]:
-    """What to do for this question before answering, most important first."""
+def _before_answering(item: dict[str, Any], remaining_steps: int) -> list[str]:
+    """What to do for this question before answering, most important first.
+
+    Built from the question's evidence state (reading_needs), not from the
+    capped suggestion list, so host follow-ups or a spent budget never hide it.
+    """
     steps = [
-        f"{_BEFORE_ANSWERING[s['kind']]} (suggested search: {s['query']})."
-        for s in suggestions
-        if s["question_id"] == item["question_id"] and s["kind"] in _BEFORE_ANSWERING
+        f"{_BEFORE_ANSWERING[need['kind']]} (suggested search: {need['query']})."
+        for need in item.get("reading_needs", [])
+        if need["kind"] in _BEFORE_ANSWERING
     ]
     if item["counterevidence"]["status"] == "none_linked":
         steps.append(
             "Counterevidence was read but none is cited: say in the answer what it "
             "showed or why it does not apply."
         )
-    if steps:
+    if steps and remaining_steps:
         steps.append(
             "Batch the URLs you find into one read: urls=[...], up to five, one "
             "retrieval step."
+        )
+    elif steps:
+        steps.append(
+            "No retrieval budget remains: state these missing readings as gaps "
+            "in the answer."
         )
     return steps
 
@@ -214,6 +221,14 @@ def _answer_material(
                 "supporting_urls": cited(claim["supporting_passage_ids"]),
                 "challenging_urls": cited(claim["challenging_passage_ids"]),
                 **({"reason": claim["rationale"]} if claim.get("rationale") else {}),
+                # Conditions and the origin of each preference must survive into
+                # the answer, or a host assumption reads as the user's requirement.
+                **(
+                    {"assumptions": claim["assumptions"]}
+                    if claim.get("assumptions")
+                    else {}
+                ),
+                **({"criteria": claim["criteria"]} if claim.get("criteria") else {}),
             }
             for claim in review["claims"]
         ],
@@ -284,7 +299,7 @@ def research_update(
     )
     update.update(
         question=_question_update(item) if item else None,
-        before_answering=_before_answering(item, plan["suggested_queries"])
+        before_answering=_before_answering(item, plan["remaining_steps"])
         if item
         else [],
         open_questions=[

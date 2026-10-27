@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 from .research_claims import claim_gaps, claim_index, validate_claims
 from .research_errors import ResearchRequestError
-from .search_guidance import question_attempts, suggest_searches
+from .search_guidance import question_attempts, reading_needs, suggest_searches
 from .source_assessment import (
     BACKGROUND_KINDS,
     counterevidence_summary,
@@ -223,17 +223,18 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
         public_review = review.copy() if review else None
         if public_review:
             public_review.pop("basis_fingerprints", None)
-        items.append(
-            dict(
-                question_id=question_id,
-                question=question,
-                review=public_review,
-                gaps=gaps,
-                attempts=len(attempts),
-                claim_support=question_claim_support(notebook, question_id),
-                counterevidence=counterevidence,
-            )
+        item: QuestionPlan = dict(
+            question_id=question_id,
+            question=question,
+            review=public_review,
+            gaps=gaps,
+            attempts=len(attempts),
+            claim_support=question_claim_support(notebook, question_id),
+            counterevidence=counterevidence,
+            reading_needs=[],
         )
+        item["reading_needs"] = reading_needs(notebook, item)
+        items.append(item)
     ready = all(not item["gaps"] for item in items)
     remaining = max(0, notebook.max_steps - len(notebook.attempts))
     return dict(

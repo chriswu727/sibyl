@@ -2,11 +2,12 @@
 
 ## Unreleased
 
-- Answer guidance: every update lists `before_answering` steps (an independent,
-  primary or corroborating source, a counterevidence read) drawn from the
-  question's suggested searches, and an assessment update carries
-  `answer_material`: the recorded claims with source URLs instead of Sibyl IDs,
-  the counterevidence status and note, and open gaps. The MCP instructions ask
+- Answer guidance: each question lists `reading_needs` (an initial, primary,
+  independent, counterevidence or corroborating source it still lacks), every
+  update turns them into `before_answering` steps, and an assessment update
+  carries `answer_material`: the recorded claims with source URLs instead of
+  Sibyl IDs, recommendation assumptions and criteria with their origin, the
+  counterevidence status and note, and open gaps. The MCP instructions ask
   hosts to read two independent publishers and one counterevidence source
   before answering and to cite URLs. The first paired host evaluation found
   Sibyl-assisted answers relying on fewer sources and thinner counterevidence.

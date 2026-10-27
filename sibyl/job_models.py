@@ -60,6 +60,7 @@ class QuestionPlan(TypedDict):
     attempts: int
     claim_support: list[dict[str, Any]]
     counterevidence: dict[str, Any]
+    reading_needs: list[dict[str, str]]
 
 
 SuggestionKind = Literal[
