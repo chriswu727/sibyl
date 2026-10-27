@@ -390,6 +390,36 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### Host-source retrieval gate, first run, 2026-10-27
+
+The [retained first run](../evals/results/host-source-retrieval-2026-10-27.json)
+of the [frozen protocol](#host-source-retrieval-gate-protocol) used the
+`live retrieval gate` workflow (`gate=host_sources`) on a GitHub-hosted runner
+at commit d9a8926, with the case file's recorded SHA-256. It exited 1 with
+`passed=false`.
+
+| Metric | Result | Gate | Outcome |
+|---|---:|---:|---|
+| Answer coverage | 55.6% | 80% | Fail |
+| Trap-safe rate | 83.3% | 80% | Pass |
+| Repeat stability | 98.5% | 90% | Pass |
+| Answerable ready rate | 9.3% | 75% | Fail |
+| Ready-state answer precision | 100% | 95% | Pass |
+| p95 retrieval latency | 2.2 s | 30 s | Pass |
+
+307 of 594 page fetches failed. Every fetch of the 52 `en.wikipedia.org` URLs
+returned HTTP 403: cases with three Wikipedia URLs read no page, and cases with
+none averaged 2.0 readable pages of 3. Page reads send rotating browser
+User-Agent strings and retry a 403 with another one, while Sibyl's search
+requests identify themselves as `Sibyl/0.4`; in the keyless runs on the same
+runner type, Wikipedia's search API, called with that identifying User-Agent,
+always returned 200. Wikimedia's policy asks automated clients for an
+identifying User-Agent. The second cause is the readiness rule: of 162 answerable
+runs, 90 had the gold answer in evidence but only 15 were sufficient; 54 had it
+in evidence rated `limited`, mostly for a single substantive domain or fewer
+than two substantive sources. This is one run; the URL list and thresholds stay
+frozen.
+
 ### Hedged-search live gate, 2026-10-27
 
 The [retained second run](../evals/results/live-retrieval-hedged-2026-10-27.json) used the same workflow, runner

@@ -174,7 +174,11 @@ agent 的订阅不包含 Tavily 的费用。参见[安装说明](llms-install.md
 Sibyl 的差异是持久化、由证据推动的研究流程，不是拥有更强的模型。
 是否比内置搜索产生更好的答案，还需要同一宿主、相同来源访问条件和预算下的对照评测。
 
-[最新实时检索记录](evals/results/live-retrieval-hedged-2026-10-27.json)
+发布用检索门槛（每个问题读取三个固定的宿主搜索 URL）的[首次运行](evals/results/host-source-retrieval-2026-10-27.json)未通过：
+答案覆盖率 55.6%（门槛 80%），可回答问题的 ready 比例 9.3%（门槛 75%）；
+稳定性 98.5%，ready 状态的答案精度 100%。在 GitHub 运行器上，所有 Wikipedia 页面读取都返回 HTTP 403，
+多数含答案的读取被评为 `limited`。
+[最新免密钥发现记录](evals/results/live-retrieval-hedged-2026-10-27.json)
 在 GitHub 托管的运行器上对 66 个问题进行了三次重复测试：陷阱问题全部安全处理，
 但答案覆盖率为 74.1%（门槛 80%），可回答问题的 ready 比例为 35.2%（门槛 75%），
 重复稳定性为 48.5%（门槛 90%），ready 状态的答案精度为 90.5%（门槛 95%），均未达标。

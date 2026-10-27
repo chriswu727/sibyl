@@ -739,6 +739,14 @@ With `--host-sources`, each case instead reads its three frozen host-search URLs
 and counts as ready only with sufficient evidence (metric `host-source-1`); this
 is the release gate, under the [frozen protocol](LAUNCH_READINESS.md#host-source-retrieval-gate-protocol).
 
+The first run of the release gate, the
+[2026-10-27 host-source run](../evals/results/host-source-retrieval-2026-10-27.json),
+failed: 55.6% answer coverage and 9.3% answerable readiness, with 98.5%
+stability, 100% ready-state precision, 83.3% trap-safe handling and 2.2 s p95
+latency. Every Wikipedia page read from the runner returned HTTP 403, and most
+answer-bearing reads were rated `limited` rather than sufficient. See
+[launch readiness](LAUNCH_READINESS.md#host-source-retrieval-gate-first-run-2026-10-27).
+
 The latest retained full keyless gate is the [2026-10-27 hedged-search run](../evals/results/live-retrieval-hedged-2026-10-27.json):
 66 cases, three repeats, 100% trap-safe handling and 10.1 s p95 latency, but 74.1%
 answer coverage (gate 80%), 35.2% answerable readiness (gate 75%), 48.5% repeat

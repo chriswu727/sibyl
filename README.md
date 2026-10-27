@@ -202,7 +202,12 @@ The practical difference is **persistent, evidence-directed research**, not a
 claim to have a better model. Whether it produces better answers than built-in
 search still needs a paired same-host, same-provider, same-budget evaluation.
 
-The latest [live retrieval run](evals/results/live-retrieval-hedged-2026-10-27.json)
+The first run of the release retrieval gate, which reads three frozen
+host-search URLs per question, [failed](evals/results/host-source-retrieval-2026-10-27.json):
+55.6% answer coverage (gate 80%) and 9.3% answerable readiness (gate 75%), with
+98.5% stability and 100% ready-state precision. Every Wikipedia page read from the
+GitHub runner returned HTTP 403, and most answer-bearing reads were rated
+`limited`. The latest [keyless discovery run](evals/results/live-retrieval-hedged-2026-10-27.json)
 tested 66 questions three times on a GitHub-hosted runner. It handled every trap
 question safely but failed answer coverage (74.1% vs 80%), answerable readiness
 (35.2% vs 75%), repeat stability (48.5% vs 90%) and ready-state answer precision
