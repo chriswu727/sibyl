@@ -390,6 +390,32 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### Host-source retrieval gate, second run, 2026-10-27
+
+The [retained second run](../evals/results/host-source-retrieval-honest-ua-2026-10-27.json)
+used the same workflow, case file (same SHA-256) and thresholds at commit
+d8f54ac, after #66 made page reads identify as Sibyl instead of rotating browser
+User-Agents. It exited 1 with `passed=false`; only answerable readiness failed.
+
+| Metric | Result | Gate | Outcome | First run |
+|---|---:|---:|---|---:|
+| Answer coverage | 87.0% | 80% | Pass | 55.6% |
+| Trap-safe rate | 91.7% | 80% | Pass | 83.3% |
+| Repeat stability | 98.5% | 90% | Pass | 98.5% |
+| Answerable ready rate | 30.2% | 75% | Fail | 9.3% |
+| Ready-state answer precision | 100% | 95% | Pass | 100% |
+| p95 retrieval latency | 4.0 s | 30 s | Pass | 2.2 s |
+
+Page fetch failures fell from 307 to 124 of 594, and every Wikipedia URL was
+read. Only two cases (`adv09`, `adv12`) read fewer pages than in the first run,
+and both had varied between repeats there. Of 162 answerable runs, 141 had the
+gold answer in evidence and 49 were ready; 71 had it in evidence rated
+`limited`, mostly because every readable source came from one domain (65) or
+fewer than two substantive sources were read (38). Ready runs were always
+correct. Readiness is the remaining gate failure, and it comes from the frozen
+readiness rule applied to three-URL reads, not from failed reads; changing that
+rule requires a new dated protocol committed before its run.
+
 ### Host-source retrieval gate, first run, 2026-10-27
 
 The [retained first run](../evals/results/host-source-retrieval-2026-10-27.json)

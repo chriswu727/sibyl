@@ -106,10 +106,12 @@ targeted reading fixes as a complete-product pass.
 
 The first [host-source release gate run](../evals/results/host-source-retrieval-2026-10-27.json)
 also fails (55.6% coverage, 9.3% answerable readiness; 98.5% stability, 100%
-precision). Next: page reads must identify Sibyl honestly instead of rotating
-browser User-Agents (every Wikipedia read returned 403 on the runner), and the
-readiness rule's treatment of single-domain answer-bearing reads needs review
-before any rule change is frozen and rerun.
+precision). After page reads identified Sibyl honestly (#66), the
+[second run](../evals/results/host-source-retrieval-honest-ua-2026-10-27.json) passes
+every threshold except answerable readiness (30.2%; 87.0% coverage, 100%
+precision). Next: review the readiness rule's treatment of single-domain
+answer-bearing reads; any change must be frozen in a new dated protocol before
+its run.
 
 Claim-based human reports now present the generated claim narrative once, while
 JSON retains compatible summary/findings/analysis fields and the full ledger.
