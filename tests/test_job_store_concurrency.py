@@ -1,5 +1,7 @@
-"""Shared research stores across real local processes. POSIX only: Windows
-locking paths are not exercised here and need a real Windows run."""
+"""Shared research stores across real local processes.
+
+These run on POSIX (flock) and Windows (msvcrt) CI runners; only the checks that
+depend on POSIX shared locks are skipped on Windows."""
 
 import asyncio
 import errno
@@ -71,7 +73,6 @@ def payload(status="awaiting_input"):
     }
 
 
-@unittest.skipUnless(os.name == "posix", "POSIX flock semantics")
 class TestSharedJobStore(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
@@ -187,10 +188,30 @@ class TestSharedJobStore(unittest.TestCase):
             with self.assertRaises(OwnerUnknown):
                 observer.recover(seen)
             self.assertTrue(observer.running_elsewhere(seen))
-        with mock.patch("fcntl.flock", side_effect=OSError(errno.EIO, "io")):
+        lock_call = "msvcrt.locking" if sys.platform == "win32" else "fcntl.flock"
+        with mock.patch(lock_call, side_effect=OSError(errno.EIO, "io")):
             with self.assertRaises(OwnerUnknown):
                 observer.recover(seen)
         self.assertEqual(observer.get(job["job_id"])["status"], "running")
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows byte-range locks")
+    def test_older_runtime_lock_blocks_startup_on_windows(self):
+        import msvcrt
+
+        research = self.root / ".research"
+        research.mkdir()
+        legacy = os.open(research / "owner.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            os.write(legacy, b"0")
+            os.lseek(legacy, 0, os.SEEK_SET)
+            msvcrt.locking(legacy, msvcrt.LK_NBLCK, 1)
+            with self.assertRaisesRegex(CapacityError, "older Sibyl runtime"):
+                JobStore(self.root)
+            os.lseek(legacy, 0, os.SEEK_SET)
+            msvcrt.locking(legacy, msvcrt.LK_UNLCK, 1)
+            self.store()
+        finally:
+            os.close(legacy)
 
     def test_corrupt_owner_record_is_not_taken_over(self):
         store = self.store()
@@ -216,6 +237,7 @@ class TestSharedJobStore(unittest.TestCase):
         self.assertTrue(fresh.exists())
         self.assertTrue((instances / f"{live.instance_id}.lock").exists())
 
+    @unittest.skipUnless(os.name == "posix", "shared directory locks are POSIX-only")
     def test_older_exclusive_runtime_blocks_startup_and_vice_versa(self):
         import fcntl
 
@@ -260,7 +282,6 @@ class TestSharedJobStore(unittest.TestCase):
             one.claim(job)
 
 
-@unittest.skipUnless(os.name == "posix", "POSIX flock semantics")
 class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.directory = tempfile.TemporaryDirectory()

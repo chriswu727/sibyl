@@ -1,7 +1,6 @@
 """Crash, failed persistence, and bounded concurrency recovery without network calls."""
 
 import asyncio
-import os
 import sqlite3
 import sys
 import tempfile
@@ -150,7 +149,6 @@ class TestResearchFaults(unittest.IsolatedAsyncioTestCase):
                         task.cancel()
                     await asyncio.gather(*tasks, return_exceptions=True)
 
-    @unittest.skipUnless(os.name == "posix", "POSIX kill/owner-lock recovery")
     async def test_process_kill_releases_owner_and_preserves_consumed_budgets(self):
         await self.runtime.aclose()
         process = await asyncio.create_subprocess_exec(

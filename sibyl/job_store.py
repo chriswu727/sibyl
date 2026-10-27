@@ -154,7 +154,8 @@ class JobStore:
         descriptor = os.open(
             path, os.O_RDWR | flags | getattr(os, "O_NOFOLLOW", 0), 0o600
         )
-        os.fchmod(descriptor, 0o600)
+        if hasattr(os, "fchmod"):  # Windows has it only from Python 3.13.
+            os.fchmod(descriptor, 0o600)
         return descriptor
 
     def _exclude_legacy_owner(self) -> int | None:
