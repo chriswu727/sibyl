@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 from .research_claims import claim_gaps, claim_index, validate_claims
 from .research_errors import ResearchRequestError
 from .search_guidance import question_attempts, suggest_searches
+from .source_assessment import BACKGROUND_KINDS, question_claim_support
 from .source_policy import source_kind
 
 
@@ -204,8 +205,7 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
             ]
             substantive = [index[ref][0] for ref in refs if ref in index]
             if not substantive or all(
-                source_kind(s, notebook.preferred_domains)
-                in {"encyclopedia", "community", "scholarly_metadata"}
+                source_kind(s, notebook.preferred_domains) in BACKGROUND_KINDS
                 for s in substantive
             ):
                 gaps.append(
@@ -230,6 +230,7 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
                 review=public_review,
                 gaps=gaps,
                 attempts=len(attempts),
+                claim_support=question_claim_support(notebook, question_id),
             )
         )
     ready = all(not item["gaps"] for item in items)

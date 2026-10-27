@@ -58,6 +58,7 @@ class QuestionPlan(TypedDict):
     review: EvidenceReview | None
     gaps: list[str]
     attempts: int
+    claim_support: list[dict[str, Any]]
 
 
 SuggestionKind = Literal[
@@ -67,6 +68,7 @@ SuggestionKind = Literal[
     "independent_source",
     "counterevidence",
     "recency",
+    "corroboration",
 ]
 
 

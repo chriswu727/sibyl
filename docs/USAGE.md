@@ -369,6 +369,7 @@ and a `reason` naming the gap that produced it:
 | `primary_source` | Only encyclopedia, community or metadata sources support the question; adds `site:` a preferred domain, "original paper" (academic) or "official source" |
 | `independent_source` | All evidence comes from one domain or one content cluster; excludes that domain |
 | `counterevidence` | No counterevidence read has returned a substantive source |
+| `corroboration` | A supported or disputed fact cites a single source; the claim's key terms, excluding that domain |
 | `recency` | The question asks about current information and no read source is dated this year |
 
 These are deterministic templates over the recorded state, not a model and not a
@@ -380,6 +381,25 @@ Budget exhaustion returns no more suggestions and asks for review or explicit
 limitations; it never silently grants a quality pass. Resuming a checkpoint does
 not reset the budget or lose the earlier rounds.
 
+
+### Source support per claim
+
+Each `research_plan.questions[]` item has `claim_support`: one entry per
+supported or disputed fact, with the number of cited sources, their
+`source_kinds`, `domains` and `flags`.
+
+| Flag | Meaning | Effect |
+|---|---|---|
+| `background_only` | Every cited source is encyclopedia, community or scholarly metadata | A gap; the job is not ready until a primary source is cited or the claim is marked unresolved |
+| `single_source` | The fact cites one source | A `corroboration` suggestion; does not block completion |
+
+Reviews already reject links to two copies of one text, so each cited source is
+a distinct content cluster. Source kinds are URL heuristics: `preferred_primary`
+(a preferred domain), `institutional` (government, intergovernmental and EU
+hosts), `documentation_candidate`, `research_candidate`, `preprint`,
+`encyclopedia`, `community`, `scholarly_metadata` and `web`. They are not
+credibility, authority or peer-review verdicts.
+Reports repeat the support line under each fact.
 
 ### Comparing with ordinary web search
 

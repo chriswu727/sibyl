@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Source assessment per claim: `research_plan.questions[].claim_support` lists
+  each supported or disputed fact's cited sources, source kinds, domains and
+  `background_only` / `single_source` flags, and reports state the same under
+  each fact. A fact supported only by encyclopedia, community or metadata
+  sources is now a completion gap. Single-source facts get a `corroboration`
+  search suggestion. Government, intergovernmental and EU hosts get the
+  `institutional` source kind.
 - Search guidance: `research_plan.suggested_queries` is now built from each
   question's recorded state instead of fixed suffixes. Suggestions have a
   `kind` (`host_follow_up`, `initial`, `primary_source`, `independent_source`,

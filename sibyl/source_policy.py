@@ -24,6 +24,14 @@ def normalize_domains(domains: list[str]) -> list[str]:
     return list(dict.fromkeys(normalized))
 
 
+# Government, military and intergovernmental hosts publish primary records more
+# often than not. This is a routing hint from the hostname alone.
+_INSTITUTIONAL_HOST_RE = re.compile(
+    r"(?:^|\.)(?:gov|mil|int)$|(?:^|\.)(?:gov|gob|gouv|govt|go)\.[a-z]{2}$"
+    r"|(?:^|\.)europa\.eu$"
+)
+
+
 def matches_domain(host: str, domains: list[str] | tuple[str, ...]) -> bool:
     return any(host == domain or host.endswith("." + domain) for domain in domains)
 
@@ -62,6 +70,8 @@ def source_kind(source, preferred_domains=()) -> str:
         return "research_candidate"
     if matches_domain(host, preferred_domains):
         return "preferred_primary"
+    if _INSTITUTIONAL_HOST_RE.search(host):
+        return "institutional"
     if host.startswith(("docs.", "developers.", "api-docs.")) or "/docs/" in path:
         return "documentation_candidate"
     return "web"
@@ -71,6 +81,7 @@ def source_priority(source, policy="primary", preferred_domains=()) -> float:
     kind = source_kind(source, preferred_domains)
     weights = {
         "preferred_primary": 3.0,
+        "institutional": 2.5,
         "documentation_candidate": 2.5,
         "research_candidate": 3.0,
         "preprint": 2.8,

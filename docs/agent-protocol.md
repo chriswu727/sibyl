@@ -100,6 +100,8 @@ The useful agent output already exists before report generation:
 disputed or unresolved), `supporting_passage_ids`, `challenging_passage_ids`,
 `counterevidence_note`, and `follow_up_queries`. Read the corresponding question's
 `gaps`: a stored conclusion may need reassessment after new retrieval.
+`claim_support` lists, for each supported or disputed fact, the cited source
+count, source-kind hints, domains and `background_only` / `single_source` flags.
 
 This ledger can inform a downstream coding task, comparison, or decision without
 calling `complete_research`. The job remains resumable and retained in local
