@@ -11,13 +11,12 @@ from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
-from mcp.server.fastmcp.exceptions import ToolError
 from research_fixtures import evidence_bundle
 
 from sibyl.async_cache import CapacityError
 from sibyl.config import Config
 from sibyl.job_store import JobStore
-from sibyl.mcp_server import configure_tool_profile, create_server
+from sibyl.mcp_server import create_server
 from sibyl.report_models import ResearchReport
 from sibyl.research_state import ResearchBudgetExceeded, ResearchNotebook
 from sibyl.runtime import RuntimePolicy, SibylRuntime
@@ -91,6 +90,31 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         ):
             return await self.jobs.continue_job(job["job_id"], "Focused question")
 
+    def assess(self, job, text="The source reports the focused evidence."):
+        passage = job["sources"][0]["passage_ids"][0]
+        return self.jobs.assess(
+            job["job_id"],
+            job["revision"],
+            "Q1",
+            "supported",
+            [passage],
+            [],
+            "Bounded conclusion.",
+            "No counterevidence round was run.",
+            claims=[
+                {
+                    "claim_id": "Q1.C1",
+                    "kind": "fact",
+                    "status": "supported",
+                    "text": text,
+                    "supporting_passage_ids": [passage],
+                    "quotes": [
+                        {"passage_id": passage, "text": "Evidence Focused question 0"}
+                    ],
+                }
+            ],
+        )
+
     async def test_exact_passage_scope_and_budgeted_read_more_are_read_only(self):
         bundle = evidence_bundle("Focused question", 1)
         source = bundle.sources[0]
@@ -149,21 +173,17 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.jobs.get(job["job_id"]), before)
 
     async def test_legacy_completed_autonomous_report_can_export(self):
-        snapshot = await self.retrieve(self.start())
+        snapshot = self.assess(await self.retrieve(self.start()))
         self.jobs.complete(
-            snapshot["job_id"],
-            snapshot["revision"],
-            "Summary [Source 1]",
-            ["Finding [Source 1]"],
-            "",
-            [],
-            allow_incomplete=True,
+            snapshot["job_id"], snapshot["revision"], allow_incomplete=True
         )
         job = self.jobs.store.get(snapshot["job_id"])
         job["mode"] = "autonomous"
         self.jobs.store.save(job)
-        server = create_server(self.runtime, agent_mode=True)
-        await server.call_tool("save_report", {"job_id": job["job_id"]})
+        server = create_server(self.runtime)
+        result = await server.call_tool("save_report", {"job_id": job["job_id"]})
+        self.assertFalse(result.isError, str(result))
+        self.assertEqual(result.structuredContent["status"], "saved")
         self.assertEqual(len(list(Path(self.directory.name).glob("*.md"))), 1)
 
     async def test_preferred_domains_reach_discovery(self):
@@ -184,12 +204,10 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         self.jobs = self.runtime.research_jobs
         restored = self.jobs.get(job["job_id"])
         self.assertEqual(restored["evidence"], job["evidence"])
+        restored = self.assess(restored)
         completed = self.jobs.complete(
             job["job_id"],
             restored["revision"],
-            "Summary [Source 1]",
-            ["Finding [Source 1]"],
-            "",
             ["One question remains unresolved."],
             allow_incomplete=True,
         )
@@ -198,12 +216,18 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
             completed["report"]["verification_scope"], "citation_targets_only"
         )
         server = create_server(self.runtime)
-        await server.call_tool(
+        exported = await server.call_tool(
             "save_report", {"job_id": job["job_id"], "format": "json"}
         )
+        self.assertFalse(exported.isError, str(exported))
         path = next(Path(self.directory.name).glob("*.json"))
+        self.assertEqual(
+            Path(exported.structuredContent["artifacts"][0]["path"]), path.resolve()
+        )
         report = ResearchReport.from_dict(json.loads(path.read_text(encoding="utf-8")))
         self.assertEqual(report.status, "partial")
+        self.assertIn("One question remains unresolved.", report.limitations)
+        self.assertEqual(report.claims[0]["claim_id"], "Q1.C1")
         self.assertFalse(report.research_plan["ready_to_complete"])
         self.assertEqual(
             report.sources[0].passage_ids, completed["sources"][0]["passage_ids"]
@@ -213,35 +237,33 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await self.jobs.continue_job(job["job_id"], "mutate completed")
 
-    async def test_stale_revision_cannot_bind_prose_to_changed_citations(self):
-        initial = self.start()
-        job = await self.retrieve(initial)
+    async def test_stale_revision_cannot_bind_claims_to_changed_citations(self):
+        assessed = self.assess(await self.retrieve(self.start()))
+        job = await self.retrieve(assessed)
+        self.assertGreater(job["revision"], assessed["revision"])
         with self.assertRaisesRegex(ValueError, "revision"):
             self.jobs.complete(
-                job["job_id"],
-                initial["revision"],
-                "Summary [Source 1]",
-                ["F [Source 1]"],
-                "",
-                [],
+                job["job_id"], assessed["revision"], allow_incomplete=True
             )
+        self.assertIsNone(self.jobs.store.get(job["job_id"])["report"])
 
-    async def test_missing_and_unknown_citations_are_rejected(self):
-        job = await self.retrieve(self.start())
-        for summary, finding in [
-            ("No citation", "F [Source 1]"),
-            ("S [Source 1]", "F [Source 999]"),
-        ]:
-            with self.assertRaises(ValueError):
+    async def test_unknown_claims_and_citations_are_rejected(self):
+        job = self.assess(await self.retrieve(self.start()))
+        before = self.jobs.store.get(job["job_id"])
+        with self.assertRaisesRegex(ValueError, "Use passage IDs"):
+            self.assess(job, "Unknown target [Source 999]")
+        for claim_ids in (["Q1.C9"], [], ["Q1.C1", "Q9.C1"]):
+            with (
+                self.subTest(claim_ids=claim_ids),
+                self.assertRaisesRegex(ValueError, "existing claim IDs"),
+            ):
                 self.jobs.complete(
                     job["job_id"],
                     job["revision"],
-                    summary,
-                    [finding],
-                    "",
-                    [],
                     allow_incomplete=True,
+                    claim_ids=claim_ids,
                 )
+        self.assertEqual(self.jobs.store.get(job["job_id"]), before)
 
     async def test_failed_step_uses_budget_and_reports_failure(self):
         job = self.start(max_steps=1)
@@ -324,23 +346,21 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
 
     async def test_nested_oversized_input_is_rejected_at_mcp_boundary(self):
         server = create_server(self.runtime)
-        with self.assertRaises(ToolError):
-            await server.call_tool(
-                "start_research", {"question": "q", "sub_questions": ["x" * 10001]}
-            )
+        result = await server.call_tool(
+            "start_research", {"question": "q", "sub_questions": ["x" * 10001]}
+        )
+        self.assertTrue(result.isError)
+        self.assertEqual(result.structuredContent["view"], "error")
+        self.assertIn("10000 characters", result.structuredContent["error"]["message"])
+        self.assertNotIn("x" * 100, result.content[0].text)
         self.assertFalse(self.jobs.store.list_jobs())
-
-    async def test_keyless_profile_includes_full_host_workflow(self):
-        server = create_server(self.runtime)
-        with mock.patch.dict(os.environ, {"SIBYL_MCP_PROFILE": "keyless"}):
-            await configure_tool_profile(server, self.runtime)
-        names = {tool.name for tool in await server.list_tools()}
-        self.assertTrue({"start_research", "complete_research", "save_report"} <= names)
-        self.assertNotIn("research", names)
 
     async def test_mcp_job_response_has_structured_content(self):
         server = create_server(self.runtime)
-        _, structured = await server.call_tool("start_research", {"question": "q"})
+        result = await server.call_tool("start_research", {"question": "q"})
+        self.assertFalse(result.isError)
+        structured = result.structuredContent
+        self.assertEqual(json.loads(result.content[0].text), structured)
         self.assertEqual(structured["status"], "awaiting_input")
         self.assertTrue(structured["job_id"])
 

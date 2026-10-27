@@ -52,7 +52,7 @@ python -m venv .venv
 .venv/bin/sibyl-mcp --list-tools
 ```
 
-最后一条命令应显示 `profile: agent` 和 8 个工具。对于接受 `mcpServers` JSON 的客户端，
+最后一条命令应列出 8 个工具。对于接受 `mcpServers` JSON 的客户端，
 可以使用以下配置，并将两个路径替换为本机的绝对路径。`SIBYL_OUTPUT_ROOT` 可省略；
 省略时研究数据保存在当前用户的数据目录，由本机的多个会话共享：
 
@@ -70,9 +70,8 @@ python -m venv .venv
 ```
 
 Windows 的可执行文件位于 `.venv\Scripts\sibyl-mcp.exe`。
-具体配置语法取决于宿主。需要可读文本响应的客户端可以添加
-`"args": ["--profile", "keyless"]`，使用 12 工具的兼容入口及完整文本响应。
-这不是远程 HTTP MCP 服务。
+具体配置语法取决于宿主。结果以 MCP `structuredContent` 返回，并同时附上相同的 JSON 文本。
+原有的 `--profile keyless` 文本兼容入口已移除。这不是远程 HTTP MCP 服务。
 
 默认搜索不需要 key。可选 Tavily 搜索使用独立凭证，并可能产生额外费用；
 agent 的订阅不包含 Tavily 的费用。参见[安装说明](llms-install.md)。
@@ -115,11 +114,10 @@ agent 的订阅不包含 Tavily 的费用。参见[安装说明](llms-install.md
 需要报告时，向 `complete_research` 提交当前 revision 和可选的 `claim_ids`，
 再调用 `save_report(job_id=..., format="md")`。报告从宿主已经记录的主张生成，
 自动带入引用、前提、标准和假设；未被选择的未知或争议信息仍然保留。
-还需要 JSON 时，再调用一次 `save_report(format="json", job_id=...)` 并使用返回的路径；
-旧选项 `format="both"` 表示 PDF 加 Markdown，不包含 JSON，不能通过替换后缀猜测文件路径。
-agent 模式的导出结果会列出已确认的真实路径、格式、大小、哈希及各格式的失败信息；
+还需要 JSON 时，再调用一次 `save_report(format="json", job_id=...)` 并使用返回的路径，
+不能通过替换后缀猜测文件路径。导出结果会列出已确认的真实路径、格式、大小、哈希及各格式的失败信息；
 请求失败时也会返回结构化修复指引和可读取到的当前 revision，不会悄悄接受无效主张。
-旧任务继续使用原来的文字定稿接口。
+旧版（contract-1）任务不能再定稿，已完成的仍可读取和导出。
 引用检查验证目标是否存在，**不证明原文支持该主张，更不保证主张符合现实**。
 研究不完整时必须保留缺口；`allow_incomplete=true` 会产生 partial 报告。
 任务 completed 表示报告已定稿，不代表所有结论都正确。定稿报告不可修改。
@@ -160,8 +158,8 @@ agent 模式的导出结果会列出已确认的真实路径、格式、大小�
 ## 从旧架构升级
 
 源码已经移除 LiteLLM、模型提供商配置、自主执行、通用模型分析、SWOT/时间线生成和金融/图表工具。
-`report` 扩展现在仅表示 PDF 渲染。使用默认 `agent` 或兼容 `keyless` 入口；
-旧的 `report`、`finance` 和 `full` profile 会被拒绝。
+`report` 扩展现在仅表示 PDF 渲染。Sibyl 只提供一套工具；
+旧的 `keyless`、`report`、`finance` 和 `full` profile 会被拒绝。
 
 建议新建虚拟环境：升级软件包不会自动卸载旧的间接依赖。
 删除 `SIBYL_CONFIG` 中的旧模型设置，不要把宿主登录 token 交给 Sibyl。

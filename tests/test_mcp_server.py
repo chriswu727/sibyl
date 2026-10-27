@@ -1,17 +1,13 @@
 """MCP report safety and request-isolation tests. No network."""
 
 import asyncio
+import json
 import unittest
 from unittest import mock
 
 import sibyl.mcp_server as mcp_server
 from sibyl.evidence import BundleDiagnostics, SourceBundle
-from sibyl.mcp_server import (
-    _format_report,
-    gather_bundle,
-    gather_evidence,
-    gather_sources,
-)
+from sibyl.mcp_server import _format_report, gather_bundle
 from sibyl.report_models import FindingVerification, ResearchReport
 
 
@@ -81,23 +77,19 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             "sibyl.mcp_tools.gather_source_bundle",
             new=mock.AsyncMock(return_value=self.bundle),
         ):
-            _, structured = await mcp_server.mcp.call_tool(
+            result = await mcp_server.mcp.call_tool(
                 "gather_bundle", {"query": "question"}
             )
 
+        self.assertFalse(result.isError)
+        structured = result.structuredContent
+        self.assertEqual(structured, self.bundle.to_dict())
         self.assertEqual(structured["bundle_id"], "sb_test")
         self.assertEqual(structured["diagnostics"]["sources_returned"], 0)
+        # Text-only hosts receive the same payload.
+        self.assertEqual(json.loads(result.content[0].text), structured)
 
-    async def test_legacy_tool_renders_same_bundle(self):
-        with mock.patch(
-            "sibyl.mcp_tools.gather_source_bundle",
-            new=mock.AsyncMock(return_value=self.bundle),
-        ):
-            result = await gather_sources("question")
-
-        self.assertEqual(result, self.bundle.error)
-
-    async def test_matching_tools_share_inflight_retrieval(self):
+    async def test_equivalent_queries_share_inflight_retrieval(self):
         started = asyncio.Event()
         release = asyncio.Event()
         calls = 0
@@ -110,15 +102,15 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
             return self.bundle
 
         with mock.patch("sibyl.mcp_tools.gather_source_bundle", new=retrieve):
-            legacy = asyncio.create_task(gather_sources(" question "))
+            padded = asyncio.create_task(gather_bundle(" question "))
             await started.wait()
-            structured = asyncio.create_task(gather_bundle("question"))
+            plain = asyncio.create_task(gather_bundle("question"))
             await asyncio.sleep(0)
             release.set()
-            legacy_result, structured_result = await asyncio.gather(legacy, structured)
+            padded_result, plain_result = await asyncio.gather(padded, plain)
 
-        self.assertEqual(legacy_result, self.bundle.error)
-        self.assertIs(structured_result, self.bundle)
+        self.assertIs(padded_result, self.bundle)
+        self.assertIs(plain_result, self.bundle)
         self.assertEqual(calls, 1)
 
     async def test_failed_retrieval_is_not_cached(self):
@@ -152,69 +144,40 @@ class TestMcpRetrieval(unittest.IsolatedAsyncioTestCase):
         self.assertIs(second, recovered)
         self.assertEqual(retrieve.await_count, 2)
 
-    async def test_mcp_registers_research_and_legacy_tools(self):
+    async def test_mcp_registers_one_research_tool_set(self):
         tools = await mcp_server.mcp.list_tools()
         names = {tool.name for tool in tools}
         structured_tool = next(tool for tool in tools if tool.name == "gather_bundle")
-        loop_tool = next(tool for tool in tools if tool.name == "gather_evidence")
 
-        self.assertEqual(len(tools), 12)
-        self.assertTrue(
+        self.assertEqual(
+            names,
             {
                 "start_research",
                 "get_research",
                 "continue_research",
+                "assess_research",
                 "complete_research",
                 "cancel_research",
-            }
-            <= names
+                "save_report",
+                "gather_bundle",
+            },
         )
-        self.assertIn("gather_evidence", names)
-        self.assertIn("gather_bundle", names)
-        self.assertIn("gather_sources", names)
-        self.assertEqual(
-            set(loop_tool.outputSchema["properties"]["status"]["enum"]),
-            {"active", "ready", "budget_exhausted", "invalid_request", "failed"},
-        )
-        self.assertIn("current_step", loop_tool.outputSchema["properties"])
-        self.assertEqual(
-            set(structured_tool.outputSchema["properties"]["status"]["enum"]),
-            {"ok", "insufficient_evidence", "invalid_request", "failed"},
-        )
+        self.assertEqual(len(tools), 8)
         self.assertEqual(
             set(structured_tool.inputSchema["properties"]["ranker"]["enum"]),
             {"lexical", "flashrank", "none"},
         )
-        self.assertEqual(
-            set(
-                structured_tool.outputSchema["$defs"]["EvidenceSource"]["properties"][
-                    "content_origin"
-                ]["enum"]
-            ),
-            {
-                "direct_fetch",
-                "jina_reader",
-                "wikipedia_api",
-                "search_snippet",
-                "crossref_api",
-            },
-        )
+        # The SourceBundle schema is documented, not repeated in every tool list;
+        # tests/test_source_bundle_contract.py checks its consumer enums.
+        self.assertIsNone(structured_tool.outputSchema)
 
-    async def test_evidence_loop_rejects_continuation_without_loop_id(self):
-        result = await gather_evidence(query="atomic query")
-
-        self.assertEqual(result.status, "invalid_request")
-        self.assertEqual(result.next_action, "revise_request")
-        self.assertIn("loop_id is required", result.error)
-
-    async def test_fastmcp_serializes_evidence_loop(self):
-        _, structured = await mcp_server.mcp.call_tool(
-            "gather_evidence", {"query": "atomic query"}
-        )
-
-        self.assertEqual(structured["schema_version"], "1.0")
-        self.assertEqual(structured["status"], "invalid_request")
-        self.assertIsNone(structured["current_step"])
+    async def test_removed_tools_are_unknown(self):
+        for name in ("gather_sources", "gather_evidence", "quick_search", "read_url"):
+            with self.subTest(name=name):
+                result = await mcp_server.mcp.call_tool(name, {"query": "q"})
+                self.assertTrue(result.isError)
+                self.assertEqual(result.structuredContent["view"], "error")
+                self.assertEqual(result.structuredContent["operation"], name)
 
 
 if __name__ == "__main__":

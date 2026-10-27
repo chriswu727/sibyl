@@ -1,6 +1,6 @@
 # Sibyl documentation
 
-These documents follow main. The host-only architecture, default agent profile
+These documents follow main. The host-only architecture, eight-tool set
 and research views are unreleased;
 the published 0.4.0b1 beta does not contain them. PyPI 0.3.0 is an older stable package.
 See [installation](../llms-install.md) and [channel status](RELEASING.md). Sibyl is a local
@@ -33,7 +33,6 @@ preview with unmet quality gates; the older published beta is a different build.
 | [Performance](PERFORMANCE.md) | Resource controls and reproducible measurement |
 | [SourceBundle 1.6](source-bundle-1.6.md) | Structured evidence consumer contract |
 | [SourceBundle fixture](source_bundle_1_6.example.json) | Machine-validated serialization example |
-| [EvidenceLoop 1.0](evidence-loop-1.0.md) | Short-lived atomic retrieval workflow, distinct from persistent jobs |
 
 ## Evaluate and release
 

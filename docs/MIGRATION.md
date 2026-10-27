@@ -15,16 +15,27 @@ the complete-product target and remaining work.
   only; saved autonomous jobs cannot continue, be assessed or be finalized anew.
 - The `research`, `analyze`, `compare`, `swot`, `timeline`, finance and chart tools,
   and the old model-backed CLI/implicit question command.
-- The old `report`, `finance` and `full` MCP profiles. The supported profiles are
-  `agent` (default, eight tools) and `keyless` (twelve compatibility tools).
+- The old `report`, `finance` and `full` MCP profiles, and (2026-10-27, before the
+  first stable release) the `keyless` compatibility profile with its text
+  responses and its `gather_evidence`, `gather_sources`, `quick_search` and
+  `read_url` tools. Sibyl serves one eight-tool set; `--profile keyless` exits
+  with an error instead of silently changing the tool list. Hosts that need web
+  search should use their own and read results with `continue_research(url=...)`;
+  `gather_bundle` remains the keyless fallback.
+- The short-lived evidence loop (`gather_evidence`, EvidenceLoop 1.0 types and its
+  offline evaluation). Persistent jobs replace it.
+- Contract-1 prose completion. Old contract-1 checkpoints get `legacy_contract`
+  from `complete_research`; already completed ones stay readable and exportable.
+  `save_report` now requires `job_id`; the `last_report` fallback and the
+  `format="both"` option were removed.
 - Model and finance dependencies/extras. The `report` extra is PDF rendering only;
   Markdown and JSON are core capabilities.
 - The unreferenced `context.py` single-window helper. Active retrieval and direct
   reads use `passages.select_passages`; tail, body and multilingual selection
   regressions exercise that production path instead.
 
-The retrieval CLI, source bundles, short-lived evidence loop, optional local
-reranker and optional rendering services are not internal researcher models.
+The retrieval CLI, source bundles, optional local reranker and optional
+rendering services are not internal researcher models.
 They remain explicit retrieval capabilities, with separate dependency/network
 disclosures. The persistent host-led job is the primary agent workflow.
 
@@ -37,8 +48,8 @@ disclosures. The persistent host-led job is the primary agent workflow.
 | Stored `depth` / `language` job fields | Preserve checkpoint shape; new MCP jobs do not expose model-effort or internal synthesis controls |
 | Old report fields such as `predictions`, `cross_analysis`, `model_used`, `charts`, `market_data_summary` | Keep historical JSON load/export compatibility; no removed producer is restored |
 | `FindingVerification` | Preserve recorded historical verdicts; rendering identifies them as historical, not fresh validation |
-| Claim contract 1 and prose completion | Existing host checkpoints retain their contract and finalize through the keyless profile; new MCP jobs explicitly use claim contract 2 |
-| `keyless` profile, Python retrieval exports and `last_report` fallback | Explicit supported compatibility, not a hidden autonomous mode |
+| Claim contract 1 checkpoints | Readable and exportable when already completed; no longer finalizable |
+| Python retrieval exports (`sibyl.gather_bundle`, `sibyl.gather_sources`) | Library API for pipelines, not an MCP profile |
 | Dated changelog, experiments, evaluation JSON and original-language evidence | Preserve provenance and failures; historical feature descriptions are not current product promises |
 
 Do not delete old data fields just to eliminate a word from a scan. Removing them

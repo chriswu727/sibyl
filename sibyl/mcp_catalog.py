@@ -52,8 +52,7 @@ class ToolCatalog:
         self.tools = []
 
     def tool(self, **options):
-        """Register a tool; profile="agent" or "keyless" limits it to that surface,
-        so one tool name can have a different schema per profile."""
+        """Register a tool; name= overrides the function name."""
         name = options.get("name") or ""
 
         def register(function):
@@ -116,20 +115,12 @@ class ToolCatalog:
 
         return register
 
-    def _enabled(self, options: dict, agent_mode: bool) -> bool:
-        profile = options.get("profile")
-        return profile is None or profile == ("agent" if agent_mode else "keyless")
-
-    def names(self, agent_mode: bool) -> list[str]:
+    def names(self) -> list[str]:
         return [
-            options.get("name") or function.__name__
-            for function, options in self.tools
-            if self._enabled(options, agent_mode)
+            options.get("name") or function.__name__ for function, options in self.tools
         ]
 
-    def create_server(
-        self, runtime: SibylRuntime, instructions: str, *, agent_mode: bool = False
-    ) -> FastMCP:
+    def create_server(self, runtime: SibylRuntime, instructions: str) -> FastMCP:
         @asynccontextmanager
         async def lifespan(server):
             try:
@@ -141,14 +132,8 @@ class ToolCatalog:
         server_options = dict(
             log_level="WARNING", instructions=instructions, lifespan=lifespan
         )
-        server = (
-            AgentMCP(runtime, **server_options)
-            if agent_mode
-            else FastMCP("sibyl", **server_options)
-        )
+        server = AgentMCP(runtime, **server_options)
         for function, options in self.tools:
-            if not self._enabled(options, agent_mode):
-                continue
             tool_name = options.get("name") or function.__name__
 
             def bind(function, tool_name=tool_name):
@@ -157,7 +142,7 @@ class ToolCatalog:
                     token = current_runtime.set(runtime)
                     try:
                         result = await function(*args, **kwargs)
-                        if agent_mode and isinstance(result, SourceBundle):
+                        if isinstance(result, SourceBundle):
                             # Same SourceBundle payload; the large schema stays in docs.
                             payload = result.to_dict()
                             return CallToolResult(
@@ -165,14 +150,12 @@ class ToolCatalog:
                                 structuredContent=payload,
                             )
                         if isinstance(result, ExportManifest):
-                            if not agent_mode:
-                                return result.text()
                             payload = result.model_dump(mode="json")
                             return CallToolResult(
                                 content=[json_text(payload)],
                                 structuredContent=payload,
                             )
-                        if agent_mode and tool_name in {
+                        if tool_name in {
                             "start_research",
                             "continue_research",
                             "get_research",
@@ -201,15 +184,13 @@ class ToolCatalog:
                             parameter.replace(annotation=hints[parameter.name])
                             for parameter in signature.parameters.values()
                         ],
-                        return_annotation=ExportManifest if agent_mode else str,
+                        return_annotation=ExportManifest,
                     )
                 return invoke
 
-            if agent_mode and function.__annotations__.get("return") is SourceBundle:
+            if function.__annotations__.get("return") is SourceBundle:
                 options = {**options, "structured_output": False}
-            server.tool(
-                **{key: value for key, value in options.items() if key != "profile"}
-            )(bind(function))
+            server.tool(**options)(bind(function))
         return server
 
 

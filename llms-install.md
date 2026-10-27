@@ -42,9 +42,8 @@ shared by your local sessions (see [shared research store](docs/USAGE.md#shared-
 ```
 
 Windows uses `.venv\\Scripts\\sibyl-mcp.exe`. Your host must launch local stdio
-servers. Agent-profile results arrive in MCP `structuredContent` and as the same
-serialized JSON text. For readable text responses and the twelve compatibility
-tools add `"args": ["--profile", "keyless"]`. The default `agent` surface has eight:
+servers. Results arrive in MCP `structuredContent` and as the same serialized
+JSON text. The former keyless text profile was removed. Sibyl exposes eight tools:
 `start_research`, `continue_research`, `get_research`, `assess_research`,
 `complete_research`, `save_report`, `cancel_research`, `gather_bundle`.
 

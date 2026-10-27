@@ -171,13 +171,12 @@ Stale dependency warnings are preserved when exporting a partial report.
 
 ## Compatibility and verification
 
-Old checkpoints without the new contract version load as contract 1 and retain
-their existing prose completion interface through the keyless profile; the agent
-profile's `complete_research` takes no prose fields and returns `legacy_contract`. They are not silently upgraded or
-assigned new verification results. Direct Python `ResearchJobs.start` retains
-contract 1 by default for embedding compatibility; pass `claim_contract_version=2`
-to use the same contract as new MCP jobs. Both MCP profiles create contract-2 jobs.
-No tool or profile was added, and no old checkpoint is deleted.
+Old checkpoints without the new contract version load as contract 1. They can no
+longer be finalized: `complete_research` takes no prose fields and returns
+`legacy_contract`. Completed contract-1 reports stay readable and exportable.
+They are not silently upgraded or assigned new verification results. Every new
+job, including those created through the Python `ResearchJobs.start`, uses
+contract 2. No old checkpoint is deleted.
 
 The [recorded SQLite workflow](examples/sqlite-wal/README.md) runs through real
 MCP stdio with claim-linked facts and a conditional recommendation, report export,

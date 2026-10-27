@@ -109,12 +109,14 @@ class TestMcpSourceBundleContract(unittest.IsolatedAsyncioTestCase):
             "sibyl.mcp_tools.gather_source_bundle",
             new=mock.AsyncMock(return_value=bundle),
         ):
-            _, structured = await mcp_server.mcp.call_tool(
+            result = await mcp_server.mcp.call_tool(
                 "gather_bundle",
                 {"query": expected["query"]},
             )
 
-        self.assertEqual(structured, expected)
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent, expected)
+        self.assertEqual(json.loads(result.content[0].text), expected)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Remove legacy surfaces before the first stable release: the keyless MCP
+  compatibility profile with its text responses and `gather_sources`,
+  `gather_evidence`, `quick_search` and `read_url` tools; the evidence loop and
+  EvidenceLoop 1.0 types; contract-1 prose completion (old contract-1 jobs get
+  `legacy_contract`, completed ones stay readable and exportable); the
+  `save_report` last-report fallback and `format="both"` (`job_id` is required);
+  and unused model counters in job views. `--profile keyless` exits with an
+  error. `gather_bundle` is documented as the keyless fallback search.
 - Record the revised product role: Sibyl manages the host's research loop
   (plan, search guidance, reading, source assessment, claim checks), with
   keyless search as a fallback, and the phased refactor that implements it. The

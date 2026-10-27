@@ -62,7 +62,7 @@ async def main():
         runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)), Config())
         server = create_server(runtime)
         try:
-            _, response = await server.call_tool('start_research', {'question': 'q'})
+            response = (await server.call_tool('start_research', {'question': 'q'})).structuredContent
             job = runtime.research_jobs.store.get(response['job_id'])
             notebook = ResearchNotebook.from_dict(job['notebook'])
             passage = EvidencePassage('P1', 'bundle/S1/P1', 'Actual evidence text.', 'hash')
@@ -71,20 +71,24 @@ async def main():
                 BundleDiagnostics(1,1,1,1,0,0,0,1,8,8,4000,4000,1)))
             job['notebook'] = notebook.to_dict()
             runtime.research_jobs.store.save(job)
-            _, reviewed = await server.call_tool('assess_research', {
+            reviewed = await server.call_tool('assess_research', {
                 'job_id': job['job_id'], 'revision': job['revision'],
                 'question_id': 'Q0', 'status': 'supported',
                 'conclusion': 'Finding', 'counterevidence_note': 'Further investigation needed.',
                 'claims': [{'claim_id': 'Q0.C1', 'kind': 'fact', 'status': 'supported',
                     'text': 'Finding', 'supporting_passage_ids': ['bundle/S1/P1'],
                     'quotes': [{'passage_id': 'bundle/S1/P1', 'text': 'Actual evidence text.'}]}]})
-            _, completed = await server.call_tool('complete_research', {
-                'job_id': job['job_id'], 'revision': reviewed['revision'],
+            assert not reviewed.isError, reviewed
+            completed = await server.call_tool('complete_research', {
+                'job_id': job['job_id'], 'revision': reviewed.structuredContent['revision'],
                 'claim_ids': ['Q0.C1'],
                 'allow_incomplete': True})
-            assert completed['status'] == 'completed'
+            assert not completed.isError, completed
+            assert completed.structuredContent['status'] == 'completed'
             for format in ('md', 'json'):
-                await server.call_tool('save_report', {'job_id': job['job_id'], 'format': format})
+                exported = await server.call_tool('save_report', {'job_id': job['job_id'], 'format': format})
+                assert not exported.isError, exported
+                assert exported.structuredContent['status'] == 'saved'
                 assert len(list(Path(directory).glob('*.' + format))) == 1
             assert 'litellm' not in sys.modules
             assert 'fpdf' not in sys.modules

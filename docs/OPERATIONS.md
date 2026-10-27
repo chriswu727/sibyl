@@ -150,7 +150,6 @@ ruff check sibyl tests scripts
 ruff format --check sibyl tests scripts
 mypy
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
-python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --agent
 python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
 python scripts/check_research_workflow.py
 ```

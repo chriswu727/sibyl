@@ -13,10 +13,6 @@ Sibyl may process research queries, search results, public URLs, downloaded page
 content, extracted passages, publication metadata, and citation identifiers. The
 host can submit assessments and reports, which Sibyl stores without model calls.
 
-`gather_evidence` keeps its question, atomic follow-up queries, and retrieved
-public evidence in the local MCP process for up to ten minutes so the host can
-complete a bounded workflow. At most 64 loop records are retained; they are not
-written to disk and disappear when the process exits.
 
 Persistent research is separate: `start_research` stores questions, plans,
 retrieval attempts, selected public evidence, progress events, counters, and

@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from sibyl.config import Config
-from sibyl.mcp_server import _mcp_profile
+from sibyl.mcp_server import _check_profile
 
 
 class TestConfig(unittest.TestCase):
@@ -55,12 +55,13 @@ class TestConfig(unittest.TestCase):
             clear=True,
         ):
             self.assertEqual(Config.from_env(), Config())
-            self.assertEqual(_mcp_profile(), "agent")
+            _check_profile(os.environ.get("SIBYL_MCP_PROFILE"))
 
     def test_profile_migration(self):
-        for value in ("full", "report", "finance"):
-            with mock.patch.dict(os.environ, {"SIBYL_MCP_PROFILE": value}):
-                with self.assertRaisesRegex(RuntimeError, "removed"):
-                    _mcp_profile()
-        with mock.patch.dict(os.environ, {"SIBYL_MCP_PROFILE": "auto"}):
-            self.assertEqual(_mcp_profile(), "agent")
+        for value in ("full", "report", "finance", "keyless", " Keyless "):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(SystemExit, "removed"):
+                    _check_profile(value)
+        for value in (None, "", "agent", "auto", " AUTO "):
+            with self.subTest(value=value):
+                self.assertIsNone(_check_profile(value))

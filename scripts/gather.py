@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Thin CLI over the gather_sources MCP tool — keyless retrieval, no synthesis.
+"""Thin CLI over the sibyl.gather_sources Python API — keyless retrieval, no synthesis.
 
     python scripts/gather.py "your search query" [max_sources]
 
@@ -10,7 +10,7 @@ over them. No API key required.
 import asyncio
 import sys
 
-from sibyl.mcp_server import gather_sources
+from sibyl import gather_sources
 
 
 async def main():
@@ -19,8 +19,7 @@ async def main():
         return
     query = sys.argv[1]
     n = int(sys.argv[2]) if len(sys.argv) > 2 else 8
-    fn = gather_sources.fn if hasattr(gather_sources, "fn") else gather_sources
-    print(await fn(query, max_sources=n))
+    print(await gather_sources(query, max_sources=n))
 
 
 if __name__ == "__main__":

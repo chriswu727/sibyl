@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import secrets
 import socket
+import subprocess
 import sys
 import tempfile
 
@@ -14,7 +16,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 QUESTION = "In what year was the company that created CUDA founded?"
-EXPECTED_KEYLESS_TOOLS = {
+EXPECTED_TOOLS = {
     "start_research",
     "get_research",
     "continue_research",
@@ -22,23 +24,39 @@ EXPECTED_KEYLESS_TOOLS = {
     "assess_research",
     "cancel_research",
     "save_report",
-    "gather_evidence",
     "gather_bundle",
-    "gather_sources",
-    "quick_search",
-    "read_url",
 }
 
 
-async def check(command: str, monitor: bool = False, agent: bool = False) -> None:
+async def check(command: str, monitor: bool = False) -> None:
     with tempfile.TemporaryDirectory(prefix="sibyl-stdio-") as directory:
-        await check_in_directory(command, directory, monitor, agent)
+        check_removed_profile(command, directory)
+        await check_in_directory(command, directory, monitor)
+
+
+def check_removed_profile(command: str, directory: str) -> None:
+    """The removed keyless profile must fail loudly, not serve a changed tool set."""
+    base = {**os.environ, "SIBYL_OUTPUT_ROOT": directory}
+    for args, env in (
+        (["--profile", "keyless"], base),
+        ([], {**base, "SIBYL_MCP_PROFILE": "keyless"}),
+    ):
+        result = subprocess.run(
+            [command, *args],
+            env=env,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode == 0 or "removed" not in result.stderr:
+            raise RuntimeError("The removed keyless profile did not fail clearly")
 
 
 async def check_in_directory(
-    command: str, directory: str, monitor: bool = False, agent: bool = False
+    command: str, directory: str, monitor: bool = False
 ) -> None:
-    args = [] if agent else ["--profile", "keyless"]
+    args: list[str] = []
     env = {"SIBYL_OUTPUT_ROOT": directory}
     token = secrets.token_urlsafe(32)
     if monitor:
@@ -58,28 +76,30 @@ async def check_in_directory(
             await session.initialize()
             tools = await session.list_tools()
             names = {tool.name for tool in tools.tools}
-            expected = (
-                EXPECTED_KEYLESS_TOOLS
-                - {"gather_evidence", "gather_sources", "quick_search", "read_url"}
-                if agent
-                else EXPECTED_KEYLESS_TOOLS
+            if names != EXPECTED_TOOLS:
+                raise RuntimeError(f"unexpected MCP tools: {sorted(names)!r}")
+            undeclared = await session.call_tool(
+                "start_research", {"question": QUESTION, "claim_contract_version": 1}
             )
-            if names != expected:
-                raise RuntimeError(f"unexpected keyless tools: {sorted(names)!r}")
-            if not agent:
-                await check_evidence_loop(session)
+            error = (undeclared.structuredContent or {}).get("error", {})
+            if not undeclared.isError or error.get("code") != "invalid_parameters":
+                raise RuntimeError("An undeclared argument was silently accepted")
             created = await session.call_tool("start_research", {"question": QUESTION})
             job = created.structuredContent or {}
             if created.isError or job.get("status") != "awaiting_input":
-                raise RuntimeError("Could not create a keyless research job")
-            if agent and (job.get("view") != "brief" or "evidence" in job):
-                raise RuntimeError("Agent profile did not return a compact brief")
-            loaded = await session.call_tool("get_research", {"job_id": job["job_id"]})
-            if (
-                loaded.isError
-                or (loaded.structuredContent or {}).get("job_id") != job["job_id"]
-            ):
+                raise RuntimeError("Could not create a research job")
+            if job.get("view") != "brief" or "evidence" in job:
+                raise RuntimeError("start_research did not return a compact brief")
+            if job.get("claim_contract_version") != 2:
+                raise RuntimeError("New job does not use evidence-linked claims")
+            loaded = await session.call_tool(
+                "get_research", {"job_id": job["job_id"], "view": "full"}
+            )
+            full = loaded.structuredContent or {}
+            if loaded.isError or full.get("job_id") != job["job_id"]:
                 raise RuntimeError("Research job was not readable")
+            if "evidence" not in full or "model_calls" in full:
+                raise RuntimeError("Full research view has an unexpected shape")
             deleted = await session.call_tool(
                 "cancel_research", {"job_id": job["job_id"], "delete": True}
             )
@@ -127,38 +147,24 @@ async def check_in_directory(
                 raise RuntimeError("Monitoring listener survived MCP shutdown")
 
 
-async def check_evidence_loop(session: ClientSession) -> None:
-    result = await session.call_tool(
-        "gather_evidence",
-        {"question": QUESTION, "max_steps": 2},
-    )
-    structured = result.structuredContent or {}
-    if result.isError:
-        raise RuntimeError("gather_evidence returned a tool error")
-    if structured.get("status") != "active":
-        raise RuntimeError(f"unexpected loop status: {structured.get('status')!r}")
-    if structured.get("next_action") != "decompose_query":
-        raise RuntimeError(f"unexpected loop action: {structured.get('next_action')!r}")
-    if structured.get("current_step") is not None:
-        raise RuntimeError("dependent question triggered an unnecessary retrieval")
-    diagnostics = structured.get("diagnostics", {})
-    if diagnostics.get("remaining_steps") != 2:
-        raise RuntimeError(f"unexpected loop diagnostics: {diagnostics!r}")
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("command", nargs="?", default="sibyl-mcp")
     parser.add_argument("--monitor", action="store_true")
-    parser.add_argument("--agent", action="store_true")
+    parser.add_argument(
+        "--agent",
+        action="store_true",
+        help="Accepted for compatibility; the eight-tool set is the only MCP surface",
+    )
     args = parser.parse_args()
     try:
-        asyncio.run(check(args.command, args.monitor, args.agent))
+        asyncio.run(check(args.command, args.monitor))
     except Exception as exc:
         print(f"MCP stdio smoke check failed: {exc}", file=sys.stderr)
         return 1
     print(
-        f"MCP stdio smoke check passed with {'eight agent' if args.agent else 'twelve keyless'} tools"
+        "MCP stdio smoke check passed with eight tools; the removed keyless "
+        "profile is rejected"
     )
     return 0
 

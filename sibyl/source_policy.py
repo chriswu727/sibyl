@@ -54,7 +54,6 @@ def source_kind(source, preferred_domains=()) -> str:
         (
             "aclanthology.org",
             "proceedings.mlr.press",
-            "openreview.net",
             "pubmed.ncbi.nlm.nih.gov",
             "pmc.ncbi.nlm.nih.gov",
             "doi.org",

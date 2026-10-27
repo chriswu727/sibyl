@@ -17,6 +17,7 @@ from sibyl.report_models import ResearchReport
 from sibyl.report_text import _format_report
 from sibyl.reporter import _report_to_markdown
 from sibyl.research_claims import ResearchClaim, locate_quote, stored_quote_text
+from sibyl.research_state import ResearchNotebook
 from sibyl.runtime import RuntimePolicy, SibylRuntime
 
 
@@ -25,7 +26,7 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.policy = RuntimePolicy(output_root=Path(self.directory.name))
         self.runtime = SibylRuntime(self.policy)
-        self.server = create_server(self.runtime, agent_mode=True)
+        self.server = create_server(self.runtime)
 
     async def asyncTearDown(self):
         await self.runtime.aclose()
@@ -115,7 +116,7 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(job["report"])
         await self.runtime.aclose()
         self.runtime = SibylRuntime(self.policy)
-        self.server = create_server(self.runtime, agent_mode=True)
+        self.server = create_server(self.runtime)
         restored = await self.call("get_research", job_id=job["job_id"])
         self.assertEqual(restored["research_plan"], job["research_plan"])
         finalized = await self.call(
@@ -498,42 +499,84 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             await self.assess(job, [], "Q1", status="unresolved")
         self.assertEqual(self.runtime.research_jobs.store.get(job["job_id"]), before)
 
-    async def test_old_checkpoint_keeps_prose_completion_without_upgrade(self):
-        job = self.runtime.research_jobs.start(
-            "Legacy question", [], "host", 2, "en", 3
-        )
-        job = await self.retrieve(job)
-        saved = self.runtime.research_jobs.store.get(job["job_id"])
-        saved["notebook"].pop("claim_contract_version")
-        self.runtime.research_jobs.store.save(saved)
+    async def test_old_checkpoint_cannot_complete_but_stays_readable(self):
+        job = await self.retrieve(await self.start())
+        unfinished = await self.retrieve(await self.start())
+        jobs = self.runtime.research_jobs
+        for item in (job, unfinished):
+            saved = jobs.store.get(item["job_id"])
+            saved["notebook"].pop("claim_contract_version")
+            jobs.store.save(saved)
+        # A contract-1 job finalized before the upgrade carries a prose report.
+        saved = jobs.store.get(job["job_id"])
+        legacy_report = ResearchReport(
+            saved["question"],
+            "Legacy summary [Source 1]",
+            ["Legacy finding [Source 1]"],
+            ResearchNotebook.from_dict(saved["notebook"]).report_sources(),
+            analysis="Legacy analysis.",
+            model_used="host",
+            verification_scope="citation_targets_only",
+            status="partial",
+        ).to_dict()
+        saved.update(status="completed", report=legacy_report)
+        jobs.store.save(saved)
         await self.runtime.aclose()
         self.runtime = SibylRuntime(self.policy)
-        self.server = create_server(self.runtime, agent_mode=True)
-        restored = await self.call("get_research", job_id=job["job_id"])
-        self.assertEqual(restored["claim_contract_version"], 1)
-        refused = await self.server.call_tool(
+        self.server = create_server(self.runtime)
+
+        pending = await self.call("get_research", job_id=unfinished["job_id"])
+        self.assertEqual(pending["claim_contract_version"], 1)
+        before = self.runtime.research_jobs.store.get(unfinished["job_id"])
+        for arguments in (
+            {"allow_incomplete": True},
+            {"claim_ids": ["Q0.C1"], "allow_incomplete": True},
+        ):
+            refused = await self.server.call_tool(
+                "complete_research",
+                {
+                    "job_id": unfinished["job_id"],
+                    "revision": pending["revision"],
+                    **arguments,
+                },
+            )
+            self.assertTrue(refused.isError)
+            self.assertEqual(
+                refused.structuredContent["error"]["code"], "legacy_contract"
+            )
+            self.assertEqual(
+                refused.structuredContent["current_revision"], pending["revision"]
+            )
+            self.assertEqual(
+                self.runtime.research_jobs.store.get(unfinished["job_id"]), before
+            )
+        prose = await self.server.call_tool(
             "complete_research",
             {
-                "job_id": job["job_id"],
-                "revision": restored["revision"],
-                "allow_incomplete": True,
-            },
-        )
-        self.assertEqual(refused.structuredContent["error"]["code"], "legacy_contract")
-        keyless = create_server(self.runtime)
-        await keyless.call_tool(
-            "complete_research",
-            {
-                "job_id": job["job_id"],
-                "revision": restored["revision"],
+                "job_id": unfinished["job_id"],
+                "revision": pending["revision"],
                 "summary": "Legacy summary [Source 1]",
                 "key_findings": ["Legacy finding [Source 1]"],
                 "allow_incomplete": True,
             },
         )
+        self.assertEqual(prose.structuredContent["error"]["code"], "invalid_parameters")
+        self.assertIsNone(
+            self.runtime.research_jobs.store.get(unfinished["job_id"])["report"]
+        )
+
         full = await self.call("get_research", job_id=job["job_id"], view="full")
+        self.assertEqual(full["claim_contract_version"], 1)
+        self.assertEqual(full["status"], "completed")
         self.assertEqual(full["report"]["schema_version"], "1.0")
         self.assertEqual(full["report"]["claims"], [])
+        exported = await self.call("save_report", job_id=job["job_id"], format="md")
+        self.assertEqual(exported["view"], "export")
+        self.assertEqual(exported["report_status"], "partial")
+        markdown = Path(exported["artifacts"][0]["path"]).read_text(encoding="utf-8")
+        self.assertIn("Legacy finding [Source 1]", markdown)
+        with self.assertRaisesRegex(ToolError, "immutable"):
+            await self.assess(full, self.facts(full))
 
     async def test_missing_claims_keep_new_jobs_incomplete(self):
         job = await self.retrieve(await self.start())

@@ -185,8 +185,11 @@ class TestResearchFaults(unittest.IsolatedAsyncioTestCase):
         restored = self.runtime.research_jobs.get(job_id)
         self.assertEqual(restored["status"], "interrupted")
         self.assertEqual(restored["remaining_steps"], 2)
-        self.assertEqual(restored["model_calls"], 1)
-        self.assertEqual(restored["reserved_output_tokens"], 100)
+        # Legacy budget counters are no longer shown but are never reset.
+        self.assertNotIn("model_calls", restored)
+        stored = self.runtime.research_jobs.store.get(job_id)["notebook"]
+        self.assertEqual(stored["model_calls"], 1)
+        self.assertEqual(stored["reserved_output_tokens"], 100)
         self.assertEqual(restored["attempts"][0]["status"], "failed")
         self.assertFalse(self.runtime.research_jobs.tasks)
 

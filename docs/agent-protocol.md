@@ -12,7 +12,7 @@ the question, inspects evidence, decides what it supports, and chooses the next
 investigation. Sibyl persists those decisions, retrieves sources, enforces
 budgets and citation identities, and exposes the remaining gaps.
 
-The agent profile exposes eight tools:
+Sibyl exposes eight tools:
 
 - `start_research`: create a bounded, persistent investigation.
 - `continue_research`: search or read a URL into that investigation.
@@ -27,17 +27,17 @@ The six research operations return domain JSON in MCP `structuredContent`, and
 the text content carries the same JSON serialized compactly, as the MCP
 specification recommends. Success results, structured errors and export
 manifests all follow this rule, so a host that passes only text to the model
-loses nothing. `--profile keyless` keeps readable text responses instead.
+loses nothing. The former keyless text profile was removed.
 Large views such as `view="full"` can exceed a host's tool-output limit; prefer
 briefs, batch passage reads and catalog pages. `gather_bundle` keeps the
-SourceBundle contract; the agent profile omits its large output schema from the
-tool listing to save host context, and the payload is unchanged. `save_report` returns an export manifest in the agent
-profile and the existing text response in the keyless profile. Failures remain
+SourceBundle contract; its large output schema is omitted from the tool listing
+to save host context, and the payload is unchanged. `save_report` returns an
+export manifest. Failures remain
 MCP errors, not successful briefs containing an invented outcome.
 
 ## Structured recovery
 
-In the agent profile, failed calls keep MCP `isError=true` and provide
+Failed calls keep MCP `isError=true` and provide
 `structuredContent`. Request/workflow errors use `schema_version="1.0"`,
 `view="error"`, and `status="error"`. They include `operation`, an `error` object
 with a safe `code`/`message` and optional `field`/`claim_id`, plus `job_id`,
@@ -68,11 +68,11 @@ claim existed. Current revision is a recovery hint, not a lock against later
 changes. Never fabricate a passage or bypass validation merely to satisfy a check;
 retain an unresolved claim and explain the gap when support is unavailable.
 Export failures use the export manifest below, also with `isError=true` when
-no artifact was confirmed. The keyless profile retains text errors.
+no artifact was confirmed.
 
 ## Brief 1.0
 
-Research mutations and `get_research(job_id)` return a brief in the agent profile.
+Research mutations and `get_research(job_id)` return a brief.
 Any profile can explicitly request `get_research(job_id, view="brief")`.
 
 | Field | Meaning |
@@ -186,24 +186,22 @@ it because the budget ended. Source kinds and duplicate clusters are heuristics.
 For a person-facing deliverable, call `complete_research` with the current
 revision and optional `claim_ids`, then `save_report`. The report renders the
 host-authored claim ledger, transitive premises and all unknown/disputed claims.
-The agent profile's `complete_research` has no summary/findings/analysis
-parameters. Old contract-1 checkpoints keep prose completion through the keyless
-profile; the agent profile refuses them with `legacy_contract`. The agent profile
-also rejects any undeclared tool argument with `invalid_parameters` naming the
+`complete_research` has no summary/findings/analysis parameters. Old contract-1
+checkpoints can no longer be finalized and get `legacy_contract`; completed ones
+stay readable and exportable. Sibyl also rejects any undeclared tool argument with `invalid_parameters` naming the
 field, instead of silently ignoring it. See [Claim reports](research-claims.md#optional-reports).
 `allow_incomplete=true` explicitly preserves unmet gates; it is not a quality pass.
 
-For Markdown and JSON, call `save_report` separately with `format="md"` and
-`format="json"`. The legacy `format="both"` means PDF plus Markdown, not JSON.
-Each artifact gets an independent filename. Use only the paths explicitly returned
+For Markdown and JSON, call `save_report(job_id=...)` separately with
+`format="md"` and `format="json"`. Each artifact gets an independent filename. Use only the paths explicitly returned
 as saved; replacing a Markdown suffix does not identify a JSON artifact.
 A rejected assessment does not persist that review or advance its revision. Correct
 the request or preserve the missing review as a gap before finalizing.
 
 ### Export manifest 1.0
 
-Agent `save_report` results have `schema_version="1.0"`, `view="export"`, `job_id`
-(null for the legacy last-report fallback), `report_status`, `requested_formats`,
+`save_report` results have `schema_version="1.0"`, `view="export"`, `job_id`,
+`report_status`, `requested_formats`,
 `artifacts`, `failures`, and `status`. Each artifact contains its `format`, exact
 absolute `path`, `size_bytes`, and `sha256`, checked against a real file in the
 output store before returning. Hashes identify bytes, not factual correctness.
@@ -216,19 +214,16 @@ formats do not acquire a guessed artifact path.
 | `partial` | Some formats succeeded and some failed; use only listed artifacts |
 | `failed` | No saved artifact was confirmed; MCP `isError=true` |
 
-For example, unavailable PDF rendering with `format="both"` returns `partial`,
-one Markdown artifact, and one PDF failure. A PDF-only failure returns `failed`
-with an empty artifact list. If a later format fails after a successful PDF,
-that PDF remains in the partial manifest. Files are independent exports, not
-an atomic multi-file transaction. Store validation can instead return a structured
+Each call requests one format, so a PDF failure returns `failed` with an empty
+artifact list; `partial` is retained in the schema for multi-format manifests.
+Files are independent exports, not an atomic multi-file transaction. Store validation can instead return a structured
 request error before any format is attempted. Export does not mutate the report,
 upgrade `report_status`, or guarantee that files will not later be removed.
 
-Direct Python job methods and the keyless profile continue returning full snapshots.
-Python embedders opt in with `create_server(runtime, agent_mode=True)`. This sets
-both the eight-tool catalog and compact transport. Old checkpoints load as contract
-1; new MCP jobs use contract 2. Direct job embedders retain the legacy default and
-can pass `claim_contract_version=2`. No background LLM or new host authority is introduced.
+Direct Python job methods continue returning full snapshots. Python embedders
+use `create_server(runtime)`, which provides the eight-tool catalog and compact
+transport. Old checkpoints load as contract 1; every new job uses contract 2. No
+background LLM or new host authority is introduced.
 
 ## Reproducible measurement, not a quality claim
 
@@ -236,14 +231,13 @@ Run from the source environment:
 
 ```bash
 python scripts/check_research_workflow.py
-python scripts/check_research_workflow.py --agent
-python scripts/check_mcp_stdio.py /absolute/path/to/sibyl-mcp --agent
+python scripts/check_mcp_stdio.py /absolute/path/to/sibyl-mcp
 ```
 
-Both replays use the same recorded SQLite sources, host-authored reasoning and
-real MCP stdio. They check two research rounds, gap reviews, exact passage reads,
-catalog pages, current citations, report export, restart and immutable completion.
-Agent replay additionally exercises schema rejection, missing-challenge/basis
+The replay uses recorded SQLite sources, host-authored reasoning and real MCP
+stdio. It checks two research rounds, gap reviews, exact passage reads, catalog
+pages, current citations, report export, restart and immutable completion. It
+also exercises schema rejection, missing-challenge/basis
 recovery, a current-revision reload, an explicit unknown report without invented
 citations, and actual paths/sizes/hashes in Markdown/JSON/PDF manifests.
 HTTP is blocked and no model is invoked. The agent replay also verifies that a
