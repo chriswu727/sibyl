@@ -10,6 +10,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -212,6 +213,31 @@ class TestSharedJobStore(unittest.TestCase):
             self.store()
         finally:
             os.close(legacy)
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows byte-range locks")
+    def test_momentary_probe_by_another_runtime_does_not_block_startup(self):
+        import msvcrt
+
+        research = self.root / ".research"
+        research.mkdir()
+        probe = os.open(research / "owner.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            os.write(probe, b"0")
+            os.lseek(probe, 0, os.SEEK_SET)
+            msvcrt.locking(probe, msvcrt.LK_NBLCK, 1)
+
+            def release():
+                os.lseek(probe, 0, os.SEEK_SET)
+                msvcrt.locking(probe, msvcrt.LK_UNLCK, 1)
+
+            timer = threading.Timer(0.2, release)
+            timer.start()
+            try:
+                self.store()
+            finally:
+                timer.join()
+        finally:
+            os.close(probe)
 
     def test_corrupt_owner_record_is_not_taken_over(self):
         store = self.store()
