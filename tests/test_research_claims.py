@@ -61,13 +61,15 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             )
 
     def facts(self, job, question_id="Q0"):
+        passage_id = job["sources"][0]["passage_ids"][0]
         return [
             {
                 "claim_id": question_id + ".C1",
                 "kind": "fact",
                 "status": "supported",
                 "text": "The inspected source describes a bounded concurrency capability.",
-                "supporting_passage_ids": [job["sources"][0]["passage_ids"][0]],
+                "supporting_passage_ids": [passage_id],
+                "quotes": [{"passage_id": passage_id, "text": "Evidence observed"}],
             }
         ]
 
@@ -265,6 +267,17 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             [{**fact, "challenging_passage_ids": fact["supporting_passage_ids"]}],
             [{**fact, "extra": "not allowed"}],
             [{**fact, "text": "Untracked reference [Source 2]"}],
+            [{**fact, "quotes": []}],
+            [{**fact, "quotes": [{**fact["quotes"][0], "text": "Invented text"}]}],
+            [{**fact, "quotes": [{**fact["quotes"][0], "text": "Evid"}]}],
+            [
+                {
+                    **fact,
+                    "quotes": [
+                        {**fact["quotes"][0], "passage_id": "observed/1/P1"},
+                    ],
+                }
+            ],
         ]
         before = self.runtime.research_jobs.store.get(job["job_id"])
         for claims in variants:
@@ -273,6 +286,62 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 self.runtime.research_jobs.store.get(job["job_id"]), before
             )
+
+    async def test_quotes_are_verified_against_the_cited_passage(self):
+        job = await self.retrieve(await self.start())
+        fact = self.facts(job)[0]
+        fact["quotes"] = [
+            {
+                "passage_id": fact["supporting_passage_ids"][0],
+                "text": "\u201cEVIDENCE   observed\u201d \u2026",
+            }
+        ]
+        job = await self.assess(job, [fact])
+        stored = job["research_plan"]["questions"][0]["review"]["claims"][0]
+        self.assertEqual(stored["quotes"][0]["text"], "Evidence observed")
+        error = await self.server.call_tool(
+            "assess_research",
+            {
+                "job_id": job["job_id"],
+                "revision": job["revision"],
+                "question_id": "Q0",
+                "status": "supported",
+                "conclusion": "Conclusion.",
+                "counterevidence_note": "Note.",
+                "claims": [
+                    {
+                        **fact,
+                        "text": "Only one writer can write at a time.",
+                        "quotes": [
+                            {
+                                "passage_id": fact["supporting_passage_ids"][0],
+                                "text": "only one writer at a time",
+                            }
+                        ],
+                    }
+                ],
+            },
+        )
+        self.assertTrue(error.isError)
+        self.assertEqual(error.structuredContent["error"]["field"], "claims.quotes")
+        self.assertEqual(error.structuredContent["error"]["claim_id"], "Q0.C1")
+        self.assertEqual(error.structuredContent["current_revision"], job["revision"])
+        await self.call(
+            "complete_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            allow_incomplete=True,
+        )
+        full = await self.call("get_research", job_id=job["job_id"], view="full")
+        quote = full["report"]["claims"][0]["quotes"][0]
+        passage = await self.call(
+            "get_research", job_id=job["job_id"], passage_id=quote["passage_id"]
+        )
+        self.assertEqual(quote["end_char"] - quote["start_char"], len(quote["text"]))
+        self.assertIn(
+            'Quote [Source 1]: "Evidence observed"', full["report"]["analysis"]
+        )
+        self.assertTrue(passage["passage"]["text"].startswith(quote["text"]))
 
     async def test_dependency_cycles_are_rejected(self):
         job = await self.retrieve(await self.start())
@@ -398,10 +467,11 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
     async def test_contradictory_sources_remain_disputed(self):
         job = await self.retrieve(await self.start())
         fact = self.facts(job)[0]
-        fact.update(
-            status="disputed",
-            challenging_passage_ids=[job["sources"][1]["passage_ids"][0]],
-        )
+        challenge = job["sources"][1]["passage_ids"][0]
+        fact.update(status="disputed", challenging_passage_ids=[challenge])
+        with self.assertRaisesRegex(ToolError, "challenging passage"):
+            await self.assess(job, [fact], status="disputed")
+        fact["quotes"].append({"passage_id": challenge, "text": "Evidence observed"})
         job = await self.assess(job, [fact], status="disputed")
         self.assertFalse(job["research_plan"]["ready_to_complete"])
         await self.call(

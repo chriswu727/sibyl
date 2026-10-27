@@ -149,7 +149,14 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         before = json.dumps(job, sort_keys=True)
         brief = research_brief(job)
         self.assertEqual(brief["research_plan"], job["research_plan"])
-        self.assertEqual(brief["limitations"], job["limitations"])
+        gaps = [
+            f"{item['question_id']}: {gap}"
+            for item in brief["research_plan"]["questions"]
+            for gap in item["gaps"]
+        ]
+        self.assertTrue(gaps)
+        self.assertFalse(set(gaps) & set(brief["limitations"]))
+        self.assertEqual(set(brief["limitations"]) | set(gaps), set(job["limitations"]))
         self.assertEqual(brief["latest_attempt"], job["attempts"][-1])
         self.assertEqual(
             brief["sources"][0]["passage_ids"], job["sources"][0]["passage_ids"]
@@ -159,6 +166,27 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             "get_research", job_id=job["job_id"], passage_id=passage
         )
         self.assertEqual(loaded["passage"], job["evidence"][0]["evidence"][0])
+        second = job["evidence"][1]["evidence"][0]["citation_id"]
+        batch = await self.call(
+            "get_research", job_id=job["job_id"], passage_ids=[second, passage, second]
+        )
+        self.assertEqual(batch["revision"], job["revision"])
+        self.assertEqual(
+            [item["passage"]["citation_id"] for item in batch["passages"]],
+            [second, passage],
+        )
+        self.assertEqual(
+            batch["passages"][1],
+            {k: v for k, v in loaded.items() if k not in {"job_id", "revision"}},
+        )
+        for arguments in (
+            {"passage_ids": []},
+            {"passage_ids": [passage, "missing"]},
+            {"passage_ids": [f"id{i}" for i in range(13)]},
+            {"passage_ids": [passage], "passage_id": passage},
+            {"passage_ids": [passage], "view": "brief"},
+        ):
+            await self.rejected("get_research", job_id=job["job_id"], **arguments)
         self.assertEqual(loaded["content_origin"], job["evidence"][0]["content_origin"])
         self.assertIn("retrieved_at", loaded)
         self.assertIn("content_cluster_id", loaded)

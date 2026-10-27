@@ -26,7 +26,13 @@ Claim IDs can be referenced across questions in the same job.
       "kind": "fact",
       "status": "supported",
       "text": "The inspected documentation states the relevant capability and conditions.",
-      "supporting_passage_ids": ["the exact passage citation_id"]
+      "supporting_passage_ids": ["the exact passage citation_id"],
+      "quotes": [
+        {
+          "passage_id": "the exact passage citation_id",
+          "text": "Exact text copied from that passage."
+        }
+      ]
     },
     {
       "claim_id": "Q1.C2",
@@ -66,9 +72,28 @@ report narratives render claims rather than those free-form review notes.
 | `rationale` | Up to 1,000 characters; required for reasoning and unresolved claims |
 | `assumptions` | Up to four explicit conditions, each at most 300 characters |
 | `criteria` | Up to six recommendation criteria: name, preference and origin |
+| `quotes` | Up to twelve `{passage_id, text}` excerpts, each at most 500 characters, from passages this claim cites |
 
 Supported facts require passage references. Facts cannot substitute another
-claim for original evidence. Supported/disputed inferences and recommendations
+claim for original evidence.
+
+### Verbatim quotes
+
+Supported and disputed facts must quote exact text from at least one supporting
+passage; disputed facts also quote a challenging passage. Each quote must come
+from a passage the claim cites. Sibyl searches the stored passage text for the
+quote, ignoring case, Unicode width, typographic quote/dash variants, whitespace
+runs and surrounding quotation marks or ellipses. A quote shorter than eight
+characters after that folding, or one not found, rejects the whole assessment
+with `field="claims.quotes"` and the claim ID. Stored quotes are replaced by the
+exact source substring, and JSON report claims add `start_char`/`end_char`
+offsets into the extracted source. Markdown, PDF and text reports print each
+quote beside its claim.
+
+This catches a citation to the wrong passage or an invented excerpt. It does not
+establish entailment: the host must still quote text that carries every asserted
+qualification, split compound claims or mark them unresolved. The rule applies
+to new assessments; previously stored claims are not rewritten or re-validated. Supported/disputed inferences and recommendations
 need a reasoning basis and rationale. A recommendation also requires criteria;
 `origin` is `user` or `host_assumption`, declared by the host. Criteria and origin
 are not independently verified against the conversation.

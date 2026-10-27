@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Require supported and disputed fact claims to quote exact text from their cited
+  passages; reject quotes not found verbatim (ignoring case, width, spacing and
+  typographic variants). Reports print the quotes; JSON adds source offsets.
+  The offline replay now rejects the earlier misplaced single-writer citation.
+- Read up to twelve passages per call with `get_research(passage_ids=[...])`.
+- Position Sibyl beside the host's own search: instructions and tool descriptions
+  now direct hosts to read the URLs they find, with keyless search as a fallback.
+- Shrink agent-facing context: shorter instructions and tool descriptions, no
+  duplicated per-question gaps in brief limitations, and no `gather_bundle` output
+  schema in the agent profile listing (payload unchanged). Tool definitions plus
+  instructions drop from about 27,000 to 16,000 characters.
 - Reconcile host-only design, goals, README translations, operations, evaluation
   status and stable-release instructions. Document removed execution separately
   from intentional legacy checkpoint/report compatibility and historical evidence.

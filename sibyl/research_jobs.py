@@ -138,44 +138,65 @@ class ResearchJobs:
         self.store.save(job)
         return self.get(job["job_id"])
 
-    def get(self, job_id: str, passage_id: str = "") -> dict[str, Any]:
+    def _load(self, job_id: str) -> tuple[JobRecord, ResearchNotebook]:
         job = self.store.get(job_id)
         if job["status"] == "running" and job_id not in self.tasks:
             job["status"] = "interrupted"
-        notebook = ResearchNotebook.from_dict(job["notebook"])
-        if passage_id:
-            item = evidence_index(notebook).get(passage_id)
-            if item is None:
-                raise ValueError("Unknown evidence passage.")
-            source, passage = item
-            return dict(
-                job_id=job_id,
-                revision=job["revision"],
-                url=display_url(source.url),
-                title=source.title,
-                passage=passage.__dict__,
-                source_char_count=source.char_count,
-                is_excerpt=passage.start_char > 0
-                or passage.end_char < source.char_count,
-                read_more={
-                    "tool": "continue_research",
-                    "job_id": job_id,
-                    "url": display_url(source.url),
-                    "requires_focused_query": True,
-                    "uses_retrieval_step": True,
-                }
-                if job["mode"] == "host"
-                and job["status"] in {"awaiting_input", "interrupted"}
-                and len(notebook.attempts) < notebook.max_steps
-                else None,
-                source_kind=source_kind(source, notebook.preferred_domains),
-                source_id=source.source_id,
-                content_hash=source.content_hash,
-                content_origin=source.content_origin,
-                content_cluster_id=source.content_cluster_id,
-                retrieved_at=source.retrieved_at,
-                published_at=source.published_at,
+        return job, ResearchNotebook.from_dict(job["notebook"])
+
+    def _passage(
+        self, job: JobRecord, notebook: ResearchNotebook, passage_id: str
+    ) -> dict[str, Any]:
+        item = evidence_index(notebook).get(passage_id)
+        if item is None:
+            raise ValueError("Unknown evidence passage.")
+        source, passage = item
+        job_id = job["job_id"]
+        return dict(
+            job_id=job_id,
+            revision=job["revision"],
+            url=display_url(source.url),
+            title=source.title,
+            passage=passage.__dict__,
+            source_char_count=source.char_count,
+            is_excerpt=passage.start_char > 0 or passage.end_char < source.char_count,
+            read_more={
+                "tool": "continue_research",
+                "job_id": job_id,
+                "url": display_url(source.url),
+                "requires_focused_query": True,
+                "uses_retrieval_step": True,
+            }
+            if job["mode"] == "host"
+            and job["status"] in {"awaiting_input", "interrupted"}
+            and len(notebook.attempts) < notebook.max_steps
+            else None,
+            source_kind=source_kind(source, notebook.preferred_domains),
+            source_id=source.source_id,
+            content_hash=source.content_hash,
+            content_origin=source.content_origin,
+            content_cluster_id=source.content_cluster_id,
+            retrieved_at=source.retrieved_at,
+            published_at=source.published_at,
+        )
+
+    def passages(self, job_id: str, passage_ids: list[str]) -> dict[str, Any]:
+        """Read several exact passages in one call, in the requested order."""
+        passage_ids = list(dict.fromkeys(passage_ids))
+        if not 1 <= len(passage_ids) <= 12:
+            raise ResearchRequestError(
+                "Read 1-12 passage IDs at a time.", field="passage_ids"
             )
+        job, notebook = self._load(job_id)
+        items = [self._passage(job, notebook, key) for key in passage_ids]
+        for item in items:
+            del item["job_id"], item["revision"]
+        return {"job_id": job_id, "revision": job["revision"], "passages": items}
+
+    def get(self, job_id: str, passage_id: str = "") -> dict[str, Any]:
+        job, notebook = self._load(job_id)
+        if passage_id:
+            return self._passage(job, notebook, passage_id)
         public: dict[str, Any] = {
             key: value for key, value in job.items() if key != "notebook"
         }

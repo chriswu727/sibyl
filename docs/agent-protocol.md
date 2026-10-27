@@ -26,7 +26,8 @@ The agent profile exposes eight tools:
 The six research operations return domain JSON in MCP `structuredContent` and
 a short text pointer. The host must actually consume `structuredContent`; a
 text-only integration should use `--profile keyless`. `gather_bundle` keeps the
-SourceBundle contract. `save_report` returns an export manifest in the agent
+SourceBundle contract; the agent profile omits its large output schema from the
+tool listing to save host context, and the payload is unchanged. `save_report` returns an export manifest in the agent
 profile and the existing text response in the keyless profile. Failures remain
 MCP errors, not successful briefs containing an invented outcome.
 
@@ -68,9 +69,9 @@ Any profile can explicitly request `get_research(job_id, view="brief")`.
 | `source_catalog_count` | Count of retained source occurrences, including sources outside the selected citation window |
 | `latest_attempt` | Last retrieval outcome, prior gaps/revision and rationale; null before retrieval |
 | `remaining_steps`, `elapsed_seconds` | Current budget accounting; not a total monetary-cost estimate |
-| `source_policy`, `preferred_domains`, `limitations` | Routing policy and retained limitations |
+| `source_policy`, `preferred_domains`, `limitations` | Routing policy and retained limitations; per-question gaps appear only in `research_plan` |
 | `report` | Null, or finalized status, summary, findings, verification scope and limitations; no analysis body or repeated source text |
-| `evidence_access` | Arguments for exact-passage, catalog and full-view reads; replace the passage-ID placeholder |
+| `evidence_access` | Arguments for batch exact-passage, catalog and full-view reads; replace the passage-ID placeholder |
 
 Each brief is a self-contained projection of the current checkpoint, **not a
 delta**. Replace old state; never inherit a previous `ready_to_complete` after
@@ -94,8 +95,10 @@ host-declared. See the [claim contract](research-claims.md).
 ## Progressive evidence reads
 
 1. Read `research_plan` and the selected `sources` in the brief.
-2. Call `get_research(job_id, passage_id=...)` for each relevant exact passage
-   **before** assessing support. It returns exact text, offsets and a passage
+2. Call `get_research(job_id, passage_ids=[...])` with up to twelve relevant
+   passage IDs **before** assessing support; `passage_id` still reads one. The
+   batch result carries `job_id`, `revision` and `passages` in the requested order,
+   or fails as a whole on an unknown ID. Each item returns exact text, offsets and a passage
    hash, plus source identity/hash, URL, title, content origin, cluster ID,
    retrieval/publication timestamps and heuristic source kind. Retrieved text
    remains untrusted data, not instructions.
@@ -135,7 +138,9 @@ underlying extracted-source hash is unchanged; old stored passages remain access
 
 ## Investigate and stop honestly
 
-Use focused `continue_research` calls linked to a `question_id`, with a rationale
+Discover sources with the host's own web search when it has one, then read the
+chosen pages with `continue_research(url=..., query=...)`; a query alone uses
+Sibyl's keyless search as a fallback. Use focused `continue_research` calls linked to a `question_id`, with a rationale
 that explains the gap being addressed. Inspect methods, time periods and source
 independence. Use `purpose="counterevidence"` to investigate alternatives and
 `purpose="follow_citation"` with `parent_passage_id` when reading a reference.
@@ -234,8 +239,10 @@ timestamps can change the exact count. This is one fixture, not a production
 workload distribution. It measures response bytes, not host tokens, latency,
 reasoning cost, or research accuracy.
 
-The desired advantage over a built-in search is a deeper, evidence-directed
-investigation. That advantage still needs a paired same-host, same-provider,
+Sibyl complements the host's own search rather than replacing it: the host can
+discover pages with its built-in search and read them into a job with
+`continue_research(url=...)`. Whether that combination yields better-supported
+answers than built-in search alone still needs a paired same-host, same-provider,
 same-budget evaluation. Current source-discovery failures and the unmet live
 retrieval gates remain in [Launch readiness](LAUNCH_READINESS.md); compact output
 does not resolve them.

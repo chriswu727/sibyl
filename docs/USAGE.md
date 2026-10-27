@@ -162,7 +162,8 @@ briefs. The host must consume MCP `structuredContent`; text-only clients can use
 
 The keyless compatibility profile also includes `gather_evidence`,
 `gather_sources`, `quick_search` and `read_url`. Neither profile calls models.
-Read exact passages with `get_research(passage_id=...)` before assessing them.
+Read exact passages with `get_research(passage_ids=[...])` (up to twelve per call)
+before assessing them.
 `view="sources"` pages the complete saved catalog; use the current revision to
 reject stale pagination. `view="full"` returns the full compatible snapshot.
 See [Agent protocol](agent-protocol.md).
@@ -232,11 +233,16 @@ assess_research(job_id="...", revision=the_current_revision, question_id="Q1",
     "claim_id": "Q1.C1", "kind": "fact", "status": "disputed",
     "text": "The available sources disagree on the requested result.",
     "supporting_passage_ids": ["bundle/S1/P1"],
-    "challenging_passage_ids": ["other/S1/P2"]
+    "challenging_passage_ids": ["other/S1/P2"],
+    "quotes": [
+      {"passage_id": "bundle/S1/P1", "text": "exact text copied from P1"},
+      {"passage_id": "other/S1/P2", "text": "exact text copied from P2"}
+    ]
   }])
 ```
 
-Facts link exact evidence. Inferences and recommendations link `basis_claim_ids`
+Facts link exact evidence and quote it; Sibyl rejects a quote it cannot find in
+the cited passage. Inferences and recommendations link `basis_claim_ids`
 and explain their rationale; recommendations also declare criteria with origin
 `user` or `host_assumption`. Unknown information uses `status="unresolved"`
 with an explanation in `rationale`. Each assessment replaces the question's claim

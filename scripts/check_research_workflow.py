@@ -135,6 +135,12 @@ async def check(
                         "status": "supported",
                         "text": "WAL allows readers and a writer to proceed concurrently.",
                         "supporting_passage_ids": [wal_passage],
+                        "quotes": [
+                            {
+                                "passage_id": wal_passage,
+                                "text": "Reading and writing can proceed concurrently.",
+                            }
+                        ],
                     },
                     {
                         "claim_id": "Q0.C2",
@@ -206,6 +212,52 @@ async def check(
                 limit=1,
             )
             require(page2["next_offset"] is None, "Source catalog did not end")
+            if agent:
+                read = await call(
+                    "get_research",
+                    job_id=job_id,
+                    passage_ids=list(passages.values()),
+                )
+                require(
+                    [item["passage"]["citation_id"] for item in read["passages"]]
+                    == list(passages.values()),
+                    "Batch passage read lost order or identity",
+                )
+                unsupported = await session.call_tool(
+                    "assess_research",
+                    {
+                        "job_id": job_id,
+                        "revision": job["revision"],
+                        "question_id": "Q0",
+                        "status": "supported",
+                        "conclusion": "SQLite serializes writers.",
+                        "counterevidence_note": "The WAL page is the only cited source.",
+                        "claims": [
+                            {
+                                "claim_id": "Q0.C1",
+                                "kind": "fact",
+                                "status": "supported",
+                                "text": "Only one writer can write at a time.",
+                                "supporting_passage_ids": [passages[WAL]],
+                                "quotes": [
+                                    {
+                                        "passage_id": passages[WAL],
+                                        "text": "There can only be a single writer at a time",
+                                    }
+                                ],
+                            }
+                        ],
+                    },
+                )
+                require(
+                    bool(unsupported.isError),
+                    "A quote absent from its cited passage was accepted",
+                )
+                require(
+                    (unsupported.structuredContent or {})["error"]["field"]
+                    == "claims.quotes",
+                    "Quote rejection lost its repair field",
+                )
             job = await call(
                 "assess_research",
                 job_id=job_id,
@@ -222,6 +274,12 @@ async def check(
                         "status": "supported",
                         "text": "WAL allows readers and a writer to proceed concurrently.",
                         "supporting_passage_ids": [passages[WAL]],
+                        "quotes": [
+                            {
+                                "passage_id": passages[WAL],
+                                "text": "Reading and writing can proceed concurrently.",
+                            }
+                        ],
                     },
                     {
                         "claim_id": "Q0.C2",
@@ -229,6 +287,16 @@ async def check(
                         "status": "supported",
                         "text": "SQLite serializes writers; applications must still handle write contention.",
                         "supporting_passage_ids": [passages[ISOLATION], passages[WAL]],
+                        "quotes": [
+                            {
+                                "passage_id": passages[ISOLATION],
+                                "text": "There can only be a single writer at a time to an SQLite database.",
+                            },
+                            {
+                                "passage_id": passages[WAL],
+                                "text": "applications should be prepared for that happenstance",
+                            },
+                        ],
                     },
                     {
                         "claim_id": "Q0.C3",

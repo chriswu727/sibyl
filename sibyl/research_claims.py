@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import unicodedata
 from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -12,7 +13,23 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .research_errors import ResearchRequestError
 
 if TYPE_CHECKING:
+    from .evidence import EvidencePassage
     from .research_state import ResearchNotebook
+
+MIN_QUOTE_CHARS = 8
+_QUOTE_FOLD = str.maketrans(
+    {
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2013": "-",
+        "\u2014": "-",
+    }
+)
+_QUOTE_EDGES = re.compile(
+    r"^(?:\.\.\.|[\s\u2026\"'\u201c\u2018])+|(?:\.\.\.|[\s\u2026\"'\u201d\u2019])+$"
+)
 
 
 class RecommendationCriterion(BaseModel):
@@ -21,6 +38,13 @@ class RecommendationCriterion(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     preference: str = Field(min_length=1, max_length=300)
     origin: Literal["user", "host_assumption"]
+
+
+class ClaimQuote(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    passage_id: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1, max_length=500)
 
 
 class ResearchClaim(BaseModel):
@@ -36,6 +60,82 @@ class ResearchClaim(BaseModel):
     rationale: str = Field(default="", max_length=1000)
     assumptions: list[str] = Field(default_factory=list, max_length=4)
     criteria: list[RecommendationCriterion] = Field(default_factory=list, max_length=6)
+    quotes: list[ClaimQuote] = Field(default_factory=list, max_length=12)
+
+
+def _folded(text: str) -> tuple[str, list[int]]:
+    """Comparison form ignoring case, width, typographic quotes and spacing.
+
+    Each folded character keeps the offset of the original character it came from.
+    """
+    characters: list[str] = []
+    offsets: list[int] = []
+    for position, character in enumerate(text):
+        if character.isspace():
+            if characters and characters[-1] != " ":
+                characters.append(" ")
+                offsets.append(position)
+            continue
+        normalized = unicodedata.normalize("NFKC", character.translate(_QUOTE_FOLD))
+        for folded in normalized.casefold():
+            characters.append(folded)
+            offsets.append(position)
+    return "".join(characters), offsets
+
+
+def locate_quote(quote: str, passage: EvidencePassage) -> tuple[int, int] | None:
+    """Return the quote's span within the passage text, or None if absent."""
+    needle = _folded(_QUOTE_EDGES.sub("", quote))[0]
+    if len(needle) < MIN_QUOTE_CHARS:
+        return None
+    haystack, offsets = _folded(passage.text)
+    found = haystack.find(needle)
+    if found < 0:
+        return None
+    return offsets[found], offsets[found + len(needle) - 1] + 1
+
+
+def _verified_quotes(
+    claim: dict[str, Any], evidence: dict[str, EvidencePassage]
+) -> list[dict[str, str]]:
+    linked = set(claim["supporting_passage_ids"] + claim["challenging_passage_ids"])
+    verified = []
+    for quote in claim["quotes"]:
+        if quote["passage_id"] not in linked:
+            raise ResearchRequestError(
+                "Each quote must come from a passage this claim cites as support or challenge.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.quotes",
+            )
+        passage = evidence[quote["passage_id"]]
+        span = locate_quote(quote["text"], passage)
+        if span is None:
+            raise ResearchRequestError(
+                "Quote not found verbatim in its cited passage. Copy at least "
+                f"{MIN_QUOTE_CHARS} characters of exact text from get_research(passage_ids=...), "
+                "cite the passage that contains it, or mark the claim unresolved.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.quotes",
+            )
+        verified.append(
+            {"passage_id": quote["passage_id"], "text": passage.text[span[0] : span[1]]}
+        )
+    if claim["kind"] == "fact" and claim["status"] != "unresolved":
+        quoted = {quote["passage_id"] for quote in verified}
+        required = [("supporting_passage_ids", "supporting")]
+        if claim["status"] == "disputed":
+            required.append(("challenging_passage_ids", "challenging"))
+        for key, role in required:
+            if not quoted & set(claim[key]):
+                raise ResearchRequestError(
+                    f"Supported and disputed facts must quote exact text from a {role} passage.",
+                    code="invalid_claim",
+                    claim_id=claim["claim_id"],
+                    field="claims.quotes",
+                )
+    return verified
 
 
 def claim_index(notebook: ResearchNotebook) -> dict[str, tuple[str, dict[str, Any]]]:
@@ -71,12 +171,13 @@ def validate_claims(
     notebook: ResearchNotebook,
     question_id: str,
     values: list[dict[str, Any]],
-    evidence_ids: set[str],
+    evidence: dict[str, EvidencePassage],
 ) -> tuple[list[dict[str, Any]], dict[str, str]]:
     if len(values) > 12:
         raise ResearchRequestError(
             "Record at most twelve material claims per question."
         )
+    evidence_ids = set(evidence)
     claims = []
     for value in values:
         try:
@@ -201,6 +302,7 @@ def validate_claims(
             raise ResearchRequestError(
                 "Use passage IDs for evidence links; report source numbers are generated at completion."
             )
+        claim["quotes"] = _verified_quotes(claim, evidence)
         claims.append(claim)
     ids = [claim["claim_id"] for claim in claims]
     if len(set(ids)) != len(ids):
@@ -305,6 +407,19 @@ def assessment_current(notebook: ResearchNotebook, claim_id: str) -> bool:
     )
 
 
+def _quote_record(
+    quote: dict[str, str], passage: EvidencePassage | None
+) -> dict[str, Any]:
+    span = locate_quote(quote["text"], passage) if passage else None
+    if passage is None or span is None:
+        return dict(quote)
+    return {
+        **quote,
+        "start_char": passage.start_char + span[0],
+        "end_char": passage.start_char + span[1],
+    }
+
+
 def render_claims(
     notebook: ResearchNotebook, selected_ids: list[str] | None
 ) -> tuple[list[dict[str, Any]], list[str], str]:
@@ -320,6 +435,9 @@ def render_claims(
     )
     for key in list(included):
         included.update(dependency_ids(key, index))
+    from .research_review import evidence_index
+
+    evidence = {key: passage for key, (_, passage) in evidence_index(notebook).items()}
     citation_map = {
         p.citation_id: f"[Source {number}]"
         for number, source in enumerate(notebook.selected_sources(), 1)
@@ -331,6 +449,10 @@ def render_claims(
             continue
         record = {
             **claim,
+            "quotes": [
+                _quote_record(quote, evidence.get(quote["passage_id"]))
+                for quote in claim.get("quotes", [])
+            ],
             "question_id": owner,
             "review_current": assessment_current(notebook, key),
         }
@@ -363,6 +485,10 @@ def render_claims(
         details.append(line)
         if claim["basis_claim_ids"]:
             details.append("Basis: " + ", ".join(claim["basis_claim_ids"]))
+        details.extend(
+            f'Quote {citation_map[quote["passage_id"]]}: "{quote["text"]}"'
+            for quote in claim.get("quotes", [])
+        )
         if claim["rationale"]:
             details.append("Reasoning: " + claim["rationale"])
         details.extend("Assumption: " + item for item in claim["assumptions"])
