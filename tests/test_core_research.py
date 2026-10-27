@@ -23,7 +23,7 @@ class TestCoreResearch(unittest.TestCase):
         for path in root.glob("*.py"):
             with self.subTest(module=path.name):
                 self.assertNotIn(path.stem, removed | forbidden)
-                for node in ast.walk(ast.parse(path.read_text())):
+                for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
                     if isinstance(node, ast.Import):
                         names = [alias.name for alias in node.names]
                     elif isinstance(node, ast.ImportFrom):

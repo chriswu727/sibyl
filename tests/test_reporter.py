@@ -255,7 +255,8 @@ class TestPdfGeneration(unittest.TestCase):
             self.assertIn("PDF font cannot render", manifest.failures[0].message)
             self.assertIn("Markdown/JSON", manifest.failures[0].message)
             self.assertIn(
-                "缺少工作负载数据", Path(manifest.artifacts[0].path).read_text()
+                "缺少工作负载数据",
+                Path(manifest.artifacts[0].path).read_text(encoding="utf-8"),
             )
             self.assertEqual(list(Path(directory).glob("*.pdf")), [])
 

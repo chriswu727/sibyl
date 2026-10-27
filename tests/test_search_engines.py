@@ -102,7 +102,8 @@ class TestTavily(unittest.IsolatedAsyncioTestCase):
                 cancelled.set()
 
         with (
-            mock.patch("sibyl.search._TAVILY_TIMEOUT_SECONDS", 0.01),
+            # Longer than Windows' ~16 ms monotonic clock tick, so elapsed time shows.
+            mock.patch("sibyl.search._TAVILY_TIMEOUT_SECONDS", 0.05),
             mock.patch("sibyl.search.search_tavily", slow),
             mock.patch(
                 "sibyl.search._search_general_web", mock.AsyncMock(return_value=[])

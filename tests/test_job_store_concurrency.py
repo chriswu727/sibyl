@@ -1,5 +1,7 @@
-"""Shared research stores across real local processes. POSIX only: Windows
-locking paths are not exercised here and need a real Windows run."""
+"""Shared research stores across real local processes.
+
+These run on POSIX (flock) and Windows (msvcrt) CI runners; only the checks that
+depend on POSIX shared locks are skipped on Windows."""
 
 import asyncio
 import errno
@@ -8,6 +10,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -71,7 +74,6 @@ def payload(status="awaiting_input"):
     }
 
 
-@unittest.skipUnless(os.name == "posix", "POSIX flock semantics")
 class TestSharedJobStore(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
@@ -187,10 +189,55 @@ class TestSharedJobStore(unittest.TestCase):
             with self.assertRaises(OwnerUnknown):
                 observer.recover(seen)
             self.assertTrue(observer.running_elsewhere(seen))
-        with mock.patch("fcntl.flock", side_effect=OSError(errno.EIO, "io")):
+        lock_call = "msvcrt.locking" if sys.platform == "win32" else "fcntl.flock"
+        with mock.patch(lock_call, side_effect=OSError(errno.EIO, "io")):
             with self.assertRaises(OwnerUnknown):
                 observer.recover(seen)
         self.assertEqual(observer.get(job["job_id"])["status"], "running")
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows byte-range locks")
+    def test_older_runtime_lock_blocks_startup_on_windows(self):
+        import msvcrt
+
+        research = self.root / ".research"
+        research.mkdir()
+        legacy = os.open(research / "owner.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            os.write(legacy, b"0")
+            os.lseek(legacy, 0, os.SEEK_SET)
+            msvcrt.locking(legacy, msvcrt.LK_NBLCK, 1)
+            with self.assertRaisesRegex(CapacityError, "older Sibyl runtime"):
+                JobStore(self.root)
+            os.lseek(legacy, 0, os.SEEK_SET)
+            msvcrt.locking(legacy, msvcrt.LK_UNLCK, 1)
+            self.store()
+        finally:
+            os.close(legacy)
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows byte-range locks")
+    def test_momentary_probe_by_another_runtime_does_not_block_startup(self):
+        import msvcrt
+
+        research = self.root / ".research"
+        research.mkdir()
+        probe = os.open(research / "owner.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            os.write(probe, b"0")
+            os.lseek(probe, 0, os.SEEK_SET)
+            msvcrt.locking(probe, msvcrt.LK_NBLCK, 1)
+
+            def release():
+                os.lseek(probe, 0, os.SEEK_SET)
+                msvcrt.locking(probe, msvcrt.LK_UNLCK, 1)
+
+            timer = threading.Timer(0.2, release)
+            timer.start()
+            try:
+                self.store()
+            finally:
+                timer.join()
+        finally:
+            os.close(probe)
 
     def test_corrupt_owner_record_is_not_taken_over(self):
         store = self.store()
@@ -216,6 +263,7 @@ class TestSharedJobStore(unittest.TestCase):
         self.assertTrue(fresh.exists())
         self.assertTrue((instances / f"{live.instance_id}.lock").exists())
 
+    @unittest.skipUnless(os.name == "posix", "shared directory locks are POSIX-only")
     def test_older_exclusive_runtime_blocks_startup_and_vice_versa(self):
         import fcntl
 
@@ -260,10 +308,12 @@ class TestSharedJobStore(unittest.TestCase):
             one.claim(job)
 
 
-@unittest.skipUnless(os.name == "posix", "POSIX flock semantics")
 class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.directory = tempfile.TemporaryDirectory()
+        # Cleanups run after asyncTearDown and in reverse order, so connections a
+        # test registers later are closed before Windows can delete the files.
+        self.addCleanup(self.directory.cleanup)
         policy = RuntimePolicy(output_root=Path(self.directory.name))
         self.owner = SibylRuntime(policy, Config())
         self.other = SibylRuntime(policy, Config())
@@ -271,7 +321,6 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         await self.owner.aclose()
         await self.other.aclose()
-        self.directory.cleanup()
 
     async def test_other_session_reads_but_cannot_change_a_running_job(self):
         jobs = self.owner.research_jobs

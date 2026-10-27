@@ -82,8 +82,10 @@ boundary. Install only the extras you need and review their policies separately.
 - Tool text is bounded recursively: 10,000 characters per string, 64,000 combined,
   128 elements per collection, and eight nesting levels.
 - Artifact names are unique, writes are staged then atomically published, and
-  files have mode `0600`. Relative traversal and symlinked subdirectories are
-  rejected. The root is resolved at startup/use from trusted operator settings.
+  files have mode `0600` on POSIX (on Windows they inherit the output directory's
+  ACLs). Relative traversal, rooted or drive-relative Windows paths, and
+  symlinked subdirectories are rejected. The root is resolved at startup/use from
+  trusted operator settings.
   Do not place it in a directory writable by an untrusted local user: filesystem
   checks are not a defense against a hostile process racing directory changes.
 - Exports are capped at 16 MiB per file, 256 files and 128 MiB per selected output

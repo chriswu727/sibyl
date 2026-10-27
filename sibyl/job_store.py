@@ -105,6 +105,9 @@ class JobStore:
     # Store calls block the event loop while waiting, so keep this short.
     BUSY_TIMEOUT = 2.0
     STALE_PENDING_SECONDS = 60.0
+    # Windows start-up probes briefly hold the legacy lock; an older runtime holds
+    # it for its whole life, so only a lock held this long blocks start-up.
+    LEGACY_PROBE_SECONDS = 1.0
 
     def __init__(self, root: Path) -> None:
         self.directory = ArtifactStore(root, ".research").root
@@ -154,7 +157,8 @@ class JobStore:
         descriptor = os.open(
             path, os.O_RDWR | flags | getattr(os, "O_NOFOLLOW", 0), 0o600
         )
-        os.fchmod(descriptor, 0o600)
+        if hasattr(os, "fchmod"):  # Windows has it only from Python 3.13.
+            os.fchmod(descriptor, 0o600)
         return descriptor
 
     def _exclude_legacy_owner(self) -> int | None:
@@ -162,7 +166,9 @@ class JobStore:
 
         Older versions take an exclusive lock on owner.lock. Current runtimes hold a
         shared lock on POSIX, so neither generation can start beside the other.
-        Windows has no shared lock: the check is made once at start-up.
+        Windows has no shared lock: the check is made once at start-up, and is
+        retried briefly because a concurrently starting runtime's own probe holds
+        the same lock for a moment.
         """
         descriptor = self._private_file(self.directory / "owner.lock")
         message = "An older Sibyl runtime owns this research directory; stop it first."
@@ -172,8 +178,11 @@ class JobStore:
 
                 if os.fstat(descriptor).st_size == 0:
                     os.write(descriptor, b"0")
-                if not _try_lock(descriptor):
-                    raise CapacityError(message)
+                deadline = time.monotonic() + self.LEGACY_PROBE_SECONDS
+                while not _try_lock(descriptor):
+                    if time.monotonic() >= deadline:
+                        raise CapacityError(message)
+                    time.sleep(0.05)
                 os.lseek(descriptor, 0, os.SEEK_SET)
                 msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
                 os.close(descriptor)

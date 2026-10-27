@@ -13,7 +13,9 @@ class TestRuntimeCompatibility(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.project = tomllib.loads(
-            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
+                encoding="utf-8"
+            )
         )["project"]
 
     def test_minimum_python_excludes_unsupported_runtime(self):
@@ -93,9 +95,9 @@ class TestReleaseValidation(unittest.TestCase):
                 temporary, root = self._release_tree()
                 with temporary:
                     manifest = root / "server.json"
-                    server = json.loads(manifest.read_text())
+                    server = json.loads(manifest.read_text(encoding="utf-8"))
                     server["description"] = description
-                    manifest.write_text(json.dumps(server))
+                    manifest.write_text(json.dumps(server), encoding="utf-8")
                     with self.assertRaisesRegex(ValueError, "description"):
                         validate_release("v0.3.0", root)
 
@@ -103,14 +105,16 @@ class TestReleaseValidation(unittest.TestCase):
         temporary, root = self._release_tree()
         with temporary:
             manifest = root / "server.json"
-            server = json.loads(manifest.read_text())
+            server = json.loads(manifest.read_text(encoding="utf-8"))
             server["description"] = "x" * 100
-            manifest.write_text(json.dumps(server))
+            manifest.write_text(json.dumps(server), encoding="utf-8")
             self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
 
     def test_current_repository_release_metadata(self):
         root = Path(__file__).resolve().parents[1]
-        version = json.loads((root / "server.json").read_text())["version"]
+        version = json.loads((root / "server.json").read_text(encoding="utf-8"))[
+            "version"
+        ]
         self.assertEqual(validate_release(f"v{version}", root), version)
 
     def test_rejects_tag_that_does_not_match_package(self):
@@ -131,7 +135,9 @@ class TestReleaseValidation(unittest.TestCase):
     def test_publication_rejects_undated_development_changelog(self):
         temporary, root = self._release_tree()
         with temporary:
-            (root / "CHANGELOG.md").write_text("# Changelog\n\n## 0.3.0 — Unreleased\n")
+            (root / "CHANGELOG.md").write_text(
+                "# Changelog\n\n## 0.3.0 — Unreleased\n", encoding="utf-8"
+            )
             self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
             with self.assertRaisesRegex(ValueError, "dated changelog"):
                 validate_release("v0.3.0", root, require_release_note=True)
@@ -146,7 +152,9 @@ class TestReleaseValidation(unittest.TestCase):
     def test_publication_rejects_invalid_calendar_date(self):
         temporary, root = self._release_tree()
         with temporary:
-            (root / "CHANGELOG.md").write_text("## 0.3.0 — 2026-02-30\n")
+            (root / "CHANGELOG.md").write_text(
+                "## 0.3.0 — 2026-02-30\n", encoding="utf-8"
+            )
             with self.assertRaises(ValueError):
                 validate_release("v0.3.0", root, require_release_note=True)
 

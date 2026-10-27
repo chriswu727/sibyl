@@ -30,7 +30,8 @@ new jobs are rejected when history is full.
 `cancel_research(job_id=..., delete=true)` removes a checkpoint but does not
 delete exported reports, backups, host conversation history, or provider records.
 SQLite deletion is not a guarantee of forensic erasure. The database uses
-owner-only file permissions, not encryption at rest.
+owner-only file permissions on POSIX and the output directory's inherited ACLs on
+Windows, not encryption at rest.
 
 MCP reports are written below the operator-selected
 output root; calling agents can select only relative

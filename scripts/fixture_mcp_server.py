@@ -20,7 +20,10 @@ def main() -> None:
     fixture = (
         Path(__file__).resolve().parents[1] / "docs/examples/sqlite-wal/sources.json"
     )
-    sources = {item["url"]: item for item in json.loads(fixture.read_text())["sources"]}
+    sources = {
+        item["url"]: item
+        for item in json.loads(fixture.read_text(encoding="utf-8"))["sources"]
+    }
 
     async def read(url: str, **kwargs) -> WebPage:
         item = sources[url]

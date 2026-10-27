@@ -408,7 +408,9 @@ guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
 Without `SIBYL_OUTPUT_ROOT`, the output root is the per-user data directory:
 `$XDG_DATA_HOME/sibyl` (absolute values only, otherwise `~/.local/share/sibyl`)
 on Linux and other POSIX systems, `~/Library/Application Support/sibyl` on macOS,
-and `%LOCALAPPDATA%\sibyl` on Windows. A newly created root is private (0700).
+and `%LOCALAPPDATA%\sibyl` on Windows. On POSIX a newly created root is private
+(0700) and store and export files are 0600; Windows has no POSIX modes, so files
+inherit the directory's ACLs (by default those of the user's profile).
 An explicit `SIBYL_OUTPUT_ROOT` always wins. Earlier versions defaulted to
 `./reports` in the host's working directory; that store is never moved, deleted
 or merged. The MCP server only warns when it finds one; set `SIBYL_OUTPUT_ROOT`
@@ -469,8 +471,9 @@ session can read a job's evidence, review ledger and report by ID.
 - Runtimes of the previous version take an exclusive directory lock. On POSIX the
   current version holds a shared lock on the same file, so the two generations
   refuse to run on one directory together. Windows checks only at startup;
-  stop older runtimes before upgrading there. Windows locking has not yet been
-  verified with real multi-process runs.
+  stop older runtimes before upgrading there. CI runs the multi-process locking
+  tests on GitHub-hosted Windows runners (Python 3.11 and 3.13); other Windows
+  setups, such as network drives, are untested.
 
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
 source passage IDs, timestamps, limitations, verification scope, and legacy model-call
