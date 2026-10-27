@@ -18,7 +18,8 @@ from sibyl.storage import ArtifactStore
 class TestAgentRecovery(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.directory = tempfile.TemporaryDirectory()
-        self.root = Path(self.directory.name)
+        # Resolved like the artifact store's root (Windows temp paths can be 8.3 names).
+        self.root = Path(self.directory.name).resolve()
         self.runtime = SibylRuntime(RuntimePolicy(output_root=self.root))
         self.server = create_server(self.runtime)
 
