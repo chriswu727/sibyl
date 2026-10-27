@@ -356,7 +356,23 @@ recommends outstanding follow-ups, and enforces the existing retrieval budget:
 
 Each attempt retains its round number, prior evidence revision, prior gaps,
 prior review status, and optional host rationale in the checkpoint and JSON report.
-Reviews accept at most four follow-up queries of up to 1,000 characters. Completed
+Reviews accept at most four follow-up queries of up to 1,000 characters.
+
+`research_plan.suggested_queries` lists at most three searches per open question
+(ten in total) for the host's own search tool. Each has a `kind`, a `purpose`
+and a `reason` naming the gap that produced it:
+
+| `kind` | When it appears |
+|---|---|
+| `host_follow_up` | The host's review listed this follow-up |
+| `initial` | No readable source for the question yet; the question without question/stop words |
+| `primary_source` | Only encyclopedia, community or metadata sources support the question; adds `site:` a preferred domain, "original paper" (academic) or "official source" |
+| `independent_source` | All evidence comes from one domain or one content cluster; excludes that domain |
+| `counterevidence` | No counterevidence read has returned a substantive source |
+| `recency` | The question asks about current information and no read source is dated this year |
+
+These are deterministic templates over the recorded state, not a model and not a
+guarantee of better sources. Completed
 searches are omitted from suggestions for that question (case/whitespace normalized);
 failed attempts remain retryable and consume budget. Explicit repeats are allowed
 for freshness checks. Empty suggestions do not prove exhaustive coverage.

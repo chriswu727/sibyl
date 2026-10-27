@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Search guidance: `research_plan.suggested_queries` is now built from each
+  question's recorded state instead of fixed suffixes. Suggestions have a
+  `kind` (`host_follow_up`, `initial`, `primary_source`, `independent_source`,
+  `counterevidence`, `recency`), a purpose and a reason naming the gap, at most
+  three per question. The MCP instructions and tool descriptions now tell the
+  host to run them with its own search.
 - Host-supplied sources now get the same assessment as Sibyl's own search
   results: `continue_research` URL reads go through the shared bundle builder
   (content clustering, relevance ranking, sufficiency), and `urls=[...]` reads
