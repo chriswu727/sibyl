@@ -149,6 +149,99 @@ def _inline_sources(retrieved: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
+_BEFORE_ANSWERING = {
+    "initial": "No readable source yet: search and read one",
+    "primary_source": "Only background sources so far: read the original publisher",
+    "independent_source": "All evidence is from one publisher: read an independent source",
+    "counterevidence": (
+        'No counterevidence read yet: read one with purpose="counterevidence"'
+    ),
+    "corroboration": "A fact rests on one source: read an independent one that states it",
+}
+ANSWER_GUIDANCE = (
+    "Write the answer for the user from this material: cite the URLs, never Sibyl "
+    "claim or passage IDs; state what the counterevidence showed and which gaps "
+    "remain open."
+)
+
+
+def _before_answering(item: dict[str, Any], remaining_steps: int) -> list[str]:
+    """What to do for this question before answering, most important first.
+
+    Built from the question's evidence state (reading_needs), not from the
+    capped suggestion list, so host follow-ups or a spent budget never hide it.
+    """
+    steps = [
+        f"{_BEFORE_ANSWERING[need['kind']]} (suggested search: {need['query']})."
+        for need in item.get("reading_needs", [])
+        if need["kind"] in _BEFORE_ANSWERING
+    ]
+    if item["counterevidence"]["status"] == "none_linked":
+        steps.append(
+            "Counterevidence was read but none is cited: say in the answer what it "
+            "showed or why it does not apply."
+        )
+    if steps and remaining_steps:
+        steps.append(
+            "Batch the URLs you find into one read: urls=[...], up to five, one "
+            "retrieval step."
+        )
+    elif steps:
+        steps.append(
+            "No retrieval budget remains: state these missing readings as gaps "
+            "in the answer."
+        )
+    return steps
+
+
+def _answer_material(
+    item: dict[str, Any], catalog: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    """The question's recorded claims as user-facing lines with source URLs."""
+    review = item["review"]
+    if not review or not review.get("claims"):
+        return None
+    urls = {
+        passage_id: source["url"]
+        for source in catalog
+        for passage_id in source["passage_ids"]
+    }
+
+    def cited(ids: list[str]) -> list[str]:
+        return list(dict.fromkeys(urls[i] for i in ids if i in urls))
+
+    challenging = review.get("challenging_passage_ids", [])
+    return {
+        "guidance": ANSWER_GUIDANCE,
+        "claims": [
+            {
+                "text": claim["text"],
+                "kind": claim["kind"],
+                "status": claim["status"],
+                "supporting_urls": cited(claim["supporting_passage_ids"]),
+                "challenging_urls": cited(claim["challenging_passage_ids"]),
+                **({"reason": claim["rationale"]} if claim.get("rationale") else {}),
+                # Conditions and the origin of each preference must survive into
+                # the answer, or a host assumption reads as the user's requirement.
+                **(
+                    {"assumptions": claim["assumptions"]}
+                    if claim.get("assumptions")
+                    else {}
+                ),
+                **({"criteria": claim["criteria"]} if claim.get("criteria") else {}),
+            }
+            for claim in review["claims"]
+        ],
+        "counterevidence": {
+            "status": item["counterevidence"]["status"],
+            "reads": item["counterevidence"]["reads"],
+            "note": review.get("counterevidence_note", ""),
+            "challenging_urls": cited(challenging),
+        },
+        "open_gaps": item["gaps"],
+    }
+
+
 def research_update(
     snapshot: dict[str, Any], question_id: str, retrieved: bool
 ) -> dict[str, Any]:
@@ -200,15 +293,15 @@ def research_update(
             }
             for source in _inline_sources(latest["sources"])
         ]
+    item = next(
+        (entry for entry in plan["questions"] if entry["question_id"] == question_id),
+        None,
+    )
     update.update(
-        question=next(
-            (
-                _question_update(item)
-                for item in plan["questions"]
-                if item["question_id"] == question_id
-            ),
-            None,
-        ),
+        question=_question_update(item) if item else None,
+        before_answering=_before_answering(item, plan["remaining_steps"])
+        if item
+        else [],
         open_questions=[
             item["question_id"] for item in plan["questions"] if item["gaps"]
         ],
@@ -221,6 +314,8 @@ def research_update(
             "brief": {"job_id": snapshot["job_id"], "view": "brief"},
         },
     )
+    if not retrieved and item:
+        update["answer_material"] = _answer_material(item, snapshot["source_catalog"])
     return update
 
 

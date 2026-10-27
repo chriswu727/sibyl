@@ -403,6 +403,11 @@ without quotes are not re-checked. Names are capitalized words that are not just
 sentence-initial; scripts without letter case are not checked. These are string
 comparisons, not entailment checks.
 
+Each question also lists `reading_needs`: every kind of reading its evidence
+still lacks (initial, primary, independent, counterevidence or corroborating
+source), each with a query. Unlike `suggested_queries` it is not capped and
+stays listed when the budget is spent.
+
 Each question also has `counterevidence`: `status` is `not_read` (no
 counterevidence read returned a substantive source; a gap), `linked` (the review
 cites a passage from such a read) or `none_linked` (sources were read and none is

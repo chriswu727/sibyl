@@ -832,6 +832,82 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response["open_questions"], [])
         self.assertNotIn("retrieved", response)
         self.assertEqual(response["question"]["review"]["status"], "supported")
+        material = response["answer_material"]
+        self.assertIn("never Sibyl claim or passage IDs", material["guidance"])
+        claim = material["claims"][0]
+        self.assertEqual(claim["status"], "supported")
+        self.assertTrue(claim["supporting_urls"][0].startswith("https://"))
+        self.assertNotIn(support[0], json.dumps(material))
+        self.assertEqual(material["counterevidence"]["status"], "linked")
+        self.assertEqual(material["open_gaps"], [])
+        # Ready to complete, but every source shares one publisher: still advised.
+        self.assertIn("independent source", response["before_answering"][0])
+        self.assertNotIn("counterevidence", " ".join(response["before_answering"]))
+
+    async def test_reading_needs_ignore_follow_ups_and_spent_budget(self):
+        from sibyl.research_views import _before_answering
+
+        job = await self.retrieve(self.start())
+        notebook = ResearchNotebook.from_dict(
+            self.jobs.store.get(job["job_id"])["notebook"]
+        )
+        notebook.reviews["Q0"] = {
+            "question_id": "Q0",
+            "status": "unresolved",
+            "conclusion": "Open",
+            "supporting_passage_ids": [],
+            "challenging_passage_ids": [],
+            "counterevidence_note": "None yet",
+            "follow_up_queries": ["one", "two", "three", "four"],
+            "reviewed_attempts": 1,
+            "reviewed_revision": 1,
+        }
+        plan = research_plan(notebook)
+        item = plan["questions"][0]
+        self.assertEqual(
+            [s["kind"] for s in plan["suggested_queries"]], ["host_follow_up"] * 3
+        )
+        kinds = [need["kind"] for need in item["reading_needs"]]
+        self.assertIn("counterevidence", kinds)
+        steps = _before_answering(item, plan["remaining_steps"])
+        self.assertIn('purpose="counterevidence"', " ".join(steps))
+        spent = _before_answering(item, 0)
+        self.assertIn("No retrieval budget remains", spent[-1])
+        self.assertIn('purpose="counterevidence"', " ".join(spent))
+
+    def test_answer_material_keeps_recommendation_conditions(self):
+        from sibyl.research_views import _answer_material
+
+        item = {
+            "gaps": [],
+            "counterevidence": {"status": "linked", "reads": 1},
+            "review": {
+                "counterevidence_note": "Checked",
+                "challenging_passage_ids": [],
+                "claims": [
+                    {
+                        "claim_id": "Q0.C2",
+                        "kind": "recommendation",
+                        "status": "supported",
+                        "text": "Use WAL for this workload.",
+                        "supporting_passage_ids": [],
+                        "challenging_passage_ids": [],
+                        "rationale": "Readers overlap one writer.",
+                        "assumptions": ["Writes stay serialized."],
+                        "criteria": [
+                            {
+                                "name": "Simplicity",
+                                "preference": "No server",
+                                "origin": "host_assumption",
+                            }
+                        ],
+                    }
+                ],
+            },
+        }
+        claim = _answer_material(item, [])["claims"][0]
+        self.assertEqual(claim["assumptions"], ["Writes stay serialized."])
+        self.assertEqual(claim["criteria"][0]["origin"], "host_assumption")
 
     async def test_mcp_retrieval_returns_new_passages_inline(self):
         server = create_server(self.runtime)
@@ -863,6 +939,10 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
             full["passage"]["text"].startswith(first["passages"][0]["text"])
         )
         self.assertNotIn("sources", update)
+        self.assertNotIn("answer_material", update)
+        steps = " ".join(update["before_answering"])
+        self.assertIn('purpose="counterevidence"', steps)
+        self.assertIn("urls=[...]", steps)
 
     def test_inline_passages_share_a_bounded_budget(self):
         from sibyl.research_views import INLINE_CHARS, INLINE_PASSAGES, _inline_sources

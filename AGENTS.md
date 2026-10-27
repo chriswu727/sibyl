@@ -25,7 +25,11 @@ Use `view="sources"` with the current revision to page the full catalog, and
 `view="full"` for the compatible snapshot. Each brief is self-contained.
 `continue_research` and `assess_research` return a `view="update"` for one
 question: new sources with top passages inline (cut ones marked `truncated`),
-retrieval notes, that question's gaps and checks, readiness and next searches.
+retrieval notes, that question's gaps and checks, readiness, next searches and
+`before_answering` steps; after an assessment, `answer_material` lists the
+recorded claims with URLs, counterevidence status and open gaps for the answer.
+Before answering, read at least two independent publishers and one
+counterevidence source; cite URLs, never Sibyl claim or passage IDs.
 
 ## Default workflow: host-assisted research
 

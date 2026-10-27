@@ -193,6 +193,32 @@ def _question_candidates(
     return candidates
 
 
+READING_NEEDS = (
+    "initial",
+    "primary_source",
+    "independent_source",
+    "counterevidence",
+    "corroboration",
+)
+
+
+def reading_needs(
+    notebook: ResearchNotebook, item: QuestionPlan
+) -> list[dict[str, str]]:
+    """Every kind of reading the question's evidence still lacks, with a query.
+
+    Unlike suggest_searches, this is not capped per question, does not depend
+    on the remaining budget and ignores the host's own follow-ups, so it is a
+    complete checklist of what to read before answering.
+    """
+    year = datetime.now(timezone.utc).year
+    needs: dict[str, str] = {}
+    for kind, _, query, _ in _question_candidates(notebook, item, year):
+        if kind in READING_NEEDS:
+            needs.setdefault(kind, query)
+    return [{"kind": kind, "query": query} for kind, query in needs.items()]
+
+
 def suggest_searches(
     notebook: ResearchNotebook, items: list[QuestionPlan]
 ) -> list[SuggestedQuery]:
