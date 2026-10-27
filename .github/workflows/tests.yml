@@ -60,6 +60,7 @@ jobs:
   windows:
     # Real Windows processes and msvcrt locks for the shared research store.
     runs-on: windows-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:

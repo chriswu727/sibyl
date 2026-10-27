@@ -156,7 +156,7 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
             ) as spawn,
         ):
             task = asyncio.create_task(read_pdf(b"%PDF-test", 1000))
-            await entered.wait()
+            await asyncio.wait_for(entered.wait(), timeout=5)
             task.cancel()
             with self.assertRaises(asyncio.CancelledError):
                 await task

@@ -10,6 +10,7 @@ import weakref
 from pathlib import Path
 
 _gates = weakref.WeakKeyDictionary()
+_WORKER = str(Path(__file__).with_name("pdf_worker.py"))
 
 
 async def _watch_memory(process):
@@ -50,7 +51,7 @@ async def read_pdf(data: bytes, max_chars: int) -> dict:
         process = await asyncio.create_subprocess_exec(
             sys.executable,
             "-I",
-            str(Path(__file__).with_name("pdf_worker.py")),
+            _WORKER,
             str(max(200, min(max_chars, 60000))),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
