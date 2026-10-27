@@ -18,7 +18,11 @@ if TYPE_CHECKING:
 from .research_claims import claim_gaps, claim_index, validate_claims
 from .research_errors import ResearchRequestError
 from .search_guidance import question_attempts, suggest_searches
-from .source_assessment import BACKGROUND_KINDS, question_claim_support
+from .source_assessment import (
+    BACKGROUND_KINDS,
+    counterevidence_summary,
+    question_claim_support,
+)
 from .source_policy import source_kind
 
 
@@ -211,12 +215,8 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
                 gaps.append(
                     "Substantive evidence beyond background/metadata is missing; inspect primary full text."
                 )
-        if not any(
-            a.get("purpose") == "counterevidence"
-            and a.get("substantive_sources", 0) > 0
-            and a["status"] in {"ok", "insufficient_evidence"}
-            for a in attempts
-        ):
+        counterevidence = counterevidence_summary(notebook, review, attempts)
+        if counterevidence["status"] == "not_read":
             gaps.append(
                 "No completed counterevidence search/read is linked to this question."
             )
@@ -231,6 +231,7 @@ def research_plan(notebook: ResearchNotebook) -> ResearchPlan:
                 gaps=gaps,
                 attempts=len(attempts),
                 claim_support=question_claim_support(notebook, question_id),
+                counterevidence=counterevidence,
             )
         )
     ready = all(not item["gaps"] for item in items)

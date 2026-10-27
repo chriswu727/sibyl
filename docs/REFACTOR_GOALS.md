@@ -238,7 +238,7 @@ Model/subscription-backed evaluations require explicit approval for usage.
 | Search guidance to the host | Deterministic gap-driven suggestions with kind and reason, named in the agent instructions; effect on research quality unmeasured |
 | Full assessment of host-supplied URLs | Implemented; up to five URLs per read share the bundle builder's ranking, clustering and sufficiency |
 | Source quality per claim | Cited source count, kind hints, domains and weak-support flags per fact; background-only support blocks completion; URL heuristics, not credibility verdicts |
-| Claim/quote consistency; source disagreement | Not implemented |
+| Claim/quote consistency; source disagreement | Numbers must appear in a fact's quotes; names absent from cited text and supported facts with different numbers are flagged; counterevidence read/linked status per question; string comparisons, not entailment |
 
 The retained ten-case host suite needed host-supplied URLs in seven cases. The
 dated live retrieval gates still have failures. See [launch evidence](LAUNCH_READINESS.md)

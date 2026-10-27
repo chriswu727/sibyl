@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .research_errors import ResearchRequestError
-from .source_assessment import claim_support, question_claim_support
+from .source_assessment import job_claim_support, question_claim_support
 
 if TYPE_CHECKING:
     from .evidence import EvidencePassage
@@ -414,12 +414,20 @@ def claim_gaps(notebook: ResearchNotebook, question_id: str) -> list[str]:
         claim_id = claim["claim_id"]
         if claim["status"] != "supported":
             gaps.append(f"{claim_id}: the host marked this claim {claim['status']}.")
-        elif "background_only" in support.get(claim_id, {}).get("flags", []):
-            gaps.append(
-                f"{claim_id}: support rests only on background sources "
-                "(encyclopedia, community or metadata); cite a primary source or "
-                "mark the claim unresolved."
-            )
+        else:
+            checks = support.get(claim_id, {})
+            if "background_only" in checks.get("flags", []):
+                gaps.append(
+                    f"{claim_id}: support rests only on background sources "
+                    "(encyclopedia, community or metadata); cite a primary source "
+                    "or mark the claim unresolved."
+                )
+            if checks.get("unquoted_numbers"):
+                gaps.append(
+                    f"{claim_id}: {', '.join(checks['unquoted_numbers'])} not found "
+                    "in the claim's quotes; quote the source text that states it "
+                    "or correct the claim."
+                )
         for basis in sorted(dependency_ids(claim_id, index)):
             owner, premise = index[basis]
             if premise["status"] != "supported":
@@ -484,6 +492,7 @@ def render_claims(
         for number, source in enumerate(notebook.selected_sources(), 1)
         for p in source.evidence
     }
+    supports = job_claim_support(notebook)
     records, findings, details = [], [], []
     for key, (owner, claim) in index.items():
         if key not in included:
@@ -530,8 +539,8 @@ def render_claims(
             f'Quote {citation_map[quote["passage_id"]]}: "{quote["text"]}"'
             for quote in claim.get("quotes", [])
         )
-        if claim["kind"] == "fact" and claim["status"] != "unresolved":
-            support = claim_support(notebook, claim)
+        if key in supports:
+            support = supports[key]
             record["source_support"] = support
             details.append(
                 f"Source support: {support['sources']} source(s); kinds: "
@@ -541,6 +550,15 @@ def render_claims(
                     if support["flags"]
                     else ""
                 )
+            )
+            details.extend(
+                f"Check: {label}: {', '.join(support[key])}"
+                for key, label in (
+                    ("unquoted_numbers", "numbers not in the quotes"),
+                    ("unmatched_names", "names not in the cited text"),
+                    ("conflicts_with", "states different numbers than"),
+                )
+                if support.get(key)
             )
         if claim["rationale"]:
             details.append("Reasoning: " + claim["rationale"])
