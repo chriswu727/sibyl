@@ -66,13 +66,13 @@ def export_report(
     report: ResearchReport,
     root: Path,
     output_dir: str,
-    format: Literal["md", "json", "pdf", "both"],
+    format: ExportFormat,
     job_id: str | None,
 ) -> ExportManifest:
     from .reporter import PDFRenderingError, _report_to_markdown, generate_pdf
 
     store = ArtifactStore(root, output_dir)
-    formats: list[ExportFormat] = ["pdf", "md"] if format == "both" else [format]
+    formats: list[ExportFormat] = [format]
     artifacts: list[ExportedArtifact] = []
     failures: list[ExportFailure] = []
     for selected in formats:

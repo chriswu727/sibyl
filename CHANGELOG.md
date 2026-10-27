@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- One report document: Markdown, plain-text and PDF reports now render the same
+  sections in the same order from a shared document, and the PDF table of
+  contents lists exactly the rendered sections. Markdown and text reports now
+  include retained cross-analysis, confidence and market-data sections that only
+  the PDF showed, and plain text shows a failed report's stored error as Markdown
+  did. JSON exports keep serializing the report record. `export_report` takes a
+  single format.
 - Compact responses: `continue_research` and `assess_research` return a
   `view="update"` for the affected question instead of the full brief. A read's
   update carries the new sources with their top passages inline (at most twelve
