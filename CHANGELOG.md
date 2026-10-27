@@ -2,6 +2,53 @@
 
 ## Unreleased
 
+- Retain a two-task Claude Code paired smoke (Sibyl plus built-in search versus
+  built-in search only, one run each, not blinded): one win, one loss, about
+  five times the cost; no superiority claim.
+- The agent profile's `complete_research` no longer exposes legacy prose
+  fields; contract-1 jobs finalize through the keyless profile and get
+  `legacy_contract` from the agent profile. The agent profile rejects
+  undeclared tool arguments with `invalid_parameters` instead of silently
+  ignoring them.
+- Share one research store safely between concurrent local sessions. Each
+  runtime holds an instance lock; running jobs record their owner and are
+  read-only elsewhere (`job_running_elsewhere`); orphans are recovered only after
+  the owner's lock is free, and lock-check failures (`owner_unknown`) never
+  count as an exited owner. Claims, recovery, creation and deletion are
+  conditional immediate transactions; the two-job worker limit now applies to
+  the whole store. SQLite uses WAL mode on a local filesystem. Busy stores,
+  full history and worker capacity have distinct error codes. A finished
+  retrieval that meets a busy store returns `result_pending`: the session keeps
+  the result, `get_research` shows it as `unsaved_result` and saves it later,
+  repeated retrieval is refused, and shutdown logs explicitly when it was lost.
+  Any call retries held results and releases claims whose final save failed;
+  job creation is a single write, so a busy `start_research` leaves no job.
+  Held views keep the stored revision so no request can match a different
+  saved state.
+- Default the output root to the per-user data directory when
+  `SIBYL_OUTPUT_ROOT` is unset. An older `./reports` store is never moved; the
+  MCP server warns how to keep using it. Older exclusive runtimes and current
+  runtimes refuse to share a directory (checked only at startup on Windows).
+- Agent-profile results, errors and export manifests now also carry their
+  structuredContent as serialized JSON text, as the MCP specification recommends
+  for hosts that pass only text to the model.
+- Escape inline Markdown in quoted source text in Markdown reports; JSON keeps
+  the matched text unescaped and stored passages are unchanged.
+- State when to use Sibyl (checked or reusable conclusions) versus a quick
+  lookup with the host's own search in server instructions and the README.
+- Require supported and disputed fact claims to quote exact text from their cited
+  passages; reject quotes not found verbatim (ignoring case, fullwidth ASCII,
+  accent encoding, spacing and typographic variants, never superscripts or other
+  numeric forms). Reports print the quotes on one line; JSON adds source offsets.
+  Batch-read errors name the unknown position.
+  The offline replay now rejects the earlier misplaced single-writer citation.
+- Read up to twelve passages per call with `get_research(passage_ids=[...])`.
+- Position Sibyl beside the host's own search: instructions and tool descriptions
+  now direct hosts to read the URLs they find, with keyless search as a fallback.
+- Shrink agent-facing context: shorter instructions and tool descriptions, no
+  duplicated per-question gaps in brief limitations, and no `gather_bundle` output
+  schema in the agent profile listing (payload unchanged). Tool definitions plus
+  instructions drop from about 27,000 to 16,000 characters.
 - Reconcile host-only design, goals, README translations, operations, evaluation
   status and stable-release instructions. Document removed execution separately
   from intentional legacy checkpoint/report compatibility and historical evidence.

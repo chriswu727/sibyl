@@ -30,7 +30,8 @@ validation and a coordinated fix before publishing details.
 
 Sibyl runs locally with the permissions of the user who starts it. It makes
 outbound requests to search services and public web pages. MCP reports
-are confined to the operator-selected `SIBYL_OUTPUT_ROOT` (default: `reports/`).
+are confined to the output root: `SIBYL_OUTPUT_ROOT`, or the per-user data
+directory when unset.
 `save_report(output_dir=...)` accepts only a relative subdirectory of that root.
 The CLI and direct Python rendering API retain explicit operator-selected paths.
 
@@ -66,11 +67,13 @@ boundary. Install only the extras you need and review their policies separately.
   have a 30-second TTL and a 64-entry cap. Shutdown cancels runtime-owned tasks.
 - Stateful report operations are mutually exclusive. Reports, loops, and caches
   are not shared between independently created server runtimes.
-- Persistent research admits two job workers, bounds retrieval attempts and active execution time, and requires explicit continuation after
+- Persistent research admits two running jobs per store across all sessions, bounds retrieval attempts and active execution time, and requires explicit continuation after
   interruption. Checkpoints reserve attempts before dispatch. These are not exact
   search-provider billing limits; already-dispatched requests can be billed.
-- Research state uses an owner-locked private SQLite database below the output
-  root, with 64 records, a 1 MiB payload ceiling per job (plus 64 KiB reserved
+- Research state uses a private SQLite database below the output root, shared by
+  the same user's local sessions. Running jobs are owned by one runtime's
+  instance lock; other sessions get read-only access until the owner finishes or
+  exits. This is not isolation between projects. The store holds 64 records, a 1 MiB payload ceiling per job (plus 64 KiB reserved
   for failure recovery metadata), 80 progress events per
   job, and a 16,384-page database limit. A stale revision cannot finalize a host
   report against different citation numbering. Finished reports are immutable.

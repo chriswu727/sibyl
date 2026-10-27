@@ -72,7 +72,10 @@ def review_question(
             "Review status must be supported, disputed, or unresolved."
         )
     normalized_claims, basis_fingerprints = validate_claims(
-        notebook, question_id, claims or [], set(evidence_index(notebook))
+        notebook,
+        question_id,
+        claims or [],
+        {key: passage for key, (_, passage) in evidence_index(notebook).items()},
     )
     known_claims = {key: item[1] for key, item in claim_index(notebook).items()}
     known_claims.update({claim["claim_id"]: claim for claim in normalized_claims})

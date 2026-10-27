@@ -10,11 +10,12 @@ from typing import get_type_hints
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult
 from pydantic import BaseModel
 
 from .async_cache import CapacityError
-from .mcp_errors import AgentMCP, SafeToolError
+from .evidence import SourceBundle
+from .mcp_errors import AgentMCP, SafeToolError, json_text
 from .report_exports import ExportManifest, ReportExportError
 from .research_errors import ResearchRequestError
 from .research_state import ResearchBudgetExceeded
@@ -51,7 +52,13 @@ class ToolCatalog:
         self.tools = []
 
     def tool(self, **options):
+        """Register a tool; profile="agent" or "keyless" limits it to that surface,
+        so one tool name can have a different schema per profile."""
+        name = options.get("name") or ""
+
         def register(function):
+            tool_name = name or function.__name__
+
             @wraps(function)
             async def bounded(*args, **kwargs):
                 async def execute():
@@ -62,7 +69,7 @@ class ToolCatalog:
 
                 try:
                     _validate_payload([*args, *kwargs.values()])
-                    return await get_runtime().execute(function.__name__, execute)
+                    return await get_runtime().execute(tool_name, execute)
                 except (
                     CapacityError,
                     ResearchBudgetExceeded,
@@ -73,7 +80,7 @@ class ToolCatalog:
                         if isinstance(exc, ResearchRequestError)
                         else ResearchRequestError(
                             str(exc),
-                            code="capacity_exceeded"
+                            code=getattr(exc, "code", "capacity_exceeded")
                             if isinstance(exc, CapacityError)
                             else "budget_exhausted",
                         )
@@ -109,6 +116,17 @@ class ToolCatalog:
 
         return register
 
+    def _enabled(self, options: dict, agent_mode: bool) -> bool:
+        profile = options.get("profile")
+        return profile is None or profile == ("agent" if agent_mode else "keyless")
+
+    def names(self, agent_mode: bool) -> list[str]:
+        return [
+            options.get("name") or function.__name__
+            for function, options in self.tools
+            if self._enabled(options, agent_mode)
+        ]
+
     def create_server(
         self, runtime: SibylRuntime, instructions: str, *, agent_mode: bool = False
     ) -> FastMCP:
@@ -129,21 +147,32 @@ class ToolCatalog:
             else FastMCP("sibyl", **server_options)
         )
         for function, options in self.tools:
+            if not self._enabled(options, agent_mode):
+                continue
+            tool_name = options.get("name") or function.__name__
 
-            def bind(function):
+            def bind(function, tool_name=tool_name):
                 @wraps(function)
                 async def invoke(*args, **kwargs):
                     token = current_runtime.set(runtime)
                     try:
                         result = await function(*args, **kwargs)
+                        if agent_mode and isinstance(result, SourceBundle):
+                            # Same SourceBundle payload; the large schema stays in docs.
+                            payload = result.to_dict()
+                            return CallToolResult(
+                                content=[json_text(payload)],
+                                structuredContent=payload,
+                            )
                         if isinstance(result, ExportManifest):
                             if not agent_mode:
                                 return result.text()
+                            payload = result.model_dump(mode="json")
                             return CallToolResult(
-                                content=[TextContent(type="text", text=result.text())],
-                                structuredContent=result.model_dump(mode="json"),
+                                content=[json_text(payload)],
+                                structuredContent=payload,
                             )
-                        if agent_mode and function.__name__ in {
+                        if agent_mode and tool_name in {
                             "start_research",
                             "continue_research",
                             "get_research",
@@ -157,12 +186,7 @@ class ToolCatalog:
                             ):
                                 result = research_brief(result)
                             return CallToolResult(
-                                content=[
-                                    TextContent(
-                                        type="text",
-                                        text="Research result in structuredContent. Read status, research_plan and limitations; completion is not a factual verification.",
-                                    )
-                                ],
+                                content=[json_text(result)],
                                 structuredContent=result,
                             )
                         return result
@@ -181,7 +205,11 @@ class ToolCatalog:
                     )
                 return invoke
 
-            server.tool(**options)(bind(function))
+            if agent_mode and function.__annotations__.get("return") is SourceBundle:
+                options = {**options, "structured_output": False}
+            server.tool(
+                **{key: value for key, value in options.items() if key != "profile"}
+            )(bind(function))
         return server
 
 

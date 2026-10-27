@@ -26,7 +26,13 @@ Claim IDs can be referenced across questions in the same job.
       "kind": "fact",
       "status": "supported",
       "text": "The inspected documentation states the relevant capability and conditions.",
-      "supporting_passage_ids": ["the exact passage citation_id"]
+      "supporting_passage_ids": ["the exact passage citation_id"],
+      "quotes": [
+        {
+          "passage_id": "the exact passage citation_id",
+          "text": "Exact text copied from that passage."
+        }
+      ]
     },
     {
       "claim_id": "Q1.C2",
@@ -66,9 +72,36 @@ report narratives render claims rather than those free-form review notes.
 | `rationale` | Up to 1,000 characters; required for reasoning and unresolved claims |
 | `assumptions` | Up to four explicit conditions, each at most 300 characters |
 | `criteria` | Up to six recommendation criteria: name, preference and origin |
+| `quotes` | Up to twelve `{passage_id, text}` excerpts, each at most 500 characters, from passages this claim cites |
 
 Supported facts require passage references. Facts cannot substitute another
-claim for original evidence. Supported/disputed inferences and recommendations
+claim for original evidence.
+
+### Verbatim quotes
+
+Supported and disputed facts must quote exact text from at least one supporting
+passage; disputed facts also quote a challenging passage. Each quote must come
+from a passage the claim cites. Sibyl searches the stored passage text for the
+quote, ignoring case, fullwidth ASCII forms, composed versus combining accents,
+typographic quote/dash variants, whitespace runs, leading/trailing ellipses and
+one surrounding pair of quotation marks. Superscripts, Roman numerals and other
+compatibility characters are not folded, so `10²` never matches `102`. A match
+must cover whole source characters. A quote shorter than eight characters after
+folding, or one not found, rejects the whole assessment with
+`field="claims.quotes"` and the claim ID. Stored quotes are replaced by the
+matched source text with whitespace runs collapsed to single spaces, so a stored
+claim can be resubmitted unchanged. JSON report claims keep that text unescaped
+and add `start_char`/`end_char` offsets into the extracted source; the stored
+passage itself is never modified. Markdown reports place each quote mid-line and
+backslash-escape inline Markdown (emphasis, code, links, images, HTML and
+entities), so quoted source text cannot add links, images or structure. Bare
+URLs inside a quote may still be auto-linked by some Markdown renderers. Markdown, PDF and text reports print each
+quote beside its claim.
+
+This catches a citation to the wrong passage or an invented excerpt. It does not
+establish entailment, source truth or freedom from hallucination: the host must still quote text that carries every asserted
+qualification, split compound claims or mark them unresolved. The rule applies
+to new assessments; previously stored claims are not rewritten or re-validated. Supported/disputed inferences and recommendations
 need a reasoning basis and rationale. A recommendation also requires criteria;
 `origin` is `user` or `host_assumption`, declared by the host. Criteria and origin
 are not independently verified against the conversation.
@@ -139,7 +172,8 @@ Stale dependency warnings are preserved when exporting a partial report.
 ## Compatibility and verification
 
 Old checkpoints without the new contract version load as contract 1 and retain
-their existing prose completion interface. They are not silently upgraded or
+their existing prose completion interface through the keyless profile; the agent
+profile's `complete_research` takes no prose fields and returns `legacy_contract`. They are not silently upgraded or
 assigned new verification results. Direct Python `ResearchJobs.start` retains
 contract 1 by default for embedding compatibility; pass `claim_contract_version=2`
 to use the same contract as new MCP jobs. Both MCP profiles create contract-2 jobs.
