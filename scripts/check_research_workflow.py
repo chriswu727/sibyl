@@ -56,14 +56,15 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
             )
 
             response_bytes = 0
+            tool_bytes: dict[str, list[int]] = {}
 
             async def call(name: str, **arguments):
                 nonlocal response_bytes
                 response = await session.call_tool(name, arguments)
                 require(not response.isError, f"{name} failed: {response.content}")
-                response_bytes += len(
-                    response.model_dump_json(exclude_none=True).encode()
-                )
+                size = len(response.model_dump_json(exclude_none=True).encode())
+                response_bytes += size
+                tool_bytes.setdefault(name, []).append(size)
                 return response.structuredContent or {}
 
             job = await call("start_research", question=QUESTION, max_steps=3)
@@ -75,12 +76,21 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 question_id="Q0",
                 rationale="Establish documented concurrency benefits and limitations.",
             )
-            wal_passage = job["sources"][0]["passage_ids"][0]
+            require(job["view"] == "update", "Retrieval did not return an update")
+            require("evidence" not in job, "Update repeated the evidence snapshot")
+            inline = job["retrieved"][0]["passages"][0]
+            wal_passage = inline["passage_id"]
+            require(
+                job["retrieved"][0]["citation"] == "[Source 1]",
+                "Update lost the citation number",
+            )
             passage = await call("get_research", job_id=job_id, passage_id=wal_passage)
             require(passage["passage"]["text"], "Exact WAL evidence unavailable")
+            require(
+                passage["passage"]["text"].startswith(inline["text"]),
+                "Inline passage text differs from the stored passage",
+            )
             require(passage["retrieved_at"], "Passage lost provenance")
-            require(job["view"] == "brief", "Mutation did not return a brief")
-            require("evidence" not in job, "Brief repeated raw evidence")
             rejected = await session.call_tool(
                 "assess_research",
                 {
@@ -154,11 +164,14 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                     },
                 ],
             )
+            require(job["view"] == "update", "Assessment did not return an update")
+            require(not job["ready_to_complete"], "Unresolved evidence became ready")
+            require(job["suggested_queries"], "Missing gap follow-up")
             require(
-                not job["research_plan"]["ready_to_complete"],
-                "Unresolved evidence became ready",
+                job["suggested_queries"][0]["query"]
+                == "SQLite simultaneous writers serialization",
+                "Host follow-up was not suggested first",
             )
-            require(job["research_plan"]["suggested_queries"], "Missing gap follow-up")
             first_revision = job["revision"]
             job = await call(
                 "continue_research",
@@ -169,17 +182,22 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 rationale="Test the stronger claim that WAL allows simultaneous writers.",
             )
             require(
-                job["latest_attempt"]["prior_gaps"],
+                job["attempt"]["prior_gaps"],
                 "Follow-up lost its research gaps",
             )
             require(
-                job["latest_attempt"]["based_on_revision"] == first_revision,
+                job["attempt"]["based_on_revision"] == first_revision,
                 "Follow-up revision lost",
             )
             require(
-                not job["research_plan"]["ready_to_complete"],
+                not job["ready_to_complete"],
                 "New evidence did not require reassessment",
             )
+            require(
+                job["question"]["counterevidence"]["status"] == "none_linked",
+                "Counterevidence read was not reported",
+            )
+            job = await call("get_research", job_id=job_id)
             passages = {
                 source["url"]: source["passage_ids"][0] for source in job["sources"]
             }
@@ -318,9 +336,14 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
                 ],
             )
             require(
-                job["research_plan"]["ready_to_complete"],
+                job["ready_to_complete"],
                 "Reviewed investigation remained incomplete",
             )
+            require(
+                job["question"]["counterevidence"]["status"] == "linked",
+                "Linked counterevidence was not reported",
+            )
+            job = await call("get_research", job_id=job_id)
             require(job["report"] is None, "An assessed ledger required a prose report")
             stale = await session.call_tool(
                 "complete_research",
@@ -397,6 +420,7 @@ async def check(directory: Path, include_pdf: bool = False) -> dict:
             job = await call("get_research", job_id=job_id, view="full")
             await check_unknown_recovery(session, directory)
             print(f"successful replay response bytes: {response_bytes}")
+            print(f"response bytes by tool: {json.dumps(tool_bytes, sort_keys=True)}")
     async with stdio_client(parameters) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()

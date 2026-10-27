@@ -294,7 +294,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
                     server, "continue_research", job_id=job["job_id"], query="q"
                 )
                 self.assertEqual(bundle["error"]["code"], code)
-                self.assertEqual(attempt["latest_attempt"]["status"], "failed")
+                self.assertEqual(attempt["attempt"]["status"], "failed")
                 for result in (bundle, attempt):
                     self.assertNotIn("SECRET", json.dumps(result))
 

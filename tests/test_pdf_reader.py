@@ -142,9 +142,7 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
                 ):
                     result = await server.call_tool("continue_research", arguments)
                 self.assertFalse(result.isError)
-                self.assertEqual(
-                    result.structuredContent["latest_attempt"]["status"], "ok"
-                )
+                self.assertEqual(result.structuredContent["attempt"]["status"], "ok")
                 self.assertIn("PDF text was truncated", result.content[0].text)
                 full = await server.call_tool(
                     "get_research", {"job_id": job["job_id"], "view": "full"}
@@ -158,7 +156,7 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
                     mock.AsyncMock(return_value=page),
                 ):
                     result = await server.call_tool("continue_research", arguments)
-                attempt = result.structuredContent["latest_attempt"]
+                attempt = result.structuredContent["attempt"]
                 self.assertNotEqual(attempt["status"], "ok")
                 self.assertEqual(attempt["substantive_sources"], 0)
                 self.assertIn("Encrypted PDF", attempt["error"])

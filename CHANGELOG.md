@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Compact responses: `continue_research` and `assess_research` return a
+  `view="update"` for the affected question instead of the full brief. A read's
+  update carries the new sources with their top passages inline (at most twelve
+  passages, 12,000 characters; cut passages are marked `truncated`), the read's
+  sufficiency verdict and notes, the question's gaps, claim support and
+  counterevidence status, readiness and suggested searches. On the offline
+  replay these responses are 43% smaller than the briefs they replace while
+  also carrying passage text. `get_research(job_id)` still returns the brief.
 - Claim checks: a quoted fact whose numbers do not appear in its quotes is a
   completion gap (`number_not_quoted`). Facts naming something absent from
   their cited text (`name_not_in_sources`) and supported facts about the same

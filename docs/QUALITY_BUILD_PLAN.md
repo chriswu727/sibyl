@@ -243,7 +243,8 @@ what conflicts or limitations matter, and what retrieval budget remains.
 The next query should address a specific gap. A repeated query or a larger source
 count alone must not be treated as progress.
 
-Keep compact self-contained briefs, on-demand exact passages and the complete
+Keep compact self-contained briefs, per-question updates with inline passages
+after each read or assessment, on-demand exact passages and the complete
 saved-source catalog. Preserve evidence outside the selected report window.
 Make failures and incomplete outcomes actionable, and let the host stop with
 uncertainty when more retrieval is unlikely to resolve the question.

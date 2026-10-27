@@ -72,7 +72,9 @@ no artifact was confirmed.
 
 ## Brief 1.0
 
-Research mutations and `get_research(job_id)` return a brief.
+`start_research`, `complete_research`, `cancel_research` and
+`get_research(job_id)` return a brief; `continue_research` and `assess_research`
+return an [update](#update-10).
 Any profile can explicitly request `get_research(job_id, view="brief")`.
 
 | Field | Meaning |
@@ -90,10 +92,35 @@ Any profile can explicitly request `get_research(job_id, view="brief")`.
 | `report` | Null, or finalized status, summary, findings, verification scope and limitations; no analysis body or repeated source text |
 | `evidence_access` | Arguments for batch exact-passage, catalog and full-view reads; replace the passage-ID placeholder |
 
-Each brief is a self-contained projection of the current checkpoint, **not a
-delta**. Replace old state; never inherit a previous `ready_to_complete` after
-retrieval. Omitted raw evidence is not missing evidence. Briefs are smaller, not
+Each brief is a self-contained projection of the current checkpoint. Replace old
+state; never inherit a previous `ready_to_complete` after retrieval. Omitted raw evidence is not missing evidence. Briefs are smaller, not
 fixed-size: long host reviews and many evidence references still consume context.
+
+## Update 1.0
+
+`continue_research` and `assess_research` return what changed for one question
+instead of the whole brief.
+
+| Field | Meaning |
+|---|---|
+| `schema_version`, `view` | `"1.0"`, `"update"` |
+| `job_id`, `revision`, `status`, `remaining_steps`, `elapsed_seconds`, `running_elsewhere`, `unsaved_result` | As in the brief |
+| `attempt` | Retrieval only: this attempt, including prior gaps, revision and rationale |
+| `evidence_sufficiency`, `retrieval_notes` | Retrieval only: the read's sufficiency verdict and notes, such as read failures, bounded-read notices and PDF extraction warnings |
+| `retrieved` | Retrieval only: readable sources from this read with `citation` (null outside the report window), source fields, `passages` inline and `omitted_passage_ids` |
+| `question` | The question's plan item: gaps, `claim_support`, `counterevidence`, attempts and a review summary (status, conclusion, claim count) |
+| `open_questions` | IDs of every question that still has gaps |
+| `ready_to_complete`, `next_action`, `suggested_queries` | As in `research_plan` |
+| `evidence_access` | Arguments for exact passage reads and the full brief |
+
+Inline passages are shared round-robin across the new sources, best passage
+first: at most twelve passages, 12,000 characters in total and 1,500 per passage.
+A cut passage has `truncated: true`; read the exact full text by passage ID before
+quoting it. Snippet-only sources are not inlined. The update does not repeat other
+questions' reviews or the source list; call `get_research(job_id)` for the brief.
+On the offline replay, the four update responses total 19,692 bytes against
+34,590 for the briefs they replace, while also carrying passage text. Real-host
+token use is measured in the paired evaluation.
 
 The useful agent output already exists before report generation:
 `research_plan.questions[].review` contains `conclusion`, `status` (supported,
