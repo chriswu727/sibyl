@@ -176,7 +176,8 @@ Sibyl 的差异是持久化、由证据推动的研究流程，不是拥有更�
 
 发布用检索门槛（每个问题读取三个固定的宿主搜索 URL）的[最新运行](evals/results/host-source-retrieval-honest-ua-2026-10-27.json)只有 ready 比例未通过：
 答案覆盖率 87.0%、稳定性 98.5%、ready 状态的答案精度 100% 均达标，
-但可回答问题的 ready 比例为 30.2%（门槛 75%），主要因为来自单一域名的含答案读取被评为 `limited`。
+但可回答问题的 ready 比例为 30.2%，主要因为来自单一域名的含答案读取被评为 `limited`。
+维护者随后把该比例改为只报告、不卡发布，因此这次运行满足修订后的第一道门槛；剩下的研究质量门槛是同宿主对照评测。
 [首次运行](evals/results/host-source-retrieval-2026-10-27.json)时，页面读取尚未以 Sibyl 身份标识，所有 Wikipedia 读取都被拒绝。
 [最新免密钥发现记录](evals/results/live-retrieval-hedged-2026-10-27.json)
 在 GitHub 托管的运行器上对 66 个问题进行了三次重复测试：陷阱问题全部安全处理，

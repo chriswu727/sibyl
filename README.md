@@ -205,8 +205,10 @@ search still needs a paired same-host, same-provider, same-budget evaluation.
 The latest run of the release retrieval gate, which reads three frozen
 host-search URLs per question, [failed only readiness](evals/results/host-source-retrieval-honest-ua-2026-10-27.json):
 87.0% answer coverage, 98.5% stability and 100% ready-state precision pass, but
-30.2% of answerable runs were ready (gate 75%), mostly because answer-bearing
-reads from a single domain are rated `limited`. The
+30.2% of answerable runs were ready, mostly because answer-bearing reads from a
+single domain are rated `limited`. The owner then made that rate a reported
+diagnostic, so this run meets the amended gate; the paired host evaluation is
+the remaining research-quality gate. The
 [first run](evals/results/host-source-retrieval-2026-10-27.json) had every Wikipedia
 read refused until page reads identified as Sibyl. The latest [keyless discovery run](evals/results/live-retrieval-hedged-2026-10-27.json)
 tested 66 questions three times on a GitHub-hosted runner. It handled every trap
