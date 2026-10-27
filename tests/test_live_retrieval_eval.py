@@ -1,5 +1,6 @@
 """Model-free live retrieval metric tests. No network."""
 
+import asyncio
 import unittest
 
 from sibyl.evidence import (
@@ -146,6 +147,29 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
             "RuntimeError: network unavailable",
         )
         self.assertEqual(progress, [(1, 1, "broken")])
+
+    async def test_records_provider_request_outcomes_per_run(self):
+        from unittest import mock
+
+        from sibyl.search import search_mojeek, search_yahoo
+
+        client = mock.Mock()
+        client.get = mock.AsyncMock(return_value=mock.Mock(status_code=403, text=""))
+
+        async def gather(query, **kwargs):
+            await asyncio.gather(
+                search_mojeek(query, client=client),
+                search_yahoo(query, client=client),
+            )
+            await search_mojeek(query, client=client)
+            return bundle("answer")
+
+        cases = [LiveRetrievalCase("a", "Who?", "answer", [])]
+        result = await evaluate_live_retrieval(cases, gather=gather)
+        self.assertEqual(
+            result.cases[0].runs[0].search_attempts,
+            {"mojeek": {"403": 2}, "yahoo": {"403": 1}},
+        )
 
 
 if __name__ == "__main__":
