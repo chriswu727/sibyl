@@ -676,12 +676,14 @@ answerable runs containing both `ok` and expected evidence, ready-state precisio
 and p50/p95 latency. It records configured and actual provider paths. Save dated
 results; public search and publisher availability vary between runs.
 
-The latest retained full keyless gate is the [2026-10-26 body-selection run](../evals/results/live-retrieval-body-selection-2026-10-26.json):
-66 cases, three repeats, 81.5% answer coverage and 97.9% ready-state answer
-precision, but 57.4% answerable readiness (gate 75%) and 51.5% repeat stability
-(gate 90%). It failed. Gold/alias matches do not measure semantic report accuracy.
-This run predates the subsequent query, metadata-classification and excerpt-hint
-changes; there is no replacement full-gate pass on the latest source.
+The latest retained full keyless gate is the [2026-10-27 GitHub-runner run](../evals/results/live-retrieval-github-runner-2026-10-27.json):
+66 cases, three repeats, 100% trap-safe handling and 8.2 s p95 latency, but 72.2%
+answer coverage (gate 80%), 30.2% answerable readiness (gate 75%), 47.0% repeat
+stability (gate 90%) and 90.7% ready-state answer precision (gate 95%). It failed.
+The runner's network blocked more page reads than the
+[2026-10-26 run](../evals/results/live-retrieval-body-selection-2026-10-26.json),
+which also failed readiness and stability. Gold/alias matches do not measure
+semantic report accuracy. There is no full-gate pass on the latest source.
 Historical July keyless/Tavily runs remain linked in
 [launch readiness](LAUNCH_READINESS.md#historical-live-evidence), not presented
 as current measurements. The host-only source is not cleared for stable release.

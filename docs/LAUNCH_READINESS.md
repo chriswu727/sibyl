@@ -346,6 +346,36 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### GitHub-runner live gate, 2026-10-27
+
+The [retained 66-case, three-repeat run](../evals/results/live-retrieval-github-runner-2026-10-27.json) ran the
+`live retrieval gate` workflow on a GitHub-hosted Ubuntu runner at commit 6130fa2,
+with anonymous keyless search, no model calls and the unchanged frozen
+datasets/thresholds. It exited 1 with `passed=false`.
+
+| Metric | Result | Gate | Outcome |
+|---|---:|---:|---|
+| Answer coverage | 72.2% | 80% | Fail |
+| Trap-safe rate | 100% | 80% | Pass |
+| Repeat stability | 47.0% | 90% | Fail |
+| Answerable ready rate | 30.2% | 75% | Fail |
+| Ready-state answer precision | 90.7% | 95% | Fail |
+| p95 retrieval latency | 8.2 s | 30 s | Pass |
+
+The runner network differs from the 2026-10-26 run: page reads averaged 4.8
+scrape failures per run (1.0 on 2026-10-26), and DuckDuckGo answered in 4 of 198
+runs, so general-web results came mostly from Yahoo, Google News and Wikipedia.
+Readiness now also applies the substantive-source checks added after 2026-10-26
+(`single_domain` was the most common insufficiency reason). The two runs differ in
+network, date and source, so the comparison is not causal. Ready-state precision
+fell below its gate: five runs on four answerable cases were `ok` without the gold
+answer in evidence.
+
+An earlier attempt the same day from a development sandbox is
+[retained as invalid](../evals/results/live-retrieval-sandbox-proxy-invalid-2026-10-27.json):
+its egress proxy closed DuckDuckGo tunnels, giving 62 zero-source runs. It
+measures that network, not Sibyl, and is not a gate outcome.
+
 ### Current-source live gate, 2026-10-26
 
 The [retained 66-case, three-repeat run](../evals/results/live-retrieval-body-selection-2026-10-26.json)

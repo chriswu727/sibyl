@@ -202,14 +202,14 @@ The practical difference is **persistent, evidence-directed research**, not a
 claim to have a better model. Whether it produces better answers than built-in
 search still needs a paired same-host, same-provider, same-budget evaluation.
 
-The [2026-10-26 live retrieval run](evals/results/live-retrieval-body-selection-2026-10-26.json)
-tested 66 questions three times. It reached 81.5% answer coverage and 97.9%
-ready-state answer precision, but failed answerable readiness (57.4% vs 75%) and
-repeat stability (51.5% vs 90%). These use gold/alias evidence matching, not
-semantic report accuracy. Seven of ten live host-suite cases needed host-supplied
+The [2026-10-27 live retrieval run](evals/results/live-retrieval-github-runner-2026-10-27.json)
+tested 66 questions three times on a GitHub-hosted runner. It handled every trap
+question safely but failed answer coverage (72.2% vs 80%), answerable readiness
+(30.2% vs 75%), repeat stability (47.0% vs 90%) and ready-state answer precision
+(90.7% vs 95%). These use gold/alias evidence matching, not semantic report
+accuracy. Seven of ten live host-suite cases needed host-supplied
 URLs. Compact responses and model removal do not fix those discovery weaknesses.
-That gate predates subsequent query/metadata/excerpt-hint changes; no newer full
-pass is recorded. A [two-workflow low-effort host retest](evals/results/host-agent-structured-retest-2026-10-26.json)
+No full pass of this gate is recorded. A [two-workflow low-effort host retest](evals/results/host-agent-structured-retest-2026-10-26.json)
 delivered partial Markdown/JSON for both tasks, but the SQLite recommendation
 still cited an excerpt missing a material qualification. Export success is not
 a semantic research-quality pass. Verbatim quote checks were added afterwards:
