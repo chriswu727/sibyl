@@ -79,7 +79,7 @@ flowchart TD
 | `research_claims.py` | Atomic claim validation, dependency freshness, criteria and claim-derived report narrative |
 | `research_errors.py` | Application-authored validation errors safe for the MCP boundary |
 | `research_jobs.py` | Host job lifecycle, progress, cancellation, continuation |
-| `job_store.py` | Private bounded SQLite, directory ownership, optimistic revisions |
+| `job_store.py` | Private bounded SQLite shared by local runtimes, instance locks, job claims, orphan recovery, optimistic revisions |
 | `report_audit.py` | Deterministic citation-target validation |
 | `research_views.py` | Compact briefs, revision-pinned source pages and compatibility views |
 | `report_sections.py`, `report_references.py` | Shared claim presentation and cited/background source grouping |
@@ -144,7 +144,12 @@ completed job ID; the runtime retains a programmatic last_report fallback for
 existing Python integrations, but no MCP tool generates a report through a model.
 
 New research jobs use a separate SQLite store, opened lazily below the output
-root. An OS-held file lock prevents simultaneous owners of the same directory.
+root (the per-user data directory unless `SIBYL_OUTPUT_ROOT` is set). Concurrent
+local runtimes share it. Each holds an OS file lock on its own instance file; a
+running job records its claiming instance, other runtimes treat it as read-only,
+and an orphan is recovered only after its owner's lock is free. Claims, recovery,
+creation and deletion run in immediate transactions conditioned on the saved
+revision. See [shared research store](USAGE.md#shared-research-store).
 Each update uses an optimistic revision; host report submission must match the
 current citation snapshot. Completed reports are immutable. Checkpoints store
 plans, evidence, progress, budgets, and reports—not credentials or model sessions.
@@ -159,7 +164,8 @@ structure, not semantic truth, source independence, or research exhaustiveness.
 Older host checkpoints retain their previous completion behavior. Old autonomous
 records remain readable/exportable, but cannot resume execution.
 
-Host retrieval runs as runtime-owned asyncio tasks (two job workers maximum).
+Host retrieval runs as runtime-owned asyncio tasks; at most two jobs run at once
+across every runtime sharing the store.
 Shutdown cancels and awaits them before releasing the store. Explicit continuation
 reuses completed evidence and consumed budgets.
 This is checkpoint recovery, not exactly-once external execution. A process crash

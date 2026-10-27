@@ -343,11 +343,21 @@ class TestResearchJobs(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(structured["status"], "awaiting_input")
         self.assertTrue(structured["job_id"])
 
-    async def test_store_is_private_and_rejects_second_runtime_owner(self):
-        self.assertEqual(stat.S_IMODE(self.jobs.store.path.stat().st_mode), 0o600)
-        with self.assertRaises(CapacityError):
-            JobStore(self.policy.output_root)
-        with self.jobs.store.connection() as connection:
+    async def test_store_is_private_and_shared_by_concurrent_runtimes(self):
+        store = self.jobs.store
+        self.assertEqual(stat.S_IMODE(store.path.stat().st_mode), 0o600)
+        lock = store.instances / f"{store.instance_id}.lock"
+        self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
+        self.assertEqual(stat.S_IMODE(store.instances.stat().st_mode), 0o700)
+        other = JobStore(self.policy.output_root)
+        try:
+            self.assertNotEqual(other.instance_id, store.instance_id)
+            self.assertTrue(store.owner_alive(other.instance_id))
+            self.assertTrue(other.owner_alive(store.instance_id))
+        finally:
+            other.close()
+        self.assertFalse(store.owner_alive(other.instance_id))
+        with store.connection() as connection:
             self.assertEqual(
                 connection.execute("PRAGMA max_page_count").fetchone()[0], 16384
             )
