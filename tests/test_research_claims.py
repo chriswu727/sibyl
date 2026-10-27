@@ -33,6 +33,9 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
 
     async def call(self, name, **arguments):
         response = await self.server.call_tool(name, arguments)
+        self.assertEqual(
+            json.loads(response.content[0].text), response.structuredContent
+        )
         if response.isError:
             self.assertEqual(response.structuredContent["view"], "error")
             self.assertEqual(response.structuredContent["status"], "error")
@@ -343,6 +346,44 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             'Quote [Source 1]: "Evidence observed"', full["report"]["analysis"]
         )
         self.assertTrue(passage["passage"]["text"].startswith(quote["text"]))
+
+    async def test_markdown_reports_escape_quoted_source_text(self):
+        source = "Evidence observed [click](https://example.com/x) ![img](a.png) <b>bold</b> *em*"
+        bundle = evidence_bundle("observed", 1)
+        passage = bundle.sources[0].evidence[0]
+        bundle.sources[0].evidence[0] = type(passage)(
+            passage.passage_id, passage.citation_id, source, passage.content_hash
+        )
+        job = await self.start()
+        with patch(
+            "sibyl.research_jobs.gather_source_bundle", AsyncMock(return_value=bundle)
+        ):
+            job = await self.call(
+                "continue_research",
+                job_id=job["job_id"],
+                question_id="Q0",
+                query="Inspect concurrency conditions",
+                purpose="counterevidence",
+            )
+        fact = self.facts(job)[0]
+        fact["quotes"][0]["text"] = source
+        job = await self.assess(job, [fact])
+        await self.call(
+            "complete_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            allow_incomplete=True,
+        )
+        full = await self.call("get_research", job_id=job["job_id"], view="full")
+        report = ResearchReport.from_dict(full["report"])
+        self.assertEqual(report.claims[0]["quotes"][0]["text"], source)
+        markdown = _report_to_markdown(report)
+        self.assertIn(
+            r"\[click\](https://example.com/x) \!\[img\](a.png) \<b\>bold\</b\> \*em\*",
+            markdown,
+        )
+        self.assertNotIn("[click](", markdown)
+        self.assertIn(source, _format_report(report))
 
     async def test_stored_claims_can_be_resubmitted_unchanged(self):
         job = await self.retrieve(await self.start())

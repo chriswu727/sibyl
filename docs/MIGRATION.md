@@ -59,6 +59,10 @@ documentation look cleaner. Old model verdicts remain fallible recorded judgment
    Unsupported fields fail without echoing their values. Model environment
    variables do not enable model execution.
 4. Keep the old checkpoint directory private and stop its owner before backup.
+   The default output root is now the per-user data directory, not `./reports`.
+   Old stores are not moved or merged; set `SIBYL_OUTPUT_ROOT` to an old store's
+   absolute path to keep using it. Stop older runtimes before newer ones use the
+   same directory.
    Existing reports remain readable/exportable. To extend a historical autonomous
    investigation, explicitly create a new host job rather than converting it.
 5. Install only needed extras. Optional Tavily/Jina calls have their own disclosure

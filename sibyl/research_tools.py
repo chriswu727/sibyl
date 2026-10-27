@@ -70,7 +70,7 @@ async def get_research(
                     key: job[key]
                     for key in ("job_id", "question", "mode", "status", "revision")
                 }
-                for job in jobs.store.list_jobs()
+                for job in jobs.list_jobs()
             ]
         }
     if passage_id and view not in {"auto", "full"}:

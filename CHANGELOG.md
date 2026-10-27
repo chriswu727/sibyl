@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+- Share one research store safely between concurrent local sessions. Each
+  runtime holds an instance lock; running jobs record their owner and are
+  read-only elsewhere (`job_running_elsewhere`); orphans are recovered only after
+  the owner's lock is free, and lock-check failures (`owner_unknown`) never
+  count as an exited owner. Claims, recovery, creation and deletion are
+  conditional immediate transactions; the two-job worker limit now applies to
+  the whole store. SQLite uses WAL mode on a local filesystem. Busy stores,
+  full history and worker capacity have distinct error codes. A finished
+  retrieval that meets a busy store returns `result_pending`: the session keeps
+  the result, `get_research` shows it as `unsaved_result` and saves it later,
+  repeated retrieval is refused, and shutdown logs explicitly when it was lost.
+  Any call retries held results and releases claims whose final save failed;
+  job creation is a single write, so a busy `start_research` leaves no job.
+  Held views keep the stored revision so no request can match a different
+  saved state.
+- Default the output root to the per-user data directory when
+  `SIBYL_OUTPUT_ROOT` is unset. An older `./reports` store is never moved; the
+  MCP server warns how to keep using it. Older exclusive runtimes and current
+  runtimes refuse to share a directory (checked only at startup on Windows).
+- Agent-profile results, errors and export manifests now also carry their
+  structuredContent as serialized JSON text, as the MCP specification recommends
+  for hosts that pass only text to the model.
+- Escape inline Markdown in quoted source text in Markdown reports; JSON keeps
+  the matched text unescaped and stored passages are unchanged.
+- State when to use Sibyl (checked or reusable conclusions) versus a quick
+  lookup with the host's own search in server instructions and the README.
 - Require supported and disputed fact claims to quote exact text from their cited
   passages; reject quotes not found verbatim (ignoring case, fullwidth ASCII,
   accent encoding, spacing and typographic variants, never superscripts or other

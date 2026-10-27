@@ -23,9 +23,13 @@ The agent profile exposes eight tools:
 - `cancel_research`: cancel work or explicitly delete a local checkpoint.
 - `gather_bundle`: standalone retrieval; it does not add evidence to a job.
 
-The six research operations return domain JSON in MCP `structuredContent` and
-a short text pointer. The host must actually consume `structuredContent`; a
-text-only integration should use `--profile keyless`. `gather_bundle` keeps the
+The six research operations return domain JSON in MCP `structuredContent`, and
+the text content carries the same JSON serialized compactly, as the MCP
+specification recommends. Success results, structured errors and export
+manifests all follow this rule, so a host that passes only text to the model
+loses nothing. `--profile keyless` keeps readable text responses instead.
+Large views such as `view="full"` can exceed a host's tool-output limit; prefer
+briefs, batch passage reads and catalog pages. `gather_bundle` keeps the
 SourceBundle contract; the agent profile omits its large output schema from the
 tool listing to save host context, and the payload is unchanged. `save_report` returns an export manifest in the agent
 profile and the existing text response in the keyless profile. Failures remain
@@ -44,7 +48,18 @@ Schema failures omit input values and provider exceptions are sanitized.
 `recovery.read` supplies a tool name and arguments to reload the current brief;
 it is null if no saved job could be read. Common actions are `repair_assessment`,
 `reload_research`, `review_and_finalize`, `inspect_gaps`, and `start_new_research`.
-Generic failures ask the host to correct/inspect the request, not retry blindly.
+`wait_for_other_session` (`job_running_elsewhere`) means another live local session
+runs the job: read it, and retry the change after that retrieval finishes.
+`check_storage` (`owner_unknown`) means the owner lock could not be checked, so
+the job was not taken over. `retry_later` covers `store_busy` (nothing was
+changed, no retrieval started) and `worker_capacity` (two jobs already run across
+sessions). `read_research` (`result_pending`) means a retrieval already ran but
+its result is not saved yet: never repeat it; call `recovery.read`, whose brief
+shows the held result with `unsaved_result=true` until it is persisted. That
+brief and the error keep the stored revision; reload once the result is saved
+before assessing;
+`delete_finished_jobs` covers `history_full`. Other capacity errors keep
+`capacity_exceeded`. Generic failures ask the host to correct/inspect the request, not retry blindly.
 
 A rejected assessment is atomic: it does not save claims or increment the
 revision. Reload the brief, repair the indicated claim, and resubmit the complete
@@ -64,6 +79,8 @@ Any profile can explicitly request `get_research(job_id, view="brief")`.
 |---|---|
 | `schema_version`, `view` | `"1.0"`, `"brief"` |
 | `job_id`, `revision`, `question`, `mode`, `status` | Current checkpoint identity and lifecycle |
+| `running_elsewhere` | True while another live local session runs this job; it is read-only here until that retrieval finishes |
+| `unsaved_result` | True when this session holds a finished retrieval the busy store has not accepted yet; it is lost if the session exits first |
 | `research_plan` | Complete question-review ledger, gaps, next action, suggested queries, and assessment scope |
 | `sources` | Current `[Source N]` citation map with source/passage IDs, URLs, titles, timestamps, content origin and heuristic source kind; no raw text |
 | `source_catalog_count` | Count of retained source occurrences, including sources outside the selected citation window |

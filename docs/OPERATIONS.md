@@ -130,8 +130,10 @@ require operator repair; no recovery routine can guarantee a write to a failed d
 The store retains at most 64 jobs and 80 progress events per job. Use
 `cancel_research(job_id, delete=true)` to explicitly remove unwanted checkpoints.
 This does not delete exported reports. Before filesystem backup or restore, stop
-the MCP runtime and copy the entire `.research` directory as one consistent unit.
-Keep backups private. Do not remove an ownership lock to bypass an active owner.
+every runtime that uses the store and copy the entire `.research` directory,
+including `jobs.sqlite3-wal`, as one consistent unit. Keep backups private. Do not
+delete instance lock files of running sessions to take over their jobs; see the
+[shared research store](USAGE.md#shared-research-store).
 
 Each selected export directory accepts at most 256 `sibyl_*` artifacts totaling
 128 MiB; each exported file is capped at 16 MiB. Explicitly archive/delete old

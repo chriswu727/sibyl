@@ -20,7 +20,10 @@ written to disk and disappear when the process exits.
 
 Persistent research is separate: `start_research` stores questions, plans,
 retrieval attempts, selected public evidence, progress events, counters, and
-reports in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`. These records survive
+reports in `<output root>/.research/jobs.sqlite3`. The output root is
+`SIBYL_OUTPUT_ROOT`, or the per-user data directory when unset. Every local
+session of the same user using that root can list and read these records; they
+are not separated by project. These records survive
 restart and have no automatic time-based expiry. At most 64 jobs are retained,
 with a 1 MiB payload limit per job plus 64 KiB reserved for recovery metadata;
 new jobs are rejected when history is full.
@@ -30,7 +33,7 @@ SQLite deletion is not a guarantee of forensic erasure. The database uses
 owner-only file permissions, not encryption at rest.
 
 MCP reports are written below the operator-selected
-`SIBYL_OUTPUT_ROOT` (default: `reports/`); calling agents can select only relative
+output root; calling agents can select only relative
 subdirectories for report export. CLI/Python callers may explicitly select their
 own output directory. Sibyl does not upload artifacts to the project maintainer.
 

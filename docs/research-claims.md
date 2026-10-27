@@ -89,14 +89,17 @@ compatibility characters are not folded, so `10²` never matches `102`. A match
 must cover whole source characters. A quote shorter than eight characters after
 folding, or one not found, rejects the whole assessment with
 `field="claims.quotes"` and the claim ID. Stored quotes are replaced by the
-matched source text with whitespace runs collapsed to single spaces, so source
-line breaks cannot add report structure and a stored claim can be resubmitted
-unchanged. JSON report claims add `start_char`/`end_char` offsets into the
-extracted source. Markdown, PDF and text reports print each
+matched source text with whitespace runs collapsed to single spaces, so a stored
+claim can be resubmitted unchanged. JSON report claims keep that text unescaped
+and add `start_char`/`end_char` offsets into the extracted source; the stored
+passage itself is never modified. Markdown reports place each quote mid-line and
+backslash-escape inline Markdown (emphasis, code, links, images, HTML and
+entities), so quoted source text cannot add links, images or structure. Bare
+URLs inside a quote may still be auto-linked by some Markdown renderers. Markdown, PDF and text reports print each
 quote beside its claim.
 
 This catches a citation to the wrong passage or an invented excerpt. It does not
-establish entailment: the host must still quote text that carries every asserted
+establish entailment, source truth or freedom from hallucination: the host must still quote text that carries every asserted
 qualification, split compound claims or mark them unresolved. The rule applies
 to new assessments; previously stored claims are not rewritten or re-validated. Supported/disputed inferences and recommendations
 need a reasoning basis and rationale. A recommendation also requires criteria;
