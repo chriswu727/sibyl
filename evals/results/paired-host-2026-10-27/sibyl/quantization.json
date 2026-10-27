@@ -1,0 +1,58 @@
+{
+  "case_id": "quantization",
+  "condition": "sibyl",
+  "elapsed_seconds": 43.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.18452450000000004,
+  "usage": {
+    "input_tokens": 14,
+    "cache_creation_input_tokens": 30221,
+    "cache_read_input_tokens": 126125,
+    "output_tokens": 5100,
+    "output_tokens_details": {
+      "thinking_tokens": 286
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 30221,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14,
+      "outputTokens": 5100,
+      "cacheReadInputTokens": 126125,
+      "cacheCreationInputTokens": 30221,
+      "webSearchRequests": 0,
+      "costUSD": 0.18452450000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 286,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 30221,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 4,
+    "mcp__sibyl__assess_research": 2
+  },
+  "final_answer": "**Direct answer:** GPTQ and AWQ are both post-training, weight-only methods for 3–4-bit LLM inference, but they work differently. GPTQ adjusts the weights using approximate second-order information. AWQ doesn't adjust weights that way. It rescales weight channels that matter most, as judged by activation size, before rounding. Most head-to-head claims come from AWQ's own paper. I found no neutral comparison, so don't read the papers as showing that one method is better.\n\n**Mechanisms and scope**\n\n- GPTQ is a one-shot weight quantization method based on approximate second-order information. It reports 3–4 bit weights with negligible accuracy loss on 175B-parameter models. https://arxiv.org/abs/2210.17323\n- GPTQ reports end-to-end speedups over FP16 of about 3.25x on A100 GPUs and 4.5x on A6000 GPUs. https://arxiv.org/abs/2210.17323\n- AWQ finds salient weight channels from the activation distribution, not the weights. It scales them up with an equivalent transformation to protect them, and it requires no backpropagation or reconstruction. https://arxiv.org/abs/2306.00978 and https://arxiv.org/html/2306.00978v5\n- AWQ picks its scale with a single hyperparameter, α, set by a fast grid search, and it also applies weight clipping. https://arxiv.org/html/2306.00978v5\n- AWQ ships with TinyChat, an inference framework. The more-than-3x speedup over Hugging Face FP16 belongs to AWQ plus TinyChat, so it is a system result and not a property of the algorithm alone. https://arxiv.org/abs/2306.00978\n- AWQ says it is orthogonal to GPTQ and can be combined with it to improve INT2 results. The two are not strict alternatives. https://arxiv.org/html/2306.00978v5\n\n**What not to infer**\n\n- Don't infer that GPTQ overfits its calibration set. This is the AWQ authors' own assertion, made in their related-work section. They say GPTQ's reconstruction \"leads to an over-fitting issue\" and sometimes needs a reorder trick. https://arxiv.org/html/2306.00978v5\n- Don't infer that the AWQ-vs-GPTQ gap is neutral. AWQ's main metric is WikiText-2 perplexity, and its primary baseline is round-to-nearest (RTN). Its data-efficiency result (16 vs. 192 calibration sequences) covers one model and bit-width: OPT-6.7B at INT3-g128. https://arxiv.org/html/2306.00978v5\n- Don't infer that either method makes 2-bit practical. In an independent evaluation, AWQ at W3 recovered LLaMA2-7B accuracy from 66.41 (RTN) to 69.63, against 73.32 for FP16. At W2, AWQ scored 0.00 on LLaMA2-7B, the same as RTN. https://arxiv.org/html/2402.18158v2\n- Don't infer that results at one model size or context length carry over. That evaluation found larger models tolerate weight quantization better. It also found long texts (4k tokens and up) lose more accuracy under weight-only quantization than short texts. https://arxiv.org/html/2402.18158v2\n- Don't infer that perplexity or zero-shot scores show quality on reasoning tasks. The same evaluation found multi-step math reasoning more sensitive to quantization than commonsense reasoning. https://arxiv.org/html/2402.18158v2\n- Don't infer that the accuracy numbers carry the speedups. GPTQ's speedups come from its own kernels and AWQ's from TinyChat, so they are not matched-hardware comparisons.\n\n**Gaps**\n\n- The independent evaluation I read tested AWQ against RTN and did not test GPTQ head-to-head, so I found no neutral GPTQ-vs-AWQ comparison.\n- I read the GPTQ paper only through its abstract page. Details such as its Hessian and Cholesky procedure are unread.\n- I used five of eight retrievals. Every source is arXiv, so nothing independent corroborates the numbers.\n- Only the GPTQ claims were recorded in the Sibyl job, and the checker flagged one as incompletely quoted (the 175B and 3–4 bit figures). My second recording call failed on a stale revision and I didn't retry it, so the AWQ claims above rest on the sources I read and are not recorded in the job. I did not finalize a report.\n\nSources:\n- https://arxiv.org/abs/2210.17323\n- https://arxiv.org/abs/2306.00978\n- https://arxiv.org/html/2306.00978v5\n- https://arxiv.org/html/2402.18158v2",
+  "final_answer_sha256": "d4187c33e5b9999dff7c717ad41c9e3957c362f335cbb9b30ab301966d38d5d0",
+  "raw_stream_sha256": "9da907b910099471d5d364117bd5683960fc0f2ea93f0df21a7ce0eaa0a64089"
+}

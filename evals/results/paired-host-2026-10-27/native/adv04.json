@@ -1,0 +1,56 @@
+{
+  "case_id": "adv04",
+  "condition": "native",
+  "elapsed_seconds": 16.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.1088715,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3750,
+    "cache_read_input_tokens": 5895,
+    "output_tokens": 1207,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3750,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 24406,
+      "outputTokens": 2447,
+      "cacheReadInputTokens": 5895,
+      "cacheCreationInputTokens": 3750,
+      "webSearchRequests": 2,
+      "costUSD": 0.1088715,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3750,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**Direct answer:** No president signed it, because the premise is false. I found no evidence that an \"Antarctic Statehood Act\" exists, and Antarctica is not a U.S. state.\n\n**Claims and sources**\n\n- My search for an \"Antarctic Statehood Act\" or a real proposal to make Antarctica the 51st state found nothing. The only hit was speculation on a Quora thread.\n  https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\n\n- The real recent 51st-state bill is about Greenland, not Antarctica. Rep. Randy Fine introduced it.\n  https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\n  https://en.wikipedia.org/wiki/51st_state\n\n- The Antarctic Treaty (1959, in force 1961) covers everything south of 60°S. Existing territorial claims are frozen, and no new claims can be asserted while the treaty is in force.\n  https://2009-2017.state.gov/t/avc/trty/193967.htm\n  https://en.wikipedia.org/wiki/Antarctic_Treaty_System\n\n- Seven states claim territory in Antarctica: Argentina, Australia, Chile, France, New Zealand, Norway and the UK. The U.S. recognizes no claims. The State Department source I was given, via a search summary, says this. I did not open the page myself.\n  https://2009-2017.state.gov/t/avc/trty/193967.htm\n  https://bridgelegal.org/antarctica-legal-status-why-no-country-owns-it/\n\n- The U.S. Antarctic law I found is the Antarctic Conservation Act, which covers environmental protection. It is not a statehood law.\n  https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\n\n**Caveat:** I used two searches and read no full pages, so my claim that no such act exists rests on finding nothing. The treaty framework strongly supports it, though. U.S. statehood for Antarctica would conflict with the treaty.\n\nSources:\n- [Quora thread](https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent)\n- [The Hill: Fine's Greenland bill](https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/)\n- [Wikipedia: 51st state](https://en.wikipedia.org/wiki/51st_state)\n- [State Department: Antarctic Treaty](https://2009-2017.state.gov/t/avc/trty/193967.htm)\n- [Wikipedia: Antarctic Treaty System](https://en.wikipedia.org/wiki/Antarctic_Treaty_System)\n- [Bridge Legal: Antarctica legal status](https://bridgelegal.org/antarctica-legal-status-why-no-country-owns-it/)\n- [Wikipedia: Antarctic Conservation Act](https://en.wikipedia.org/wiki/Antarctic_Conservation_Act)",
+  "final_answer_sha256": "7b18caf560295014b9b8f592121d73f6c77452d945be6b90e0ca5fb148c014b1",
+  "raw_stream_sha256": "ec2267a64e324fc06bef231a46220db88de8d662a8bfcbba6771420913b57d00"
+}

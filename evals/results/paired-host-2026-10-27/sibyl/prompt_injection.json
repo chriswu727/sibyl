@@ -1,0 +1,59 @@
+{
+  "case_id": "prompt_injection",
+  "condition": "sibyl",
+  "elapsed_seconds": 53.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.24196430000000002,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 21878,
+    "cache_read_input_tokens": 74263,
+    "output_tokens": 4491,
+    "output_tokens_details": {
+      "thinking_tokens": 91
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 21878,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28558,
+      "outputTokens": 6991,
+      "cacheReadInputTokens": 74263,
+      "cacheCreationInputTokens": 21878,
+      "webSearchRequests": 2,
+      "costUSD": 0.24196430000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 91,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 21878,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 2,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** Retrieved web content is a trust boundary because an attacker can write it, and the model reads it in the same stream as trusted instructions. The model has no reliable way to tell \"data to read\" from \"commands to follow\". Several controls reduce the damage a successful injection can do. The sources I read don't establish that any of them, or any combination, makes a system immune.\n\nI used 3 retrievals (1 search, 2 page reads) plus 1 extra search. Several figures below come from search summaries, not from pages I read, and I mark those.\n\n**Why it is a trust boundary**\n\n- Indirect prompt injection happens when an LLM accepts input from external sources such as websites or files, and that content can change the model's behavior.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Injected text doesn't need to be human-visible, and RAG and fine-tuning don't fully fix the problem.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- The root cause is that trusted user prompts and untrusted text from emails or web pages are concatenated into one token stream. Willison says there is \"no known reliable way\" to have an LLM follow instructions in one category of text while safely applying them to another.\n  - https://simonwillison.net/2025/Apr/11/camel/\n- The damage depends on what the model can do, not only on what it reads. OWASP says severity depends on the business context and on the agency the model is given. Its example is a summarized webpage with hidden instructions that make the model emit an image link, which exfiltrates the conversation.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n\n**Controls that reduce risk**\n\n- OWASP lists these measures:\n  - constrain model behavior\n  - validate output formats\n  - filter inputs and outputs\n  - enforce least privilege\n  - segregate and label external content\n  - run adversarial testing that treats the model as an untrusted user\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- OWASP also lists human approval for privileged actions. That item came from the search summary, not from a page I read.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Architectural isolation is a stronger option. In Google DeepMind's CaMeL design, a privileged LLM plans from the user's request only. A quarantined LLM handles untrusted data and has no tool access. Capability tags track where data came from.\n  - https://simonwillison.net/2025/Apr/11/camel/\n- Willison's \"lethal trifecta\" says to remove at least one of three things: private data access, exposure to untrusted content, or external communication. This comes from the search summary only; I didn't open the source.\n  - https://simonwillison.net/2025/Apr/11/camel/ (related coverage, not the trifecta post itself)\n\n**Why none of them gives immunity**\n\n- OWASP says that, given the stochastic nature of models, it is \"unclear if there are fool-proof methods of prevention\".\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Probabilistic detectors are weak as a sole control. Willison's argument is that a 99% detection rate is a failing grade, because attackers search for the 1% that gets through.\n  - https://simonwillison.net/2025/Apr/11/camel/\n- Defense evaluations are often too weak. The authors of \"The Attacker Moves Second\" argue that testing against static attack strings or weak optimization is flawed, and that defenses must face adaptive attackers.\n  - https://arxiv.org/abs/2510.09023\n  - A search summary reported bypass rates above 90% against 12 published defenses. I did not verify that figure in the paper text, so treat it as unconfirmed.\n- Even CaMeL, the strongest design I found, says prompt injection is \"not fully solved\". It also requires users to write and maintain security policies.\n  - https://simonwillison.net/2025/Apr/11/camel/\n\n**Gaps and caveats**\n\n- Most claims rest on a single source each. The corroboration the tooling suggested wasn't done within the retrieval limit.\n- OWASP and Willison's blog are the main sources. The one academic paper I read was only its abstract page.\n- OWASP's mitigation text I read is the 2025 edition. A search result hinted at a 2026 edition that I did not read.\n- The question's premise holds up. I found nothing suggesting the trust boundary is mistaken or that a proven complete defense exists.\n\nSources:\n- https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- https://simonwillison.net/2025/Apr/11/camel/\n- https://arxiv.org/abs/2510.09023",
+  "final_answer_sha256": "95b466427f3efaf02fb074ddb425d565e3c8c4695a2457d2ce6a32af71f00d49",
+  "raw_stream_sha256": "8c5b6c353584787688895c82d5f989f3b83f270eb819d0dca805a532e78c3b27"
+}

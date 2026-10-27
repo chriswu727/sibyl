@@ -1,0 +1,175 @@
+{
+  "case_id": "flashattention",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.3645992,
+  "judge_subtype": "success",
+  "pages_read": 7,
+  "pages_cited": 7,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"FlashAttention is an exact attention algorithm that uses tiling to reduce HBM–SRAM reads and writes.\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"It processes blocks, computes softmax incrementally, recomputes attention on-chip in the backward pass, and fuses everything into one CUDA kernel.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"It does more FLOPs because of recomputation but is faster from fewer HBM accesses; HBM accesses are the main factor in attention runtime; most Transformer ops are memory-bound.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"partial\"}, {\"claim\": \"Each new attention variant needs a new CUDA kernel, and implementations 'may also not be transferrable across GPU architectures.'\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"unsupported\"}, {\"claim\": \"Beyond about 1K tokens some approximate methods such as Linformer become faster; past block size 256, runtime is limited by arithmetic and other factors.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"partial\"}, {\"claim\": \"FlashAttention-1 reached 25–40% of peak FLOPs/s; FlashAttention-2 reached 50–73% on A100; a 2–4x figure versus optimized baselines.\", \"url\": \"https://arxiv.org/abs/2307.08691\", \"label\": \"supported\"}, {\"claim\": \"FlashAttention-2 reached only 35% utilization on H100; FlashAttention-3 reached about 75% in FP16 using Hopper-specific features.\", \"url\": \"https://arxiv.org/abs/2407.08608\", \"label\": \"supported\"}, {\"claim\": \"15% end-to-end speedup on BERT-large (seq 512) versus the MLPerf 1.1 record; 3x on GPT-2 (seq 1K).\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Most claims trace to the excerpts. The quoted line about non-transferability across GPU architectures and the block-size-256 claim are not in the bounded excerpt. Sources are three primary papers from overlapping authors, and the answer explicitly says there is no independent source. Limitations are disclosed; the Linformer comparison is the only substantive narrowing evidence. The uncited claim is the statement that 'exact' means mathematically equivalent rather than bitwise identical.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"FlashAttention is an 'IO-aware exact attention algorithm' that reduces HBM–SRAM reads and writes by tiling and computes the same output, not an approximation.\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"Softmax stays exact through a running row max and normalizer with exponential rescaling; Theorem 1 says the algorithm returns softmax(QK^T)V with O(N) extra memory.\", \"url\": \"https://arxiv.org/html/2205.14135\", \"label\": \"partial\"}, {\"claim\": \"The backward pass stores the output and softmax statistics and recomputes attention on-chip; extra FLOPs are outweighed by lower memory traffic.\", \"url\": \"https://arxiv.org/html/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"HBM accesses fall from Θ(Nd+N^2) to Θ(N^2 d^2/M), up to 9x fewer, with a lower bound that no exact algorithm can asymptotically beat across SRAM sizes.\", \"url\": \"https://arxiv.org/html/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"15% on BERT-large vs MLPerf 1.1, 3x on GPT-2 (1K), 2.4x on LRA; 0.7 perplexity gain and Path-X/Path-256 results from longer context.\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"FA1 reached 25–40% of peak because of poor work partitioning; FA2 is about 2x faster at 50–73% of peak on A100.\", \"url\": \"https://arxiv.org/abs/2307.08691\", \"label\": \"supported\"}, {\"claim\": \"FA3 uses Hopper-specific asynchrony, TMA, warp specialization and FP8; 1.5–2.0x over FA2 on H100, 740 TFLOPs/s (75%); FP8 has 2.6x lower error than a baseline FP8 attention, so it is not error-free.\", \"url\": \"https://arxiv.org/abs/2407.08608\", \"label\": \"supported\"}, {\"claim\": \"Implementations 'may not be transferrable across GPU architectures' and each variant needs its own CUDA kernel; the IO-optimality proof is single-GPU, with multi-GPU left as future work.\", \"url\": \"https://arxiv.org/html/2205.14135\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Well grounded in the abstracts and introduction. The Theorem 1 details, the running-max rescaling details, the transferability quote and the single-GPU scope are not in the bounded excerpt. The answer discloses that it skipped most of the paper and has no independent replication. The FP8 error and kernel-version-dependence points narrow the conclusion modestly.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"HBM accesses fall from Θ(Nd+N^2) to Θ(N^2 d^2/M), with a lower bound that no exact algorithm can asymptotically beat over a range of SRAM sizes.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"Figure 2 shows 40.3 GB vs 4.4 GB of HBM reads/writes and 41.7 ms vs 7.3 ms runtime.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"unsupported\"}, {\"claim\": \"Original paper gains: BERT-large ~15% vs MLPerf 1.1, GPT-2 up to 3x vs HuggingFace, LRA 2.4x, attention 7.6x, memory up to 20x lower.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"partial\"}, {\"claim\": \"FA3 forward pass is 1.5–2.0x faster than FA2 on H100, up to 740 TFLOPs/s (~75%); FA2 reached ~35% on H100; gains rely on Hopper features, though the authors say the techniques should transfer to other accelerators.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2407.08608\", \"label\": \"supported\"}, {\"claim\": \"FA3's FP8 kernel is not persistent, trails cuDNN at small sequence lengths and with causal masking, and is roughly at par at head dims 128/256 without causal masking.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2407.08608\", \"label\": \"partial\"}, {\"claim\": \"Each new attention variant needs a hand-written CUDA kernel and may not transfer across GPU architectures; optimality is shown only for a single GPU.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"unsupported\"}, {\"claim\": \"GPT-2 speedup is 3x vs HuggingFace but only about 1.7–1.8x vs Megatron-LM.\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"unsupported\"}, {\"claim\": \"A secondary blog claims standard attention can match FlashAttention-2 below about 256 tokens.\", \"url\": \"https://www.gmicloud.ai/en/blog/flashattention-inference-speedup\", \"label\": \"unsupported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Several specific quantitative claims are not in the bounded excerpts: the Figure 2 numbers, the Megatron 1.7–1.8x figure (the excerpt says 3x vs both HuggingFace and Megatron-LM), the FA3 FP16 RMSE values (the excerpt states only same error as FA2 and better than standard), the 20x memory figure, and Theorem 1. The blog does not contain the 256-token claim. The KV-cache decoding claim is also not in the blog, although the claim that compute-bound prefill sees smaller gains is. The repo memory-bandwidth claim has no URL. Strengths: the cuDNN footnote and the baseline-dependence point substantively narrow the gains, and secondary-source claims are flagged as unverified.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "FlashAttention is an exact attention algorithm that uses tiling to reduce HBM–SRAM reads and writes.",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "It processes blocks, computes softmax incrementally, recomputes attention on-chip in the backward pass, and fuses everything into one CUDA kernel.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "It does more FLOPs because of recomputation but is faster from fewer HBM accesses; HBM accesses are the main factor in attention runtime; most Transformer ops are memory-bound.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "partial"
+        },
+        {
+          "claim": "Each new attention variant needs a new CUDA kernel, and implementations 'may also not be transferrable across GPU architectures.'",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Beyond about 1K tokens some approximate methods such as Linformer become faster; past block size 256, runtime is limited by arithmetic and other factors.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "partial"
+        },
+        {
+          "claim": "FlashAttention-1 reached 25–40% of peak FLOPs/s; FlashAttention-2 reached 50–73% on A100; a 2–4x figure versus optimized baselines.",
+          "url": "https://arxiv.org/abs/2307.08691",
+          "label": "supported"
+        },
+        {
+          "claim": "FlashAttention-2 reached only 35% utilization on H100; FlashAttention-3 reached about 75% in FP16 using Hopper-specific features.",
+          "url": "https://arxiv.org/abs/2407.08608",
+          "label": "supported"
+        },
+        {
+          "claim": "15% end-to-end speedup on BERT-large (seq 512) versus the MLPerf 1.1 record; 3x on GPT-2 (seq 1K).",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Most claims trace to the excerpts. The quoted line about non-transferability across GPU architectures and the block-size-256 claim are not in the bounded excerpt. Sources are three primary papers from overlapping authors, and the answer explicitly says there is no independent source. Limitations are disclosed; the Linformer comparison is the only substantive narrowing evidence. The uncited claim is the statement that 'exact' means mathematically equivalent rather than bitwise identical."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "FlashAttention is an 'IO-aware exact attention algorithm' that reduces HBM–SRAM reads and writes by tiling and computes the same output, not an approximation.",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "Softmax stays exact through a running row max and normalizer with exponential rescaling; Theorem 1 says the algorithm returns softmax(QK^T)V with O(N) extra memory.",
+          "url": "https://arxiv.org/html/2205.14135",
+          "label": "partial"
+        },
+        {
+          "claim": "The backward pass stores the output and softmax statistics and recomputes attention on-chip; extra FLOPs are outweighed by lower memory traffic.",
+          "url": "https://arxiv.org/html/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "HBM accesses fall from Θ(Nd+N^2) to Θ(N^2 d^2/M), up to 9x fewer, with a lower bound that no exact algorithm can asymptotically beat across SRAM sizes.",
+          "url": "https://arxiv.org/html/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "15% on BERT-large vs MLPerf 1.1, 3x on GPT-2 (1K), 2.4x on LRA; 0.7 perplexity gain and Path-X/Path-256 results from longer context.",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "FA1 reached 25–40% of peak because of poor work partitioning; FA2 is about 2x faster at 50–73% of peak on A100.",
+          "url": "https://arxiv.org/abs/2307.08691",
+          "label": "supported"
+        },
+        {
+          "claim": "FA3 uses Hopper-specific asynchrony, TMA, warp specialization and FP8; 1.5–2.0x over FA2 on H100, 740 TFLOPs/s (75%); FP8 has 2.6x lower error than a baseline FP8 attention, so it is not error-free.",
+          "url": "https://arxiv.org/abs/2407.08608",
+          "label": "supported"
+        },
+        {
+          "claim": "Implementations 'may not be transferrable across GPU architectures' and each variant needs its own CUDA kernel; the IO-optimality proof is single-GPU, with multi-GPU left as future work.",
+          "url": "https://arxiv.org/html/2205.14135",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Well grounded in the abstracts and introduction. The Theorem 1 details, the running-max rescaling details, the transferability quote and the single-GPU scope are not in the bounded excerpt. The answer discloses that it skipped most of the paper and has no independent replication. The FP8 error and kernel-version-dependence points narrow the conclusion modestly."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "HBM accesses fall from Θ(Nd+N^2) to Θ(N^2 d^2/M), with a lower bound that no exact algorithm can asymptotically beat over a range of SRAM sizes.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "Figure 2 shows 40.3 GB vs 4.4 GB of HBM reads/writes and 41.7 ms vs 7.3 ms runtime.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Original paper gains: BERT-large ~15% vs MLPerf 1.1, GPT-2 up to 3x vs HuggingFace, LRA 2.4x, attention 7.6x, memory up to 20x lower.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "partial"
+        },
+        {
+          "claim": "FA3 forward pass is 1.5–2.0x faster than FA2 on H100, up to 740 TFLOPs/s (~75%); FA2 reached ~35% on H100; gains rely on Hopper features, though the authors say the techniques should transfer to other accelerators.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2407.08608",
+          "label": "supported"
+        },
+        {
+          "claim": "FA3's FP8 kernel is not persistent, trails cuDNN at small sequence lengths and with causal masking, and is roughly at par at head dims 128/256 without causal masking.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2407.08608",
+          "label": "partial"
+        },
+        {
+          "claim": "Each new attention variant needs a hand-written CUDA kernel and may not transfer across GPU architectures; optimality is shown only for a single GPU.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "unsupported"
+        },
+        {
+          "claim": "GPT-2 speedup is 3x vs HuggingFace but only about 1.7–1.8x vs Megatron-LM.",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "unsupported"
+        },
+        {
+          "claim": "A secondary blog claims standard attention can match FlashAttention-2 below about 256 tokens.",
+          "url": "https://www.gmicloud.ai/en/blog/flashattention-inference-speedup",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Several specific quantitative claims are not in the bounded excerpts: the Figure 2 numbers, the Megatron 1.7–1.8x figure (the excerpt says 3x vs both HuggingFace and Megatron-LM), the FA3 FP16 RMSE values (the excerpt states only same error as FA2 and better than standard), the 20x memory figure, and Theorem 1. The blog does not contain the 256-token claim. The KV-cache decoding claim is also not in the blog, although the claim that compute-bound prefill sees smaller gains is. The repo memory-bandwidth claim has no URL. Strengths: the cuDNN footnote and the baseline-dependence point substantively narrow the gains, and secondary-source claims are flagged as unverified."
+    }
+  }
+}

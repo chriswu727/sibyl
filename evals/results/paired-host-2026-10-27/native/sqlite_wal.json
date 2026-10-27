@@ -1,0 +1,72 @@
+{
+  "case_id": "sqlite_wal",
+  "condition": "native",
+  "elapsed_seconds": 20.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.0373917,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 4300,
+    "cache_read_input_tokens": 5894,
+    "output_tokens": 1498,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4300,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 4,
+      "outputTokens": 1498,
+      "cacheReadInputTokens": 5894,
+      "cacheCreationInputTokens": 4300,
+      "webSearchRequests": 0,
+      "costUSD": 0.0327774,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 4300,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 23713,
+      "outputTokens": 4486,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0046143,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2045,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 3
+  },
+  "final_answer": "**Direct answer:** No. WAL doesn't eliminate write contention. SQLite still allows only one writer at a time. What WAL gives you is concurrency between readers and a writer: readers don't block the writer, and the writer doesn't block readers. Rollback-journal mode only partly offers this.\n\n**Claims and sources**\n\n- WAL lets readers and writers run at the same time. Writers append to the WAL, so they don't interfere with readers.\n  https://www.sqlite.org/wal.html\n\n- Each reader sees a consistent snapshot for the length of its read transaction.\n  https://www.sqlite.org/wal.html\n\n- WAL still permits only one writer at a time, because there is only one WAL file.\n  https://www.sqlite.org/wal.html\n\n- In the default rollback-journal mode, readers and a writer holding RESERVED can coexist. The writer must take PENDING and then EXCLUSIVE to commit or spill its cache. That blocks new readers and waits for existing ones to finish. So WAL's real gain is removing that reader/writer blocking at commit time. The page I fetched doesn't state that comparison outright; I inferred it from the two locking descriptions.\n  https://www.sqlite.org/lockingv3.html\n\n- Rollback-journal mode also allows only one writer. A second writer that can't get RESERVED fails with SQLITE_BUSY.\n  https://www.sqlite.org/lockingv3.html\n\n- Write contention remains in WAL mode. BEGIN IMMEDIATE can fail with SQLITE_BUSY if another write transaction is active. A deferred transaction that starts by reading and then writes can also fail with SQLITE_BUSY if another connection has modified the database in the meantime. The transaction page doesn't describe WAL-specific upgrade behavior and doesn't mention busy handlers. Using BEGIN IMMEDIATE for write transactions is common practice, but my sources don't establish it as a recommendation.\n  https://www.sqlite.org/lang_transaction.html\n\n- The \"readers never block\" rule is only mostly true. SQLITE_BUSY can still occur in obscure cases: another connection holds exclusive locking mode, the last connection is closing and cleaning up, or crash recovery is running.\n  https://www.sqlite.org/wal.html\n\n- Checkpoint starvation: if there is always at least one active reader, checkpoints can't complete and the WAL file can grow without bound. RESTART and TRUNCATE checkpoints can make readers block.\n  https://www.sqlite.org/wal.html\n\n- Other limits: all processes must be on the same host, so WAL doesn't work over a network filesystem. WAL was historically poor for very large transactions, but the page says this improved in 3.11.0.\n  https://www.sqlite.org/wal.html\n\n**Not established:** I didn't find sources for throughput numbers or for how much WAL helps in a particular workload. The pages I read describe locking behavior, not performance measurements.\n\nSources:\n- https://www.sqlite.org/wal.html\n- https://www.sqlite.org/lockingv3.html\n- https://www.sqlite.org/lang_transaction.html",
+  "final_answer_sha256": "de661e0d6471cfc8b15cd5135f15038faa2f69345183b79b5e37d78198b2eb9e",
+  "raw_stream_sha256": "12ec6ad1ce8baca54ec1caa7962da8f49493fd2257b0faafc1a9de5764937c88"
+}

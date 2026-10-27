@@ -1,0 +1,59 @@
+{
+  "case_id": "real06",
+  "condition": "sibyl",
+  "elapsed_seconds": 33.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.16683969999999998,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 13644,
+    "cache_read_input_tokens": 65737,
+    "output_tokens": 1946,
+    "output_tokens_details": {
+      "thinking_tokens": 75
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13644,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28275,
+      "outputTokens": 2914,
+      "cacheReadInputTokens": 65737,
+      "cacheCreationInputTokens": 13644,
+      "webSearchRequests": 2,
+      "costUSD": 0.16683969999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 75,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13644,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 2,
+    "mcp__sibyl__continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** The evidence doesn't settle the exact day. Construction was completed in 1952, in early October. The best-supported date is October 9, 1952 (Wikipedia's infobox), but Wikipedia's own text says the headquarters was declared complete on October 10, 1952.\n\nClaims and sources:\n\n- The UN says construction began on UN Day (24 October) 1949 and was completed in 1952. It gives no month or day. Source: https://www.un.org/en/visit/about-us\n- Wikipedia's infobox lists the completion date as October 9, 1952, and cites a New York Times article of October 10, 1952, \"Work Completed on U.N. Buildings\". Source: https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n- The body text of the same Wikipedia article says \"The Manhattan headquarters was declared complete on October 10, 1952,\" citing the same Times article. The one-day gap is probably the difference between the event and the next-day report, but I couldn't confirm that. Source: https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n- A search snippet also said the General Assembly Building was formally dedicated on October 10, 1952. I didn't read that page. Source: https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building\n- The groundbreaking date of September 14, 1948 differs from the UN's \"construction began 24 October 1949\" statement. Wikipedia says the 1948 groundbreaking marked the start of work on the Secretariat's basement, while the UN's 1949 date is likely the cornerstone ceremony. Source: https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\nI couldn't read the New York Times article itself, and I found no primary UN document stating the day. If you need a single date, cite \"October 9, 1952\" and note that some accounts say October 10.",
+  "final_answer_sha256": "650d60688528a62887a962362f2ae649e01879a3599f4bb3d8c3fe01d03dc617",
+  "raw_stream_sha256": "8fab27d9455bccc1c06f1ce16836aa1849c4765e53af4ffab4c68ab401ffc6fd"
+}

@@ -1,0 +1,57 @@
+{
+  "case_id": "real03",
+  "condition": "deep_research",
+  "elapsed_seconds": 20.8,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.16355050000000002,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14406,
+    "cache_read_input_tokens": 33705,
+    "output_tokens": 1449,
+    "output_tokens_details": {
+      "thinking_tokens": 67
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14406,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 27938,
+      "outputTokens": 2668,
+      "cacheReadInputTokens": 33705,
+      "cacheCreationInputTokens": 14406,
+      "webSearchRequests": 2,
+      "costUSD": 0.16355050000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 67,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14406,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2
+  },
+  "final_answer": "**Direct answer:** Sagg Eco Village is in the Lar area of Ganderbal district, in the Kashmir Valley of Jammu & Kashmir. Its address is Watlar Wuder, Lar, Ganderbal (PIN 191201), on the Harmukh foothills about 6 km from Ganderbal town.\n\nThis comes from two web searches. The result summaries came back with links, but I didn't open any of the pages themselves. Each claim below cites the listing that the search summary drew it from.\n\n**Claims and sources**\n\n- It is in Ganderbal district, Kashmir.\n  - https://ecovillage.org/map/community/sagg-eco-village/\n  - https://www.tripadvisor.com/Hotel_Review-g32869462-d17693204-Reviews-SAGG_Eco_Village_Kashmir-Bagh_Mahanand_Ganderbal_District_Kashmir_Jammu_and_Kashmir.html\n- The address is Watlar Wuder, Lar, Ganderbal, PIN 191201.\n  - https://ecovillage.org/ecovillage/sagg-eco-village/\n  - https://recreation.saggecovillage.earth/\n- Ganderbal town is about 6 km away.\n  - https://ecoideaz.com/green-directory/sagg-eco-village-kashmir/\n- Third-party listings place it in the Bagh Mahanand or Chanthan Gulabpora locality.\n  - https://www.tripadvisor.com/Hotel_Review-g32869462-d17693204-Reviews-SAGG_Eco_Village_Kashmir-Bagh_Mahanand_Ganderbal_District_Kashmir_Jammu_and_Kashmir.html\n  - https://eldercare.nears.me/places/india/jammu-and-kashmir/chanthan-gulabpora-bagh-mahanand/home-nursing-services/sagg-eco-village-elder-care/\n- The setting is the Harmukh foothills, overlooking the Sindh and Nigeen valleys. Its coordinates are about 34.272N, 74.762E.\n  - https://casaclan.com/projects/sagg-eco-village-kashmir/\n  - https://mapcarta.com/N5931593287\n- It is billed as J&K's first eco village. Its founder is Fayaz Ahmad Dar, and its own farm supplies the food.\n  - https://zeenews.india.com/india/eco-and-sustainable-tourism-kashmir-s-first-eco-village-with-mud-cottages-for-tourists-2498150.html\n  - https://preciouskashmir.com/2022/09/21/sagg-eco-village-kashmirs-offbeat-recreational-destination/\n- Its website says guests must pre-book and that there are no walk-ins.\n  - https://recreation.saggecovillage.earth/\n\n**Caveats**\n- I did not check the coordinates on a map. They come from one search summary, which gave them only as approximate.\n- The founding year is inconsistent across sources (2012 or 2013). That doesn't affect the location.\n- The exact village name varies across listings (Lar, Watlar, Bagh Mahanand, Chanthan Gulabpora). They all point to the same area of Ganderbal district.",
+  "final_answer_sha256": "c1bf50913a13480dd803a189808e511c3b91b31a26449e15d85541d7c04f5b0c",
+  "raw_stream_sha256": "07eff0334d3197af6b8fdf6a8953ec1631535c1e98b88d78b89d235ee1f7c7f6"
+}

@@ -1,0 +1,59 @@
+{
+  "case_id": "real03",
+  "condition": "sibyl",
+  "elapsed_seconds": 26.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1145859,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 11535,
+    "cache_read_input_tokens": 45819,
+    "output_tokens": 1724,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 11535,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14317,
+      "outputTokens": 2523,
+      "cacheReadInputTokens": 45819,
+      "cacheCreationInputTokens": 11535,
+      "webSearchRequests": 1,
+      "costUSD": 0.1145859,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 11535,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "Sagg Eco Village is in the Ganderbal district of central Kashmir. It sits in the Chanthan Gulabpora area, in the Wali War region on the Sindh River's foothills. A search summary puts it about 6 km from Ganderbal town. I didn't confirm that distance on a page I read.\n\nClaims, each with its source:\n\n- **Ganderbal:** Sagg is described as a natural farm and cultural retreat centre located in Ganderbal.\n  - https://ecovillage.org/map/community/sagg-eco-village/\n- **Chanthan Gulabpura, Wali War:** A local youth from Ganderbal district established it in the Chanthan Gulabpura area, at the foothills of the Sindh River in the Wali War region.\n  - https://preciouskashmir.com/2022/09/21/sagg-eco-village-kashmirs-offbeat-recreational-destination/\n- **Street address (search-result summary only):** Watlar Wuder, Lar–Chunt Waliwar Road, Ganderbal, J&K 191201. I did not open the pages behind this. Treat the address as unverified.\n  - https://recreation.saggecovillage.earth/ (the official site; my read of it returned a 404)\n\nLimits on the evidence:\n- Each key claim rests on one page I read.\n- I didn't search for contradicting sources, and I found no conflicting location.\n- I didn't find exact coordinates.\n\nSources:\n- [Global Ecovillage Network listing](https://ecovillage.org/map/community/sagg-eco-village/)\n- [Precious Kashmir (IANS), 21 Sep 2022](https://preciouskashmir.com/2022/09/21/sagg-eco-village-kashmirs-offbeat-recreational-destination/)\n- [Official site](https://recreation.saggecovillage.earth/)",
+  "final_answer_sha256": "0982abc9592284bf5a16fcf0d3e4b8a196ceccd26ff632df9b3299cad6b1bd46",
+  "raw_stream_sha256": "b27faf1804d48e8e6999e2e88d037ed8db40046be0d90167edf18073622af9e0"
+}

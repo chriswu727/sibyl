@@ -109,9 +109,16 @@ also fails (55.6% coverage, 9.3% answerable readiness; 98.5% stability, 100%
 precision). After page reads identified Sibyl honestly (#66), the
 [second run](../evals/results/host-source-retrieval-honest-ua-2026-10-27.json) passes
 every threshold except answerable readiness (30.2%; 87.0% coverage, 100%
-precision). Next: review the readiness rule's treatment of single-domain
-answer-bearing reads; any change must be frozen in a new dated protocol before
-its run.
+precision). The owner then made answerable readiness a reported diagnostic.
+
+The first [paired host evaluation](../evals/results/paired-host-2026-10-27/manifest.json)
+gave Sibyl the best citation support (78.6% against 69.1% for built-in search
+and 71.6% for a deep-research workflow) and 6 of 6 factual answers, but failed
+gate 2 on counterevidence (rubric 1.1 against 1.4). Next: make the Sibyl
+workflow cost fewer retrievals (fold reading into fewer calls, let the update
+carry what the host would otherwise fetch again) so a counterevidence read fits
+the host's budget, and have the final answer carry the counterevidence status
+Sibyl records. Then rerun gate 2 as a new dated run under the same protocol.
 
 Claim-based human reports now present the generated claim narrative once, while
 JSON retains compatible summary/findings/analysis fields and the full ledger.

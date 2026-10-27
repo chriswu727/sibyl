@@ -1,0 +1,135 @@
+{
+  "case_id": "adv01",
+  "kind": "trap",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "deep_research",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.23524720000000002,
+  "judge_subtype": "success",
+  "pages_read": 8,
+  "pages_cited": 9,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"The 1921 Nobel Prize in Physics went to Einstein 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect'; citation does not mention relativity.\", \"url\": \"https://www.nobelprize.org/prizes/physics/1921/summary/\", \"label\": \"supported\"}, {\"claim\": \"The 1921 Nobel Prize in Physics went to Einstein 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect'; citation does not mention relativity.\", \"url\": \"https://www.nobelprize.org/prizes/physics/1921/einstein/facts/\", \"label\": \"supported\"}, {\"claim\": \"In 1921 the committee decided no nominations met the criteria in Nobel's will; the prize was reserved and Einstein received it in 1922.\", \"url\": \"https://www.nobelprize.org/prizes/physics/1921/summary/\", \"label\": \"supported\"}, {\"claim\": \"The Nobel Prize's own account says the award was for the photoelectric effect and not the theory of relativity.\", \"url\": \"https://x.com/NobelPrize/status/435434128859598848\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise and gives the actual award basis. Every cited claim is supported by its page text, mostly from primary nobelprize.org sources.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Einstein's prize was the 1921 Nobel Prize in Physics.\", \"url\": \"https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/\", \"label\": \"supported\"}, {\"claim\": \"Einstein's prize was the 1921 Nobel Prize in Physics.\", \"url\": \"https://arxiv.org/pdf/2112.13519\", \"label\": \"supported\"}, {\"claim\": \"The 1921 prize was reserved because no nominee met Nobel's criteria; the Academy voted on 9 November 1922 to award it to Einstein.\", \"url\": \"https://arxiv.org/pdf/2112.13519\", \"label\": \"partial\"}, {\"claim\": \"The 1921 prize was reserved because no nominee met Nobel's criteria; the Academy voted on 9 November 1922 to award it to Einstein.\", \"url\": \"https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305\", \"label\": \"unreachable\"}, {\"claim\": \"The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.\", \"url\": \"https://nobel-prize.net/en/topics/einstein-and-the-prize/\", \"label\": \"supported\"}, {\"claim\": \"The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.\", \"url\": \"https://www.kroneckerwallis.com/the-photoelectric-effect-why-einstein-won-the-nobel-prize/\", \"label\": \"supported\"}, {\"claim\": \"The committee avoided honouring relativity directly because it was considered controversial or uncertain.\", \"url\": \"https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/\", \"label\": \"supported\"}, {\"claim\": \"The committee avoided honouring relativity directly because it was considered controversial or uncertain.\", \"url\": \"https://arxiv.org/pdf/2112.13519\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise. Only the first 8 pairs were graded; the separate Annalen claim (Wiley) would be unreachable. The arXiv text reports the reservation and a 10 Nov 1922 telegram, not a 9 Nov vote, so that claim is partial. It covers Gullstrand's critical report but does not explicitly frame relativity as controversial, so that claim is also partial. The caveat items are flagged as unverified rather than asserted.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.\", \"url\": \"https://www.nobelprize.org/prizes/physics/1921/einstein/facts/\", \"label\": \"supported\"}, {\"claim\": \"The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.\", \"url\": \"https://nobel-prize.net/en/topics/einstein-and-the-prize/\", \"label\": \"supported\"}, {\"claim\": \"The 1921 prize was reserved; on 9 November 1922 the Academy voted to give it to Einstein.\", \"url\": \"https://arxiv.org/pdf/2112.13519\", \"label\": \"partial\"}, {\"claim\": \"The 1921 prize was reserved; on 9 November 1922 the Academy voted to give it to Einstein.\", \"url\": \"https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305\", \"label\": \"unreachable\"}, {\"claim\": \"Relativity was avoided because committee members found it controversial; the notification telegram explicitly said relativity was not considered.\", \"url\": \"https://arxiv.org/pdf/2112.13519\", \"label\": \"partial\"}, {\"claim\": \"Relativity was avoided because committee members found it controversial; the notification telegram explicitly said relativity was not considered.\", \"url\": \"https://arxiv.org/pdf/1807.02134\", \"label\": \"unsupported\"}, {\"claim\": \"A 2022 Annalen der Physik article argues the photoelectric framing and the committee-member-misunderstanding story are oversimplified.\", \"url\": \"https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305\", \"label\": \"unreachable\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise. The arXiv 2112.13519 text gives a 10 Nov telegram rather than a 9 Nov vote, and describes Gullstrand's critical report but not the telegram content, so both claims citing it are partial. The arXiv 1807.02134 excerpt only names the photoelectric citation and says nothing on why relativity was avoided. The uncited claim is that the Nobel lecture was on relativity.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "The 1921 Nobel Prize in Physics went to Einstein 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect'; citation does not mention relativity.",
+          "url": "https://www.nobelprize.org/prizes/physics/1921/summary/",
+          "label": "supported"
+        },
+        {
+          "claim": "The 1921 Nobel Prize in Physics went to Einstein 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect'; citation does not mention relativity.",
+          "url": "https://www.nobelprize.org/prizes/physics/1921/einstein/facts/",
+          "label": "supported"
+        },
+        {
+          "claim": "In 1921 the committee decided no nominations met the criteria in Nobel's will; the prize was reserved and Einstein received it in 1922.",
+          "url": "https://www.nobelprize.org/prizes/physics/1921/summary/",
+          "label": "supported"
+        },
+        {
+          "claim": "The Nobel Prize's own account says the award was for the photoelectric effect and not the theory of relativity.",
+          "url": "https://x.com/NobelPrize/status/435434128859598848",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise and gives the actual award basis. Every cited claim is supported by its page text, mostly from primary nobelprize.org sources."
+    },
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Einstein's prize was the 1921 Nobel Prize in Physics.",
+          "url": "https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/",
+          "label": "supported"
+        },
+        {
+          "claim": "Einstein's prize was the 1921 Nobel Prize in Physics.",
+          "url": "https://arxiv.org/pdf/2112.13519",
+          "label": "supported"
+        },
+        {
+          "claim": "The 1921 prize was reserved because no nominee met Nobel's criteria; the Academy voted on 9 November 1922 to award it to Einstein.",
+          "url": "https://arxiv.org/pdf/2112.13519",
+          "label": "partial"
+        },
+        {
+          "claim": "The 1921 prize was reserved because no nominee met Nobel's criteria; the Academy voted on 9 November 1922 to award it to Einstein.",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.",
+          "url": "https://nobel-prize.net/en/topics/einstein-and-the-prize/",
+          "label": "supported"
+        },
+        {
+          "claim": "The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.",
+          "url": "https://www.kroneckerwallis.com/the-photoelectric-effect-why-einstein-won-the-nobel-prize/",
+          "label": "supported"
+        },
+        {
+          "claim": "The committee avoided honouring relativity directly because it was considered controversial or uncertain.",
+          "url": "https://spacedaily.com/t-einstein-won-the-1921-nobel-prize-in-physics-but-not-for-relativity-the-nobel-committee-avoided-honouring-that-still-controversial-theory-directly-and-instead-awarded-him-for-his-work-on-the-photoe/",
+          "label": "supported"
+        },
+        {
+          "claim": "The committee avoided honouring relativity directly because it was considered controversial or uncertain.",
+          "url": "https://arxiv.org/pdf/2112.13519",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise. Only the first 8 pairs were graded; the separate Annalen claim (Wiley) would be unreachable. The arXiv text reports the reservation and a 10 Nov 1922 telegram, not a 9 Nov vote, so that claim is partial. It covers Gullstrand's critical report but does not explicitly frame relativity as controversial, so that claim is also partial. The caveat items are flagged as unverified rather than asserted."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.",
+          "url": "https://www.nobelprize.org/prizes/physics/1921/einstein/facts/",
+          "label": "supported"
+        },
+        {
+          "claim": "The citation reads 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect' and does not mention relativity.",
+          "url": "https://nobel-prize.net/en/topics/einstein-and-the-prize/",
+          "label": "supported"
+        },
+        {
+          "claim": "The 1921 prize was reserved; on 9 November 1922 the Academy voted to give it to Einstein.",
+          "url": "https://arxiv.org/pdf/2112.13519",
+          "label": "partial"
+        },
+        {
+          "claim": "The 1921 prize was reserved; on 9 November 1922 the Academy voted to give it to Einstein.",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Relativity was avoided because committee members found it controversial; the notification telegram explicitly said relativity was not considered.",
+          "url": "https://arxiv.org/pdf/2112.13519",
+          "label": "partial"
+        },
+        {
+          "claim": "Relativity was avoided because committee members found it controversial; the notification telegram explicitly said relativity was not considered.",
+          "url": "https://arxiv.org/pdf/1807.02134",
+          "label": "unsupported"
+        },
+        {
+          "claim": "A 2022 Annalen der Physik article argues the photoelectric framing and the committee-member-misunderstanding story are oversimplified.",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise. The arXiv 2112.13519 text gives a 10 Nov telegram rather than a 9 Nov vote, and describes Gullstrand's critical report but not the telegram content, so both claims citing it are partial. The arXiv 1807.02134 excerpt only names the photoelectric citation and says nothing on why relativity was avoided. The uncited claim is that the Nobel lecture was on relativity."
+    }
+  }
+}

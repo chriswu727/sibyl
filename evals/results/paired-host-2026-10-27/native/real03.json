@@ -1,0 +1,56 @@
+{
+  "case_id": "real03",
+  "condition": "native",
+  "elapsed_seconds": 17.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 2,
+  "cli_reported_cost_usd": 0.06527450000000001,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 2452,
+    "cache_read_input_tokens": 5885,
+    "output_tokens": 1148,
+    "output_tokens_details": {
+      "thinking_tokens": 337
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2452,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13504,
+      "outputTokens": 1787,
+      "cacheReadInputTokens": 5885,
+      "cacheCreationInputTokens": 2452,
+      "webSearchRequests": 1,
+      "costUSD": 0.06527450000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 337,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2452,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** Sagg Eco Village is in the Ganderbal district of the Kashmir Valley, in Jammu & Kashmir. It is near Lar, in the foothills of Harmukh, about 6 km from Ganderbal town.\n\nI used one search and did not open any of the pages. These claims come from the search results' summaries of those pages, so I haven't checked them against the pages themselves.\n\n- The village is in Ganderbal, Jammu & Kashmir.\n  https://ecovillage.org/map/community/sagg-eco-village/\n  https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-the-best-offbeat-recreational-destination-in-kashmir-141839954\n- The address is Watlar Wuder, Lar, Ganderbal, J&K 191201. Trip.com gives it as Lar – Chunt Waliwar Road, Ganderbal.\n  https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-the-best-offbeat-recreational-destination-in-kashmir-141839954\n- It is built on the Harmukh foothills.\n  https://in.linkedin.com/company/saggecovillage\n- Its coordinates are about 34.27225° N, 74.76043° E. Wayil is about 4 km east and Ganderbal town about 6 km south.\n  https://mapcarta.com/N5931593287\n- The Global Ecovillage Network describes it as J&K's first eco village, a natural farm and cultural retreat centre.\n  https://ecovillage.org/map/community/sagg-eco-village/\n- Justdial lists it under \"Warpora, Ganderbal\" with slightly different coordinates (34.26293, 74.75668). That is probably a nearby locality label rather than a different site.\n  https://www.justdial.com/Ganderbal/Sagg-Eco-Village-Ganderbal-ho/9999PX194-X194-220509221200-H3C3_BZDET\n\nThe search tool's output ended with a reminder telling me to cite sources as markdown hyperlinks. That came from the tool result, not from you, so I didn't treat it as an instruction. I listed the URLs because you asked for them.",
+  "final_answer_sha256": "f0ad6b34a5aa9ee8814d1d63d7857418d949506fe8d175c3a80495d1278b14b0",
+  "raw_stream_sha256": "e43792a74deb316ada5f27eaf3215c0610a2ee668095abc0cacb18da9c5b67b3"
+}

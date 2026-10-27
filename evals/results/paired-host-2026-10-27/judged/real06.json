@@ -1,0 +1,140 @@
+{
+  "case_id": "real06",
+  "kind": "factual",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "sibyl",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.2810872,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 9,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"The UN says construction of the headquarters complex was completed in 1952 (year only)\", \"url\": \"https://www.un.org/ungifts/secretariat-building\", \"label\": \"unsupported\"}, {\"claim\": \"Construction was officially completed in October 1952 (no day given)\", \"url\": \"https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia infobox gives completion date October 9, 1952\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Headquarters\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia body text says the Manhattan headquarters was declared complete on October 10, 1952\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Headquarters\", \"label\": \"unsupported\"}, {\"claim\": \"Untapped New York says the Manhattan headquarters was not completed until October 9, 1952\", \"url\": \"https://www.untappedcities.com/united-nations-lake-success/\", \"label\": \"supported\"}, {\"claim\": \"The General Assembly Building was formally dedicated on October 10, 1952\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building\", \"label\": \"supported\"}, {\"claim\": \"Secretariat staff began moving in August 22, 1950, and the building was completed June 1951\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building\", \"label\": \"partial\"}, {\"claim\": \"The Dag Hammarskjöld Library was dedicated in November 1961\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Headquarters\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Leads with October 9, 1952 as the date most sources give, while noting the conflict with October 10. Counted as stating the gold answer. The un.org excerpt contains only navigation text. The Oct 10 body-text claim is not in the bounded Wikipedia excerpt. The Secretariat page gives August 21, 1950, not August 22; it does give June 1951.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"UN says construction began on UN Day (24 October) 1949 and was completed in 1952\", \"url\": \"https://www.un.org/en/visit/about-us\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia infobox lists completion as October 9, 1952, citing a NYT article of October 10, 1952 'Work Completed on U.N. Buildings'\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"partial\"}, {\"claim\": \"Wikipedia body text says the Manhattan headquarters was declared complete on October 10, 1952\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"unsupported\"}, {\"claim\": \"The General Assembly Building was formally dedicated on October 10, 1952\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building\", \"label\": \"supported\"}, {\"claim\": \"Groundbreaking was September 14, 1948, marking the start of work on the Secretariat's basement\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Names October 9, 1952 as best-supported and as the date to cite, noting the October 10 alternative. Counted as correct. The infobox date is in the excerpt but the NYT citation title is not. The Oct 10 body text is not in the excerpt. The groundbreaking date is in the excerpt but the Secretariat-basement detail is not.\"}, \"Z\": {\"verdict\": \"incorrect\", \"claims\": [{\"claim\": \"Wikipedia article text says the headquarters was declared complete on October 10, 1952\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"unsupported\"}, {\"claim\": \"The Wikipedia infobox lists October 9, 1952\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"supported\"}, {\"claim\": \"The UN's site says construction was completed in 1952 without a specific day\", \"url\": \"https://www.un.org/ungifts/united-nations-ny-site\", \"label\": \"unsupported\"}, {\"claim\": \"The Secretariat Building was finished in June 1951\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building\", \"label\": \"supported\"}, {\"claim\": \"Dag Hammarskjöld Library dedicated November 1961; cafeteria and Conference Building expansion 1978–1981\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"unsupported\"}, {\"claim\": \"Groundbreaking was September 14, 1948\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"supported\"}, {\"claim\": \"Construction began on UN Day, October 24, 1949\", \"url\": \"https://www.un.org/ungifts/united-nations-ny-site\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Gives only October 1952 as the firm answer. Says the day is either 9 or 10 and highlights October 10 as the article-text date, so it never commits to the gold date October 9. The un.org/ungifts excerpt contains only navigation text. The Oct 10 body text and the later-additions details are not in the bounded excerpt.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "The UN says construction of the headquarters complex was completed in 1952 (year only)",
+          "url": "https://www.un.org/ungifts/secretariat-building",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Construction was officially completed in October 1952 (no day given)",
+          "url": "https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia infobox gives completion date October 9, 1952",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Headquarters",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia body text says the Manhattan headquarters was declared complete on October 10, 1952",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Headquarters",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Untapped New York says the Manhattan headquarters was not completed until October 9, 1952",
+          "url": "https://www.untappedcities.com/united-nations-lake-success/",
+          "label": "supported"
+        },
+        {
+          "claim": "The General Assembly Building was formally dedicated on October 10, 1952",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building",
+          "label": "supported"
+        },
+        {
+          "claim": "Secretariat staff began moving in August 22, 1950, and the building was completed June 1951",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building",
+          "label": "partial"
+        },
+        {
+          "claim": "The Dag Hammarskjöld Library was dedicated in November 1961",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Headquarters",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Leads with October 9, 1952 as the date most sources give, while noting the conflict with October 10. Counted as stating the gold answer. The un.org excerpt contains only navigation text. The Oct 10 body-text claim is not in the bounded Wikipedia excerpt. The Secretariat page gives August 21, 1950, not August 22; it does give June 1951."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "UN says construction began on UN Day (24 October) 1949 and was completed in 1952",
+          "url": "https://www.un.org/en/visit/about-us",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia infobox lists completion as October 9, 1952, citing a NYT article of October 10, 1952 'Work Completed on U.N. Buildings'",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "partial"
+        },
+        {
+          "claim": "Wikipedia body text says the Manhattan headquarters was declared complete on October 10, 1952",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The General Assembly Building was formally dedicated on October 10, 1952",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building",
+          "label": "supported"
+        },
+        {
+          "claim": "Groundbreaking was September 14, 1948, marking the start of work on the Secretariat's basement",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Names October 9, 1952 as best-supported and as the date to cite, noting the October 10 alternative. Counted as correct. The infobox date is in the excerpt but the NYT citation title is not. The Oct 10 body text is not in the excerpt. The groundbreaking date is in the excerpt but the Secretariat-basement detail is not."
+    },
+    "native": {
+      "verdict": "incorrect",
+      "claims": [
+        {
+          "claim": "Wikipedia article text says the headquarters was declared complete on October 10, 1952",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The Wikipedia infobox lists October 9, 1952",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "supported"
+        },
+        {
+          "claim": "The UN's site says construction was completed in 1952 without a specific day",
+          "url": "https://www.un.org/ungifts/united-nations-ny-site",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The Secretariat Building was finished in June 1951",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building",
+          "label": "supported"
+        },
+        {
+          "claim": "Dag Hammarskjöld Library dedicated November 1961; cafeteria and Conference Building expansion 1978–1981",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Groundbreaking was September 14, 1948",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "supported"
+        },
+        {
+          "claim": "Construction began on UN Day, October 24, 1949",
+          "url": "https://www.un.org/ungifts/united-nations-ny-site",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Gives only October 1952 as the firm answer. Says the day is either 9 or 10 and highlights October 10 as the article-text date, so it never commits to the gold date October 9. The un.org/ungifts excerpt contains only navigation text. The Oct 10 body text and the later-additions details are not in the bounded excerpt."
+    }
+  }
+}

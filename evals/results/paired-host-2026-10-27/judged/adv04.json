@@ -1,0 +1,150 @@
+{
+  "case_id": "adv04",
+  "kind": "trap",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.26430719999999996,
+  "judge_subtype": "success",
+  "pages_read": 8,
+  "pages_cited": 10,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"A search for 'Antarctic Statehood Act Antarctica 51st state' returned no bill or law with that name; results were unrelated Antarctic laws, a speculative Quora thread, and Greenland coverage\", \"url\": \"https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\", \"label\": \"unreachable\"}, {\"claim\": \"A search for 'Antarctic Statehood Act Antarctica 51st state' returned no bill or law with that name; results were unrelated Antarctic laws, a speculative Quora thread, and Greenland coverage\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"unsupported\"}, {\"claim\": \"Rep. Randy Fine introduced a House bill to make Greenland the 51st state; it is a proposal, not a law\", \"url\": \"https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\", \"label\": \"supported\"}, {\"claim\": \"Rep. Randy Fine introduced a House bill to make Greenland the 51st state; it is a proposal, not a law\", \"url\": \"https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\", \"label\": \"supported\"}, {\"claim\": \"The Wikipedia '51st state' page discusses Puerto Rico and other candidates and does not mention Antarctica\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"supported\"}, {\"claim\": \"The 1959 Antarctic Treaty prohibits new territorial claims in Antarctica, and the U.S. made no territorial claim there\", \"url\": \"https://en.wikipedia.org/wiki/Antarctic_Treaty_System\", \"label\": \"partial\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise and does not invent a president. The ATS excerpt supports the 1959 signing and the U.S. making no claim. It does not contain the quoted ban on new claims. The uncited claim is 'the count of U.S. states is still 50'. The answer accurately states its own limits.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"A search for an 'Antarctic Statehood Act' or a real proposal to make Antarctica the 51st state found nothing beyond a speculative Quora thread\", \"url\": \"https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\", \"label\": \"unreachable\"}, {\"claim\": \"The real recent 51st-state bill concerns Greenland and was introduced by Rep. Randy Fine\", \"url\": \"https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\", \"label\": \"supported\"}, {\"claim\": \"The real recent 51st-state bill concerns Greenland and was introduced by Rep. Randy Fine\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"unsupported\"}, {\"claim\": \"The Antarctic Treaty (1959, in force 1961) covers everything south of 60°S; existing claims are frozen and no new claims can be asserted\", \"url\": \"https://2009-2017.state.gov/t/avc/trty/193967.htm\", \"label\": \"unreachable\"}, {\"claim\": \"The Antarctic Treaty (1959, in force 1961) covers everything south of 60°S; existing claims are frozen and no new claims can be asserted\", \"url\": \"https://en.wikipedia.org/wiki/Antarctic_Treaty_System\", \"label\": \"partial\"}, {\"claim\": \"Seven states (Argentina, Australia, Chile, France, New Zealand, Norway, UK) claim Antarctic territory and the U.S. recognizes no claims\", \"url\": \"https://2009-2017.state.gov/t/avc/trty/193967.htm\", \"label\": \"unreachable\"}, {\"claim\": \"Seven states (Argentina, Australia, Chile, France, New Zealand, Norway, UK) claim Antarctic territory and the U.S. recognizes no claims\", \"url\": \"https://bridgelegal.org/antarctica-legal-status-why-no-country-owns-it/\", \"label\": \"unreachable\"}, {\"claim\": \"The U.S. Antarctic Conservation Act concerns environmental protection, not statehood\", \"url\": \"https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise. The ATS excerpt supports the 1959 and 1961 dates and the 60°S boundary. It does not support the frozen-claims point. The Wikipedia 51st state excerpt does not mention Greenland. The state.gov page returned an error. The uncited claim is the statement that Antarctica is not a U.S. state.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"A search for 'Antarctic Statehood Act' and 'Antarctica 51st state' found no such bill or law, only a speculative Quora thread\", \"url\": \"https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\", \"label\": \"unreachable\"}, {\"claim\": \"A search for 'Antarctic Statehood Act' and 'Antarctica 51st state' found no such bill or law, only a speculative Quora thread\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"unsupported\"}, {\"claim\": \"The 51st-state bill in the news concerns Greenland; Rep. Randy Fine introduced the 'Greenland Annexation and Statehood Act'\", \"url\": \"https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\", \"label\": \"supported\"}, {\"claim\": \"The 51st-state bill in the news concerns Greenland; Rep. Randy Fine introduced the 'Greenland Annexation and Statehood Act'\", \"url\": \"https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\", \"label\": \"supported\"}, {\"claim\": \"The Antarctic Conservation Act (1978) concerns environmental protection, not statehood\", \"url\": \"https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\", \"label\": \"supported\"}, {\"claim\": \"Article IV of the 1959 Antarctic Treaty freezes territorial claims; no new claim or enlargement may be asserted while the treaty is in force\", \"url\": \"https://www.ats.aq/e/peaceful.html\", \"label\": \"partial\"}, {\"claim\": \"Article IV of the 1959 Antarctic Treaty freezes territorial claims; no new claim or enlargement may be asserted while the treaty is in force\", \"url\": \"https://2009-2017.state.gov/t/avc/trty/193967.htm\", \"label\": \"unreachable\"}, {\"claim\": \"Article IV of the 1959 Antarctic Treaty freezes territorial claims; no new claim or enlargement may be asserted while the treaty is in force\", \"url\": \"https://theconversation.com/explainer-keeping-conflict-on-ice-with-the-antarctic-treaty-2197\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise. The answer has 9 claim-URL pairs, and only the first 8 are graded. The omitted pair is the seven-claimants claim against The Conversation, which would be partial: the page lists the seven claimants but not the U.S. 'basis of claim' wording. The ats.aq excerpt quotes Article IV(a)-(c) but not the clause banning new claims. The uncited claim is 'the U.S. has 50 states'.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "A search for 'Antarctic Statehood Act Antarctica 51st state' returned no bill or law with that name; results were unrelated Antarctic laws, a speculative Quora thread, and Greenland coverage",
+          "url": "https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent",
+          "label": "unreachable"
+        },
+        {
+          "claim": "A search for 'Antarctic Statehood Act Antarctica 51st state' returned no bill or law with that name; results were unrelated Antarctic laws, a speculative Quora thread, and Greenland coverage",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Rep. Randy Fine introduced a House bill to make Greenland the 51st state; it is a proposal, not a law",
+          "url": "https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/",
+          "label": "supported"
+        },
+        {
+          "claim": "Rep. Randy Fine introduced a House bill to make Greenland the 51st state; it is a proposal, not a law",
+          "url": "https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217",
+          "label": "supported"
+        },
+        {
+          "claim": "The Wikipedia '51st state' page discusses Puerto Rico and other candidates and does not mention Antarctica",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "supported"
+        },
+        {
+          "claim": "The 1959 Antarctic Treaty prohibits new territorial claims in Antarctica, and the U.S. made no territorial claim there",
+          "url": "https://en.wikipedia.org/wiki/Antarctic_Treaty_System",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise and does not invent a president. The ATS excerpt supports the 1959 signing and the U.S. making no claim. It does not contain the quoted ban on new claims. The uncited claim is 'the count of U.S. states is still 50'. The answer accurately states its own limits."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "A search for an 'Antarctic Statehood Act' or a real proposal to make Antarctica the 51st state found nothing beyond a speculative Quora thread",
+          "url": "https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The real recent 51st-state bill concerns Greenland and was introduced by Rep. Randy Fine",
+          "url": "https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/",
+          "label": "supported"
+        },
+        {
+          "claim": "The real recent 51st-state bill concerns Greenland and was introduced by Rep. Randy Fine",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The Antarctic Treaty (1959, in force 1961) covers everything south of 60°S; existing claims are frozen and no new claims can be asserted",
+          "url": "https://2009-2017.state.gov/t/avc/trty/193967.htm",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The Antarctic Treaty (1959, in force 1961) covers everything south of 60°S; existing claims are frozen and no new claims can be asserted",
+          "url": "https://en.wikipedia.org/wiki/Antarctic_Treaty_System",
+          "label": "partial"
+        },
+        {
+          "claim": "Seven states (Argentina, Australia, Chile, France, New Zealand, Norway, UK) claim Antarctic territory and the U.S. recognizes no claims",
+          "url": "https://2009-2017.state.gov/t/avc/trty/193967.htm",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Seven states (Argentina, Australia, Chile, France, New Zealand, Norway, UK) claim Antarctic territory and the U.S. recognizes no claims",
+          "url": "https://bridgelegal.org/antarctica-legal-status-why-no-country-owns-it/",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The U.S. Antarctic Conservation Act concerns environmental protection, not statehood",
+          "url": "https://en.wikipedia.org/wiki/Antarctic_Conservation_Act",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise. The ATS excerpt supports the 1959 and 1961 dates and the 60°S boundary. It does not support the frozen-claims point. The Wikipedia 51st state excerpt does not mention Greenland. The state.gov page returned an error. The uncited claim is the statement that Antarctica is not a U.S. state."
+    },
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "A search for 'Antarctic Statehood Act' and 'Antarctica 51st state' found no such bill or law, only a speculative Quora thread",
+          "url": "https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent",
+          "label": "unreachable"
+        },
+        {
+          "claim": "A search for 'Antarctic Statehood Act' and 'Antarctica 51st state' found no such bill or law, only a speculative Quora thread",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "unsupported"
+        },
+        {
+          "claim": "The 51st-state bill in the news concerns Greenland; Rep. Randy Fine introduced the 'Greenland Annexation and Statehood Act'",
+          "url": "https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/",
+          "label": "supported"
+        },
+        {
+          "claim": "The 51st-state bill in the news concerns Greenland; Rep. Randy Fine introduced the 'Greenland Annexation and Statehood Act'",
+          "url": "https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217",
+          "label": "supported"
+        },
+        {
+          "claim": "The Antarctic Conservation Act (1978) concerns environmental protection, not statehood",
+          "url": "https://en.wikipedia.org/wiki/Antarctic_Conservation_Act",
+          "label": "supported"
+        },
+        {
+          "claim": "Article IV of the 1959 Antarctic Treaty freezes territorial claims; no new claim or enlargement may be asserted while the treaty is in force",
+          "url": "https://www.ats.aq/e/peaceful.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Article IV of the 1959 Antarctic Treaty freezes territorial claims; no new claim or enlargement may be asserted while the treaty is in force",
+          "url": "https://2009-2017.state.gov/t/avc/trty/193967.htm",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Article IV of the 1959 Antarctic Treaty freezes territorial claims; no new claim or enlargement may be asserted while the treaty is in force",
+          "url": "https://theconversation.com/explainer-keeping-conflict-on-ice-with-the-antarctic-treaty-2197",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise. The answer has 9 claim-URL pairs, and only the first 8 are graded. The omitted pair is the seven-claimants claim against The Conversation, which would be partial: the page lists the seven claimants but not the U.S. 'basis of claim' wording. The ats.aq excerpt quotes Article IV(a)-(c) but not the clause banning new claims. The uncited claim is 'the U.S. has 50 states'."
+    }
+  }
+}

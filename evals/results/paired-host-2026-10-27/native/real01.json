@@ -1,0 +1,73 @@
+{
+  "case_id": "real01",
+  "condition": "native",
+  "elapsed_seconds": 30.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.0688497,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2868,
+    "cache_read_input_tokens": 10629,
+    "output_tokens": 1148,
+    "output_tokens_details": {
+      "thinking_tokens": 42
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2868,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13437,
+      "outputTokens": 1636,
+      "cacheReadInputTokens": 10629,
+      "cacheCreationInputTokens": 2868,
+      "webSearchRequests": 1,
+      "costUSD": 0.0657689,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 42,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2868,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 28233,
+      "outputTokens": 515,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0030808000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 313,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**Direct answer:** Jürgen Aschoff studied medicine at the University of Bonn. Some sources suggest he also studied at other universities, so Bonn may not be the only one.\n\n**Claims and support**\n\n- Aschoff enrolled in medicine at the University of Bonn after finishing his Abitur. He said he did so \"lacking a specific interest.\" I read this on the page itself.\n  https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n\n- He moved to the University of Göttingen in 1938 and worked on thermoregulation physiology under Hermann Rein. He received his venia legendi (teaching qualification) there in 1944 and became a professor in 1949. I read this on the Wikipedia page.\n  https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n\n- An obituary reportedly places him later at Göttingen, Würzburg and Heidelberg. I only saw this in a search-result summary and did not open the obituary.\n  https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\n\n- Wikidata lists his education as Bonn, Heidelberg and Freiburg. This differs from the other sources, which don't mention Freiburg. I only saw this in a search-result summary and did not open the Wikidata page.\n  https://www.wikidata.org/wiki/Q75270\n\n**Caveats:** The Wikipedia page gives no dates for his Bonn studies and doesn't mention a medical degree. Wikidata's list suggests he may also have studied at Heidelberg or Freiburg. I did not resolve which university awarded his degree.\n\nSources:\n- [Jürgen Aschoff – Wikipedia](https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff)\n- [In Memoriam: Jürgen Aschoff, 1913–1998 – The Auk](https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full)\n- [Jürgen Aschoff – Wikidata](https://www.wikidata.org/wiki/Q75270)",
+  "final_answer_sha256": "fd6e6b482193a0c97049a0e767e98dc41295ee170f06ca90635a9717a59bbb97",
+  "raw_stream_sha256": "56d129600579696eea6377779489e5527846e1ad8d0fe12010eeedf022bf3881"
+}

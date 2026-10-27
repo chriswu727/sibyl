@@ -1,0 +1,74 @@
+{
+  "case_id": "real06",
+  "condition": "deep_research",
+  "elapsed_seconds": 38.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1791575,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 15082,
+    "cache_read_input_tokens": 70321,
+    "output_tokens": 1822,
+    "output_tokens_details": {
+      "thinking_tokens": 191
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15082,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28294,
+      "outputTokens": 2902,
+      "cacheReadInputTokens": 70321,
+      "cacheCreationInputTokens": 15082,
+      "webSearchRequests": 2,
+      "costUSD": 0.17296810000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 191,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15082,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 55229,
+      "outputTokens": 1333,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0061894,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1042,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2,
+    "WebFetch": 2
+  },
+  "final_answer": "**Answer: October 9, 1952 is the date most sources give, but the evidence doesn't settle the exact day.** All the sources agree on October 1952. Wikipedia gives both October 9 and October 10, and I found no primary source that fixes the day. I did the research directly with searches and page reads rather than spawning the skill's subagents. Its workflow needs shell commands and local files, which you ruled out.\n\n**Claims and sources**\n\n- The UN says construction of the headquarters complex was completed in 1952. That is the year only, with no day.\n  - https://www.un.org/ungifts/secretariat-building\n- Another history site says construction was \"officially completed in October 1952\". It gives no day.\n  - https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/\n- The Wikipedia infobox for the UN Headquarters gives a completion date of October 9, 1952.\n  - https://en.wikipedia.org/wiki/United_Nations_Headquarters\n- The body text of the same article says the Manhattan headquarters \"was declared complete on October 10, 1952\". It contradicts its own infobox.\n  - https://en.wikipedia.org/wiki/United_Nations_Headquarters\n- Untapped New York says the Manhattan headquarters was not completed until October 9, 1952. A search summary of that page said so; I did not open it.\n  - https://www.untappedcities.com/united-nations-lake-success/\n- Wikipedia's General Assembly Building article gives October 10, 1952 as that one building's formal dedication. That is a different event from completing the whole complex.\n  - https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building\n- Earlier milestones, so \"completed\" isn't confused with them:\n  - The Secretariat building was finished in 1950–51. Wikipedia says staff began moving in on August 22, 1950, and it was completed in June 1951. I did not open that article, so the June 1951 date comes from a search summary.\n    - https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building\n  - The Dag Hammarskjöld Library was dedicated in November 1961, after the main complex was finished.\n    - https://en.wikipedia.org/wiki/United_Nations_Headquarters\n\nI used five retrievals: two searches, two page reads, and one more search.\n\nSources:\n- [UN – Secretariat Building](https://www.un.org/ungifts/secretariat-building)\n- [Classic New York History](https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/)\n- [Wikipedia – United Nations Headquarters](https://en.wikipedia.org/wiki/United_Nations_Headquarters)\n- [Untapped New York](https://www.untappedcities.com/united-nations-lake-success/)\n- [Wikipedia – UN General Assembly Building](https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building)\n- [Wikipedia – UN Secretariat Building](https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building)",
+  "final_answer_sha256": "083d0a54de2d551e4b8a670a566526d006da7c82f38b5b9f4a34bc34b408367d",
+  "raw_stream_sha256": "946491bf4252b4e0c909efb4d59e08f960fb388f35e76dc313521414157c169a"
+}

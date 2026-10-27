@@ -1,0 +1,73 @@
+{
+  "case_id": "real06",
+  "condition": "native",
+  "elapsed_seconds": 20.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.0690308,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2777,
+    "cache_read_input_tokens": 10386,
+    "output_tokens": 1047,
+    "output_tokens_details": {
+      "thinking_tokens": 35
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2777,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13722,
+      "outputTokens": 1468,
+      "cacheReadInputTokens": 10386,
+      "cacheCreationInputTokens": 2777,
+      "webSearchRequests": 1,
+      "costUSD": 0.06427060000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 35,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2777,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 44387,
+      "outputTokens": 643,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0047602,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 357,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**Direct answer:** The main UN Headquarters complex in New York was completed in **October 1952**. The exact day is uncertain: sources give October 9 or October 10, 1952. October 10, 1952 is the date the article text uses. I could not find a primary source that settles which of the two is right.\n\n**Claims and sources**\n\n- Wikipedia's article text says the headquarters \"was declared complete on October 10, 1952.\"\n  https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n- The infobox of that same Wikipedia article lists October 9, 1952, so the page disagrees with itself by one day.\n  https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n- The UN's own site says construction was completed in 1952, without a specific day (as summarized by the search tool; I did not open the page).\n  https://www.un.org/ungifts/united-nations-ny-site\n\n- The Secretariat Building was finished earlier, in June 1951, so it isn't the completion date of the whole complex (search summary, not verified by opening the page).\n  https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building\n\n- Later additions came after 1952. The Dag Hammarskjöld Library was dedicated in November 1961, and a cafeteria and Conference Building expansion followed in 1978–1981.\n  https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n- Sources also disagree on when construction started. One gives a groundbreaking of September 14, 1948 and another gives UN Day, October 24, 1949 (search summary, not verified on the pages).\n  https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n  https://www.un.org/ungifts/united-nations-ny-site\n\nI read only the first 100,000 of about 270,000 characters of the Wikipedia page. I did not check the Secretariat page or the UN page directly.\n\nSources:\n- [Headquarters of the United Nations (Wikipedia)](https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations)\n- [United Nations Secretariat Building (Wikipedia)](https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building)\n- [United Nations NY Site (un.org)](https://www.un.org/ungifts/united-nations-ny-site)",
+  "final_answer_sha256": "3d266068cafa7cd75c95b2390f9780919dd7366c329b3987b7d7a04b793730de",
+  "raw_stream_sha256": "ac3c71749efdbaa69637a72ae2e121a16df139ec09b370f706aac88a499760af"
+}

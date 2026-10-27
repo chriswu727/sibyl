@@ -1,0 +1,155 @@
+{
+  "case_id": "sqlite_wal",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "deep_research",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.22003119999999998,
+  "judge_subtype": "success",
+  "pages_read": 4,
+  "pages_cited": 4,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"WAL mode allows only one writer at a time because there is only one WAL file, so writers still contend.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"Readers do not block writers and a writer does not block readers. WAL is also faster in most scenarios, uses more sequential I/O and needs fewer fsync() calls.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"The no-blocking property is only 'mostly true'. SQLITE_BUSY can still occur, for example when another connection uses exclusive locking mode.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"All processes must be on the same host, so WAL does not work over a network filesystem. Always-overlapping readers prevent checkpoints and the WAL grows without bound.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 1, \"counterevidence\": 1}, \"notes\": \"The core claims are well supported. The excerpt only shows the TOC heading 'Sometimes Queries Return SQLITE_BUSY In WAL Mode'; it does not contain the 'mostly true' wording or the exclusive-locking-mode case. It says a long-running reader stalls the checkpointer but not that the WAL grows without bound. The answer uses a single source and openly discloses that the second fetch and the counterevidence check were not completed.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"WAL lets readers and a writer run at the same time without blocking each other.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"The docs hedge that writers-don't-block-readers is only 'mostly true'.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"WAL permits only one writer at a time because there is one WAL file.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"SQLite supports many simultaneous read transactions but only one write transaction.\", \"url\": \"https://www.sqlite.org/lang_transaction.html\", \"label\": \"supported\"}, {\"claim\": \"A second writer gets SQLITE_BUSY, a read-to-write upgrade fails if another connection has modified the database, and BEGIN IMMEDIATE can fail with SQLITE_BUSY.\", \"url\": \"https://www.sqlite.org/lang_transaction.html\", \"label\": \"supported\"}, {\"claim\": \"EXCLUSIVE and IMMEDIATE behave the same in WAL mode.\", \"url\": \"https://www.sqlite.org/lang_transaction.html\", \"label\": \"supported\"}, {\"claim\": \"BEGIN CONCURRENT allows concurrent writers in wal/wal2 mode using optimistic page-level conflict detection. A conflict returns SQLITE_BUSY_SNAPSHOT, and COMMITs are still serialized.\", \"url\": \"https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md\", \"label\": \"supported\"}, {\"claim\": \"WAL is faster in most scenarios because content is written once instead of twice, writes are sequential, and fewer fsync() calls are needed.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Additional cited claims beyond the first 8 are mostly supported: 1-2% slower for read-heavy workloads, read degradation as the WAL grows, the 3.11.0 large-transaction fix, and same-host only. Two are not fully stated in the excerpt: that a checkpoint-triggering commit is much slower, and that checkpoint starvation causes unbounded growth. The 'mostly true' wording is not in the excerpt; only the SQLITE_BUSY section heading partly supports it. Inferences are flagged. The answer uses three relevant primary documents and notes they all come from one publisher. BEGIN CONCURRENT is substantive evidence that narrows the conclusion to stock WAL.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"WAL lets readers and writers run concurrently because writers append to the WAL and do not interfere with readers.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"Each reader sees a consistent snapshot for the duration of its read transaction.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"WAL still permits only one writer at a time because there is only one WAL file.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"In rollback mode, readers coexist with a RESERVED writer, but the writer must take PENDING and then EXCLUSIVE to commit or spill cache, which blocks new readers and waits for existing ones.\", \"url\": \"https://www.sqlite.org/lockingv3.html\", \"label\": \"partial\"}, {\"claim\": \"Rollback mode allows only one writer, and a second writer that cannot get RESERVED fails with SQLITE_BUSY.\", \"url\": \"https://www.sqlite.org/lockingv3.html\", \"label\": \"partial\"}, {\"claim\": \"BEGIN IMMEDIATE can fail with SQLITE_BUSY if another write is active, and a deferred read-then-write transaction can fail with SQLITE_BUSY.\", \"url\": \"https://www.sqlite.org/lang_transaction.html\", \"label\": \"supported\"}, {\"claim\": \"The no-blocking rule is only mostly true. SQLITE_BUSY can occur under exclusive locking mode, during last-connection close, or during crash recovery.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"With always-active readers, checkpoints can't complete and the WAL grows without bound. RESTART and TRUNCATE checkpoints can block readers.\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"The lockingv3 lock states are supported. The cache-spill detail and SQLITE_BUSY on a failed RESERVED lock are not in the excerpt, and the comparison is openly marked as inference. The specific SQLITE_BUSY cases, unbounded WAL growth, and RESTART/TRUNCATE behavior are beyond the wal.html excerpt; only the section heading partly supports them. An additional claim on same-host and the 3.11.0 large-transaction fix is supported. The answer uses three relevant primary documents. The rollback-vs-WAL locking comparison substantively narrows what WAL's benefit actually is.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "WAL mode allows only one writer at a time because there is only one WAL file, so writers still contend.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Readers do not block writers and a writer does not block readers. WAL is also faster in most scenarios, uses more sequential I/O and needs fewer fsync() calls.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "The no-blocking property is only 'mostly true'. SQLITE_BUSY can still occur, for example when another connection uses exclusive locking mode.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "All processes must be on the same host, so WAL does not work over a network filesystem. Always-overlapping readers prevent checkpoints and the WAL grows without bound.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 1,
+        "counterevidence": 1
+      },
+      "notes": "The core claims are well supported. The excerpt only shows the TOC heading 'Sometimes Queries Return SQLITE_BUSY In WAL Mode'; it does not contain the 'mostly true' wording or the exclusive-locking-mode case. It says a long-running reader stalls the checkpointer but not that the WAL grows without bound. The answer uses a single source and openly discloses that the second fetch and the counterevidence check were not completed."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "WAL lets readers and a writer run at the same time without blocking each other.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "The docs hedge that writers-don't-block-readers is only 'mostly true'.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "WAL permits only one writer at a time because there is one WAL file.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "SQLite supports many simultaneous read transactions but only one write transaction.",
+          "url": "https://www.sqlite.org/lang_transaction.html",
+          "label": "supported"
+        },
+        {
+          "claim": "A second writer gets SQLITE_BUSY, a read-to-write upgrade fails if another connection has modified the database, and BEGIN IMMEDIATE can fail with SQLITE_BUSY.",
+          "url": "https://www.sqlite.org/lang_transaction.html",
+          "label": "supported"
+        },
+        {
+          "claim": "EXCLUSIVE and IMMEDIATE behave the same in WAL mode.",
+          "url": "https://www.sqlite.org/lang_transaction.html",
+          "label": "supported"
+        },
+        {
+          "claim": "BEGIN CONCURRENT allows concurrent writers in wal/wal2 mode using optimistic page-level conflict detection. A conflict returns SQLITE_BUSY_SNAPSHOT, and COMMITs are still serialized.",
+          "url": "https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md",
+          "label": "supported"
+        },
+        {
+          "claim": "WAL is faster in most scenarios because content is written once instead of twice, writes are sequential, and fewer fsync() calls are needed.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Additional cited claims beyond the first 8 are mostly supported: 1-2% slower for read-heavy workloads, read degradation as the WAL grows, the 3.11.0 large-transaction fix, and same-host only. Two are not fully stated in the excerpt: that a checkpoint-triggering commit is much slower, and that checkpoint starvation causes unbounded growth. The 'mostly true' wording is not in the excerpt; only the SQLITE_BUSY section heading partly supports it. Inferences are flagged. The answer uses three relevant primary documents and notes they all come from one publisher. BEGIN CONCURRENT is substantive evidence that narrows the conclusion to stock WAL."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "WAL lets readers and writers run concurrently because writers append to the WAL and do not interfere with readers.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Each reader sees a consistent snapshot for the duration of its read transaction.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "WAL still permits only one writer at a time because there is only one WAL file.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "In rollback mode, readers coexist with a RESERVED writer, but the writer must take PENDING and then EXCLUSIVE to commit or spill cache, which blocks new readers and waits for existing ones.",
+          "url": "https://www.sqlite.org/lockingv3.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Rollback mode allows only one writer, and a second writer that cannot get RESERVED fails with SQLITE_BUSY.",
+          "url": "https://www.sqlite.org/lockingv3.html",
+          "label": "partial"
+        },
+        {
+          "claim": "BEGIN IMMEDIATE can fail with SQLITE_BUSY if another write is active, and a deferred read-then-write transaction can fail with SQLITE_BUSY.",
+          "url": "https://www.sqlite.org/lang_transaction.html",
+          "label": "supported"
+        },
+        {
+          "claim": "The no-blocking rule is only mostly true. SQLITE_BUSY can occur under exclusive locking mode, during last-connection close, or during crash recovery.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "With always-active readers, checkpoints can't complete and the WAL grows without bound. RESTART and TRUNCATE checkpoints can block readers.",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "The lockingv3 lock states are supported. The cache-spill detail and SQLITE_BUSY on a failed RESERVED lock are not in the excerpt, and the comparison is openly marked as inference. The specific SQLITE_BUSY cases, unbounded WAL growth, and RESTART/TRUNCATE behavior are beyond the wal.html excerpt; only the section heading partly supports them. An additional claim on same-host and the 3.11.0 large-transaction fix is supported. The answer uses three relevant primary documents. The rollback-vs-WAL locking comparison substantively narrows what WAL's benefit actually is."
+    }
+  }
+}

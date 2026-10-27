@@ -1,0 +1,75 @@
+{
+  "case_id": "postgres_isolation",
+  "condition": "sibyl",
+  "elapsed_seconds": 44.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.09520499999999998,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 12034,
+    "cache_read_input_tokens": 72382,
+    "output_tokens": 3739,
+    "output_tokens_details": {
+      "thinking_tokens": 287
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 12034,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 12,
+      "outputTokens": 3739,
+      "cacheReadInputTokens": 72382,
+      "cacheCreationInputTokens": 12034,
+      "webSearchRequests": 0,
+      "costUSD": 0.09278819999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 287,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 12034,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 10248,
+      "outputTokens": 2784,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0024168,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1184,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 2,
+    "WebFetch": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** Both levels give each transaction a stable snapshot, and both can abort a transaction with a serialization failure (SQLSTATE `40001`). The difference is what they guarantee. Repeatable Read still permits serialization anomalies, such as two transactions that each read data the other then writes. Serializable detects those and aborts one of the transactions. At either level, the application must retry the whole transaction when it gets `40001`. It should usually also retry deadlocks (`40P01`), and sometimes unique-key (`23505`) or exclusion (`23P01`) violations.\n\n**Claims and sources**\n\n1. Phantom reads can't happen at either level in PostgreSQL. Serialization anomalies are possible at Repeatable Read and impossible at Serializable.\n   - https://www.postgresql.org/docs/current/transaction-iso.html\n\n2. Both levels can raise errors meant to prevent serialization anomalies, so applications using either must be ready to retry. The SQLSTATE is `40001` (`serialization_failure`).\n   - https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n3. It may also be advisable to retry deadlocks (`40P01`). In some cases it is also appropriate to retry unique violations (`23505`) and exclusion violations (`23P01`). The docs warn that these can be persistent errors rather than transient ones, so retry them with more care.\n   - https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n4. Retry the complete transaction, including the logic that decides which SQL and values to use.\n   - PostgreSQL has no automatic retry.\n   - A retry isn't guaranteed to succeed, and under high contention it may take many attempts.\n   - https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n5. At Repeatable Read, a transaction is rolled back with \"could not serialize access due to concurrent update\" if it tries to modify or lock a row that another transaction changed and committed after it began. On retry, the transaction sees the committed change in its initial view.\n   - https://www.postgresql.org/docs/current/transaction-iso.html\n\n6. The docs' example has two concurrent transactions, each summing one class and inserting a row into the other class. Both would commit at Repeatable Read. At Serializable, one commits and the other fails with \"could not serialize access due to read/write dependencies among transactions.\"\n   - https://www.postgresql.org/docs/current/transaction-iso.html\n\n7. Serializable uses predicate locking (Serializable Snapshot Isolation, which adds anomaly checks to snapshot isolation). These locks don't block and can't cause deadlocks.\n   - The monitoring adds overhead but no blocking beyond Repeatable Read.\n   - The only blocking case is `SERIALIZABLE READ ONLY DEFERRABLE`.\n   - https://www.postgresql.org/docs/current/transaction-iso.html\n\n8. Serializable doesn't remove every error. Unique-constraint violations can still occur between overlapping Serializable transactions, even after checking that the key is absent. That is why `23505` is sometimes worth retrying.\n   - https://www.postgresql.org/docs/current/transaction-iso.html\n   - https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n9. At Repeatable Read, only updating transactions might need to be retried. Read-only transactions never have serialization conflicts there. Under Serializable, data read by a read-only transaction isn't known to be valid until it commits, except in a deferrable read-only transaction. Declaring transactions `READ ONLY` is recommended.\n   - https://www.postgresql.org/docs/current/transaction-iso.html\n\n**Evidence limits**\n- All sources are the official PostgreSQL 18 docs (current version). I found no independent corroboration and did not search for counterevidence, so the claims are single-source. I don't expect conflicts, since this is the authoritative description.\n- Claims 1–4 are recorded in Sibyl with verified quotes. The Sibyl extractor kept only the isolation-level table from the Transaction Isolation page. Claims 5–9 come from a separate full-page fetch, so they have no verified quotes in the job. The job isn't finalized, and the checker flagged claims 2 and 3 because the SQLSTATE numbers are split across lines in the extracted passage text.\n- I used 3 of the 8 allowed retrievals and 3 more Sibyl calls, so no budget limit was hit.",
+  "final_answer_sha256": "0201371cf0de017b46f593c8cc321cc41885cd0d72ece0a2dc35b2c4bf72fcee",
+  "raw_stream_sha256": "7767b77d7c861186b795b67cfcfc90e0fea1f159dddaf0548a1593eba95d6090"
+}

@@ -1,0 +1,175 @@
+{
+  "case_id": "semiconductor_2024",
+  "kind": "research",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.28256719999999996,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 12,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"SIA reported 2024 global sales of $627.6B, up 19.1% from $526.8B in 2023; record and first year above $600B\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"SIA reported 2024 global sales of $627.6B, up 19.1% from $526.8B in 2023; record and first year above $600B\", \"url\": \"https://x.com/SIAAmerica/status/1887958734183219214\", \"label\": \"partial\"}, {\"claim\": \"Monthly data is from WSTS; SIA page notes March 3, 2025 revision of 2024 total to $630.5B\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"SIA's 2025 report uses $630.5B as 2024 base; 2025 sales $791.7B, up 25.6%\", \"url\": \"https://atreg.com/global-2025-semiconductor-sales-rise-by-25-6-percent-to-791-7-billion/\", \"label\": \"supported\"}, {\"claim\": \"2024 regional growth: Americas +44.8%, China +18.3%, Asia Pacific/All Others +12.5%, Japan -0.4%, Europe -8.1%\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"SIA described 2025 double-digit growth as a projection\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"Gartner final 2024 revenue $655.9B, up 21%\", \"url\": \"https://www.gartner.com/en/newsroom/press-releases/2025-04-10-gartner-says-worldwide-semiconductor-revenue-grew-21-percent-in-2024\", \"label\": \"unreachable\"}, {\"claim\": \"Gartner final 2024 $655.9B (+21%); February preliminary about $626B (+18%)\", \"url\": \"https://www.gartner.com/en/newsroom/press-releases/2025-02-03-gartner-says-worldwide-semiconductor-revenue-grew-18-percent-in-2024\", \"label\": \"partial\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Covers all three distinctions and adds a revision/vintage point. Gartner's $655.9B 'final' figure is material but rests on an unreachable page, and that limitation is not disclosed. The answer says no recalculated growth rate was found, yet the SIA Factbook and WSTS Spring 2025 show 19.7%; the answer did not consult them. The atreg page text does support the $791.7B claim, despite the answer's disclaimer. Gartner's February preliminary (independent publisher, $626B/18.1%) is a substantive alternative-methodology figure. The statement that Gartner uses a different basis is uncited inference, which the answer discloses.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"SIA announced 2024 sales of $627.6B on Feb 7, 2025, up 19.1% from $526.8B in 2023\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"First time annual sales exceeded $600B\", \"url\": \"https://x.com/SIAAmerica/status/1887958734183219214\", \"label\": \"supported\"}, {\"claim\": \"WSTS later updated 2024 year-end total to $630.5B; no growth rate given for revised figure\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"2025 SIA Factbook gives $630.5B for 2024\", \"url\": \"https://www.semiconductors.org/wp-content/uploads/2025/05/2025-SIA-Factbook-FINAL-1.pdf\", \"label\": \"supported\"}, {\"claim\": \"2024 regional growth: Americas +44.8%, China +18.3%, APAC/Others +12.5%, Japan -0.4%, Europe -8.1%\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"Memory +78.9% to $165.1B, DRAM +82.6%, logic largest at $212.6B; SIA credited AI demand\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"partial\"}, {\"claim\": \"WSTS forecasts: Spring 2024 +16.0% and Fall 2024 +19.0% (~$627B) for 2024; Spring 2025 +11.2% to $700.9B for 2025 and $760.7B for 2026\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"partial\"}, {\"claim\": \"Later 2025 forecast revisions: +15.4% (Aug 2025), then +22.5% to $772.2B (Dec 2025)\", \"url\": \"https://www.eusemiconductors.eu/sites/default/files/ESIA_WSTS_PR_AuFc2025.pdf\", \"label\": \"partial\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Covers all three distinctions clearly. The Spring 2024 +16.0% and Fall 2024 +19.0% forecasts rest on unreachable WSTS pages. The August 2025 +15.4% figure is not in the ESIA text, and 'SIA credited AI' is not stated on the page. The answer says the Spring 2025 PDF was unreadable and that 19.7% could not be verified, but its own cited Factbook shows 19.7% '23/'24, and the PDF text confirms it. Limitations are disclosed, but no substantive challenging evidence (such as alternative-methodology totals) is offered. The 19.7% derivation and the Wikipedia $791.7B mention are uncited.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"SIA announced 2024 sales of $627.6B, up 19.1% from $526.8B; highest-ever and first above $600B; published Feb 7, 2025\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"SIA page update: WSTS revised 2024 year-end sales to $630.5B\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"WSTS Spring 2025 lists 2024 world total $630,549M, up 19.7%\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"supported\"}, {\"claim\": \"Logic largest at $212.6B; memory +78.9% to $165.1B; DRAM +82.6%\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}, {\"claim\": \"WSTS Fall 2024 forecast for 2024 was $627B, up 19.0%\", \"url\": \"https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024\", \"label\": \"supported\"}, {\"claim\": \"WSTS Spring 2025 2024 regional growth: Americas +45.2%, Asia Pacific +16.4%, Japan 0.0%, Europe -8.1%\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"supported\"}, {\"claim\": \"Fall 2024 forecast regional rates: Americas +38.9%, Asia Pacific +17.5%, Japan +1.4%, Europe -6.7%\", \"url\": \"https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024\", \"label\": \"supported\"}, {\"claim\": \"Spring 2025 projections: 2025 $700.9B (+11.2%), 2026 $760.7B (+8.5%)\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 2, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Every cited claim is supported by the page texts. Z correctly identifies the finalized WSTS actual ($630,549M, +19.7%) and contrasts it with the Fall 2024 forecast and with regional actuals. The answer discloses that SIA relies on WSTS data and that it found no independent corroboration. It does not reconcile SIA's regional breakdown (44.8%, with China separate) with WSTS's (45.2%), and it does not bring in alternative-methodology totals such as Gartner's. Counterevidence is therefore limited to disclosed caveats.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "SIA reported 2024 global sales of $627.6B, up 19.1% from $526.8B in 2023; record and first year above $600B",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA reported 2024 global sales of $627.6B, up 19.1% from $526.8B in 2023; record and first year above $600B",
+          "url": "https://x.com/SIAAmerica/status/1887958734183219214",
+          "label": "partial"
+        },
+        {
+          "claim": "Monthly data is from WSTS; SIA page notes March 3, 2025 revision of 2024 total to $630.5B",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA's 2025 report uses $630.5B as 2024 base; 2025 sales $791.7B, up 25.6%",
+          "url": "https://atreg.com/global-2025-semiconductor-sales-rise-by-25-6-percent-to-791-7-billion/",
+          "label": "supported"
+        },
+        {
+          "claim": "2024 regional growth: Americas +44.8%, China +18.3%, Asia Pacific/All Others +12.5%, Japan -0.4%, Europe -8.1%",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA described 2025 double-digit growth as a projection",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "Gartner final 2024 revenue $655.9B, up 21%",
+          "url": "https://www.gartner.com/en/newsroom/press-releases/2025-04-10-gartner-says-worldwide-semiconductor-revenue-grew-21-percent-in-2024",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Gartner final 2024 $655.9B (+21%); February preliminary about $626B (+18%)",
+          "url": "https://www.gartner.com/en/newsroom/press-releases/2025-02-03-gartner-says-worldwide-semiconductor-revenue-grew-18-percent-in-2024",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Covers all three distinctions and adds a revision/vintage point. Gartner's $655.9B 'final' figure is material but rests on an unreachable page, and that limitation is not disclosed. The answer says no recalculated growth rate was found, yet the SIA Factbook and WSTS Spring 2025 show 19.7%; the answer did not consult them. The atreg page text does support the $791.7B claim, despite the answer's disclaimer. Gartner's February preliminary (independent publisher, $626B/18.1%) is a substantive alternative-methodology figure. The statement that Gartner uses a different basis is uncited inference, which the answer discloses."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "SIA announced 2024 sales of $627.6B on Feb 7, 2025, up 19.1% from $526.8B in 2023",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "First time annual sales exceeded $600B",
+          "url": "https://x.com/SIAAmerica/status/1887958734183219214",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS later updated 2024 year-end total to $630.5B; no growth rate given for revised figure",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "2025 SIA Factbook gives $630.5B for 2024",
+          "url": "https://www.semiconductors.org/wp-content/uploads/2025/05/2025-SIA-Factbook-FINAL-1.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "2024 regional growth: Americas +44.8%, China +18.3%, APAC/Others +12.5%, Japan -0.4%, Europe -8.1%",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "Memory +78.9% to $165.1B, DRAM +82.6%, logic largest at $212.6B; SIA credited AI demand",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "partial"
+        },
+        {
+          "claim": "WSTS forecasts: Spring 2024 +16.0% and Fall 2024 +19.0% (~$627B) for 2024; Spring 2025 +11.2% to $700.9B for 2025 and $760.7B for 2026",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "partial"
+        },
+        {
+          "claim": "Later 2025 forecast revisions: +15.4% (Aug 2025), then +22.5% to $772.2B (Dec 2025)",
+          "url": "https://www.eusemiconductors.eu/sites/default/files/ESIA_WSTS_PR_AuFc2025.pdf",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Covers all three distinctions clearly. The Spring 2024 +16.0% and Fall 2024 +19.0% forecasts rest on unreachable WSTS pages. The August 2025 +15.4% figure is not in the ESIA text, and 'SIA credited AI' is not stated on the page. The answer says the Spring 2025 PDF was unreadable and that 19.7% could not be verified, but its own cited Factbook shows 19.7% '23/'24, and the PDF text confirms it. Limitations are disclosed, but no substantive challenging evidence (such as alternative-methodology totals) is offered. The 19.7% derivation and the Wikipedia $791.7B mention are uncited."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "SIA announced 2024 sales of $627.6B, up 19.1% from $526.8B; highest-ever and first above $600B; published Feb 7, 2025",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA page update: WSTS revised 2024 year-end sales to $630.5B",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Spring 2025 lists 2024 world total $630,549M, up 19.7%",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "Logic largest at $212.6B; memory +78.9% to $165.1B; DRAM +82.6%",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Fall 2024 forecast for 2024 was $627B, up 19.0%",
+          "url": "https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Spring 2025 2024 regional growth: Americas +45.2%, Asia Pacific +16.4%, Japan 0.0%, Europe -8.1%",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "Fall 2024 forecast regional rates: Americas +38.9%, Asia Pacific +17.5%, Japan +1.4%, Europe -6.7%",
+          "url": "https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024",
+          "label": "supported"
+        },
+        {
+          "claim": "Spring 2025 projections: 2025 $700.9B (+11.2%), 2026 $760.7B (+8.5%)",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Every cited claim is supported by the page texts. Z correctly identifies the finalized WSTS actual ($630,549M, +19.7%) and contrasts it with the Fall 2024 forecast and with regional actuals. The answer discloses that SIA relies on WSTS data and that it found no independent corroboration. It does not reconcile SIA's regional breakdown (44.8%, with China separate) with WSTS's (45.2%), and it does not bring in alternative-methodology totals such as Gartner's. Counterevidence is therefore limited to disclosed caveats."
+    }
+  }
+}

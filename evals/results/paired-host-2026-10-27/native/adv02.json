@@ -1,0 +1,56 @@
+{
+  "case_id": "adv02",
+  "condition": "native",
+  "elapsed_seconds": 15.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.11357400000000001,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3679,
+    "cache_read_input_tokens": 5880,
+    "output_tokens": 1180,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3679,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 26670,
+      "outputTokens": 2493,
+      "cacheReadInputTokens": 5880,
+      "cacheCreationInputTokens": 3679,
+      "webSearchRequests": 2,
+      "costUSD": 0.11357400000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3679,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**Direct answer:** No one has walked on Mars, so there was no \"first human\" on its surface. The question rests on a false premise. Only robotic spacecraft have operated there.\n\nClaims and supporting sources:\n\n- No human has walked on Mars, and no crewed Mars mission is currently funded or scheduled.\n  - https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\n  - https://marsprogress.com/\n\n- Only robots are at Mars now: two rovers on the ground and six orbiters.\n  - https://marsprogress.com/\n\n- NASA's stated goal is to send astronauts to Mars in the 2030s, with no firm date. Other sources say the early 2040s, or a delay to about 2039.\n  - https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814\n  - https://www.universetoday.com/articles/2033-is-the-perfect-year-to-send-humans-to-mars-with-a-bonus-venus-flyby\n\n- NASA's 2022 objectives describe a 30-day, two-person surface mission. Other estimates involve much longer stays.\n  - https://www.space.com/nasa-plans-astronauts-mars-mission-30-days\n  - https://interestingengineering.com/science/nasa-releases-50-key-objectives-to-tackle-on-its-first-human-mission-to-mars\n\n- SpaceX had floated a 2028 crewed flight. In February 2026 it reportedly told investors it would prioritize the Moon, which cancelled the uncrewed 2026 Mars landing plan.\n  - https://marsprogress.com/\n\n**Caveats:** The search summaries I relied on were a mix of dated and recent. I read only the search results, not the full pages. The SpaceX report is secondhand (attributed to the Wall Street Journal), and I didn't check it against the original. Several of the NASA timeline sources are one to four years old.\n\nSources:\n- [List of crewed Mars mission plans](https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans)\n- [Mars Progress](https://marsprogress.com/)\n- [The Conversation: NASA wants to send humans to Mars in the 2030s](https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814)\n- [Universe Today: 2033](https://www.universetoday.com/articles/2033-is-the-perfect-year-to-send-humans-to-mars-with-a-bonus-venus-flyby)\n- [Space.com: 30-day Mars plan](https://www.space.com/nasa-plans-astronauts-mars-mission-30-days)\n- [Interesting Engineering: 50 objectives](https://interestingengineering.com/science/nasa-releases-50-key-objectives-to-tackle-on-its-first-human-mission-to-mars)",
+  "final_answer_sha256": "2bd7e650f325b2e87abe98d770663c0fad00c44a113802d9cf08c213fc8037bf",
+  "raw_stream_sha256": "d7288ef0c16d7741f45b451eff8841874326e83003cdaca8088b1d155f72139b"
+}

@@ -1,0 +1,74 @@
+{
+  "case_id": "real02",
+  "condition": "deep_research",
+  "elapsed_seconds": 25.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1268674,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 14060,
+    "cache_read_input_tokens": 70424,
+    "output_tokens": 1657,
+    "output_tokens_details": {
+      "thinking_tokens": 141
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14060,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13101,
+      "outputTokens": 2134,
+      "cacheReadInputTokens": 70424,
+      "cacheCreationInputTokens": 14060,
+      "webSearchRequests": 1,
+      "costUSD": 0.1208244,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 141,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14060,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 55875,
+      "outputTokens": 911,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.006043,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 686,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 3
+  },
+  "final_answer": "**Black Condor II (Ryan Kendall) died in *Infinite Crisis* #1 (DC Comics, December 2005).**\n\nI used four retrievals: one search, two page reads that returned content, and one that failed. I did the research directly, without the skill's subagent and file-writing workflow, because that workflow conflicts with your \"no shell or local files\" constraint.\n\n**Claims and sources**\n\n- Ryan Kendall, the second Black Condor, was killed in *Infinite Crisis* #1. The Wikipedia Black Condor page says so. A search summary of the Comic Vine, DCU Guide and DC Fandom results gives the same issue. https://en.wikipedia.org/wiki/Black_Condor\n- The DCU Guide page cites *Infinite Crisis* #1 as the source for his death, but the page itself doesn't state the issue number explicitly. https://dcuguide.com/Black_Condor_(Ryan_Kendall)\n- He was killed by Sinestro while serving with the Freedom Fighters, in an ambush by the Secret Society of Super Villains. Wikipedia and DCU Guide both say Sinestro killed him. https://en.wikipedia.org/wiki/Black_Condor and https://dcuguide.com/Black_Condor_(Ryan_Kendall)\n- The \"December 2005\" date and the \"beam fired by Sinestro\" detail come only from a search-result summary. I didn't check them on a page. https://dcuguide.com/Black_Condor_(Ryan_Kendall) and https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\n- Later appearances are not verified. A search summary says he returned as a Black Lantern in *Blackest Night*. It also says a Prime Earth version was resurrected in *Dark Nights: Death Metal*. I didn't confirm either on a page, and neither changes the answer.\n\n**Caveats:** The question's premise holds. Kendall did die, and in a single identifiable issue. I couldn't read the DC Fandom page, which returned HTTP 402, and I didn't check the comic itself.\n\nSources:\n- [Black Condor – Wikipedia](https://en.wikipedia.org/wiki/Black_Condor)\n- [Black Condor (Ryan Kendall) – DCU Guide](https://dcuguide.com/Black_Condor_(Ryan_Kendall))\n- [Ryan Kendall (New Earth) – DC Fandom](https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)) (appeared only in search results)",
+  "final_answer_sha256": "aba69004e14fb5679eec79f07b07301e8f2888678bf0ead8c385af65a433a1eb",
+  "raw_stream_sha256": "996378539e7810839c1590f8a7de1f9423f13cafdbc1f09c145642754e097014"
+}

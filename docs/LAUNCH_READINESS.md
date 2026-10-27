@@ -455,6 +455,51 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### Paired host evaluation, 2026-10-27
+
+The [retained run](../evals/results/paired-host-2026-10-27/manifest.json)
+followed the [frozen protocol](#paired-host-evaluation-protocol): 20 tasks, three
+conditions, 60 runs on Claude Code 2.1.312 with `claude-sonnet-5-5` at medium
+effort, all completed without errors or timeouts, then one blind
+`claude-opus-5-5` judgment per task (157 of 182 cited pages readable). It does
+**not** meet gate 2: the counterevidence rubric mean is 0.3 below built-in
+search, beyond the declared 0.2.
+
+| Metric | Built-in search | Sibyl | Deep-research workflow |
+|---|---:|---:|---:|
+| Citation support rate (unreachable excluded) | 69.1% | **78.6%** | 71.6% |
+| Same, unreachable counted unsupported | 61.2% | **76.7%** | 64.3% |
+| Unsupported claim-URL pairs | 18.7% | **13.7%** | 18.9% |
+| Unreachable cited pages | 16 of 139 | 3 of 120 | 15 of 147 |
+| Factual answers correct | 5 of 6 | 6 of 6 | 6 of 6 |
+| Trap questions passed | 4 of 4 | 4 of 4 | 4 of 4 |
+| Rubric: coverage / support / source quality / counterevidence | 2.0 / 0.6 / 1.8 / 1.4 | 1.8 / 0.9 / 1.8 / **1.1** | 2.0 / 0.6 / 1.9 / 1.7 |
+| CLI-reported cost, total | $1.83 | $3.13 | $3.00 |
+| Time, total | 484 s | 726 s | 662 s |
+
+Against built-in search, Sibyl meets the support, factual and trap criteria and
+the coverage (-0.2), support (+0.3) and source-quality (0.0) rubric criteria, but
+not counterevidence (-0.3). Under the same eight-retrieval instruction the Sibyl
+runs read fewer sources and wrote shorter answers: three research runs made no
+counterevidence read, and one disclosed that its counterevidence check did not
+finish. The deep-research workflow scored highest on counterevidence at a cost
+close to Sibyl's, without improving citation support.
+
+Limits: one run per task on one host and model family, judged by the same
+family; unreachable pages are partly a reader effect, because the judge's page
+texts come from the same reader Sibyl uses (the stricter rate above counts them
+against every condition). Raw streams are kept out of the repository; each run
+record keeps their SHA-256. A gate-2 pass requires a new dated run under this
+protocol after a fix.
+
+Competitors not run here, from public documentation: Perplexity Sonar Deep
+Research, Exa Research/Agent, Tavily Research and Firecrawl return finished
+cited answers or reports through paid, keyed APIs, and GPT Researcher, STORM and
+open_deep_research need a model API key and a search key. None documented a
+persistent evidence ledger with verbatim-quote checks per claim, which is
+Sibyl's distinct feature; benchmarks such as DeepResearch Bench measure that
+property (citation support), which is where Sibyl led here.
+
 ### Host-source retrieval gate, second run, 2026-10-27
 
 The [retained second run](../evals/results/host-source-retrieval-honest-ua-2026-10-27.json)

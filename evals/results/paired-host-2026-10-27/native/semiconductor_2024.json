@@ -1,0 +1,73 @@
+{
+  "case_id": "semiconductor_2024",
+  "condition": "native",
+  "elapsed_seconds": 24.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.13093849999999999,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4959,
+    "cache_read_input_tokens": 12336,
+    "output_tokens": 1815,
+    "output_tokens_details": {
+      "thinking_tokens": 43
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4959,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28767,
+      "outputTokens": 3149,
+      "cacheReadInputTokens": 12336,
+      "cacheCreationInputTokens": 4959,
+      "webSearchRequests": 2,
+      "costUSD": 0.1300936,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 43,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 4959,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 4459,
+      "outputTokens": 798,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0008449,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 496,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Global semiconductor sales hit a record in 2024, passing $600 billion for the first time. The SIA's first figure, built from WSTS data, was $627.6 billion, up 19.1% from $526.8 billion in 2023. WSTS later revised the total to $630.5 billion. Gartner counts revenue on a different basis and put 2024 at $655.9 billion, up 21%. The numbers differ because the sources use different methods, so the source and vintage should always be named.\n\n**How to tell a final annual figure from other numbers**\n- A final annual figure is a realized full-year total from a named source. It is the latest revision, not the first release. For 2024, the SIA/WSTS total is $630.5 billion, and the first-release $627.6 billion is superseded.\n- A forecast is a projection for a future period. The SIA's \"double-digit growth projected for 2025\" is a forecast, not a result.\n- Regional growth rates apply to one region. Examples are the Americas at +44.8% and Europe at –8.1%. They are not the global total and should not be used as the global growth rate.\n- Preliminary estimates are not final. Gartner's February 2025 estimate was $626 billion, up 18%, and its April 2025 final was $655.9 billion, up 21%.\n- Growth rates depend on the base year. The 19.1% rate uses the original 2023 base of $526.8 billion. I did not find a recalculated rate for the revised $630.5 billion.\n\n**Claims and sources**\n\nClaim: SIA reported 2024 global sales of $627.6B, up 19.1% from $526.8B in 2023. This was a record and the first year above $600B.\n- https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n- https://x.com/SIAAmerica/status/1887958734183219214\n\nClaim: The monthly data comes from WSTS, and the SIA page notes a March 3, 2025 revision of the 2024 total to $630.5B.\n- https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\nClaim: SIA's 2025 report uses $630.5B as the 2024 base, with 2025 sales of $791.7B, up 25.6%. This came from a search summary only. The page fetch failed, so I haven't verified it directly.\n- https://atreg.com/global-2025-semiconductor-sales-rise-by-25-6-percent-to-791-7-billion/\n\nClaim: 2024 regional growth was Americas +44.8%, China +18.3%, Asia Pacific/All Others +12.5%, Japan –0.4%, Europe –8.1%.\n- https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\nClaim: SIA described 2025 double-digit growth as a projection, which makes it a forecast.\n- https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\nClaim: Gartner's final 2024 revenue was $655.9B, up 21%. Its February preliminary estimate was about $626B, up 18%.\n- https://www.gartner.com/en/newsroom/press-releases/2025-04-10-gartner-says-worldwide-semiconductor-revenue-grew-21-percent-in-2024\n- https://www.gartner.com/en/newsroom/press-releases/2025-02-03-gartner-says-worldwide-semiconductor-revenue-grew-18-percent-in-2024\n\n**Limits of the evidence**\n- I did not retrieve WSTS's own publication of the $630.5B figure. It is confirmed only through the SIA page.\n- I did not find an explanation for the gap between Gartner and WSTS. It likely reflects different scope and methodology, but that is my inference, not something I found in a source.",
+  "final_answer_sha256": "8129be58bc92ccfc0f8bb0acf0c92441aeb8310a468a1441324a6daf613020be",
+  "raw_stream_sha256": "f98cf3f351d967b074aed1b1498cd1549bd3ed2af01e0bd814fd7e6d094fd364"
+}

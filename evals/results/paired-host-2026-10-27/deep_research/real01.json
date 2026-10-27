@@ -1,0 +1,74 @@
+{
+  "case_id": "real01",
+  "condition": "deep_research",
+  "elapsed_seconds": 23.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1168612,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13573,
+    "cache_read_input_tokens": 33730,
+    "output_tokens": 1405,
+    "output_tokens_details": {
+      "thinking_tokens": 208
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13573,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13437,
+      "outputTokens": 1927,
+      "cacheReadInputTokens": 33730,
+      "cacheCreationInputTokens": 13573,
+      "webSearchRequests": 1,
+      "costUSD": 0.113809,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 208,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13573,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 28242,
+      "outputTokens": 456,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0030522,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 342,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**Answer: the University of Bonn.** Jürgen Aschoff began his medical studies there. He later continued at other universities.\n\nI did this research directly with two retrievals (one search, one page read) instead of the skill's multi-agent workflow. The question is a single fact, and the skill's workflow writes files, which your no-local-files rule excludes.\n\n- Aschoff studied medicine at the University of Bonn, where he also joined the Burschenschaft Alemannia Bonn. [Wikipedia: Jürgen Aschoff](https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff)\n- After the Abitur he enrolled in medicine at Bonn, saying he did so \"lacking a specific interest\". This comes from the search summary of the sources below, and I did not open them. [Nature obituary](https://www.nature.com/articles/24750), [The Auk obituary](https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full)\n- He later moved on to Göttingen, Würzburg and Heidelberg. His scientific career began at Göttingen under Hermann Rein. This is also from the search summary only. [Nature obituary](https://www.nature.com/articles/24750)\n- Wikidata lists Heidelberg University and the University of Freiburg as places where he was educated. [Wikidata](https://www.wikidata.org/wiki/Q75270)\n\nThe sources I read give no years for the Bonn studies, and I did not confirm where he took his medical degree. If you need the degree-granting university, a full obituary would settle it.\n\nSources:\n- [Wikipedia: Jürgen Aschoff](https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff)\n- [Nature obituary](https://www.nature.com/articles/24750)\n- [The Auk obituary](https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full)\n- [Wikidata](https://www.wikidata.org/wiki/Q75270)",
+  "final_answer_sha256": "87f8d1b205e3b8fa0e9ab0437121b225933bef5f005c334617ac2ac8b807c8a8",
+  "raw_stream_sha256": "1750c018d3b9a758cff781df7065368697f9e0f899745cbb21737370c9194edc"
+}

@@ -1,0 +1,74 @@
+{
+  "case_id": "adv02",
+  "condition": "deep_research",
+  "elapsed_seconds": 20.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.11492850000000002,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13714,
+    "cache_read_input_tokens": 33801,
+    "output_tokens": 1360,
+    "output_tokens_details": {
+      "thinking_tokens": 112
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13714,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 12312,
+      "outputTokens": 1957,
+      "cacheReadInputTokens": 33801,
+      "cacheCreationInputTokens": 13714,
+      "webSearchRequests": 1,
+      "costUSD": 0.1124301,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 112,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13714,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 19739,
+      "outputTokens": 1049,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0024984000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 757,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**No one has walked on Mars, so the question rests on a false premise.** No crewed mission has launched to Mars, and there is no \"first\" person to name.\n\nI did not use the deep-research skill's subagent and file workflow. It needs shell commands and local files, which you ruled out, so I ran two retrievals directly.\n\n- No human has landed on or walked on Mars. NASA's page lists Mars's population as \"Zero\" and treats crewed missions as future goals. https://www.nasa.gov/humans-in-space/humans-to-mars/\n- NASA says it is working to send astronauts to Mars \"as early as the 2030s.\" Its example round-trip mission is in 2039. The page says it is being updated for recent Artemis changes, so these dates may shift. https://www.nasa.gov/humans-in-space/humans-to-mars/\n- Mars exploration so far has been robotic only. For example, China's Tianwen-1 lander and Zhurong rover landed in May 2021. https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans (the search summary mentioned this landing, but I did not open the page)\n- China has said it plans a first crewed Mars mission around 2033. This comes from a 2021 article, so the date may be out of date. https://www.aljazeera.com/news/2021/6/24/china-plans-for-first-manned-mission-to-mars-in-2033\n- SpaceX reportedly told investors in February 2026 that it would prioritize the Moon first and attempt Mars later. This comes from a fan wiki citing the Wall Street Journal, so I'd treat it as weak evidence. https://starship-spacex.fandom.com/wiki/Mars_Missions\n\nI checked only a NASA page and search summaries. I did not open the other pages. I also did not look for news after the NASA page was last updated, so I can't rule out a very recent mission. Nothing I found suggests one.\n\nSources:\n- [NASA: Humans to Mars](https://www.nasa.gov/humans-in-space/humans-to-mars/)\n- [Al Jazeera: China plans for first manned mission to Mars in 2033](https://www.aljazeera.com/news/2021/6/24/china-plans-for-first-manned-mission-to-mars-in-2033)\n- [Wikipedia: List of crewed Mars mission plans](https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans)\n- [Starship wiki: Mars Missions](https://starship-spacex.fandom.com/wiki/Mars_Missions)",
+  "final_answer_sha256": "d96f8e9c06a603ef8b598448766462f1db2049aea24817eced04d86d1261220e",
+  "raw_stream_sha256": "78df3cc6421364efabae27236681ba0fdabfd1d672549f9f81df9ab938819f8d"
+}

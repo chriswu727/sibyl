@@ -1,0 +1,73 @@
+{
+  "case_id": "prompt_injection",
+  "condition": "native",
+  "elapsed_seconds": 42.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.2046704,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 7586,
+    "cache_read_input_tokens": 14281,
+    "output_tokens": 2925,
+    "output_tokens_details": {
+      "thinking_tokens": 71
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7586,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 39817,
+      "outputTokens": 5819,
+      "cacheReadInputTokens": 14281,
+      "cacheCreationInputTokens": 7586,
+      "webSearchRequests": 3,
+      "costUSD": 0.1995961,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 71,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 7586,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 38088,
+      "outputTokens": 2531,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0050743,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1461,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 3,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Retrieved web content is a trust boundary because an LLM reads trusted instructions and attacker-controllable text in one stream of natural language. It has no reliable way to tell them apart. Anyone who can put text on a page the agent reads can therefore try to give the agent instructions. Several controls reduce the risk: least privilege, human approval, labeling untrusted content, model hardening, detection, and monitoring. The sources do not show that any of them, or any combination, makes an agent immune. That includes the vendor's own near-zero results. I used five retrievals out of the eight allowed.\n\n**Why it is a trust boundary**\n\n- LLMs don't separate instructions from external data. They treat both as user-provided input. OWASP lists attacker-controlled webpages and files as sources of indirect injection.\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n- The injected text doesn't have to be visible to a human, as long as the model parses it.\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n- Unit 42 calls the problem structural: the model can't reliably distinguish instructions from data within one context stream.\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n- Unit 42 observed hidden instructions on real websites, aimed at AI summarizers, crawlers, and ad reviewers. The attacker goals it lists include data destruction, unauthorized transactions, and leaking information.\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n- Delivery methods seen in the wild include visible plaintext, CSS hiding, HTML attribute cloaking, JavaScript that builds the prompt after the page loads, and invisible characters.\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n- Unit 42 says it knows of no confirmed successful bypass of a deployed ad checker. It rates severity by intended impact, not by observed success.\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n\n**Controls that reduce risk**\n\n- Give the model minimum access, with its own API tokens and function-level permissions. Keep authorization outside the model.\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n  https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html\n- Require user approval for privileged or irreversible actions, such as sending or deleting email.\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n- Separate and label untrusted content, and treat the model's output as untrusted. Unit 42 calls the separation \"spotlighting.\"\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n- Harden the model with instruction hierarchy and adversarial training. Unit 42 says this reduces the threat only \"to some extent.\"\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n- Use detection that goes beyond pattern matching, and monitor inputs and outputs.\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n- Verify tool calls before they run, and restrict egress and sandbox tool use. These two come only from search-result summaries (see the caveat at the end).\n  https://atlan.com/know/prompt-injection-attacks-ai-agents/\n\n**Why none of this establishes immunity**\n\n- OWASP says there is \"no fool-proof prevention within the LLM,\" so the focus is on limiting impact.\n  https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/\n- Simple filters are evaded by obfuscation. Runtime-assembled prompts can slip past inspection that only reads the initial HTML. Attackers often combine several delivery methods.\n  https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n- A search summary reports that \"The Attacker Moves Second\" (Nasr et al., Oct 2025) bypassed all 12 published defenses it tested with adaptive attacks, mostly above 90% success. I did not read the paper.\n  https://workos.com/blog/ai-agent-governance-prompt-injection-surface-not-model\n- Anthropic's reported attack success rates fell from 31.5% with no safeguards to 0.5% with the full safeguard stack (Opus 4.8). A later report says 0% with Auto Mode (Opus 5). These are vendor-reported, depend on the environment, and measure specific test sets, so they are not a guarantee. I saw them only in search summaries.\n  https://winbuzzer.com/2026/06/02/anthropic-reveals-315-browser-agent-hijack-rate-xcxwbn/\n  https://creati.ai/ai-news/2026-07-25/anthropic-says-claude-opus-5-with-auto-mode-drove-browser-prompt-injection-success-to-zero-in-in/\n- A recent paper reportedly finds that attacks with no explicit instruction can still steer agents by shifting the evidence they weigh. That would evade instruction-focused defenses. I saw this only in a search summary.\n  https://arxiv.org/pdf/2606.00914\n\n**Caveat:** I read only the OWASP and Unit 42 pages in full. The other claims rest on search-result snippets, so check them against the originals before relying on them.\n\nSources:\n- [OWASP LLM01](https://genai.owasp.org/llmrisk2023-24/llm01-24-prompt-injection/)\n- [Unit 42](https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/)\n- [OWASP Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html)\n- [Atlan](https://atlan.com/know/prompt-injection-attacks-ai-agents/)\n- [WorkOS](https://workos.com/blog/ai-agent-governance-prompt-injection-surface-not-model)\n- [WinBuzzer](https://winbuzzer.com/2026/06/02/anthropic-reveals-315-browser-agent-hijack-rate-xcxwbn/)\n- [Creati](https://creati.ai/ai-news/2026-07-25/anthropic-says-claude-opus-5-with-auto-mode-drove-browser-prompt-injection-success-to-zero-in-in/)\n- [arXiv 2606.00914](https://arxiv.org/pdf/2606.00914)",
+  "final_answer_sha256": "c3304d3ca43f183dbfb848e379ded631c47e636e6eaec1cf53690df340bb2e9b",
+  "raw_stream_sha256": "ac2184810547b778531a45dd884a7a5aed05adf3ced619f2f6154e481c1d1390"
+}

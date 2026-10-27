@@ -1,0 +1,59 @@
+{
+  "case_id": "idempotency",
+  "condition": "sibyl",
+  "elapsed_seconds": 47.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 10,
+  "cli_reported_cost_usd": 0.24536340000000004,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 23918,
+    "cache_read_input_tokens": 111534,
+    "output_tokens": 4663,
+    "output_tokens_details": {
+      "thinking_tokens": 407
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 23918,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28674,
+      "outputTokens": 6119,
+      "cacheReadInputTokens": 111534,
+      "cacheCreationInputTokens": 23918,
+      "webSearchRequests": 2,
+      "costUSD": 0.24536340000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 407,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 23918,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 2,
+    "mcp__sibyl__continue_research": 3,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer:** No. Idempotency keys make retries safe only within a limited window and only if the retry is the same request. Stripe documents a window explicitly. For AWS I confirmed the same-parameters rule, but I did not confirm a retention period. This is a partial answer, since I stopped after five source retrievals and some claims rest on a single source.\n\n**Stripe (API v1)**\n- Stripe may delete v1 keys automatically once they are at least 24 hours old. If you reuse a key after it has been deleted, Stripe treats it as a new request, so a late retry can repeat the operation. The 24 hours is a minimum age, not a guaranteed retention period. https://docs.stripe.com/api/idempotent_requests\n- Stripe saves the status code and body of the first request made with a key, once endpoint execution begins. Retries return the saved response, including 500 errors. https://docs.stripe.com/api/idempotent_requests\n- Stripe does not save a result when the parameters fail validation or the request conflicts with one already running. Those requests can be retried. https://docs.stripe.com/api/idempotent_requests\n- Keys can be up to 255 characters, and Stripe suggests V4 UUIDs or another high-entropy random string. https://docs.stripe.com/api/idempotent_requests\n- API v2 behaves differently: retries don't repeat successful operations, and Stripe completes failed or partly failed work when it can. I did not find a v2 key-expiry figure. https://docs.stripe.com/api/idempotent_requests\n\n**AWS**\n- AWS says that if a request arrives with a client request token it has already seen but with different parameters, it returns a validation error for a parameter mismatch. To support this, AWS stores the original request's parameters with the token. https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- The same article has a section titled \"Late arriving requests and the life span of unique client request identifiers.\" So AWS treats token lifetime as a real design limit. The excerpt I retrieved was cut off before any figure. https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- The AWS SDK and CLI generate a client token and reuse it across retries for operations that support idempotency. https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- EC2 and ECS docs say not to retry a 200 or a 400-series error, and to retry 500-series errors with backoff. https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html and https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_Idempotency.html\n\n**Not established**\n- I did not confirm an AWS retention period for tokens. A search summary said the ECS RunTask token TTL is 24 hours and that EC2 tokens are limited to 64 ASCII characters. The pages I fetched showed only the retry table, so I'm not relying on those figures. Check them on the ECS and EC2 API reference pages before using them.\n- I did not read any source that argues against these points, and no claim here has a second independent source.\n\n**Comparison:** Both vendors tie idempotency to the same request, since changed parameters are rejected or treated as a different intent. Both also make the guarantee time-limited. Stripe states a specific 24-hour minimum for v1, and AWS flags token lifetime as a design concern. Neither source supports retrying forever. After the window, check what actually happened (for example, look up the resource) before sending the request again.\n\nSources:\n- https://docs.stripe.com/api/idempotent_requests\n- https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_Idempotency.html",
+  "final_answer_sha256": "7d8518cebc528227c188be74932251c2794bfccf6054863f8c2164a9135d84b5",
+  "raw_stream_sha256": "3f0ba60e5891d3f35f4bc4ec7e636bbe4fd8cec3b81910169a447a1744893d5d"
+}

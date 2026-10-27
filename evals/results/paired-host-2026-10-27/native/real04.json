@@ -1,0 +1,73 @@
+{
+  "case_id": "real04",
+  "condition": "native",
+  "elapsed_seconds": 11.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.0668642,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 2653,
+    "cache_read_input_tokens": 5879,
+    "output_tokens": 601,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2653,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14808,
+      "outputTokens": 1112,
+      "cacheReadInputTokens": 5879,
+      "cacheCreationInputTokens": 2653,
+      "webSearchRequests": 1,
+      "costUSD": 0.0619359,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2653,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 48033,
+      "outputTokens": 250,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0049283,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 186,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "Peso Pluma's birth name is **Hassan Emilio Kabande Laija**.\n\nClaims and support:\n\n- Peso Pluma was born Hassan Emilio Kabande Laija. Wikipedia's article on the artist states this, and the search results for that name agree.\n  https://en.wikipedia.org/wiki/Peso_Pluma\n- He was born on 15 June 1999 in Zapopan, Jalisco, Mexico. This comes from the Wikipedia page. A secondary source (Sportskeeda) says Guadalajara, but Zapopan is part of the Guadalajara metropolitan area, so the two don't really conflict.\n  https://en.wikipedia.org/wiki/Peso_Pluma\n  https://wiki.sportskeeda.com/youtube/where-is-peso-pluma-from\n\nCaveat: I read the Wikipedia page only up to its first 100,000 characters, and the search snippets came from secondary sources. I didn't check a primary source such as a birth record. The name appears consistently across the sources I saw.\n\nSources:\n- https://en.wikipedia.org/wiki/Peso_Pluma\n- https://wiki.sportskeeda.com/youtube/where-is-peso-pluma-from",
+  "final_answer_sha256": "13428849422c718050e06c36522f9210b4fe54542cc8906d3d1d3ff572880b11",
+  "raw_stream_sha256": "da57fac52f408b3f1026eee335f4f76533fde12e515445a5ba83e3e99b679f18"
+}
