@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .research_errors import ResearchRequestError
+from .source_assessment import claim_support, question_claim_support
 
 if TYPE_CHECKING:
     from .evidence import EvidencePassage
@@ -405,11 +406,20 @@ def claim_gaps(notebook: ResearchNotebook, question_id: str) -> list[str]:
             else []
         )
     index = claim_index(notebook)
+    support = {
+        item["claim_id"]: item for item in question_claim_support(notebook, question_id)
+    }
     gaps = []
     for claim in claims:
         claim_id = claim["claim_id"]
         if claim["status"] != "supported":
             gaps.append(f"{claim_id}: the host marked this claim {claim['status']}.")
+        elif "background_only" in support.get(claim_id, {}).get("flags", []):
+            gaps.append(
+                f"{claim_id}: support rests only on background sources "
+                "(encyclopedia, community or metadata); cite a primary source or "
+                "mark the claim unresolved."
+            )
         for basis in sorted(dependency_ids(claim_id, index)):
             owner, premise = index[basis]
             if premise["status"] != "supported":
@@ -520,6 +530,18 @@ def render_claims(
             f'Quote {citation_map[quote["passage_id"]]}: "{quote["text"]}"'
             for quote in claim.get("quotes", [])
         )
+        if claim["kind"] == "fact" and claim["status"] != "unresolved":
+            support = claim_support(notebook, claim)
+            record["source_support"] = support
+            details.append(
+                f"Source support: {support['sources']} source(s); kinds: "
+                + (", ".join(support["source_kinds"]) or "none")
+                + (
+                    f"; flags: {', '.join(support['flags'])}"
+                    if support["flags"]
+                    else ""
+                )
+            )
         if claim["rationale"]:
             details.append("Reasoning: " + claim["rationale"])
         details.extend("Assumption: " + item for item in claim["assumptions"])

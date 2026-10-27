@@ -41,6 +41,8 @@ Use `view="sources"` with the current revision to page the full catalog, and
    declare criteria and their user/host_assumption origin. Unknowns remain
    unresolved with an explanation. See docs/research-claims.md. Run the searches in
    `research_plan.suggested_queries` (each has a kind and the gap-based reason).
+   `claim_support` flags facts that rest on one source or only on background
+   sources; the latter block completion.
    Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
    For unresolved gaps, supply focused `follow_up_queries`, then use

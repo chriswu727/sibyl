@@ -236,8 +236,9 @@ Model/subscription-backed evaluations require explicit approval for usage.
 | Natural tool use inside real subscription-backed hosts | Two bounded low-effort workflows delivered partial reports; broader usability and exact claim support remain unproven |
 | Better research than built-in search | Hypothesis; paired evaluation not established |
 | Search guidance to the host | Deterministic gap-driven suggestions with kind and reason, named in the agent instructions; effect on research quality unmeasured |
-| Full assessment of host-supplied URLs | Not implemented; URL reads skip ranking, clustering and sufficiency |
-| Source quality per claim; claim/quote consistency; source disagreement | Not implemented |
+| Full assessment of host-supplied URLs | Implemented; up to five URLs per read share the bundle builder's ranking, clustering and sufficiency |
+| Source quality per claim | Cited source count, kind hints, domains and weak-support flags per fact; background-only support blocks completion; URL heuristics, not credibility verdicts |
+| Claim/quote consistency; source disagreement | Not implemented |
 
 The retained ten-case host suite needed host-supplied URLs in seven cases. The
 dated live retrieval gates still have failures. See [launch evidence](LAUNCH_READINESS.md)

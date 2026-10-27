@@ -23,7 +23,8 @@ from .job_models import (
     SuggestedQuery,
     SuggestionKind,
 )
-from .queries import search_query_variants
+from .queries import keyword_query, search_query_variants
+from .source_assessment import BACKGROUND_KINDS
 from .source_policy import source_kind
 
 if TYPE_CHECKING:
@@ -43,7 +44,6 @@ def question_attempts(
 
 PER_QUESTION = 3
 TOTAL = 10
-BACKGROUND_KINDS = {"encyclopedia", "community", "scholarly_metadata"}
 _RECENCY_RE = re.compile(
     r"\b(?:latest|current|currently|now|today|recent|recently|this year)\b",
     re.IGNORECASE,
@@ -158,6 +158,23 @@ def _question_candidates(
                 "limitations, failures or sources that disagree.",
             )
         )
+    for support in item["claim_support"]:
+        if "single_source" in support["flags"]:
+            claim = next(
+                claim
+                for claim in (review or {}).get("claims", [])
+                if claim["claim_id"] == support["claim_id"]
+            )
+            excluded = " ".join(f"-site:{domain}" for domain in support["domains"])
+            candidates.append(
+                (
+                    "corroboration",
+                    "explore",
+                    " ".join([keyword_query(claim["text"]), excluded]).strip(),
+                    f"{support['claim_id']} rests on a single source; find an "
+                    "independent source that states it.",
+                )
+            )
     asks_recent = _RECENCY_RE.search(question) or any(
         int(value) >= year for value in _YEAR_RE.findall(question)
     )

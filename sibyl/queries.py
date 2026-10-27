@@ -119,6 +119,16 @@ def search_query_variants(query: str) -> List[str]:
     return [clean, focused]
 
 
+def keyword_query(text: str, max_terms: int = 12) -> str:
+    """Search-box form of a statement: its terms without stop words or punctuation."""
+    terms = [
+        term
+        for term in _TERM_RE.findall(" ".join(str(text or "").split()))
+        if _search_term_key(term) not in _SEARCH_STOP_WORDS
+    ]
+    return " ".join(terms[:max_terms])
+
+
 def query_requires_decomposition(query: str) -> bool:
     clean = " ".join(str(query or "").split())
     if not clean:
