@@ -10,12 +10,13 @@ from unittest.mock import AsyncMock, patch
 from mcp.server.fastmcp.exceptions import ToolError
 from research_fixtures import evidence_bundle
 
+from sibyl.evidence import EvidencePassage
 from sibyl.mcp_catalog import _validate_payload
 from sibyl.mcp_server import create_server
 from sibyl.report_models import ResearchReport
 from sibyl.report_text import _format_report
 from sibyl.reporter import _report_to_markdown
-from sibyl.research_claims import ResearchClaim
+from sibyl.research_claims import ResearchClaim, locate_quote, stored_quote_text
 from sibyl.runtime import RuntimePolicy, SibylRuntime
 
 
@@ -61,13 +62,15 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             )
 
     def facts(self, job, question_id="Q0"):
+        passage_id = job["sources"][0]["passage_ids"][0]
         return [
             {
                 "claim_id": question_id + ".C1",
                 "kind": "fact",
                 "status": "supported",
                 "text": "The inspected source describes a bounded concurrency capability.",
-                "supporting_passage_ids": [job["sources"][0]["passage_ids"][0]],
+                "supporting_passage_ids": [passage_id],
+                "quotes": [{"passage_id": passage_id, "text": "Evidence observed"}],
             }
         ]
 
@@ -265,6 +268,17 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             [{**fact, "challenging_passage_ids": fact["supporting_passage_ids"]}],
             [{**fact, "extra": "not allowed"}],
             [{**fact, "text": "Untracked reference [Source 2]"}],
+            [{**fact, "quotes": []}],
+            [{**fact, "quotes": [{**fact["quotes"][0], "text": "Invented text"}]}],
+            [{**fact, "quotes": [{**fact["quotes"][0], "text": "Evid"}]}],
+            [
+                {
+                    **fact,
+                    "quotes": [
+                        {**fact["quotes"][0], "passage_id": "observed/1/P1"},
+                    ],
+                }
+            ],
         ]
         before = self.runtime.research_jobs.store.get(job["job_id"])
         for claims in variants:
@@ -272,6 +286,88 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
                 await self.assess(job, claims)
             self.assertEqual(
                 self.runtime.research_jobs.store.get(job["job_id"]), before
+            )
+
+    async def test_quotes_are_verified_against_the_cited_passage(self):
+        job = await self.retrieve(await self.start())
+        fact = self.facts(job)[0]
+        fact["quotes"] = [
+            {
+                "passage_id": fact["supporting_passage_ids"][0],
+                "text": "\u201cEVIDENCE   observed\u201d \u2026",
+            }
+        ]
+        job = await self.assess(job, [fact])
+        stored = job["research_plan"]["questions"][0]["review"]["claims"][0]
+        self.assertEqual(stored["quotes"][0]["text"], "Evidence observed")
+        error = await self.server.call_tool(
+            "assess_research",
+            {
+                "job_id": job["job_id"],
+                "revision": job["revision"],
+                "question_id": "Q0",
+                "status": "supported",
+                "conclusion": "Conclusion.",
+                "counterevidence_note": "Note.",
+                "claims": [
+                    {
+                        **fact,
+                        "text": "Only one writer can write at a time.",
+                        "quotes": [
+                            {
+                                "passage_id": fact["supporting_passage_ids"][0],
+                                "text": "only one writer at a time",
+                            }
+                        ],
+                    }
+                ],
+            },
+        )
+        self.assertTrue(error.isError)
+        self.assertEqual(error.structuredContent["error"]["field"], "claims.quotes")
+        self.assertEqual(error.structuredContent["error"]["claim_id"], "Q0.C1")
+        self.assertEqual(error.structuredContent["current_revision"], job["revision"])
+        await self.call(
+            "complete_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            allow_incomplete=True,
+        )
+        full = await self.call("get_research", job_id=job["job_id"], view="full")
+        quote = full["report"]["claims"][0]["quotes"][0]
+        passage = await self.call(
+            "get_research", job_id=job["job_id"], passage_id=quote["passage_id"]
+        )
+        self.assertEqual(quote["end_char"] - quote["start_char"], len(quote["text"]))
+        self.assertIn(
+            'Quote [Source 1]: "Evidence observed"', full["report"]["analysis"]
+        )
+        self.assertTrue(passage["passage"]["text"].startswith(quote["text"]))
+
+    async def test_stored_claims_can_be_resubmitted_unchanged(self):
+        job = await self.retrieve(await self.start())
+        passage_id = job["sources"][0]["passage_ids"][0]
+        passage = await self.call(
+            "get_research", job_id=job["job_id"], passage_id=passage_id
+        )
+        text = passage["passage"]["text"]
+        fact = {
+            **self.facts(job)[0],
+            "quotes": [{"passage_id": passage_id, "text": text[:480]}],
+        }
+        job = await self.assess(job, [fact])
+        stored = job["research_plan"]["questions"][0]["review"]["claims"]
+        resubmitted = await self.assess(job, stored)
+        self.assertEqual(
+            resubmitted["research_plan"]["questions"][0]["review"]["claims"], stored
+        )
+
+    async def test_batch_read_names_the_unknown_position(self):
+        job = await self.retrieve(await self.start())
+        known = job["sources"][0]["passage_ids"][0]
+        with self.assertRaisesRegex(ToolError, r"passage_ids\[1\] is unknown"):
+            await self.call(
+                "get_research", job_id=job["job_id"], passage_ids=[known, "missing"]
             )
 
     async def test_dependency_cycles_are_rejected(self):
@@ -398,10 +494,11 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
     async def test_contradictory_sources_remain_disputed(self):
         job = await self.retrieve(await self.start())
         fact = self.facts(job)[0]
-        fact.update(
-            status="disputed",
-            challenging_passage_ids=[job["sources"][1]["passage_ids"][0]],
-        )
+        challenge = job["sources"][1]["passage_ids"][0]
+        fact.update(status="disputed", challenging_passage_ids=[challenge])
+        with self.assertRaisesRegex(ToolError, "challenging passage"):
+            await self.assess(job, [fact], status="disputed")
+        fact["quotes"].append({"passage_id": challenge, "text": "Evidence observed"})
         job = await self.assess(job, [fact], status="disputed")
         self.assertFalse(job["research_plan"]["ready_to_complete"])
         await self.call(
@@ -434,3 +531,57 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         job = await self.start()
         with self.assertRaisesRegex(ToolError, "Combined tool text"):
             await self.assess(job, [item.model_dump() for item in inputs])
+
+
+class TestQuoteMatching(unittest.TestCase):
+    def locate(self, source, quote):
+        passage = EvidencePassage("P1", "b/S1/P1", source, "hash", 0, len(source))
+        span = locate_quote(quote, passage)
+        return span and stored_quote_text(passage, span)
+
+    def test_folds_presentation_but_not_meaning(self):
+        for source, quote, stored in (
+            (
+                "Readers \u201cnever\u201d block\u2014really",
+                '"never" block-really',
+                "\u201cnever\u201d block\u2014really",
+            ),
+            ("Cafe\u0301 au lait menu", "Caf\u00e9 au lait", "Cafe\u0301 au lait"),
+            ("Caf\u00e9 au lait menu", "Cafe\u0301 au lait", "Caf\u00e9 au lait"),
+            (
+                "\uff21\uff22\uff23 fullwidth text",
+                "abc fullwidth",
+                "\uff21\uff22\uff23 fullwidth",
+            ),
+            (
+                "Writers  take\n turns here.",
+                "\u201cwriters take turns\u201d \u2026",
+                "Writers take turns",
+            ),
+            (
+                'He said "stop now" and left',
+                '"stop now" and left',
+                '"stop now" and left',
+            ),
+        ):
+            with self.subTest(quote=quote):
+                self.assertEqual(self.locate(source, quote), stored)
+
+    def test_rejects_changed_numbers_partial_characters_and_short_quotes(self):
+        for source, quote in (
+            ("grew to 10\u00b2 square km", "grew to 102 square km"),
+            ("result\u00b9 was negative", "result1 was negative"),
+            ("take 5 mg \u2163 daily", "take 5 mg IV daily"),
+            ("Die Stra\u00dfe ist lang", "se ist lang"),
+            ("Die Stra\u00dfe ist lang", "die stras"),
+            ("Some evidence text", "Some"),
+        ):
+            with self.subTest(quote=quote):
+                self.assertIsNone(self.locate(source, quote))
+
+    def test_stored_quote_cannot_add_markdown_structure(self):
+        stored = self.locate(
+            "Limits:\n\n## Not a heading\n- not a list",
+            "Limits: ## Not a heading - not a list",
+        )
+        self.assertNotIn("\n", stored)

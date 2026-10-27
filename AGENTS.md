@@ -19,20 +19,23 @@ need no extra; `[report]` is PDF rendering only, with Pillow >=13.0.0.
 
 Read `research_plan.questions[].review` for host-authored conclusions and stable
 support/challenge links. Inspect gaps before reuse. Use
-`get_research(passage_id=...)` for exact evidence: briefs omit raw text.
+`get_research(passage_ids=[...])` for exact evidence: briefs omit raw text.
 Use `view="sources"` with the current revision to page the full catalog, and
 `view="full"` for the compatible snapshot. Each brief is self-contained, not a delta.
 
 ## Default workflow: host-assisted research
 
 1. Call `start_research(question, sub_questions=[...])`. Host mode is the default.
-2. Call `continue_research(job_id, query, question_id)` with focused questions. Follow leads,
-   investigate contradictions, and look for original sources.
+2. Find sources with your own web search when available and read them with
+   `continue_research(job_id, url=..., query=..., question_id=...)`; a query alone
+   uses keyless search. Follow leads, investigate contradictions, and look for
+   original sources.
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
 4. Call `assess_research` for each question with stable supporting/challenging
    passage IDs, atomic claims, a conclusion, and a counterevidence note. Facts cite
-   passages; reasoning cites basis_claim_ids with a rationale. Recommendations
+   passages and quote exact text from them (unverifiable quotes are rejected);
+   reasoning cites basis_claim_ids with a rationale. Recommendations
    declare criteria and their user/host_assumption origin. Unknowns remain
    unresolved with an explanation. See docs/research-claims.md. Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.

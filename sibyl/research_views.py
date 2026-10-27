@@ -9,6 +9,12 @@ from .research_errors import ResearchRequestError
 
 def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
     report = snapshot["report"]
+    # Question gaps already appear in research_plan; do not repeat them here.
+    plan_gaps = {
+        f"{item['question_id']}: {gap}"
+        for item in snapshot["research_plan"]["questions"]
+        for gap in item["gaps"]
+    }
     return {
         "schema_version": "1.0",
         "view": "brief",
@@ -26,9 +32,11 @@ def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "preferred_domains",
                 "research_plan",
                 "claim_contract_version",
-                "limitations",
             )
         },
+        "limitations": [
+            note for note in snapshot["limitations"] if note not in plan_gaps
+        ],
         "latest_attempt": snapshot["attempts"][-1] if snapshot["attempts"] else None,
         "sources": [
             {
@@ -62,7 +70,10 @@ def research_brief(snapshot: dict[str, Any]) -> dict[str, Any]:
         else None,
         "evidence_access": {
             "tool": "get_research",
-            "passage": {"job_id": snapshot["job_id"], "passage_id": "<passage ID>"},
+            "passages": {
+                "job_id": snapshot["job_id"],
+                "passage_ids": ["<passage ID>"],
+            },
             "catalog": {
                 "job_id": snapshot["job_id"],
                 "view": "sources",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
 from contextlib import asynccontextmanager
 from functools import wraps
 from typing import get_type_hints
@@ -14,6 +15,7 @@ from mcp.types import CallToolResult, TextContent
 from pydantic import BaseModel
 
 from .async_cache import CapacityError
+from .evidence import SourceBundle
 from .mcp_errors import AgentMCP, SafeToolError
 from .report_exports import ExportManifest, ReportExportError
 from .research_errors import ResearchRequestError
@@ -136,6 +138,18 @@ class ToolCatalog:
                     token = current_runtime.set(runtime)
                     try:
                         result = await function(*args, **kwargs)
+                        if agent_mode and isinstance(result, SourceBundle):
+                            # Same SourceBundle payload; the large schema stays in docs.
+                            payload = result.to_dict()
+                            return CallToolResult(
+                                content=[
+                                    TextContent(
+                                        type="text",
+                                        text=json.dumps(payload, ensure_ascii=False),
+                                    )
+                                ],
+                                structuredContent=payload,
+                            )
                         if isinstance(result, ExportManifest):
                             if not agent_mode:
                                 return result.text()
@@ -181,6 +195,8 @@ class ToolCatalog:
                     )
                 return invoke
 
+            if agent_mode and function.__annotations__.get("return") is SourceBundle:
+                options = {**options, "structured_output": False}
             server.tool(**options)(bind(function))
         return server
 

@@ -7,7 +7,8 @@
 **A research MCP for your AI agent: investigate across sources, inspect evidence,
 track counterevidence and gaps, and export a cited report when needed.**
 
-Your agent does the thinking. Sibyl gives it a persistent research workspace.
+Your agent does the searching and thinking. Sibyl gives it a persistent research
+workspace alongside its own search; it does not replace it.
 Connect it to a local MCP-capable agent you already use, including one backed by
 a subscription. Sibyl does not call another generative model, read subscription
 credentials, or require a second model API key. The host's own usage rules still apply.
@@ -19,15 +20,17 @@ credentials, or require a second model API key. The host's own usage rules still
 > **Source preview, not a new PyPI release.** This README describes the host-only
 > architecture in this checkout. Published beta 0.4.0b1 and stable 0.3.0 still
 > contain the older architecture. Use the source installation below to try this
-> version. It is not yet proven superior to your agent's built-in search.
+> version. No paired evaluation yet shows that adding Sibyl to your agent's own
+> search yields better-supported answers.
 
 ## Research for the agent, reports for the person
 
 A search call returns leads. Sibyl keeps the investigation connected:
 
 - Break a question into research questions and retain the plan across calls.
-- Search and read original pages into one evidence store.
+- Read the pages your agent finds into one evidence store, or search keylessly.
 - Inspect exact passages with stable identities, hashes and provenance.
+- Reject fact claims whose quotes do not appear verbatim in the cited passage.
 - Record supported, disputed or unresolved conclusions with evidence links.
 - Investigate counterevidence and pursue specific gaps in subsequent rounds.
 - Reuse the structured review ledger directly, or export Markdown, JSON or PDF.
@@ -90,18 +93,20 @@ Try asking your agent:
 | Tool | Purpose |
 |---|---|
 | `start_research` | Create a bounded job with focused sub-questions |
-| `continue_research` | Search or read a URL into the job |
-| `get_research` | Read the brief, an exact passage, source catalog or full state |
+| `continue_research` | Read a URL your agent found, or search keylessly, into the job |
+| `get_research` | Read the brief, exact passages in a batch, source catalog or full state |
 | `assess_research` | Record the host's conclusion, support, challenges and gaps |
 | `complete_research` | Optionally finalize a cited host-authored report |
 | `save_report` | Export that report; Markdown is the default |
 | `cancel_research` | Cancel work or explicitly delete a checkpoint |
 | `gather_bundle` | Retrieve standalone evidence without creating a job |
 
-Start with `question` and `sub_questions`. Link each retrieval to `question_id`;
+Start with `question` and `sub_questions`. Find sources with your agent's own
+search when it has one and read them with `continue_research(url=..., query=...)`;
+a query alone uses Sibyl's keyless search. Link each retrieval to `question_id`;
 use `purpose="counterevidence"` for an actual investigation of alternatives.
-The brief intentionally omits raw text: read
-`get_research(job_id, passage_id=...)` before assessing support.
+The brief intentionally omits raw text: read up to twelve passages at once with
+`get_research(job_id, passage_ids=[...])` before assessing support.
 
 Each assessment preserves stable supporting/challenging passage IDs, a conclusion
 and optional `follow_up_queries`. Inspect `research_plan` for remaining gaps,
@@ -110,8 +115,10 @@ continue with a focused query and rationale, then reassess. Use
 outside the selected citation window.
 
 New MCP jobs also record material facts, inferences and recommendations in
-`assess_research(claims=...)`. Facts link exact passages; reasoning links its
-premises; recommendations state criteria and assumptions. Unknowns stay explicit.
+`assess_research(claims=...)`. Facts link exact passages and quote them;
+Sibyl rejects a quote it cannot find in the cited passage, ignoring only case,
+spacing, accent encoding and typographic variants; numbers are never folded. Reasoning links its premises; recommendations
+state criteria and assumptions. Unknowns stay explicit.
 Changes to a premise or new retrieval make dependent judgments need reassessment.
 See the [claim contract and complete example](docs/research-claims.md).
 
@@ -193,7 +200,9 @@ That gate predates subsequent query/metadata/excerpt-hint changes; no newer full
 pass is recorded. A [two-workflow low-effort host retest](evals/results/host-agent-structured-retest-2026-10-26.json)
 delivered partial Markdown/JSON for both tasks, but the SQLite recommendation
 still cited an excerpt missing a material qualification. Export success is not
-a semantic research-quality pass.
+a semantic research-quality pass. Verbatim quote checks were added afterwards:
+an invented or misplaced quote is now rejected, but a real quote can still
+overstate a claim, and no new model-backed run has measured the change.
 
 Search bundles select up to three disjoint passages per source from the bounded
 extracted text, using Unicode lexical matches and prose/table context rather than
