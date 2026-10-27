@@ -306,7 +306,9 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
         job = await self.retrieve(self.start())
         job = await self.retrieve(job, "counter", "counterevidence")
         refs = [source["passage_ids"][0] for source in job["sources"]]
-        quoted = await self.call("get_research", job_id=job["job_id"], passage_id=refs[0])
+        quoted = await self.call(
+            "get_research", job_id=job["job_id"], passage_id=refs[0]
+        )
         reviewed = await self.call(
             "assess_research",
             job_id=job["job_id"],

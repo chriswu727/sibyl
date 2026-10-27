@@ -57,6 +57,7 @@ shows the text is in the cited passage, not that it supports the whole claim;
 check every qualification yourself.
 """
 
+
 async def _cached_source_bundle(
     query: str,
     max_sources: int,

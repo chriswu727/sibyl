@@ -67,8 +67,6 @@ def check(wheel: Path, version: str, profile: str) -> None:
             SCRIPTS / "check_research_workflow.py",
             *(["--pdf"] if profile == "report-extract" else []),
         )
-        run(python, SCRIPTS / "check_research_workflow.py", "--agent")
-        run(python, SCRIPTS / "check_mcp_stdio.py", executable, "--agent")
         print(
             f"Clean-wheel {profile} passed; temporary environment removed on exit",
             flush=True,

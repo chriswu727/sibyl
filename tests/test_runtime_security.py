@@ -2,6 +2,7 @@
 
 import asyncio
 import gzip
+import json
 import os
 import stat
 import tempfile
@@ -11,12 +12,10 @@ from pathlib import Path
 from unittest import mock
 
 import httpx
-from mcp.server.fastmcp.exceptions import ToolError
 
 from sibyl.async_cache import AsyncSingleFlightTTL, CapacityError
 from sibyl.mcp_server import create_server
 from sibyl.privacy import display_url
-from sibyl.report_models import ResearchReport
 from sibyl.runtime import RuntimePolicy, SibylRuntime
 from sibyl.scraper import ResponseTooLargeError, _bounded_get
 from sibyl.storage import ArtifactStore
@@ -72,112 +71,176 @@ class TestCompressedBodies(unittest.IsolatedAsyncioTestCase):
 
 
 class TestRuntime(unittest.IsolatedAsyncioTestCase):
-    async def test_pdf_only_export_failure_is_a_tool_error(self):
-        with tempfile.TemporaryDirectory() as directory:
-            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
-            runtime.last_report = ResearchReport("q", "summary", [], [])
-            try:
-                with mock.patch(
-                    "sibyl.reporter.generate_pdf",
-                    side_effect=RuntimeError("token=SECRET"),
-                ):
-                    with self.assertRaisesRegex(
-                        ToolError, "PDF export failed"
-                    ) as raised:
-                        await create_server(runtime).call_tool(
-                            "save_report", {"format": "pdf"}
-                        )
-                self.assertNotIn("SECRET", str(raised.exception))
-                self.assertFalse(list(Path(directory).glob("*.pdf")))
-                self.assertEqual(runtime.failed, 1)
-            finally:
-                await runtime.aclose()
+    def runtime(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory.name)))
+        self.addAsyncCleanup(runtime.aclose)
+        return runtime, Path(directory.name)
 
-    async def test_combined_export_keeps_markdown_and_discloses_pdf_failure(self):
-        with tempfile.TemporaryDirectory() as directory:
-            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
-            runtime.last_report = ResearchReport("q", "summary", [], [])
-            try:
-                with mock.patch(
-                    "sibyl.reporter.generate_pdf",
-                    side_effect=RuntimeError("token=SECRET"),
-                ):
-                    result = await create_server(runtime).call_tool(
-                        "save_report", {"format": "both"}
-                    )
-                self.assertIn("PDF failed", str(result))
-                self.assertIn("Markdown saved", str(result))
-                self.assertNotIn("SECRET", str(result))
-                self.assertEqual(len(list(Path(directory).glob("*.md"))), 1)
-            finally:
-                await runtime.aclose()
+    async def call(self, server, name, error=False, **arguments):
+        result = await server.call_tool(name, arguments)
+        self.assertEqual(bool(result.isError), error, str(result))
+        self.assertEqual(json.loads(result.content[0].text), result.structuredContent)
+        return result.structuredContent
+
+    async def finalized(self, server):
+        """Finalize a report through the public tools only."""
+        job = await self.call(server, "start_research", question="question")
+        job = await self.call(
+            server,
+            "assess_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            question_id="Q0",
+            status="unresolved",
+            conclusion="Unknown.",
+            counterevidence_note="No usable evidence was found.",
+            claims=[
+                {
+                    "claim_id": "Q0.C1",
+                    "kind": "fact",
+                    "status": "unresolved",
+                    "text": "The exported outcome is unknown.",
+                    "rationale": "No observed outcome is available.",
+                }
+            ],
+        )
+        await self.call(
+            server,
+            "complete_research",
+            job_id=job["job_id"],
+            revision=job["revision"],
+            allow_incomplete=True,
+        )
+        return job["job_id"]
+
+    async def test_pdf_only_export_failure_is_a_structured_error(self):
+        runtime, directory = self.runtime()
+        server = create_server(runtime)
+        job_id = await self.finalized(server)
+        with mock.patch(
+            "sibyl.reporter.generate_pdf",
+            side_effect=RuntimeError("token=SECRET"),
+        ):
+            result = await self.call(
+                server, "save_report", error=True, job_id=job_id, format="pdf"
+            )
+        self.assertEqual(result["view"], "export")
+        self.assertEqual(result["status"], "failed")
+        self.assertEqual(result["artifacts"], [])
+        self.assertEqual([item["format"] for item in result["failures"]], ["pdf"])
+        self.assertNotIn("SECRET", json.dumps(result))
+        self.assertFalse(list(directory.glob("*.pdf")))
+        self.assertEqual(runtime.failed, 1)
 
     async def test_markdown_and_json_need_separate_exports_and_return_real_paths(self):
-        with tempfile.TemporaryDirectory() as directory:
-            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
-            runtime.last_report = ResearchReport("q", "summary", [], [])
-            server = create_server(runtime)
-            try:
-                with mock.patch(
-                    "sibyl.reporter.generate_pdf",
-                    side_effect=RuntimeError("unavailable"),
-                ):
-                    _, combined = await server.call_tool(
-                        "save_report", {"format": "both"}
-                    )
-                self.assertIn("PDF failed", combined["result"])
-                self.assertNotIn("JSON saved", combined["result"])
-                self.assertFalse(list(Path(directory).glob("*.json")))
-                md_path = Path(combined["result"].split("Markdown saved: ")[1])
-                self.assertTrue(md_path.is_file())
-                _, exported = await server.call_tool("save_report", {"format": "json"})
-                json_path = Path(exported["result"].removeprefix("JSON saved: "))
-                self.assertTrue(json_path.is_file())
-                self.assertNotEqual(json_path, md_path.with_suffix(".json"))
-                self.assertIn(
-                    '"summary": "summary"', json_path.read_text(encoding="utf-8")
-                )
-            finally:
-                await runtime.aclose()
+        runtime, directory = self.runtime()
+        server = create_server(runtime)
+        job_id = await self.finalized(server)
+        markdown = await self.call(server, "save_report", job_id=job_id, format="md")
+        self.assertEqual(markdown["requested_formats"], ["md"])
+        self.assertEqual([item["format"] for item in markdown["artifacts"]], ["md"])
+        self.assertFalse(list(directory.glob("*.json")))
+        md_path = Path(markdown["artifacts"][0]["path"])
+        self.assertTrue(md_path.is_file())
+        exported = await self.call(server, "save_report", job_id=job_id, format="json")
+        json_path = Path(exported["artifacts"][0]["path"])
+        self.assertTrue(json_path.is_file())
+        self.assertNotEqual(json_path, md_path.with_suffix(".json"))
+        self.assertEqual(
+            json.loads(json_path.read_text(encoding="utf-8"))["claims"][0]["text"],
+            "The exported outcome is unknown.",
+        )
 
     async def test_export_uses_runtime_root_and_rejects_escape(self):
-        with tempfile.TemporaryDirectory() as directory:
-            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
-            runtime.last_report = ResearchReport("question", "summary", [], [])
-            server = create_server(runtime)
-            await server.call_tool(
-                "save_report", {"format": "md", "output_dir": "nested"}
-            )
-            files = list((Path(directory) / "nested").glob("*.md"))
-            self.assertEqual(len(files), 1)
-            self.assertIn("summary", files[0].read_text(encoding="utf-8"))
-            with self.assertRaises(ToolError):
-                await server.call_tool(
-                    "save_report", {"format": "md", "output_dir": "../escape"}
-                )
-            await runtime.aclose()
+        runtime, directory = self.runtime()
+        server = create_server(runtime)
+        job_id = await self.finalized(server)
+        await self.call(
+            server, "save_report", job_id=job_id, format="md", output_dir="nested"
+        )
+        files = list((directory / "nested").glob("*.md"))
+        self.assertEqual(len(files), 1)
+        self.assertIn(
+            "The exported outcome is unknown.", files[0].read_text(encoding="utf-8")
+        )
+        before = sorted(directory.parent.iterdir())
+        escaped = await self.call(
+            server,
+            "save_report",
+            error=True,
+            job_id=job_id,
+            format="md",
+            output_dir="../escape",
+        )
+        self.assertNotIn("artifacts", escaped)
+        self.assertFalse((directory.parent / "escape").exists())
+        self.assertEqual(sorted(directory.parent.iterdir()), before)
 
     async def test_oversized_input_is_rejected_before_provider(self):
-        server = create_server(SibylRuntime())
-        with mock.patch("sibyl.search.search_web", new=mock.AsyncMock()) as search:
-            with self.assertRaises(ToolError):
-                await server.call_tool("quick_search", {"query": "x" * 10001})
-            search.assert_not_awaited()
+        runtime, _ = self.runtime()
+        server = create_server(runtime)
+        job = await self.call(server, "start_research", question="q")
+        search = mock.AsyncMock()
+        read = mock.AsyncMock()
+        with (
+            mock.patch("sibyl.mcp_tools.gather_source_bundle", new=search),
+            mock.patch("sibyl.research_jobs.gather_source_bundle", new=search),
+            mock.patch("sibyl.research_jobs.read_source_bundle", new=read),
+        ):
+            for name, arguments in (
+                ("gather_bundle", {"query": "x" * 10001}),
+                ("continue_research", {"job_id": job["job_id"], "query": "x" * 10001}),
+                (
+                    "continue_research",
+                    {
+                        "job_id": job["job_id"],
+                        "query": "q",
+                        "url": "https://example.com/" + "x" * 10001,
+                    },
+                ),
+            ):
+                with self.subTest(name=name, fields=sorted(arguments)):
+                    result = await self.call(server, name, error=True, **arguments)
+                    self.assertIn("10000 characters", result["error"]["message"])
+                    self.assertNotIn("x" * 100, json.dumps(result))
+        search.assert_not_awaited()
+        read.assert_not_awaited()
+        current = runtime.research_jobs.get(job["job_id"])
+        self.assertEqual(current["attempts"], [])
+        self.assertEqual(current["revision"], job["revision"])
 
-    async def test_read_url_redacts_metadata_without_changing_evidence(self):
+    async def test_source_read_redacts_metadata_without_changing_evidence(self):
         from sibyl.scraper import WebPage
 
-        server = create_server(SibylRuntime())
+        runtime, _ = self.runtime()
+        server = create_server(runtime)
+        job = await self.call(server, "start_research", question="q")
         page = WebPage(
             "https://example.com/?token=SECRET", "title", "original evidence " * 20
         )
         with mock.patch(
-            "sibyl.scraper.scrape_url", new=mock.AsyncMock(return_value=page)
+            "sibyl.research_sources.scrape_url", new=mock.AsyncMock(return_value=page)
         ):
-            result = await server.call_tool("read_url", {"url": page.url})
-        rendered = str(result)
-        self.assertNotIn("SECRET", rendered)
-        self.assertIn("original evidence", rendered)
+            brief = await self.call(
+                server,
+                "continue_research",
+                job_id=job["job_id"],
+                url=page.url,
+                query="original evidence",
+            )
+        full = await self.call(
+            server, "get_research", job_id=job["job_id"], view="full"
+        )
+        passage_id = full["source_catalog"][0]["passage_ids"][0]
+        passage = await self.call(
+            server, "get_research", job_id=job["job_id"], passage_id=passage_id
+        )
+        for result in (brief, full, passage):
+            self.assertNotIn("SECRET", json.dumps(result))
+        self.assertIn("token=REDACTED", full["source_catalog"][0]["url"])
+        self.assertTrue(passage["passage"]["text"].startswith("original evidence"))
 
     async def test_capacity_deadline_and_shutdown(self):
         runtime = SibylRuntime(RuntimePolicy(max_active=1, tool_timeout=0.05))
@@ -187,37 +250,53 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             started.set()
             await asyncio.Event().wait()
 
-        first = asyncio.create_task(runtime.execute("read_url", slow))
+        first = asyncio.create_task(runtime.execute("gather_bundle", slow))
         await started.wait()
         with self.assertRaises(CapacityError):
-            await runtime.execute("read_url", slow)
+            await runtime.execute("gather_bundle", slow)
         with self.assertRaises(asyncio.TimeoutError):
             await first
         self.assertEqual(runtime.failed, 1)
         await runtime.aclose()
         with self.assertRaisesRegex(RuntimeError, "closed"):
-            await runtime.execute("read_url", slow)
+            await runtime.execute("gather_bundle", slow)
 
-    async def test_servers_do_not_share_reports_or_loops(self):
-        one, two = SibylRuntime(), SibylRuntime()
-        one.last_report = ResearchReport("q", "summary", [], [])
-        self.assertIsNone(two.last_report)
-        self.assertIsNot(one.evidence_loops, two.evidence_loops)
+    async def test_servers_do_not_share_reports_or_caches(self):
+        (one, _), (two, root) = self.runtime(), self.runtime()
         self.assertIsNot(one.bundle_cache, two.bundle_cache)
+        job_id = await self.finalized(create_server(one))
         server = create_server(two)
-        with self.assertRaisesRegex(ToolError, "No research report"):
-            await server.call_tool("save_report", {})
-        await one.aclose()
-        await two.aclose()
+        missing = await self.call(server, "save_report", error=True, format="md")
+        self.assertEqual(missing["error"]["code"], "invalid_parameters")
+        self.assertEqual(missing["error"]["field"], "job_id")
+        other = await self.call(
+            server, "save_report", error=True, job_id=job_id, format="md"
+        )
+        self.assertNotIn("artifacts", other)
+        self.assertEqual(list(root.glob("sibyl_*")), [])
 
     async def test_provider_errors_do_not_leak_secrets(self):
-        server = create_server(SibylRuntime())
-        with mock.patch(
-            "sibyl.search.search_web", side_effect=ValueError("token=SECRET")
+        runtime, _ = self.runtime()
+        server = create_server(runtime)
+        job = await self.call(server, "start_research", question="q")
+        for exception, code in (
+            (ValueError, "invalid_request"),
+            (RuntimeError, "operation_failed"),
         ):
-            with self.assertRaises(ToolError) as raised:
-                await server.call_tool("quick_search", {"query": "q"})
-        self.assertNotIn("SECRET", str(raised.exception))
+            failure = mock.AsyncMock(side_effect=exception("https://h/?token=SECRET"))
+            with (
+                self.subTest(exception=exception.__name__),
+                mock.patch("sibyl.mcp_tools.gather_source_bundle", new=failure),
+                mock.patch("sibyl.research_jobs.gather_source_bundle", new=failure),
+            ):
+                bundle = await self.call(server, "gather_bundle", error=True, query="q")
+                attempt = await self.call(
+                    server, "continue_research", job_id=job["job_id"], query="q"
+                )
+                self.assertEqual(bundle["error"]["code"], code)
+                self.assertEqual(attempt["latest_attempt"]["status"], "failed")
+                for result in (bundle, attempt):
+                    self.assertNotIn("SECRET", json.dumps(result))
 
     async def test_report_operations_cannot_race(self):
         runtime = SibylRuntime()
@@ -248,7 +327,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             finally:
                 stopped.set()
 
-        task = asyncio.create_task(runtime.execute("read_url", operation))
+        task = asyncio.create_task(runtime.execute("gather_bundle", operation))
         await started.wait()
         await runtime.aclose()
         self.assertTrue(task.cancelled())

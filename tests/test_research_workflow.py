@@ -7,13 +7,13 @@ from pathlib import Path
 
 
 class TestResearchWorkflow(unittest.TestCase):
-    def test_agent_stdio_research_and_export_replay(self):
+    def replay(self, *arguments):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(
             [
                 sys.executable,
                 str(root / "scripts/check_research_workflow.py"),
-                "--agent",
+                *arguments,
             ],
             cwd=root,
             capture_output=True,
@@ -21,17 +21,12 @@ class TestResearchWorkflow(unittest.TestCase):
             timeout=45,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("agent successful replay response bytes", result.stdout)
+        self.assertIn("successful replay response bytes", result.stdout)
+        self.assertIn("structured error recovery", result.stdout)
         self.assertIn("no network/model calls", result.stdout)
 
     def test_real_stdio_research_and_export_replay(self):
-        root = Path(__file__).resolve().parents[1]
-        result = subprocess.run(
-            [sys.executable, str(root / "scripts/check_research_workflow.py")],
-            cwd=root,
-            capture_output=True,
-            text=True,
-            timeout=45,
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("no network/model calls", result.stdout)
+        self.replay()
+
+    def test_legacy_agent_flag_runs_the_same_replay(self):
+        self.replay("--agent")

@@ -108,34 +108,62 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
         process.kill.assert_called_once()
         process.wait.assert_awaited_once()
 
-    async def test_read_tool_discloses_pdf_warnings_and_failures(self):
+    async def test_source_read_discloses_pdf_warnings_and_failures(self):
+        import json
+        import tempfile
+        from pathlib import Path
+
         from sibyl.config import Config
         from sibyl.mcp_server import create_server
-        from sibyl.runtime import SibylRuntime
+        from sibyl.runtime import RuntimePolicy, SibylRuntime
 
-        runtime = SibylRuntime(config=Config())
-        server = create_server(runtime)
-        try:
-            page = WebPage(
-                "https://example.com/paper.pdf",
-                "Paper",
-                "evidence " * 100,
-                source_type="pdf",
-                extraction_warnings=("PDF text was truncated.",),
-            )
-            with mock.patch(
-                "sibyl.scraper.scrape_url", mock.AsyncMock(return_value=page)
-            ):
-                result = await server.call_tool("read_url", {"url": page.url})
-            self.assertIn("PDF text was truncated", str(result))
-            page.error = "Encrypted PDF is not supported."
-            with mock.patch(
-                "sibyl.scraper.scrape_url", mock.AsyncMock(return_value=page)
-            ):
-                result = await server.call_tool("read_url", {"url": page.url})
-            self.assertIn("Encrypted PDF", str(result))
-        finally:
-            await runtime.aclose()
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)), Config())
+            server = create_server(runtime)
+            try:
+                job = (
+                    await server.call_tool("start_research", {"question": "q"})
+                ).structuredContent
+                page = WebPage(
+                    "https://example.com/paper.pdf",
+                    "Paper",
+                    "evidence " * 100,
+                    source_type="pdf",
+                    extraction_warnings=("PDF text was truncated.",),
+                )
+                arguments = {
+                    "job_id": job["job_id"],
+                    "url": page.url,
+                    "query": "evidence",
+                }
+                with mock.patch(
+                    "sibyl.research_sources.scrape_url",
+                    mock.AsyncMock(return_value=page),
+                ):
+                    result = await server.call_tool("continue_research", arguments)
+                self.assertFalse(result.isError)
+                self.assertEqual(
+                    result.structuredContent["latest_attempt"]["status"], "ok"
+                )
+                self.assertIn("PDF text was truncated", result.content[0].text)
+                full = await server.call_tool(
+                    "get_research", {"job_id": job["job_id"], "view": "full"}
+                )
+                self.assertIn(
+                    "PDF text was truncated", json.dumps(full.structuredContent)
+                )
+                page.error = "Encrypted PDF is not supported."
+                with mock.patch(
+                    "sibyl.research_sources.scrape_url",
+                    mock.AsyncMock(return_value=page),
+                ):
+                    result = await server.call_tool("continue_research", arguments)
+                attempt = result.structuredContent["latest_attempt"]
+                self.assertNotEqual(attempt["status"], "ok")
+                self.assertEqual(attempt["substantive_sources"], 0)
+                self.assertIn("Encrypted PDF", attempt["error"])
+            finally:
+                await runtime.aclose()
 
     async def test_cancel_kills_and_reaps_worker_without_secrets(self):
         process = mock.Mock(returncode=None)

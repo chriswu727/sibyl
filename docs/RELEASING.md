@@ -89,9 +89,7 @@ changelog. This does not enforce the research-quality gates.
    .venv/bin/mypy
    .venv/bin/python scripts/check_docs.py
    .venv/bin/python scripts/check_research_workflow.py --pdf
-   .venv/bin/python scripts/check_research_workflow.py --agent
    .venv/bin/python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
-   .venv/bin/python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --agent
    .venv/bin/python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
    .venv/bin/python scripts/eval_retrieval.py --ranker lexical
    .venv/bin/python scripts/eval_retrieval_pipeline.py --ranker lexical

@@ -337,7 +337,7 @@ class TestCrossSessionJobs(unittest.IsolatedAsyncioTestCase):
                 job["job_id"], job["revision"], "Q0", "unresolved", [], [], "c", "n"
             ),
             lambda: other.complete(
-                job["job_id"], job["revision"], "", [], "", [], True
+                job["job_id"], job["revision"], allow_incomplete=True
             ),
         ):
             with self.assertRaises(ResearchRequestError) as raised:

@@ -31,7 +31,6 @@ def load_cases(path: Path) -> list[dict]:
 async def collect(cases: list[dict], output: Path, executable: str) -> None:
     parameters = StdioServerParameters(
         command=executable,
-        args=["--profile", "keyless"],
         env={"SIBYL_OUTPUT_ROOT": str(output), "SIBYL_SEARCH_PROVIDER": "keyless"},
         cwd=str(output),
     )
@@ -82,6 +81,8 @@ async def collect(cases: list[dict], output: Path, executable: str) -> None:
                         if index == 0
                         else "Investigate scope, exceptions, and limits before drawing conclusions.",
                     )
+                # Mutations return compact briefs; record the full checkpoint view.
+                job = await call("get_research", job_id=job["job_id"], view="full")
                 print(
                     json.dumps(
                         {

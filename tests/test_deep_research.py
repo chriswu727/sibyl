@@ -9,7 +9,6 @@ from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
-from mcp.server.fastmcp.exceptions import ToolError
 from research_fixtures import evidence_bundle
 
 from sibyl.config import Config
@@ -365,16 +364,57 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(search.call_args.kwargs["include_academic"])
         return result
 
-    def assess(self, job, status="supported", support=None, challenge=None):
+    def quote(self, job, passage_id):
+        try:
+            text = self.jobs.get(job["job_id"], passage_id)["passage"]["text"]
+        except Exception:
+            text = "Evidence"
+        return {"passage_id": passage_id, "text": text.split(". ")[0]}
+
+    def claims(self, job, status, support, challenge):
+        """One atomic fact claim matching the question-level review."""
+        if status == "unresolved":
+            return [
+                {
+                    "claim_id": "Q0.C1",
+                    "kind": "fact",
+                    "status": "unresolved",
+                    "text": "The answer could not be established.",
+                    "rationale": "The retrieved evidence does not settle the question.",
+                }
+            ]
+        return [
+            {
+                "claim_id": "Q0.C1",
+                "kind": "fact",
+                "status": status,
+                "text": "The reviewed sources describe the measured result.",
+                "supporting_passage_ids": support,
+                "challenging_passage_ids": challenge,
+                "quotes": [self.quote(job, pid) for pid in support[:1] + challenge[:1]],
+            }
+        ]
+
+    def assess(
+        self, job, status="supported", support=None, challenge=None, claims=True
+    ):
+        """claims=True builds a matching claim, False omits claims, a list is used."""
+        support = (
+            support if support is not None else [job["sources"][0]["passage_ids"][0]]
+        )
+        challenge = challenge or []
+        if claims is True:
+            claims = self.claims(job, status, support, challenge)
         return self.jobs.assess(
             job["job_id"],
             job["revision"],
             "Q0",
             status,
-            support if support is not None else [job["sources"][0]["passage_ids"][0]],
-            challenge or [],
+            support,
+            challenge,
             "Conclusion with explicit scope.",
             "Examined possible contrary evidence.",
+            claims=claims or None,
         )
 
     async def test_full_deep_workflow_survives_restart_exports_evidence(self):
@@ -382,7 +422,25 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         support = job["sources"][0]["passage_ids"][0]
         job = await self.retrieve(job, "replication limitations", "counterevidence")
         challenge = job["sources"][0]["passage_ids"][0]
-        job = self.assess(job, "disputed", [support], [challenge])
+        # Each source's report is a supported fact; the question stays disputed.
+        claims = [
+            {
+                "claim_id": f"Q0.C{index}",
+                "kind": "fact",
+                "status": "supported",
+                "text": text,
+                "supporting_passage_ids": [passage],
+                "quotes": [self.quote(job, passage)],
+            }
+            for index, (passage, text) in enumerate(
+                (
+                    (support, "The original study reports the effect."),
+                    (challenge, "A replication reports a conflicting result."),
+                ),
+                1,
+            )
+        ]
+        job = self.assess(job, "disputed", [support], [challenge], claims=claims)
         self.assertTrue(job["research_plan"]["ready_to_complete"])
         self.assertEqual(job["research_plan"]["next_action"], "synthesize")
         await self.runtime.aclose()
@@ -390,16 +448,15 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         self.jobs = self.runtime.research_jobs
         job = self.jobs.get(job["job_id"])
         self.assertTrue(job["research_plan"]["ready_to_complete"])
-        job = self.jobs.complete(
-            job["job_id"],
-            job["revision"],
-            "Conflicting results [Source 1] [Source 2]",
-            ["Disagreement [Source 1] [Source 2]"],
-            "",
-            [],
-        )
+        job = self.jobs.complete(job["job_id"], job["revision"])
         report = ResearchReport.from_dict(job["report"])
         self.assertEqual(report.status, "ok")
+        self.assertEqual(
+            [claim["text"] for claim in report.claims],
+            [claim["text"] for claim in claims],
+        )
+        self.assertIn("[Source 1]", report.summary)
+        self.assertIn("[Source 2]", report.summary)
         self.assertEqual(
             report.research_plan["questions"][0]["review"]["status"], "disputed"
         )
@@ -407,28 +464,30 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
             all(source.evidence and source.content_hash for source in report.sources)
         )
         md = _report_to_markdown(report)
-        self.assertIn("Evidence Review", md)
+        self.assertIn("Evidence-linked conclusions", md)
+        self.assertIn('Quote [Source 1]: "Evidence replication limitations 0"', md)
         self.assertIn(challenge, md)
         self.assertNotIn("Evidence support 0. Evidence support", md)
 
-    async def test_completion_without_reviews_requires_explicit_incomplete_flag(self):
+    async def test_completion_with_open_gates_requires_explicit_incomplete_flag(self):
         job = await self.retrieve(self.start())
-        args = (
-            job["job_id"],
-            job["revision"],
-            "S [Source 1]",
-            ["F [Source 1]"],
-            "",
-            [],
-        )
+        with self.assertRaisesRegex(ValueError, "claim IDs"):
+            self.jobs.complete(job["job_id"], job["revision"], allow_incomplete=True)
+        # Reviewed, but no counterevidence round was run.
+        job = self.assess(job)
+        self.assertFalse(job["research_plan"]["ready_to_complete"])
         with self.assertRaisesRegex(ValueError, "gaps"):
-            self.jobs.complete(*args)
-        result = self.jobs.complete(*args, allow_incomplete=True)
+            self.jobs.complete(job["job_id"], job["revision"])
+        self.assertIsNone(self.jobs.store.get(job["job_id"])["report"])
+        result = self.jobs.complete(
+            job["job_id"], job["revision"], allow_incomplete=True
+        )
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["report"]["status"], "partial")
         md = _report_to_markdown(ResearchReport.from_dict(result["report"]))
         self.assertIn("Partial report", md)
-        self.assertIn("S [Source 1]", md)
+        self.assertIn("The reviewed sources describe the measured result.", md)
+        self.assertIn("[Source 1]", md)
         self.assertFalse(result["report"]["research_plan"]["ready_to_complete"])
         self.assertTrue(
             any("counterevidence" in s for s in result["report"]["limitations"])
@@ -450,7 +509,8 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
     async def test_review_drives_next_round_across_restart_and_export(self):
         server = create_server(self.runtime)
         job = await self.retrieve(self.start(3))
-        _, job = await server.call_tool(
+        job = await self.structured(
+            server,
             "assess_research",
             {
                 "job_id": job["job_id"],
@@ -462,6 +522,7 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
                 "follow_up_queries": ["independent replication methods"],
             },
         )
+        self.assertEqual(job["view"], "brief")
         self.assertEqual(
             job["research_plan"]["suggested_queries"][0]["query"],
             "independent replication methods",
@@ -474,7 +535,8 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
             "sibyl.research_jobs.gather_source_bundle",
             mock.AsyncMock(return_value=evidence_bundle("replication", 1)),
         ):
-            _, updated = await server.call_tool(
+            updated = await self.structured(
+                server,
                 "continue_research",
                 {
                     "job_id": job["job_id"],
@@ -484,7 +546,9 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
                     "rationale": "Resolve the missing independent replication evidence.",
                 },
             )
-        step = updated["attempts"][-1]
+        step = updated["latest_attempt"]
+        updated = self.jobs.get(job["job_id"])
+        self.assertEqual(updated["attempts"][-1], step)
         self.assertEqual(step["round"], 2)
         self.assertEqual(step["based_on_revision"], job["revision"])
         self.assertEqual(step["prior_review_status"], "unresolved")
@@ -497,14 +561,8 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         updated = self.assess(updated)
         self.assertTrue(updated["research_plan"]["ready_to_complete"])
         self.assertEqual(updated["research_plan"]["suggested_queries"], [])
-        result = self.jobs.complete(
-            updated["job_id"],
-            updated["revision"],
-            "S [Source 1]",
-            ["F [Source 1]"],
-            "",
-            [],
-        )
+        result = self.jobs.complete(updated["job_id"], updated["revision"])
+        self.assertEqual(result["report"]["status"], "ok")
         self.assertEqual(result["report"]["research_stats"]["steps"][-1], step)
 
     async def test_follow_up_input_limits_do_not_mutate_job(self):
@@ -564,12 +622,19 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
     ):
         initial = self.start()
         job = await self.retrieve(initial)
-        with self.assertRaisesRegex(ValueError, "revision"):
-            self.assess(initial, support=[job["sources"][0]["passage_ids"][0]])
-        with self.assertRaisesRegex(ValueError, "unknown"):
-            self.assess(job, support=["invented/P1"])
-        with self.assertRaisesRegex(ValueError, "both"):
-            self.assess(job, "disputed")
+        for claims in (False, True):
+            with self.subTest(claims=claims):
+                with self.assertRaisesRegex(ValueError, "revision"):
+                    self.assess(
+                        initial,
+                        support=[job["sources"][0]["passage_ids"][0]],
+                        claims=claims,
+                    )
+                with self.assertRaisesRegex(ValueError, "unknown"):
+                    self.assess(job, support=["invented/P1"], claims=claims)
+                with self.assertRaisesRegex(ValueError, "both"):
+                    self.assess(job, "disputed", claims=claims)
+        self.assertEqual(self.jobs.get(job["job_id"])["revision"], job["revision"])
 
     async def test_metadata_or_wiki_only_does_not_pass_primary_gate(self):
         job = self.start()
@@ -634,10 +699,20 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
         job = self.assess(job, "unresolved", [])
         self.assertFalse(job["research_plan"]["ready_to_complete"])
 
+    async def structured(self, server, name, arguments, error=False):
+        response = await server.call_tool(name, arguments)
+        self.assertEqual(bool(response.isError), error, str(response))
+        self.assertEqual(
+            json.loads(response.content[0].text), response.structuredContent
+        )
+        return response.structuredContent
+
     async def test_mcp_assessment_tool_returns_structured_plan(self):
         server = create_server(self.runtime)
         job = await self.retrieve(self.start(), purpose="counterevidence")
-        _, response = await server.call_tool(
+        support = [job["sources"][0]["passage_ids"][0]]
+        response = await self.structured(
+            server,
             "assess_research",
             {
                 "job_id": job["job_id"],
@@ -646,7 +721,8 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
                 "status": "supported",
                 "conclusion": "Bounded conclusion",
                 "counterevidence_note": "Checked limitations",
-                "supporting_passage_ids": [job["sources"][0]["passage_ids"][0]],
+                "supporting_passage_ids": support,
+                "claims": self.claims(job, "supported", support, []),
             },
         )
         self.assertTrue(response["research_plan"]["ready_to_complete"])
@@ -654,28 +730,35 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
     async def test_mcp_gaps_and_stale_revision_are_actionable(self):
         server = create_server(self.runtime)
         job = await self.retrieve(self.start())
-        with self.assertRaisesRegex(ToolError, "Inspect research_plan"):
-            await server.call_tool(
-                "complete_research",
-                {
-                    "job_id": job["job_id"],
-                    "revision": job["revision"],
-                    "summary": "Summary [Source 1]",
-                    "key_findings": ["Finding [Source 1]"],
-                },
-            )
-        with self.assertRaisesRegex(ToolError, "current revision"):
-            await server.call_tool(
-                "assess_research",
-                {
-                    "job_id": job["job_id"],
-                    "revision": job["revision"] - 1,
-                    "question_id": "Q0",
-                    "status": "supported",
-                    "conclusion": "Conclusion",
-                    "counterevidence_note": "Checked limits",
-                },
-            )
+        job = self.assess(job)
+        gaps = await self.structured(
+            server,
+            "complete_research",
+            {"job_id": job["job_id"], "revision": job["revision"]},
+            error=True,
+        )
+        self.assertEqual(gaps["error"]["code"], "research_gaps")
+        self.assertIn("Inspect research_plan", gaps["error"]["message"])
+        self.assertEqual(gaps["recovery"]["action"], "inspect_gaps")
+        self.assertEqual(gaps["current_revision"], job["revision"])
+        self.assertIsNone(self.jobs.store.get(job["job_id"])["report"])
+        stale = await self.structured(
+            server,
+            "assess_research",
+            {
+                "job_id": job["job_id"],
+                "revision": job["revision"] - 1,
+                "question_id": "Q0",
+                "status": "supported",
+                "conclusion": "Conclusion",
+                "counterevidence_note": "Checked limits",
+            },
+            error=True,
+        )
+        self.assertEqual(stale["error"]["code"], "stale_revision")
+        self.assertIn("current revision", stale["error"]["message"])
+        self.assertEqual(stale["current_revision"], job["revision"])
+        self.assertEqual(stale["recovery"]["action"], "reload_research")
 
     async def test_cancel_direct_read_retains_attempt(self):
         entered = asyncio.Event()

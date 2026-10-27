@@ -231,14 +231,13 @@ Run from the source environment:
 
 ```bash
 python scripts/check_research_workflow.py
-python scripts/check_research_workflow.py --agent
-python scripts/check_mcp_stdio.py /absolute/path/to/sibyl-mcp --agent
+python scripts/check_mcp_stdio.py /absolute/path/to/sibyl-mcp
 ```
 
-Both replays use the same recorded SQLite sources, host-authored reasoning and
-real MCP stdio. They check two research rounds, gap reviews, exact passage reads,
-catalog pages, current citations, report export, restart and immutable completion.
-Agent replay additionally exercises schema rejection, missing-challenge/basis
+The replay uses recorded SQLite sources, host-authored reasoning and real MCP
+stdio. It checks two research rounds, gap reviews, exact passage reads, catalog
+pages, current citations, report export, restart and immutable completion. It
+also exercises schema rejection, missing-challenge/basis
 recovery, a current-revision reload, an explicit unknown report without invented
 citations, and actual paths/sizes/hashes in Markdown/JSON/PDF manifests.
 HTTP is blocked and no model is invoked. The agent replay also verifies that a

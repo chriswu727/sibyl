@@ -116,7 +116,9 @@ class ToolCatalog:
         return register
 
     def names(self) -> list[str]:
-        return [options.get("name") or function.__name__ for function, options in self.tools]
+        return [
+            options.get("name") or function.__name__ for function, options in self.tools
+        ]
 
     def create_server(self, runtime: SibylRuntime, instructions: str) -> FastMCP:
         @asynccontextmanager

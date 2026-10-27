@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -14,9 +13,6 @@ from sibyl.scraper import WebPage
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--agent", action="store_true")
-    args = parser.parse_args()
     fixture = (
         Path(__file__).resolve().parents[1] / "docs/examples/sqlite-wal/sources.json"
     )
@@ -30,7 +26,7 @@ def main() -> None:
         return WebPage(url, item["title"], item["text"])
 
     runtime = SibylRuntime(config=Config())
-    server = create_server(runtime, agent_mode=args.agent)
+    server = create_server(runtime)
     with (
         patch("sibyl.research_sources.scrape_url", read),
         patch(
