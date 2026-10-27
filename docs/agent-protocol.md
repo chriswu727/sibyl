@@ -101,7 +101,10 @@ disputed or unresolved), `supporting_passage_ids`, `challenging_passage_ids`,
 `counterevidence_note`, and `follow_up_queries`. Read the corresponding question's
 `gaps`: a stored conclusion may need reassessment after new retrieval.
 `claim_support` lists, for each supported or disputed fact, the cited source
-count, source-kind hints, domains and `background_only` / `single_source` flags.
+count, source-kind hints, domains and flags (`background_only`, `single_source`,
+`number_not_quoted`, `name_not_in_sources`, `possible_conflict`).
+`counterevidence` states whether counterevidence was read and whether the review
+cites any of it. See [Usage](USAGE.md#source-support-per-claim).
 
 This ledger can inform a downstream coding task, comparison, or decision without
 calling `complete_research`. The job remains resumable and retained in local

@@ -98,6 +98,12 @@ entities), so quoted source text cannot add links, images or structure. Bare
 URLs inside a quote may still be auto-linked by some Markdown renderers. Markdown, PDF and text reports print each
 quote beside its claim.
 
+Every number in a quoted fact must also appear in one of its quotes; otherwise
+the job reports a `number_not_quoted` gap. Names missing from the cited text and
+supported facts that state different numbers about the same subject are flagged
+in `research_plan.questions[].claim_support` (see
+[Usage](USAGE.md#source-support-per-claim)).
+
 This catches a citation to the wrong passage or an invented excerpt. It does not
 establish entailment, source truth or freedom from hallucination: the host must still quote text that carries every asserted
 qualification, split compound claims or mark them unresolved. The rule applies

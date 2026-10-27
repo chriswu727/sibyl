@@ -59,6 +59,7 @@ class QuestionPlan(TypedDict):
     gaps: list[str]
     attempts: int
     claim_support: list[dict[str, Any]]
+    counterevidence: dict[str, Any]
 
 
 SuggestionKind = Literal[

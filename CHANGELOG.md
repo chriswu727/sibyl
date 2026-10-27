@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Claim checks: a quoted fact whose numbers do not appear in its quotes is a
+  completion gap (`number_not_quoted`). Facts naming something absent from
+  their cited text (`name_not_in_sources`) and supported facts about the same
+  subject with different numbers (`possible_conflict`) are flagged in
+  `claim_support` and in reports. Each question reports a `counterevidence`
+  summary: not read, read with passages linked, or read with none linked.
 - Source assessment per claim: `research_plan.questions[].claim_support` lists
   each supported or disputed fact's cited sources, source kinds, domains and
   `background_only` / `single_source` flags, and reports state the same under

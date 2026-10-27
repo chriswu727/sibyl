@@ -392,8 +392,24 @@ supported or disputed fact, with the number of cited sources, their
 |---|---|---|
 | `background_only` | Every cited source is encyclopedia, community or scholarly metadata | A gap; the job is not ready until a primary source is cited or the claim is marked unresolved |
 | `single_source` | The fact cites one source | A `corroboration` suggestion; does not block completion |
+| `number_not_quoted` | A number, year or date figure in the fact appears in none of its quotes; listed in `unquoted_numbers` | A gap; quote the text that states it or correct the claim |
+| `name_not_in_sources` | A capitalized name in the fact appears in no cited passage or source title; listed in `unmatched_names` | Reported only |
+| `possible_conflict` | Another supported fact about the same subject (most key terms shared) states different numbers; up to five listed in `conflicts_with` | Reported only; reconcile or mark one disputed |
 
-Reviews already reject links to two copies of one text, so each cited source is
+The number check compares digits only, with thousands separators removed: `2`
+does not match `two`, and `1.5 million` does not match `1,500,000`. Facts stored
+without quotes are not re-checked. Names are capitalized words that are not just
+sentence-initial; scripts without letter case are not checked. These are string
+comparisons, not entailment checks.
+
+Each question also has `counterevidence`: `status` is `not_read` (no
+counterevidence read returned a substantive source; a gap), `linked` (the review
+cites a passage from such a read) or `none_linked` (sources were read and none is
+cited; the review's counterevidence note is the host's account of why), with the
+number of `reads` and the `linked_passage_ids`.
+
+Reviews already reject links to two copies of one text, and a fact marked
+supported cannot cite challenging passages (mark it disputed instead), so each cited source is
 a distinct content cluster. Source kinds are URL heuristics: `preferred_primary`
 (a preferred domain), `institutional` (government, intergovernmental and EU
 hosts), `documentation_candidate`, `research_candidate`, `preprint`,
