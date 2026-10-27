@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add a manually dispatched `live retrieval gate` workflow that runs the frozen
+  66-case keyless gate on a GitHub-hosted runner and uploads its raw metrics.
+  Raise dependency floors to certifi 2026.10.23 and click 8.5.
 - Run the test suite and the stdio research replay on Windows in CI. Output
   directories now reject Windows rooted (`\tmp`) and drive-relative (`C:x`)
   paths on every platform, which previously escaped the output root on Windows.
