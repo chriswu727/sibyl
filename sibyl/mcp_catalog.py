@@ -52,7 +52,13 @@ class ToolCatalog:
         self.tools = []
 
     def tool(self, **options):
+        """Register a tool; profile="agent" or "keyless" limits it to that surface,
+        so one tool name can have a different schema per profile."""
+        name = options.get("name") or ""
+
         def register(function):
+            tool_name = name or function.__name__
+
             @wraps(function)
             async def bounded(*args, **kwargs):
                 async def execute():
@@ -63,7 +69,7 @@ class ToolCatalog:
 
                 try:
                     _validate_payload([*args, *kwargs.values()])
-                    return await get_runtime().execute(function.__name__, execute)
+                    return await get_runtime().execute(tool_name, execute)
                 except (
                     CapacityError,
                     ResearchBudgetExceeded,
@@ -110,6 +116,17 @@ class ToolCatalog:
 
         return register
 
+    def _enabled(self, options: dict, agent_mode: bool) -> bool:
+        profile = options.get("profile")
+        return profile is None or profile == ("agent" if agent_mode else "keyless")
+
+    def names(self, agent_mode: bool) -> list[str]:
+        return [
+            options.get("name") or function.__name__
+            for function, options in self.tools
+            if self._enabled(options, agent_mode)
+        ]
+
     def create_server(
         self, runtime: SibylRuntime, instructions: str, *, agent_mode: bool = False
     ) -> FastMCP:
@@ -130,8 +147,11 @@ class ToolCatalog:
             else FastMCP("sibyl", **server_options)
         )
         for function, options in self.tools:
+            if not self._enabled(options, agent_mode):
+                continue
+            tool_name = options.get("name") or function.__name__
 
-            def bind(function):
+            def bind(function, tool_name=tool_name):
                 @wraps(function)
                 async def invoke(*args, **kwargs):
                     token = current_runtime.set(runtime)
@@ -152,7 +172,7 @@ class ToolCatalog:
                                 content=[json_text(payload)],
                                 structuredContent=payload,
                             )
-                        if agent_mode and function.__name__ in {
+                        if agent_mode and tool_name in {
                             "start_research",
                             "continue_research",
                             "get_research",
@@ -187,7 +207,9 @@ class ToolCatalog:
 
             if agent_mode and function.__annotations__.get("return") is SourceBundle:
                 options = {**options, "structured_output": False}
-            server.tool(**options)(bind(function))
+            server.tool(
+                **{key: value for key, value in options.items() if key != "profile"}
+            )(bind(function))
         return server
 
 

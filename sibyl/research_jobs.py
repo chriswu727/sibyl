@@ -564,6 +564,8 @@ class ResearchJobs:
         limitations: list[str],
         allow_incomplete: bool = False,
         claim_ids: list[str] | None = None,
+        *,
+        prose_allowed: bool = True,
     ) -> dict[str, Any]:
         import re
 
@@ -583,6 +585,11 @@ class ResearchJobs:
         if len(key_findings) > 32 or len(limitations) > 32:
             raise ValueError("At most 32 findings and limitations are supported.")
         notebook = ResearchNotebook.from_dict(job["notebook"])
+        if notebook.claim_contract_version < 2 and not prose_allowed:
+            raise ResearchRequestError(
+                "This job predates evidence-linked claims. Finalize it with the keyless profile's prose completion (summary, key_findings, analysis).",
+                code="legacy_contract",
+            )
         report_claims: list[dict[str, Any]] = []
         if notebook.claim_contract_version >= 2:
             if summary or key_findings or analysis:

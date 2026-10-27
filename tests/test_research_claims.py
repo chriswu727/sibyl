@@ -223,21 +223,36 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
     async def test_arbitrary_prose_cannot_bypass_the_claim_report(self):
         job = await self.retrieve(await self.start())
         job = await self.assess(job, self.facts(job))
-        for arguments in (
-            {"summary": "Invented price [Source 1]"},
-            {"key_findings": ["Invented precision [Source 1]"]},
-            {"analysis": "Unsupported new assertion"},
+        for field, value in (
+            ("summary", "Invented price [Source 1]"),
+            ("key_findings", ["Invented precision [Source 1]"]),
+            ("analysis", "Unsupported new assertion"),
         ):
-            with (
-                self.subTest(arguments=arguments),
-                self.assertRaisesRegex(ToolError, "omit summary"),
-            ):
-                await self.call(
+            with self.subTest(field=field):
+                response = await self.server.call_tool(
                     "complete_research",
-                    job_id=job["job_id"],
-                    revision=job["revision"],
-                    **arguments,
+                    {
+                        "job_id": job["job_id"],
+                        "revision": job["revision"],
+                        field: value,
+                    },
                 )
+                self.assertTrue(response.isError)
+                error = response.structuredContent["error"]
+                self.assertEqual(error["code"], "invalid_parameters")
+                self.assertEqual(error["field"], field)
+                self.assertIn("assess_research(claims=...)", error["message"])
+        agent_schema = next(
+            tool
+            for tool in await self.server.list_tools()
+            if tool.name == "complete_research"
+        ).inputSchema["properties"]
+        self.assertFalse({"summary", "key_findings", "analysis"} & agent_schema.keys())
+        self.assertIsNone(self.runtime.research_jobs.store.get(job["job_id"])["report"])
+        typo = await self.server.call_tool(
+            "get_research", {"job_id": job["job_id"], "passage": "x"}
+        )
+        self.assertEqual(typo.structuredContent["error"]["field"], "passage")
 
     async def test_invalid_claims_do_not_mutate_checkpoint(self):
         job = await self.retrieve(await self.start())
@@ -492,13 +507,25 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         self.server = create_server(self.runtime, agent_mode=True)
         restored = await self.call("get_research", job_id=job["job_id"])
         self.assertEqual(restored["claim_contract_version"], 1)
-        await self.call(
+        refused = await self.server.call_tool(
             "complete_research",
-            job_id=job["job_id"],
-            revision=restored["revision"],
-            summary="Legacy summary [Source 1]",
-            key_findings=["Legacy finding [Source 1]"],
-            allow_incomplete=True,
+            {
+                "job_id": job["job_id"],
+                "revision": restored["revision"],
+                "allow_incomplete": True,
+            },
+        )
+        self.assertEqual(refused.structuredContent["error"]["code"], "legacy_contract")
+        keyless = create_server(self.runtime)
+        await keyless.call_tool(
+            "complete_research",
+            {
+                "job_id": job["job_id"],
+                "revision": restored["revision"],
+                "summary": "Legacy summary [Source 1]",
+                "key_findings": ["Legacy finding [Source 1]"],
+                "allow_incomplete": True,
+            },
         )
         full = await self.call("get_research", job_id=job["job_id"], view="full")
         self.assertEqual(full["report"]["schema_version"], "1.0")

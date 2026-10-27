@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Retain a two-task Claude Code paired smoke (Sibyl plus built-in search versus
+  built-in search only, one run each, not blinded): one win, one loss, about
+  five times the cost; no superiority claim.
+- The agent profile's `complete_research` no longer exposes legacy prose
+  fields; contract-1 jobs finalize through the keyless profile and get
+  `legacy_contract` from the agent profile. The agent profile rejects
+  undeclared tool arguments with `invalid_parameters` instead of silently
+  ignoring them.
 - Share one research store safely between concurrent local sessions. Each
   runtime holds an instance lock; running jobs record their owner and are
   read-only elsewhere (`job_running_elsewhere`); orphans are recovered only after

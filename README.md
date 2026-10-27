@@ -214,7 +214,12 @@ delivered partial Markdown/JSON for both tasks, but the SQLite recommendation
 still cited an excerpt missing a material qualification. Export success is not
 a semantic research-quality pass. Verbatim quote checks were added afterwards:
 an invented or misplaced quote is now rejected, but a real quote can still
-overstate a claim, and no new model-backed run has measured the change.
+overstate a claim. A [two-task Claude Code paired smoke](evals/results/host-claude-code-paired-2026-10-27.json)
+(one run per condition, not blinded) split one win and one loss: with Sibyl the
+host quote-verified every supported fact and found a material SQLite corruption
+bug the built-in-search baseline missed, but on the NVIDIA question it chose
+weaker sources than the baseline, at roughly five times the cost. This is not a
+superiority result.
 
 Search bundles select up to three disjoint passages per source from the bounded
 extracted text, using Unicode lexical matches and prose/table context rather than

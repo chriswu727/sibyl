@@ -46,7 +46,8 @@ Use `view="sources"` with the current revision to page the full catalog, and
 5. Optionally submit `complete_research(job_id, revision, claim_ids=[...],
    limitations=[...])`. New jobs render reports from recorded claims and their
    evidence, reasoning and criteria; omit summary/key_findings/analysis. Unknown
-   and disputed claims remain included. Old contract-1 jobs retain prose completion.
+   and disputed claims remain included. Old contract-1 jobs retain prose completion
+   through the keyless profile; the agent profile rejects undeclared arguments.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
 
 Agent failures retain `isError=true` and structured recovery. For `view="error"`,

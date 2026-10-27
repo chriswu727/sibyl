@@ -58,9 +58,9 @@ def create_server(
         agent_mode=agent_mode,
     )
     if agent_mode:
-        for function, _ in mcp_tools._catalog.tools:
-            if function.__name__ not in mcp_tools._AGENT_TOOLS:
-                server.remove_tool(function.__name__)
+        for name in mcp_tools._catalog.names(agent_mode=True):
+            if name not in mcp_tools._AGENT_TOOLS:
+                server.remove_tool(name)
     return server
 
 
