@@ -104,6 +104,13 @@ provider outcomes show DuckDuckGo and Mojeek refusing almost every request.
 Thresholds are unchanged. Diagnose discovery/readiness misses without treating the two
 targeted reading fixes as a complete-product pass.
 
+The first [host-source release gate run](../evals/results/host-source-retrieval-2026-10-27.json)
+also fails (55.6% coverage, 9.3% answerable readiness; 98.5% stability, 100%
+precision). Next: page reads must identify Sibyl honestly instead of rotating
+browser User-Agents (every Wikipedia read returned 403 on the runner), and the
+readiness rule's treatment of single-domain answer-bearing reads needs review
+before any rule change is frozen and rerun.
+
 Claim-based human reports now present the generated claim narrative once, while
 JSON retains compatible summary/findings/analysis fields and the full ledger.
 PDF rendering checks font coverage and reports failures instead of silently losing
