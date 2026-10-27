@@ -117,7 +117,7 @@ outside the selected citation window.
 New MCP jobs also record material facts, inferences and recommendations in
 `assess_research(claims=...)`. Facts link exact passages and quote them;
 Sibyl rejects a quote it cannot find in the cited passage, ignoring only case,
-spacing and typographic variants. Reasoning links its premises; recommendations
+spacing, accent encoding and typographic variants; numbers are never folded. Reasoning links its premises; recommendations
 state criteria and assumptions. Unknowns stay explicit.
 Changes to a premise or new retrieval make dependent judgments need reassessment.
 See the [claim contract and complete example](docs/research-claims.md).

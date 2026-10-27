@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from .research_state import ResearchNotebook
 
 MIN_QUOTE_CHARS = 8
+MAX_QUOTE_CHARS = 500
 _QUOTE_FOLD = str.maketrans(
     {
         "\u2018": "'",
@@ -27,9 +28,8 @@ _QUOTE_FOLD = str.maketrans(
         "\u2014": "-",
     }
 )
-_QUOTE_EDGES = re.compile(
-    r"^(?:\.\.\.|[\s\u2026\"'\u201c\u2018])+|(?:\.\.\.|[\s\u2026\"'\u201d\u2019])+$"
-)
+_ELLIPSIS_EDGES = re.compile(r"^(?:\.\.\.|\u2026)+|(?:\.\.\.|\u2026)+$")
+_QUOTE_PAIRS = {'"': '"', "'": "'", "\u201c": "\u201d", "\u2018": "\u2019"}
 
 
 class RecommendationCriterion(BaseModel):
@@ -44,7 +44,7 @@ class ClaimQuote(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     passage_id: str = Field(min_length=1, max_length=200)
-    text: str = Field(min_length=1, max_length=500)
+    text: str = Field(min_length=1, max_length=MAX_QUOTE_CHARS)
 
 
 class ResearchClaim(BaseModel):
@@ -64,8 +64,10 @@ class ResearchClaim(BaseModel):
 
 
 def _folded(text: str) -> tuple[str, list[int]]:
-    """Comparison form ignoring case, width, typographic quotes and spacing.
+    """Comparison form ignoring case, fullwidth ASCII, typographic quotes and spacing.
 
+    Canonical decomposition makes composed and combining accents compare equal;
+    compatibility forms such as superscripts and Roman numerals stay distinct.
     Each folded character keeps the offset of the original character it came from.
     """
     characters: list[str] = []
@@ -76,23 +78,46 @@ def _folded(text: str) -> tuple[str, list[int]]:
                 characters.append(" ")
                 offsets.append(position)
             continue
-        normalized = unicodedata.normalize("NFKC", character.translate(_QUOTE_FOLD))
+        if "\uff01" <= character <= "\uff5e":
+            character = chr(ord(character) - 0xFEE0)
+        normalized = unicodedata.normalize("NFD", character.translate(_QUOTE_FOLD))
         for folded in normalized.casefold():
             characters.append(folded)
             offsets.append(position)
     return "".join(characters), offsets
 
 
+def _quote_needle(quote: str) -> str:
+    quote = _ELLIPSIS_EDGES.sub("", quote.strip()).strip()
+    if len(quote) > 1 and _QUOTE_PAIRS.get(quote[0]) == quote[-1]:
+        quote = quote[1:-1]
+    return _folded(quote)[0].strip()
+
+
 def locate_quote(quote: str, passage: EvidencePassage) -> tuple[int, int] | None:
-    """Return the quote's span within the passage text, or None if absent."""
-    needle = _folded(_QUOTE_EDGES.sub("", quote))[0]
+    """Return the quote's span within the passage text, or None if absent.
+
+    A match must start and end on whole source characters, not inside a
+    multi-character folding such as the "ss" from a German sharp s.
+    """
+    needle = _quote_needle(quote)
     if len(needle) < MIN_QUOTE_CHARS:
         return None
     haystack, offsets = _folded(passage.text)
     found = haystack.find(needle)
-    if found < 0:
-        return None
-    return offsets[found], offsets[found + len(needle) - 1] + 1
+    while found >= 0:
+        end = found + len(needle)
+        if (found == 0 or offsets[found - 1] != offsets[found]) and (
+            end == len(offsets) or offsets[end] != offsets[end - 1]
+        ):
+            return offsets[found], offsets[end - 1] + 1
+        found = haystack.find(needle, found + 1)
+    return None
+
+
+def stored_quote_text(passage: EvidencePassage, span: tuple[int, int]) -> str:
+    """Source text of a verified quote on one line, so it cannot add report markup."""
+    return " ".join(passage.text[span[0] : span[1]].split())
 
 
 def _verified_quotes(
@@ -119,9 +144,15 @@ def _verified_quotes(
                 claim_id=claim["claim_id"],
                 field="claims.quotes",
             )
-        verified.append(
-            {"passage_id": quote["passage_id"], "text": passage.text[span[0] : span[1]]}
-        )
+        text = stored_quote_text(passage, span)
+        if len(text) > MAX_QUOTE_CHARS:
+            raise ResearchRequestError(
+                f"Quoted source text exceeds {MAX_QUOTE_CHARS} characters; quote a shorter excerpt.",
+                code="invalid_claim",
+                claim_id=claim["claim_id"],
+                field="claims.quotes",
+            )
+        verified.append({"passage_id": quote["passage_id"], "text": text})
     if claim["kind"] == "fact" and claim["status"] != "unresolved":
         quoted = {quote["passage_id"] for quote in verified}
         required = [("supporting_passage_ids", "supporting")]

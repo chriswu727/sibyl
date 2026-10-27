@@ -188,6 +188,14 @@ class ResearchJobs:
                 "Read 1-12 passage IDs at a time.", field="passage_ids"
             )
         job, notebook = self._load(job_id)
+        index = evidence_index(notebook)
+        for position, key in enumerate(passage_ids):
+            if key not in index:
+                raise ResearchRequestError(
+                    f"passage_ids[{position}] is unknown or a search-snippet passage; "
+                    "snippets are leads, not readable evidence.",
+                    field="passage_ids",
+                )
         items = [self._passage(job, notebook, key) for key in passage_ids]
         for item in items:
             del item["job_id"], item["revision"]

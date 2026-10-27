@@ -82,12 +82,17 @@ claim for original evidence.
 Supported and disputed facts must quote exact text from at least one supporting
 passage; disputed facts also quote a challenging passage. Each quote must come
 from a passage the claim cites. Sibyl searches the stored passage text for the
-quote, ignoring case, Unicode width, typographic quote/dash variants, whitespace
-runs and surrounding quotation marks or ellipses. A quote shorter than eight
-characters after that folding, or one not found, rejects the whole assessment
-with `field="claims.quotes"` and the claim ID. Stored quotes are replaced by the
-exact source substring, and JSON report claims add `start_char`/`end_char`
-offsets into the extracted source. Markdown, PDF and text reports print each
+quote, ignoring case, fullwidth ASCII forms, composed versus combining accents,
+typographic quote/dash variants, whitespace runs, leading/trailing ellipses and
+one surrounding pair of quotation marks. Superscripts, Roman numerals and other
+compatibility characters are not folded, so `10²` never matches `102`. A match
+must cover whole source characters. A quote shorter than eight characters after
+folding, or one not found, rejects the whole assessment with
+`field="claims.quotes"` and the claim ID. Stored quotes are replaced by the
+matched source text with whitespace runs collapsed to single spaces, so source
+line breaks cannot add report structure and a stored claim can be resubmitted
+unchanged. JSON report claims add `start_char`/`end_char` offsets into the
+extracted source. Markdown, PDF and text reports print each
 quote beside its claim.
 
 This catches a citation to the wrong passage or an invented excerpt. It does not

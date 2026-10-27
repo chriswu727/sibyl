@@ -3,8 +3,10 @@
 ## Unreleased
 
 - Require supported and disputed fact claims to quote exact text from their cited
-  passages; reject quotes not found verbatim (ignoring case, width, spacing and
-  typographic variants). Reports print the quotes; JSON adds source offsets.
+  passages; reject quotes not found verbatim (ignoring case, fullwidth ASCII,
+  accent encoding, spacing and typographic variants, never superscripts or other
+  numeric forms). Reports print the quotes on one line; JSON adds source offsets.
+  Batch-read errors name the unknown position.
   The offline replay now rejects the earlier misplaced single-writer citation.
 - Read up to twelve passages per call with `get_research(passage_ids=[...])`.
 - Position Sibyl beside the host's own search: instructions and tool descriptions
