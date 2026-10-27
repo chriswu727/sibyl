@@ -1,4 +1,5 @@
 """SourceBundle 1.6 consumer contract tests."""
+
 import hashlib
 import json
 import unittest
@@ -9,7 +10,6 @@ from pydantic import TypeAdapter
 
 import sibyl.mcp_server as mcp_server
 from sibyl.evidence import SourceBundle
-
 
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE = ROOT / "docs" / "source_bundle_1_6.example.json"
@@ -40,7 +40,19 @@ class TestSourceBundleContract(unittest.TestCase):
             "token_5gram_containment_v1",
         )
         self.assertTrue(
-            all(source.content_cluster_id.startswith("cc_") for source in bundle.sources)
+            all(
+                source.content_cluster_id.startswith("cc_") for source in bundle.sources
+            )
+        )
+
+    def test_older_payload_without_substantive_domains_remains_readable(self):
+        expected = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+        expected["diagnostics"].pop("substantive_domains")
+        bundle = TypeAdapter(SourceBundle).validate_python(expected)
+        self.assertEqual(bundle.diagnostics.substantive_domains, 0)
+        self.assertEqual(
+            bundle.sources[0].evidence[0].text,
+            expected["sources"][0]["evidence"][0]["text"],
         )
 
     def test_contract_schema_exposes_consumer_enums(self):
@@ -49,8 +61,9 @@ class TestSourceBundleContract(unittest.TestCase):
         self.assertEqual(schema["properties"]["schema_version"]["const"], "1.6")
         self.assertEqual(
             set(
-                schema["$defs"]["EvidenceSource"]["properties"]
-                ["content_origin"]["enum"]
+                schema["$defs"]["EvidenceSource"]["properties"]["content_origin"][
+                    "enum"
+                ]
             ),
             {
                 "direct_fetch",
@@ -66,13 +79,15 @@ class TestSourceBundleContract(unittest.TestCase):
         )
         self.assertIn(
             "meta_article_published_time",
-            schema["$defs"]["EvidenceSource"]["properties"]
-            ["published_at_method"]["enum"],
+            schema["$defs"]["EvidenceSource"]["properties"]["published_at_method"][
+                "enum"
+            ],
         )
         self.assertEqual(
             set(
-                schema["$defs"]["BundleDiagnostics"]["properties"]
-                ["recommended_action"]["enum"]
+                schema["$defs"]["BundleDiagnostics"]["properties"][
+                    "recommended_action"
+                ]["enum"]
             ),
             {
                 "not_assessed",

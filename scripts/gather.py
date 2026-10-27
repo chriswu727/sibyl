@@ -6,6 +6,7 @@
 Prints the numbered [Source N] full-text blocks so a caller (you) can reason
 over them. No API key required.
 """
+
 import asyncio
 import sys
 

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="790" viewBox="0 0 1200 790" role="img" aria-labelledby="title description">
+  <title id="title">A two-round Sibyl research replay</title>
+  <desc id="description">Does SQLite WAL eliminate write contention? Read WAL documentation, record an unresolved gap, inspect isolation documentation as counterevidence, and export a narrower conclusion. This is a diagram of an offline MCP replay, not an application screenshot or live benchmark. The host authors the reasoning; Sibyl checks citation targets, not semantic truth.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#0b1220"/><stop offset="1" stop-color="#102b2d"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="m0 1 5 3-5 3" fill="none" stroke="#7ba29b" stroke-width="1.5"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="790" rx="20" fill="url(#background)"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="46" y="48" fill="#73dfc1" font-size="13" letter-spacing="2">SIBYL / RESEARCH REPLAY</text>
+    <rect x="839" y="27" width="315" height="30" rx="15" fill="#163934" stroke="#37736a"/>
+    <text x="996" y="47" text-anchor="middle" fill="#c2e6db" font-size="12">OFFLINE FIXTURE · REAL MCP STDIO</text>
+    <text x="46" y="107" fill="#f0fdfa" font-size="32" font-weight="700">Does SQLite WAL eliminate write contention?</text>
+    <text x="46" y="145" fill="#a8c3bd" font-size="18">Two source reads. One explicit gap. A more precise conclusion.</text>
+
+    <rect x="46" y="182" width="526" height="198" rx="12" fill="#10232b" stroke="#315451"/>
+    <text x="68" y="214" fill="#73dfc1" font-size="13" letter-spacing="1.5">ROUND 01 / ESTABLISH THE BENEFIT</text>
+    <text x="68" y="254" fill="#f0fdfa" font-size="22" font-weight="700">Read the WAL documentation</text>
+    <text x="68" y="287" fill="#bed3cf" font-size="17">Readers and a writer can proceed concurrently.</text>
+    <text x="68" y="315" fill="#bed3cf" font-size="17">Busy errors can still occur.</text>
+    <text x="68" y="354" fill="#89aba4" font-family="monospace" font-size="14">sqlite.org/wal.html</text>
+
+    <rect x="628" y="182" width="526" height="198" rx="12" fill="#10232b" stroke="#315451"/>
+    <text x="650" y="214" fill="#73dfc1" font-size="13" letter-spacing="1.5">ROUND 02 / TEST THE STRONGER CLAIM</text>
+    <text x="650" y="254" fill="#f0fdfa" font-size="22" font-weight="700">Read the isolation documentation</text>
+    <text x="650" y="287" fill="#bed3cf" font-size="17">Only one writer can write at a time.</text>
+    <text x="650" y="315" fill="#bed3cf" font-size="17">Other writers must take turns.</text>
+    <text x="650" y="354" fill="#89aba4" font-family="monospace" font-size="14">sqlite.org/isolation.html</text>
+
+    <path d="M309 380v28" fill="none" stroke="#7ba29b" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="46" y="412" width="526" height="108" rx="12" fill="#332b20" stroke="#816c3f"/>
+    <text x="68" y="443" fill="#f4cb7d" font-size="13" letter-spacing="1.5">HOST REVIEW / UNRESOLVED</text>
+    <text x="68" y="476" fill="#f3e7d2" font-size="17">Does reader/writer overlap imply parallel writers?</text>
+    <text x="68" y="501" fill="#c9b99b" font-size="15">Record the gap before the counterevidence read.</text>
+    <path d="M572 464h28V282h23" fill="none" stroke="#7ba29b" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M891 380v166" fill="none" stroke="#7ba29b" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="46" y="551" width="1108" height="141" rx="12" fill="#13352f" stroke="#4a8d7b"/>
+    <text x="68" y="582" fill="#73dfc1" font-size="13" letter-spacing="1.5">EXPORTED REPORT / HOST-AUTHORED CONCLUSION</text>
+    <text x="68" y="621" fill="#f0fdfa" font-size="23" font-weight="700">WAL improves reader/writer concurrency, not writer/writer concurrency.</text>
+    <text x="68" y="659" fill="#bed3cf" font-size="16">Citation targets checked · Markdown + JSON · Checkpoint survives process restart</text>
+
+    <text x="46" y="731" fill="#a8c3bd" font-size="15">Two official pages, one publisher. Not independent corroboration or an accuracy benchmark.</text>
+    <text x="46" y="758" fill="#a8c3bd" font-size="15">Recorded excerpts · No model calls · Semantic support is not independently verified</text>
+  </g>
+</svg>

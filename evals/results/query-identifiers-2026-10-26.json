@@ -1,0 +1,293 @@
+{
+  "date": "2026-10-26",
+  "scope": "Exploratory model-free tracing of three frozen live retrieval misses; not a replacement release gate or a controlled comparison.",
+  "provider": "keyless",
+  "model_calls": 0,
+  "manual_url_rescues": 0,
+  "code_base": "875805d (report-presentation merge); after includes query-identifier changes",
+  "raw_before_sha256": "c8051634fe77d439bea7e007ceb1b39471f78732044648c706ecdd90ba3a5f36",
+  "raw_after_sha256": "b50d0aef4ccac7dff958f01b62082da01dc8d2909c6cec1f06dd4816a1ade31c",
+  "cases": [
+    {
+      "case_id": "real07",
+      "question": "What's the month, day, and year of the online publication of the paper \"Articulatory constraints on stop insertion and elision in consonant clusters\"?",
+      "before": {
+        "queries": [
+          "What's the month, day, and year of the online publication of the paper \"Articulatory constraints on stop insertion and elision in consonant clusters\"?"
+        ],
+        "status": "insufficient_evidence",
+        "reasons": [
+          "no_substantive_sources",
+          "fragmented_query_support"
+        ],
+        "full_extraction_gold_match_urls": [],
+        "failed_reads": [
+          {
+            "url": "https://api.crossref.org/v1/works/10.1515/ling.2011.031",
+            "error": "Unsupported content type: application/json"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Japanese_phonology",
+            "error": "Response exceeds 2097152 bytes"
+          }
+        ]
+      },
+      "after": {
+        "case_id": "real07",
+        "queries": [
+          "What's the month, day, and year of the online publication of the paper \"Articulatory constraints on stop insertion and elision in consonant clusters\"?",
+          "Articulatory constraints on stop insertion and elision in consonant clusters"
+        ],
+        "outcome": {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 8,
+          "latency_ms": 5910,
+          "error": "",
+          "search_results": 8,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 5,
+          "wikipedia_fallbacks": 1,
+          "metadata_fallbacks": 1,
+          "search_providers": [
+            "crossref",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 0.846154,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        "sources": [
+          {
+            "url": "https://portalrecerca.uab.cat/en/publications/articulatory-constraints-on-stop-insertion-and-elision-in-consona/",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://portalrecerca.csuc.cat/article/doi/10.1515/ling.2011.031?locale=en",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://api.crossref.org/v1/works/10.1515/ling.2011.031",
+            "origin": "crossref_api"
+          },
+          {
+            "url": "https://www.academia.edu/80028303/Articulatory_constraints_on_stop_insertion_and_elision_in_consonant_clusters",
+            "origin": "search_snippet"
+          },
+          {
+            "url": "https://www.researchgate.net/profile/Daniel-Recasens/publication/273072358_Articulatory_constraints_on_stop_insertion_and_elision_in_consonant_clusters/links/5fe4ac25299bf140883f2c07/Articulatory-constraints-on-stop-insertion-and-elision-in-consonant-clusters.pdf",
+            "origin": "search_snippet"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Japanese_phonology",
+            "origin": "wikipedia_api"
+          },
+          {
+            "url": "https://portalrecerca.csuc.cat/article/doi/10.1515/ling.2011.031?mode=full",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://www.researchgate.net/publication/273072358_Articulatory_constraints_on_stop_insertion_and_elision_in_consonant_clusters",
+            "origin": "search_snippet"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "real15",
+      "question": "What change did Patch 0.7 make to the spell Crusader Strike in the beta of World of Warcraft?",
+      "before": {
+        "queries": [
+          "What change did Patch 0.7 make to the spell Crusader Strike in the beta of World of Warcraft?",
+          "change Patch 0 7 make spell Crusader Strike beta World Warcraft"
+        ],
+        "status": "insufficient_evidence",
+        "reasons": [
+          "no_substantive_sources",
+          "HTML text truncated to 30000 characters."
+        ],
+        "full_extraction_gold_match_urls": [],
+        "failed_reads": []
+      },
+      "after": {
+        "case_id": "real15",
+        "queries": [
+          "What change did Patch 0.7 make to the spell Crusader Strike in the beta of World of Warcraft?",
+          "change Patch 0.7 make spell Crusader Strike beta World Warcraft"
+        ],
+        "outcome": {
+          "status": "insufficient_evidence",
+          "evidence_sufficiency": "insufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 7,
+          "latency_ms": 3713,
+          "error": "",
+          "search_results": 7,
+          "urls_attempted": 7,
+          "pages_scraped": 7,
+          "scrape_failures": 0,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "wikipedia"
+          ],
+          "max_source_query_term_coverage": 0.545455,
+          "sufficiency_reasons": [
+            "no_substantive_sources",
+            "HTML text truncated to 30000 characters."
+          ],
+          "query_complexity": "single_step",
+          "recommended_action": "refine_query",
+          "refinement_searches": 0,
+          "refinement_failures": 0
+        },
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/World_of_Warcraft%3A_Cataclysm",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/World_of_Warcraft%3A_Battle_for_Azeroth",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Diablo_III",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Vought_F-8_Crusader",
+            "origin": "wikipedia_api"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Patch_Adams",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Batman%3A_Caped_Crusader",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Patch",
+            "origin": "direct_fetch"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "real23",
+      "question": "Who was the rector of Hacettepe University in 2006?",
+      "before": {
+        "queries": [
+          "Who was the rector of Hacettepe University in 2006?",
+          "rector Hacettepe University 2006",
+          "rector Hacettepe University 2006 -site:en.wikipedia.org"
+        ],
+        "status": "insufficient_evidence",
+        "reasons": [
+          "missing_historical_role_tenure",
+          "HTML text truncated to 30000 characters."
+        ],
+        "full_extraction_gold_match_urls": [],
+        "failed_reads": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Turkey",
+            "error": "Response exceeds 2097152 bytes"
+          }
+        ]
+      },
+      "after": {
+        "case_id": "real23",
+        "queries": [
+          "Who was the rector of Hacettepe University in 2006?",
+          "rector Hacettepe University 2006",
+          "rector Hacettepe University 2006 -site:en.wikipedia.org"
+        ],
+        "outcome": {
+          "status": "ok",
+          "evidence_sufficiency": "sufficient",
+          "answer_in_evidence": false,
+          "refutation_in_evidence": false,
+          "safe_trap_outcome": false,
+          "source_count": 10,
+          "latency_ms": 5375,
+          "error": "",
+          "search_results": 16,
+          "urls_attempted": 8,
+          "pages_scraped": 8,
+          "scrape_failures": 2,
+          "wikipedia_fallbacks": 3,
+          "metadata_fallbacks": 0,
+          "search_providers": [
+            "google_news",
+            "wikipedia",
+            "yahoo"
+          ],
+          "max_source_query_term_coverage": 1,
+          "sufficiency_reasons": [],
+          "query_complexity": "single_step",
+          "recommended_action": "synthesize",
+          "refinement_searches": 1,
+          "refinement_failures": 0
+        },
+        "sources": [
+          {
+            "url": "https://en.wikipedia.org/wiki/Hacettepe_University_Ankara_State_Conservatory",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://www.wendangwang.com/search/Hacettepe+University+2006+rector+name",
+            "origin": "search_snippet"
+          },
+          {
+            "url": "https://felsefe.hacettepe.edu.tr/en/menu/history-81",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://yunus.hacettepe.edu.tr/~aulucan/0info.htm",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://hacettepe.edu.tr/about/university_administration",
+            "origin": "direct_fetch"
+          },
+          {
+            "url": "https://icc.org.tr/en/our-founder",
+            "origin": "search_snippet"
+          },
+          {
+            "url": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1kc3B5SU9sTGdkZjJqNVU5YktyVmhRUmRfVXpBaFFvaVdsRk1sVWc5LTdxSE9LZWFLbktYSU8tVVNrSGh5QmE3dGxPQTdpMUpjSFM5Tk83ZW5XT2ZPMXR3MVRLZlpVM2lPVkhTUUNNTmFCNUE5QWQ4?oc=5",
+            "origin": "search_snippet"
+          },
+          {
+            "url": "https://tr.wikipedia.org/wiki/Mehmet_Cahit_G%C3%BCran",
+            "origin": "search_snippet"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/Turkey",
+            "origin": "wikipedia_api"
+          },
+          {
+            "url": "https://en.wikipedia.org/wiki/F._Tulga_Ocak",
+            "origin": "search_snippet"
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "All three after runs still lack a frozen gold/alias match; the two ok statuses must not be represented as successful answers.",
+    "Quoted-title fallback and decimal-version preservation are deterministic regression fixes, not evidence that overall live readiness improved.",
+    "Metadata-only/unreadable papers and historical-role applicability remain unresolved. Semantic support and real host conclusions were not scored.",
+    "The separate retained 66-case three-repeat gate still fails. No threshold or gold alias was changed."
+  ]
+}

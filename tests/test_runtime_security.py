@@ -13,7 +13,6 @@ import httpx
 from mcp.server.fastmcp.exceptions import ToolError
 
 from sibyl.async_cache import AsyncSingleFlightTTL, CapacityError
-from sibyl.config import Config, Provider
 from sibyl.mcp_server import create_server
 from sibyl.privacy import display_url
 from sibyl.report_models import ResearchReport
@@ -72,6 +71,72 @@ class TestCompressedBodies(unittest.IsolatedAsyncioTestCase):
 
 
 class TestRuntime(unittest.IsolatedAsyncioTestCase):
+    async def test_pdf_only_export_failure_is_a_tool_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("token=SECRET"),
+                ):
+                    with self.assertRaisesRegex(
+                        ToolError, "PDF export failed"
+                    ) as raised:
+                        await create_server(runtime).call_tool(
+                            "save_report", {"format": "pdf"}
+                        )
+                self.assertNotIn("SECRET", str(raised.exception))
+                self.assertFalse(list(Path(directory).glob("*.pdf")))
+                self.assertEqual(runtime.failed, 1)
+            finally:
+                await runtime.aclose()
+
+    async def test_combined_export_keeps_markdown_and_discloses_pdf_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("token=SECRET"),
+                ):
+                    result = await create_server(runtime).call_tool(
+                        "save_report", {"format": "both"}
+                    )
+                self.assertIn("PDF failed", str(result))
+                self.assertIn("Markdown saved", str(result))
+                self.assertNotIn("SECRET", str(result))
+                self.assertEqual(len(list(Path(directory).glob("*.md"))), 1)
+            finally:
+                await runtime.aclose()
+
+    async def test_markdown_and_json_need_separate_exports_and_return_real_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            server = create_server(runtime)
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("unavailable"),
+                ):
+                    _, combined = await server.call_tool(
+                        "save_report", {"format": "both"}
+                    )
+                self.assertIn("PDF failed", combined["result"])
+                self.assertNotIn("JSON saved", combined["result"])
+                self.assertFalse(list(Path(directory).glob("*.json")))
+                md_path = Path(combined["result"].split("Markdown saved: ")[1])
+                self.assertTrue(md_path.is_file())
+                _, exported = await server.call_tool("save_report", {"format": "json"})
+                json_path = Path(exported["result"].removeprefix("JSON saved: "))
+                self.assertTrue(json_path.is_file())
+                self.assertNotEqual(json_path, md_path.with_suffix(".json"))
+                self.assertIn('"summary": "summary"', json_path.read_text())
+            finally:
+                await runtime.aclose()
+
     async def test_export_uses_runtime_root_and_rejects_escape(self):
         with tempfile.TemporaryDirectory() as directory:
             runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
@@ -101,7 +166,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
 
         server = create_server(SibylRuntime())
         page = WebPage(
-            "https://example.com/?token=SECRET", "title", "original evidence"
+            "https://example.com/?token=SECRET", "title", "original evidence " * 20
         )
         with mock.patch(
             "sibyl.scraper.scrape_url", new=mock.AsyncMock(return_value=page)
@@ -160,7 +225,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             started.set()
             await release.wait()
 
-        first = asyncio.create_task(runtime.execute("research", report))
+        first = asyncio.create_task(runtime.execute("save_report", report))
         await started.wait()
         with self.assertRaises(CapacityError):
             await runtime.execute("save_report", report)
@@ -213,6 +278,37 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
 
 
 class TestArtifacts(unittest.TestCase):
+    def test_quotas_reject_without_removing_existing_exports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(directory)
+            store.MAX_ARTIFACT_BYTES = 4
+            with self.assertRaises(CapacityError):
+                store.write(b"large", "report", ".md")
+            first = store.write(b"one", "report", ".md")
+            store.MAX_DIRECTORY_BYTES = 4
+            with self.assertRaises(CapacityError):
+                store.write(b"two", "report", ".md")
+            store.MAX_DIRECTORY_BYTES = 100
+            store.MAX_ARTIFACTS = 1
+            with self.assertRaises(CapacityError):
+                store.write(b"two", "report", ".md")
+            self.assertEqual(first.read_bytes(), b"one")
+            self.assertFalse(list(Path(directory).glob(".sibyl-*")))
+
+    def test_symlinked_staging_and_lock_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = ArtifactStore(directory)
+            target = Path(directory) / "original"
+            target.write_bytes(b"original")
+            link = Path(directory) / "link"
+            link.symlink_to(target)
+            with self.assertRaises(ValueError):
+                store.publish(link, "report", ".md")
+            (Path(directory) / ".artifact.lock").symlink_to(target)
+            with self.assertRaises(ValueError):
+                store.write(b"new", "report", ".md")
+            self.assertEqual(target.read_bytes(), b"original")
+
     def test_private_unique_files_and_no_temporary_leftovers(self):
         with tempfile.TemporaryDirectory() as directory:
             store = ArtifactStore(directory)
@@ -221,7 +317,11 @@ class TestArtifacts(unittest.TestCase):
             self.assertNotEqual(first, second)
             self.assertEqual(first.read_bytes(), b"one")
             self.assertEqual(stat.S_IMODE(first.stat().st_mode), 0o600)
-            self.assertEqual(len(list(Path(directory).iterdir())), 2)
+            self.assertEqual(len(list(Path(directory).glob("sibyl_*"))), 2)
+            self.assertFalse(list(Path(directory).glob(".sibyl-*")))
+            self.assertEqual(
+                stat.S_IMODE((Path(directory) / ".artifact.lock").stat().st_mode), 0o600
+            )
 
     def test_escape_and_symlink_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -239,12 +339,6 @@ class TestArtifacts(unittest.TestCase):
                 with store.staging(".md"):
                     raise RuntimeError("failed")
             self.assertEqual(list(Path(directory).iterdir()), [])
-
-    def test_credentials_are_hidden_in_configuration_repr(self):
-        config = Config(
-            providers=[Provider("model", api_key="SECRET", api_base="http://SECRET")]
-        )
-        self.assertNotIn("SECRET", repr(config))
 
     def test_url_metadata_redacts_credentials_but_preserves_query(self):
         result = display_url(

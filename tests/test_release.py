@@ -1,10 +1,57 @@
 """Release guard tests. No network."""
+
 import json
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
 from scripts.check_release import validate_release
+
+
+class TestRuntimeCompatibility(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.project = tomllib.loads(
+            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
+        )["project"]
+
+    def test_minimum_python_excludes_unsupported_runtime(self):
+        self.assertEqual(self.project["requires-python"], ">=3.11")
+
+    def test_image_using_extras_enforce_pillow_security_floor(self):
+        for extra in ("report", "all"):
+            with self.subTest(extra=extra):
+                self.assertIn(
+                    "pillow>=13.0.0", self.project["optional-dependencies"][extra]
+                )
+
+    def test_model_and_finance_dependencies_are_not_declared(self):
+        extras = self.project["optional-dependencies"]
+        self.assertNotIn("finance", extras)
+        requirements = self.project["dependencies"] + [
+            requirement for group in extras.values() for requirement in group
+        ]
+        for name in (
+            "litellm",
+            "openai",
+            "anthropic",
+            "yfinance",
+            "pytrends",
+            "matplotlib",
+            "pandas",
+        ):
+            self.assertFalse(
+                any(item.lower().startswith(name) for item in requirements)
+            )
+
+    def test_core_does_not_pull_in_pillow(self):
+        self.assertFalse(
+            any(
+                item.lower().startswith("pillow")
+                for item in self.project["dependencies"]
+            )
+        )
 
 
 class TestReleaseValidation(unittest.TestCase):
@@ -22,6 +69,7 @@ class TestReleaseValidation(unittest.TestCase):
             json.dumps(
                 {
                     "name": "io.github.chriswu727/sibyl",
+                    "description": "Traceable research reports.",
                     "version": version,
                     "packages": [{"version": version}],
                 }
@@ -39,10 +87,68 @@ class TestReleaseValidation(unittest.TestCase):
         with temporary:
             self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
 
+    def test_rejects_invalid_registry_descriptions(self):
+        for description in (None, 123, "", "   ", "x" * 101):
+            with self.subTest(description=description):
+                temporary, root = self._release_tree()
+                with temporary:
+                    manifest = root / "server.json"
+                    server = json.loads(manifest.read_text())
+                    server["description"] = description
+                    manifest.write_text(json.dumps(server))
+                    with self.assertRaisesRegex(ValueError, "description"):
+                        validate_release("v0.3.0", root)
+
+    def test_accepts_registry_description_at_limit(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            manifest = root / "server.json"
+            server = json.loads(manifest.read_text())
+            server["description"] = "x" * 100
+            manifest.write_text(json.dumps(server))
+            self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
+
+    def test_current_repository_release_metadata(self):
+        root = Path(__file__).resolve().parents[1]
+        version = json.loads((root / "server.json").read_text())["version"]
+        self.assertEqual(validate_release(f"v{version}", root), version)
+
     def test_rejects_tag_that_does_not_match_package(self):
         temporary, root = self._release_tree()
         with temporary, self.assertRaisesRegex(ValueError, "must equal"):
             validate_release("v0.3.1", root)
+
+    def test_publication_accepts_matching_pep440_beta(self):
+        temporary, root = self._release_tree("0.4.0b1")
+        with temporary:
+            self.assertEqual(
+                validate_release("v0.4.0b1", root, require_release_note=True),
+                "0.4.0b1",
+            )
+            with self.assertRaisesRegex(ValueError, "must equal"):
+                validate_release("v0.4.0", root, require_release_note=True)
+
+    def test_publication_rejects_undated_development_changelog(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            (root / "CHANGELOG.md").write_text("# Changelog\n\n## 0.3.0 — Unreleased\n")
+            self.assertEqual(validate_release("v0.3.0", root), "0.3.0")
+            with self.assertRaisesRegex(ValueError, "dated changelog"):
+                validate_release("v0.3.0", root, require_release_note=True)
+
+    def test_publication_accepts_dated_changelog(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            self.assertEqual(
+                validate_release("v0.3.0", root, require_release_note=True), "0.3.0"
+            )
+
+    def test_publication_rejects_invalid_calendar_date(self):
+        temporary, root = self._release_tree()
+        with temporary:
+            (root / "CHANGELOG.md").write_text("## 0.3.0 — 2026-02-30\n")
+            with self.assertRaises(ValueError):
+                validate_release("v0.3.0", root, require_release_note=True)
 
     def test_rejects_missing_changelog_section(self):
         temporary, root = self._release_tree()
@@ -58,6 +164,7 @@ class TestReleaseValidation(unittest.TestCase):
                 json.dumps(
                     {
                         "name": "io.github.chriswu727/sibyl",
+                        "description": "Traceable research reports.",
                         "version": "0.2.0",
                         "packages": [{"version": "0.2.0"}],
                     }

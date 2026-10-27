@@ -1,4 +1,5 @@
 """Safety checks for URLs fetched by Sibyl."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,6 @@ import ipaddress
 import socket
 from typing import List, Tuple
 from urllib.parse import urlsplit
-
 
 _BLOCKED_HOST_SUFFIXES = (".localhost", ".local", ".internal", ".home", ".lan")
 _BLOCKED_HOSTNAMES = {"localhost", "local", "internal", "home", "lan"}
@@ -31,7 +31,9 @@ def _unsafe_address_reason(address) -> str:
         or address.is_reserved
         or address.is_unspecified
     ):
-        return "Private, loopback, link-local, and reserved IP addresses are not allowed."
+        return (
+            "Private, loopback, link-local, and reserved IP addresses are not allowed."
+        )
     return ""
 
 

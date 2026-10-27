@@ -1,4 +1,5 @@
 """Pinned DNS transport tests. No network."""
+
 import ssl
 import unittest
 from unittest import mock

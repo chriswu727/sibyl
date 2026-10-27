@@ -1,4 +1,5 @@
 """Fixed-plan evidence-loop evaluator tests. No network."""
+
 import unittest
 
 from sibyl.evidence import (
@@ -13,7 +14,7 @@ from sibyl.evidence_loop_eval import EvidenceLoopEvalCase, evaluate_evidence_loo
 def bundle(query: str, *, action: str, text: str) -> SourceBundle:
     status = "ok" if action == "synthesize" else "insufficient_evidence"
     sufficiency = "sufficient" if action == "synthesize" else "insufficient"
-    passage = EvidencePassage("P1", f"sb/S1/P1", text, "hash")
+    passage = EvidencePassage("P1", "sb/S1/P1", text, "hash")
     source = EvidenceSource(
         "S1",
         "https://example.com",
@@ -62,7 +63,11 @@ class TestEvidenceLoopEval(unittest.IsolatedAsyncioTestCase):
         )
 
         async def gather(query, **kwargs):
-            text = "NVIDIA was founded in 1993." if "founded" in query else "CUDA was created by NVIDIA."
+            text = (
+                "NVIDIA was founded in 1993."
+                if "founded" in query
+                else "CUDA was created by NVIDIA."
+            )
             return bundle(query, action="synthesize", text=text)
 
         result = await evaluate_evidence_loops([case], gather=gather)

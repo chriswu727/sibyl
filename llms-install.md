@@ -1,89 +1,81 @@
 # Install Sibyl MCP
 
-Sibyl is a local stdio evidence-retrieval MCP server for AI agents. Its default
-keyless profile searches, extracts, deduplicates, ranks, and returns inspectable
-source bundles; the host agent plans and writes the answer. It does not require
-a search or model API key.
+Sibyl adds persistent evidence research to an existing MCP-capable AI agent.
+The host plans, reasons and writes under its own account and usage rules.
+Sibyl never reads subscription tokens or calls a generative model.
 
-## Requirements
+## Source preview
 
-- Python 3.10 or newer
-- [`uv`](https://docs.astral.sh/uv/) for isolated `uvx` execution
+The host-only architecture and default eight-tool agent surface are unreleased.
+PyPI 0.4.0b1 and stable 0.3.0 contain the previous architecture. Use a fresh source
+environment; upgrading an old environment does not remove old dependencies.
 
-## Keyless MCP configuration
+```bash
+git clone https://github.com/chriswu727/sibyl.git
+cd sibyl
+python -m venv .venv
+.venv/bin/python -m pip install -e .
+.venv/bin/sibyl-mcp --version
+.venv/bin/sibyl-mcp --list-tools
+```
+
+Requires Python 3.11+. The version string alone does not identify this unreleased
+change; record the checkout commit when reporting problems.
+
+## Host configuration
+
+For hosts accepting `mcpServers` JSON, replace the paths. `SIBYL_OUTPUT_ROOT` is
+optional; without it, research is stored in the per-user data directory and
+shared by your local sessions (see [shared research store](docs/USAGE.md#shared-research-store)):
 
 ```json
 {
   "mcpServers": {
     "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research", "sibyl-mcp"]
-    }
-  }
-}
-```
-
-Equivalent commands:
-
-```bash
-claude mcp add sibyl -- uvx --from sibyl-research sibyl-mcp
-codex mcp add sibyl -- uvx --from sibyl-research sibyl-mcp
-```
-
-Verify the published package:
-
-```bash
-uvx --from sibyl-research sibyl-mcp --version
-uvx --from sibyl-research sibyl-mcp --list-tools
-```
-
-The default output should identify the `keyless` profile and list
-`gather_evidence`, `gather_bundle`, `gather_sources`, `quick_search`, and
-`read_url`.
-
-## Optional production search
-
-Tavily can replace the anonymous general-web path while the other public
-sources remain available:
-
-```json
-{
-  "mcpServers": {
-    "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research", "sibyl-mcp"],
+      "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
       "env": {
-        "SIBYL_SEARCH_PROVIDER": "tavily",
-        "TAVILY_API_KEY": "${TAVILY_API_KEY}",
-        "CROSSREF_MAILTO": "${CROSSREF_MAILTO}"
+        "SIBYL_OUTPUT_ROOT": "/absolute/path/to/private-sibyl-research"
       }
     }
   }
 }
 ```
 
-Tavily is explicit opt-in and may incur provider usage charges. A failed or
-empty Tavily search falls back to the keyless chain. Crossref is queried for
-academic and DOI-oriented questions without a key; `CROSSREF_MAILTO` is
-optional.
+Windows uses `.venv\\Scripts\\sibyl-mcp.exe`. Your host must launch local stdio
+servers. Agent-profile results arrive in MCP `structuredContent` and as the same
+serialized JSON text. For readable text responses and the twelve compatibility
+tools add `"args": ["--profile", "keyless"]`. The default `agent` surface has eight:
+`start_research`, `continue_research`, `get_research`, `assess_research`,
+`complete_research`, `save_report`, `cancel_research`, `gather_bundle`.
 
-## Optional experimental report profile
+Do not configure a model provider or pass subscription credentials to Sibyl.
+The host sends tool inputs/outputs through its own model connection; its privacy
+policy and usage limits still apply. No hidden MCP sampling is performed.
 
-Install the report extra and provide a model credential:
+## Optional integrations
 
-```json
-{
-  "mcpServers": {
-    "sibyl": {
-      "command": "uvx",
-      "args": ["--from", "sibyl-research[report]", "sibyl-mcp", "--profile", "report"],
-      "env": {
-        "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY}"
-      }
-    }
-  }
-}
+Install from the same checkout:
+
+```bash
+.venv/bin/python -m pip install -e '.[pdf,report,monitor]'
 ```
 
-Do not put a literal secret in a committed MCP configuration. Use the host's
-secret or environment-variable mechanism.
+`pdf` reads text PDFs on POSIX, without OCR. `report` only renders PDF output;
+Markdown/JSON need neither extra. `monitor` enables authenticated loopback-only
+operational endpoints when explicitly configured; see [Operations](docs/OPERATIONS.md).
+It is not an HTTP MCP transport.
+
+Anonymous search needs no key. To opt into Tavily, set
+`SIBYL_SEARCH_PROVIDER=tavily` and supply `TAVILY_API_KEY` through your host's secret
+or environment mechanism. This is separately billed by Tavily. One research step
+can make multiple provider requests. Failed or empty searches fall back to the
+keyless chain. `CROSSREF_MAILTO` is optional and disclosed to Crossref for academic
+metadata queries. Jina rendering is separately opt-in and sends target URLs to Jina.
+
+Never commit real keys. Environment placeholder expansion depends on your host,
+not Sibyl. The old model-backed `report/full` profiles are no longer available.
+See the [migration inventory](docs/MIGRATION.md) before reusing an old installation
+or checkpoint directory.
+
+Read the [Agent protocol](docs/agent-protocol.md), [Usage](docs/USAGE.md),
+[Privacy](PRIVACY.md) and [release evidence](docs/LAUNCH_READINESS.md).

@@ -1,11 +1,11 @@
 """Deterministic near-duplicate clustering for retrieved source text."""
+
 from __future__ import annotations
 
 import hashlib
 import re
 from dataclasses import dataclass
 from typing import List, Sequence, Set
-
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 _SHINGLE_SIZE = 5
@@ -35,7 +35,7 @@ def _shingles(tokens: Sequence[str]) -> Set[str]:
     if len(tokens) < _SHINGLE_SIZE:
         return set()
     return {
-        " ".join(tokens[index:index + _SHINGLE_SIZE])
+        " ".join(tokens[index : index + _SHINGLE_SIZE])
         for index in range(len(tokens) - _SHINGLE_SIZE + 1)
     }
 

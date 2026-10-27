@@ -1,4 +1,5 @@
 """Web search across keyless and optional production providers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,7 +11,7 @@ import time
 import weakref
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
-from urllib.parse import quote, unquote, urlparse, parse_qs, quote_plus
+from urllib.parse import parse_qs, quote, quote_plus, unquote, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -28,10 +29,10 @@ class SearchResult:
     provider: str = ""
 
 
-_HEADERS = {
-    "User-Agent": "Sibyl/0.4 (+https://github.com/chriswu727/sibyl)"
-}
+_HEADERS = {"User-Agent": "Sibyl/0.4 (+https://github.com/chriswu727/sibyl)"}
 _SEARCH_BATCH_TIMEOUT_SECONDS = 8.0
+_GENERAL_WEB_TIMEOUT_SECONDS = 7.0
+_TAVILY_TIMEOUT_SECONDS = 2.0
 _SEARCH_PROVIDERS = {"keyless", "tavily"}
 _logger = logging.getLogger(__name__)
 
@@ -87,9 +88,7 @@ def _configured_search_provider() -> str:
         choices = ", ".join(sorted(_SEARCH_PROVIDERS))
         raise ValueError(f"SIBYL_SEARCH_PROVIDER must be one of: {choices}.")
     if provider == "tavily" and not os.environ.get("TAVILY_API_KEY", "").strip():
-        raise ValueError(
-            "SIBYL_SEARCH_PROVIDER=tavily requires TAVILY_API_KEY."
-        )
+        raise ValueError("SIBYL_SEARCH_PROVIDER=tavily requires TAVILY_API_KEY.")
     return provider
 
 
@@ -149,6 +148,7 @@ async def search_tavily(
 
 # ── DuckDuckGo ────────────────────────────────────────────────────
 
+
 def _extract_ddg_url(ddg_url: str) -> str:
     if "uddg=" in ddg_url:
         parsed = urlparse(ddg_url)
@@ -159,7 +159,9 @@ def _extract_ddg_url(ddg_url: str) -> str:
 
 
 async def search_duckduckgo(
-    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 10,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     results = []
     own_client = client is None
@@ -205,8 +207,11 @@ async def search_duckduckgo(
 
 # ── Mojeek (independent keyless index — failover when DDG is blocked) ──
 
+
 async def search_mojeek(
-    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 10,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     """Scrape Mojeek — an independent search index (its own crawler), keyless and
     scraper-tolerant. Independence matters: it does not fail in correlation with
@@ -259,6 +264,7 @@ async def search_mojeek(
 
 # ── Yahoo (third keyless general-web path) ───────────────────────
 
+
 def _extract_yahoo_url(yahoo_url: str) -> str:
     marker = "/RU="
     if marker not in yahoo_url:
@@ -268,7 +274,9 @@ def _extract_yahoo_url(yahoo_url: str) -> str:
 
 
 async def search_yahoo(
-    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 10,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     results = []
     own_client = client is None
@@ -312,24 +320,30 @@ async def search_yahoo(
 
 
 async def _search_general_web(
-    query: str, max_results: int = 10, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 10,
+    client: Optional[httpx.AsyncClient] = None,
+    *,
+    timeout: float = _GENERAL_WEB_TIMEOUT_SECONDS,
 ) -> List[SearchResult]:
     """Search DuckDuckGo HTML, then fail over to Mojeek and Yahoo."""
-    async def search_with_failover():
+    providers = (search_duckduckgo, search_mojeek, search_yahoo)
+    deadline = asyncio.get_running_loop().time() + timeout
+    for index, provider in enumerate(providers):
+        remaining = deadline - asyncio.get_running_loop().time()
+        if remaining <= 0:
+            break
+        # Reserve time for every fallback, including provider pacing/queue waits.
+        attempt_timeout = remaining / (len(providers) - index)
         try:
-            results = await search_duckduckgo(query, max_results, client=client)
+            results = await asyncio.wait_for(
+                provider(query, max_results, client=client), timeout=attempt_timeout
+            )
         except Exception:
-            results = []
-        if not results:
-            results = await search_mojeek(query, max_results, client=client)
-        if not results:
-            results = await search_yahoo(query, max_results, client=client)
-        return results
-
-    try:
-        return await asyncio.wait_for(search_with_failover(), timeout=9.0)
-    except asyncio.TimeoutError:
-        return []
+            continue
+        if results:
+            return results
+    return []
 
 
 async def _search_configured_general_web(
@@ -341,24 +355,40 @@ async def _search_configured_general_web(
     if provider == "keyless":
         return await _search_general_web(query, max_results, client=client)
 
+    started = asyncio.get_running_loop().time()
     try:
-        results = await search_tavily(query, max_results, client=client)
+        results = await asyncio.wait_for(
+            search_tavily(query, max_results, client=client),
+            timeout=_TAVILY_TIMEOUT_SECONDS,
+        )
     except Exception as exc:
         _logger.warning(
             "Tavily search failed (%s); falling back to keyless search.",
             type(exc).__name__,
         )
-        return await _search_general_web(query, max_results, client=client)
+        results = []
+    else:
+        if not results:
+            _logger.warning(
+                "Tavily returned no results; falling back to keyless search."
+            )
     if results:
         return results
-    _logger.warning("Tavily returned no results; falling back to keyless search.")
-    return await _search_general_web(query, max_results, client=client)
+    remaining = _GENERAL_WEB_TIMEOUT_SECONDS - (
+        asyncio.get_running_loop().time() - started
+    )
+    return await _search_general_web(
+        query, max_results, client=client, timeout=max(0.0, remaining)
+    )
 
 
 # ── Google News (via RSS) ─────────────────────────────────────────
 
+
 async def search_google_news(
-    query: str, max_results: int = 8, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 8,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     """Search Google News via RSS feed (free, no API key)."""
     results = []
@@ -385,13 +415,19 @@ async def search_google_news(
             link = item.find("link")
             desc = item.find("description")
             if title and link:
-                results.append(SearchResult(
-                    title=title.get_text(strip=True),
-                    url=link.get_text(strip=True),
-                    snippet=BeautifulSoup(desc.get_text(), "lxml").get_text(strip=True)[:200] if desc else "",
-                    source="news",
-                    provider="google_news",
-                ))
+                results.append(
+                    SearchResult(
+                        title=title.get_text(strip=True),
+                        url=link.get_text(strip=True),
+                        snippet=BeautifulSoup(desc.get_text(), "lxml").get_text(
+                            strip=True
+                        )[:200]
+                        if desc
+                        else "",
+                        source="news",
+                        provider="google_news",
+                    )
+                )
     except Exception:
         pass
     finally:
@@ -402,8 +438,11 @@ async def search_google_news(
 
 # ── Reddit (via JSON API) ────────────────────────────────────────
 
+
 async def search_reddit(
-    query: str, max_results: int = 5, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 5,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     """Search Reddit via its public JSON API (no API key needed)."""
     results = []
@@ -432,13 +471,15 @@ async def search_reddit(
             subreddit = d.get("subreddit", "")
             score = d.get("score", 0)
             if title:
-                results.append(SearchResult(
-                    title=f"[r/{subreddit}] {title} ({score} upvotes)",
-                    url=url,
-                    snippet=snippet,
-                    source="reddit",
-                    provider="reddit",
-                ))
+                results.append(
+                    SearchResult(
+                        title=f"[r/{subreddit}] {title} ({score} upvotes)",
+                        url=url,
+                        snippet=snippet,
+                        source="reddit",
+                        provider="reddit",
+                    )
+                )
     except Exception:
         pass
     finally:
@@ -449,8 +490,11 @@ async def search_reddit(
 
 # ── Wikipedia ─────────────────────────────────────────────────────
 
+
 async def search_wikipedia(
-    query: str, max_results: int = 3, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 3,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     """Search Wikipedia via its free API."""
     results = []
@@ -479,15 +523,19 @@ async def search_wikipedia(
         data = resp.json()
         for item in data.get("query", {}).get("search", []):
             title = item.get("title", "")
-            snippet = BeautifulSoup(item.get("snippet", ""), "lxml").get_text(strip=True)
+            snippet = BeautifulSoup(item.get("snippet", ""), "lxml").get_text(
+                strip=True
+            )
             url = f"https://en.wikipedia.org/wiki/{quote_plus(title.replace(' ', '_'))}"
-            results.append(SearchResult(
-                title=f"[Wikipedia] {title}",
-                url=url,
-                snippet=snippet,
-                source="wikipedia",
-                provider="wikipedia",
-            ))
+            results.append(
+                SearchResult(
+                    title=f"[Wikipedia] {title}",
+                    url=url,
+                    snippet=snippet,
+                    source="wikipedia",
+                    provider="wikipedia",
+                )
+            )
     except Exception:
         pass
     finally:
@@ -496,11 +544,14 @@ async def search_wikipedia(
     return results
 
 
-_WIKI_URL_RE = re.compile(r"https?://([a-z]{2,3})\.(?:m\.)?wikipedia\.org/wiki/(.+)", re.I)
+_WIKI_URL_RE = re.compile(
+    r"https?://([a-z]{2,3})\.(?:m\.)?wikipedia\.org/wiki/(.+)", re.I
+)
 
 
 async def fetch_wikipedia_extract(
-    url: str, client: Optional[httpx.AsyncClient] = None,
+    url: str,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> Optional[str]:
     """Full clean plain-text of a Wikipedia article via the API — bypasses HTML
     scraping, which truncates long articles before infoboxes / tail sections. The
@@ -509,7 +560,10 @@ async def fetch_wikipedia_extract(
     m = _WIKI_URL_RE.match(url or "")
     if not m:
         return None
-    lang, title = m.group(1).lower(), unquote(m.group(2).split("#")[0]).replace("_", " ")
+    lang, title = (
+        m.group(1).lower(),
+        unquote(m.group(2).split("#")[0]).replace("_", " "),
+    )
     own_client = client is None
     if own_client:
         client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
@@ -520,10 +574,15 @@ async def fetch_wikipedia_extract(
             client,
             f"https://{lang}.wikipedia.org/w/api.php",
             params={
-                "action": "query", "prop": "extracts", "explaintext": "1",
-                "redirects": "1", "titles": title, "format": "json",
+                "action": "query",
+                "prop": "extracts",
+                "explaintext": "1",
+                "redirects": "1",
+                "titles": title,
+                "format": "json",
             },
-            headers=_HEADERS, timeout=12.0,
+            headers=_HEADERS,
+            timeout=12.0,
         )
         if resp.status_code != 200:
             return None
@@ -540,13 +599,16 @@ async def fetch_wikipedia_extract(
 
 
 async def wikipedia_lookup(
-    query: str, client: Optional[httpx.AsyncClient] = None, max_pages: int = 2,
+    query: str,
+    client: Optional[httpx.AsyncClient] = None,
+    max_pages: int = 2,
 ) -> List["WebPage"]:
     """Find the best-matching Wikipedia article(s) for a query via the opensearch
     API and return their full-text extracts as WebPages. A robust encyclopedic
     fallback when general web search is thin or rate-limited — opensearch matches
     titles even from a partial/entity query."""
     from .scraper import WebPage
+
     own_client = client is None
     if own_client:
         client = httpx.AsyncClient(follow_redirects=True, timeout=12.0)
@@ -556,9 +618,15 @@ async def wikipedia_lookup(
             0.1,
             client,
             "https://en.wikipedia.org/w/api.php",
-            params={"action": "opensearch", "search": query, "limit": max_pages,
-                    "namespace": "0", "format": "json"},
-            headers=_HEADERS, timeout=12.0,
+            params={
+                "action": "opensearch",
+                "search": query,
+                "limit": max_pages,
+                "namespace": "0",
+                "format": "json",
+            },
+            headers=_HEADERS,
+            timeout=12.0,
         )
         if resp.status_code != 200:
             return []
@@ -566,7 +634,8 @@ async def wikipedia_lookup(
         titles = data[1] if len(data) > 1 else []
         urls = data[3] if len(data) > 3 else []
         extracts = await asyncio.gather(
-            *[fetch_wikipedia_extract(u, client) for u in urls], return_exceptions=True)
+            *[fetch_wikipedia_extract(u, client) for u in urls], return_exceptions=True
+        )
         pages = []
         for title, url, ex in zip(titles, urls, extracts):
             if isinstance(ex, str) and ex:
@@ -587,6 +656,7 @@ async def wikipedia_lookup(
 
 
 # ── Crossref (academic metadata) ──────────────────────────────
+
 
 def _crossref_date_text(item) -> str:
     for field, label in (
@@ -612,8 +682,18 @@ def _crossref_date_text(item) -> str:
         if not 1 <= month <= 12:
             continue
         month_name = (
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
         )[month - 1]
         if not day:
             return f"{label}: {month_name} {year} ({year:04d}-{month:02d})."
@@ -689,10 +769,12 @@ async def search_crossref(
             authors = []
             for author in (item.get("author") or [])[:5]:
                 name = " ".join(
-                    part for part in (
+                    part
+                    for part in (
                         str(author.get("given") or "").strip(),
                         str(author.get("family") or "").strip(),
-                    ) if part
+                    )
+                    if part
                 )
                 if name:
                     authors.append(name)
@@ -720,8 +802,11 @@ async def search_crossref(
 
 # ── Semantic Scholar (academic papers) ───────────────────────────
 
+
 async def search_semantic_scholar(
-    query: str, max_results: int = 5, client: Optional[httpx.AsyncClient] = None,
+    query: str,
+    max_results: int = 5,
+    client: Optional[httpx.AsyncClient] = None,
 ) -> List[SearchResult]:
     """Search academic papers via Semantic Scholar API (free, no key needed)."""
     results = []
@@ -762,13 +847,15 @@ async def search_semantic_scholar(
             year = paper.get("year", "")
             citations = paper.get("citationCount", 0)
             if title and url:
-                results.append(SearchResult(
-                    title=f"[Paper, {year}] {title} ({citations} citations)",
-                    url=url,
-                    snippet=abstract[:200],
-                    source="academic",
-                    provider="semantic_scholar",
-                ))
+                results.append(
+                    SearchResult(
+                        title=f"[Paper, {year}] {title} ({citations} citations)",
+                        url=url,
+                        snippet=abstract[:200],
+                        source="academic",
+                        provider="semantic_scholar",
+                    )
+                )
     except Exception:
         pass
     finally:
@@ -778,6 +865,7 @@ async def search_semantic_scholar(
 
 
 # ── Unified search ────────────────────────────────────────────────
+
 
 async def search_web(
     query: str,
@@ -805,9 +893,7 @@ async def search_web(
         # "all" — search every engine concurrently. General web uses an
         # independent fallback chain so one blocked endpoint does not erase web results.
         coroutines = [
-            _search_configured_general_web(
-                query, max_results, search_provider, client
-            ),
+            _search_configured_general_web(query, max_results, search_provider, client),
             search_google_news(query, min(max_results, 5), client=client),
             search_reddit(query, min(max_results, 3), client=client),
             search_wikipedia(query, 2, client=client),
@@ -821,13 +907,13 @@ async def search_web(
             )
 
         tasks = [asyncio.create_task(coroutine) for coroutine in coroutines]
-        done, pending = await asyncio.wait(
-            tasks, timeout=_SEARCH_BATCH_TIMEOUT_SECONDS
-        )
-        for task in pending:
-            task.cancel()
-        if pending:
-            await asyncio.gather(*pending, return_exceptions=True)
+        try:
+            done, _ = await asyncio.wait(tasks, timeout=_SEARCH_BATCH_TIMEOUT_SECONDS)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
         results_lists = []
         for task in tasks:
             if task not in done or task.cancelled():

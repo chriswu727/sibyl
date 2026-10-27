@@ -1,0 +1,1843 @@
+{
+  "date": "2026-10-21",
+  "baseline": "041178debb0990b277e500a3d722bde44d338d7d plus discovery change",
+  "retrieval_sha256": "b2d00c4e49006f1738c28e35b65483fcaf4fefd510d57ec932c4347dfa177f5b",
+  "method": "Live production MCP stdio, keyless search, existing Codex conversation as host; no separate model or paid search calls.",
+  "rubric": {
+    "coverage": "0: misses the question; 1: partial answer with explicit gaps; 2: addresses every requested distinction.",
+    "support": "0: material unsupported claim; 1: bounded claims with source limitations; 2: each finding is supported by inspected passages.",
+    "source_quality": "0: only snippets/background; 1: one substantive primary/research source; 2: at least two relevant primary/research documents, without confusing one publisher with independence.",
+    "counterevidence": "0: absent; 1: attempted and limitations disclosed; 2: substantive evidence narrows or challenges the conclusion.",
+    "delivery": "0: workflow/export failure; 1: explicit abstention or partial report; 2: complete cited report with successful Markdown/JSON export."
+  },
+  "scope": "Host-authored, host-scored, not independent or blind. Initial questions fixed before collection. Adaptive follow-ups respond to inspected gaps. Host-supplied URLs are disclosed, not counted as discovery wins.",
+  "cases": [
+    {
+      "id": "idempotency",
+      "question": "Do idempotency keys make retries safe indefinitely? Compare the documented limits in Stripe and AWS guidance.",
+      "job_id": "2463afeb591d482082de0864dae588a6",
+      "status": "ok",
+      "summary": "Idempotency keys do not make retries safe indefinitely: retention, request identity, and the API contract matter. [Source 1] [Source 2]",
+      "key_findings": [
+        "Stripe API v1 permits removal of keys once they are at least 24 hours old; reusing a pruned key creates a new request. The documentation also checks parameters against the original request. This retention statement must not be silently extended to API v2. [Source 1]",
+        "AWS Powertools defines an idempotent repeat as an unexpired stored request. This is a bounded duplicate-suppression contract, not a promise of eternal deduplication. [Source 2]",
+        "The AWS Builders Library recommends caller-provided request identifiers because identical parameters can represent separate intended operations. A payload hash alone does not establish duplicate intent. [Source 3]"
+      ],
+      "analysis": "Use a stable key for retries of the same intended operation, and check the specific endpoint's retention and failure semantics. The inspected AWS material does not establish a single retention duration shared by every AWS API.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: AWS builders library idempotent APIs late arriving requests intent limitations",
+        "Retrieval coverage needs review for: Stripe idempotent requests site:docs.stripe.com/api",
+        "Retrieval coverage needs review for: Stripe idempotent request key retention and parameter mismatch",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Stripe discovery failed; its canonical URL was supplied by the host. AWS sources were search-discovered.",
+        "Documentation review only; no payment or infrastructure API operations were executed.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Do idempotency keys make retries safe indefinitely? Compare the documented limits in Stripe and AWS guidance.",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "Use a stable key for retries of the same intended operation, and check the specific endpoint's retention and failure semantics. The inspected AWS material does not establish a single retention duration shared by every AWS API.",
+              "supporting_passage_ids": [
+                "read_0723da0ddfba388c7790/S1/P1",
+                "sb_d2515c797f69fe1f/S2/P1",
+                "sb_d2515c797f69fe1f/S7/P2"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "Finite Stripe retention and expiring AWS records directly narrow the indefinite-retry claim. The report distinguishes Stripe API versions and AWS utility guidance.",
+              "reviewed_attempts": 4,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 4
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 2,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "Stripe idempotent requests key retention 24 hours",
+          "status": "ok",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 6,
+          "bundle_id": "sb_d2515c797f69fe1f"
+        },
+        {
+          "query": "AWS builders library idempotent APIs late arriving requests intent limitations",
+          "status": "insufficient_evidence",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 4,
+          "bundle_id": "sb_4717f2d151efb674",
+          "error": "Found 4 source(s), but the evidence is insufficient for synthesis (single domain, HTML text truncated to 30000 characters.). Treat these as leads and gather more evidence."
+        },
+        {
+          "query": "Stripe idempotent requests site:docs.stripe.com/api",
+          "status": "insufficient_evidence",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Resolve the missing Stripe half of the comparison; verify whether its retention is finite.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 0,
+          "bundle_id": "sb_a3e3280fa15b5223",
+          "error": "No sources found for query: 'Stripe idempotent requests site:docs.stripe.com/api'. Try a different phrasing."
+        },
+        {
+          "query": "Stripe idempotent request key retention and parameter mismatch",
+          "status": "ok",
+          "round": 4,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "parent_passage_id": "",
+          "rationale": "Domain-constrained search returned no Stripe source. Read the host-supplied canonical API documentation; do not count this as search discovery.",
+          "based_on_revision": 8,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_0723da0ddfba388c7790"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://docs.stripe.com/api/idempotent_requests",
+          "title": "Idempotent requests | Stripe API Reference",
+          "content_hash": "9ad7683cc09b56dfc43c3a4d67358fdb1bc1ed77a57f520f5ee49c264ef0ff21",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:04.654429+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "read_0723da0ddfba388c7790/S1/P1",
+            "read_0723da0ddfba388c7790/S1/P2",
+            "read_0723da0ddfba388c7790/S1/P3",
+            "read_0723da0ddfba388c7790/S1/P4",
+            "read_0723da0ddfba388c7790/S1/P5"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://docs.aws.amazon.com/powertools/python/3.4.0/utilities/idempotency/",
+          "title": "Idempotency - Powertools for AWS Lambda (Python)",
+          "content_hash": "471f68c2038d9a9c3c1a78d964911327e6263e6d01065849a6f37ff7c9189489",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:12:35.366083+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_d2515c797f69fe1f/S2/P1",
+            "sb_d2515c797f69fe1f/S2/P2",
+            "sb_d2515c797f69fe1f/S2/P3"
+          ]
+        },
+        {
+          "citation": "[Source 3]",
+          "url": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+          "title": "Making retries safe with idempotent APIs",
+          "content_hash": "de705e7d9f394da082a64533d4c0ad102e3c4b007d9daa13cf16384335a8e2a2",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:12:35.366083+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_d2515c797f69fe1f/S7/P1",
+            "sb_d2515c797f69fe1f/S7/P2",
+            "sb_d2515c797f69fe1f/S7/P3"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "sqlite_wal",
+      "question": "Does SQLite WAL eliminate write contention, and what concurrency benefit does it actually provide?",
+      "job_id": "1a381e1656324e9083202b1ba3d2fc93",
+      "status": "ok",
+      "summary": "WAL improves reader/writer overlap but does not eliminate contention between writers. [Source 2]",
+      "key_findings": [
+        "Readers can continue while a writer appends to the WAL, but only one writer can write at a time. [Source 2]",
+        "A WAL read transaction keeps its starting snapshot. Escalating an outdated read snapshot to a write can fail with SQLITE_BUSY_SNAPSHOT, requiring the snapshot to be released and a new transaction started. [Source 1]",
+        "Long-running readers can delay checkpoint progress, so better reader/writer overlap is not the same as contention-free operation. [Source 2]"
+      ],
+      "analysis": "Separate three concerns: concurrent reads, serialization of writers, and checkpoint progress. The two sources are complementary official SQLite documents, not independent experiments.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: SQLite WAL readers writer concurrency",
+        "Retrieval coverage needs review for: SQLite WAL SQLITE_BUSY only one writer limitations",
+        "Retrieval coverage needs review for: SQLite WAL only one writer site:sqlite.org",
+        "Retrieval coverage needs review for: SQLite WAL read concurrency single writer limitation",
+        "Retrieval coverage needs review for: SQLite isolation write serialization snapshot WAL",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Three searches did not discover primary sources. Both official URLs were supplied by the host.",
+        "No concurrency benchmark was executed; the report describes documented semantics.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Does SQLite WAL eliminate write contention, and what concurrency benefit does it actually provide?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "Separate three concerns: concurrent reads, serialization of writers, and checkpoint progress. The two sources are complementary official SQLite documents, not independent experiments.",
+              "supporting_passage_ids": [
+                "read_e2c6c5c3b40e4eff1d4e/S1/P5",
+                "read_26f8bfaa72b8392af7e1/S1/P3",
+                "read_26f8bfaa72b8392af7e1/S1/P4"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The single-writer limit and stale-snapshot failure are explicit counterexamples to the claim that WAL eliminates write contention.",
+              "reviewed_attempts": 5,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 5
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 1,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "SQLite WAL readers writer concurrency",
+          "status": "insufficient_evidence",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 2,
+          "bundle_id": "sb_cccff697af226696",
+          "error": "Found 4 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
+        },
+        {
+          "query": "SQLite WAL SQLITE_BUSY only one writer limitations",
+          "status": "insufficient_evidence",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 0,
+          "bundle_id": "sb_ac683f230d91acd8",
+          "error": "No sources found for query: 'SQLite WAL SQLITE_BUSY only one writer limitations'. Try a different phrasing."
+        },
+        {
+          "query": "SQLite WAL only one writer site:sqlite.org",
+          "status": "insufficient_evidence",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Replace background evidence with primary documentation about the single-writer constraint.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 0,
+          "bundle_id": "sb_d5d151c7b857957b",
+          "error": "No sources found for query: 'SQLite WAL only one writer site:sqlite.org'. Try a different phrasing."
+        },
+        {
+          "query": "SQLite WAL read concurrency single writer limitation",
+          "status": "ok",
+          "round": 4,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "https://sqlite.org/wal.html",
+          "parent_passage_id": "",
+          "rationale": "Search failed to discover primary documentation. Read the host-supplied official WAL page; retain failed discovery in the trace.",
+          "based_on_revision": 8,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_e2c6c5c3b40e4eff1d4e"
+        },
+        {
+          "query": "SQLite isolation write serialization snapshot WAL",
+          "status": "ok",
+          "round": 5,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "https://sqlite.org/isolation.html",
+          "parent_passage_id": "",
+          "rationale": "Cross-check WAL behavior against the official isolation specification, not another encyclopedia.",
+          "based_on_revision": 10,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_26f8bfaa72b8392af7e1"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://sqlite.org/isolation.html",
+          "title": "Isolation In SQLite",
+          "content_hash": "0b6ec123e1bec6684dc41f93faf52321a536f60b18056e52b4d6c39834ea2ec2",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:06.169467+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "read_26f8bfaa72b8392af7e1/S1/P1",
+            "read_26f8bfaa72b8392af7e1/S1/P2",
+            "read_26f8bfaa72b8392af7e1/S1/P3",
+            "read_26f8bfaa72b8392af7e1/S1/P4",
+            "read_26f8bfaa72b8392af7e1/S1/P5",
+            "read_26f8bfaa72b8392af7e1/S1/P6",
+            "read_26f8bfaa72b8392af7e1/S1/P7"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://sqlite.org/wal.html",
+          "title": "Write-Ahead Logging",
+          "content_hash": "b47b61396f9e0ef441d3102c5bdad92ea6445f296e150151b979dc230d1502ad",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:05.795577+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "read_e2c6c5c3b40e4eff1d4e/S1/P1",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P2",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P3",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P4",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P5",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P6",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P7",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P8",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P9",
+            "read_e2c6c5c3b40e4eff1d4e/S1/P10"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "postgres_isolation",
+      "question": "How do PostgreSQL Repeatable Read and Serializable differ for concurrent transactions, and what must applications retry?",
+      "job_id": "ea61402f2c484448a4e03f551cd12cb5",
+      "status": "ok",
+      "summary": "Repeatable Read supplies a stable snapshot; Serializable additionally detects dangerous read/write dependency patterns and may abort transactions to prevent inconsistent serial orderings. [Source 1]",
+      "key_findings": [
+        "A stable Repeatable Read snapshot alone does not prevent all cross-transaction consistency anomalies. Serializable adds monitoring that can roll back a participant when a dangerous dependency pattern is found. [Source 1]",
+        "Both isolation levels can produce serialization failures. Applications must retry the whole transaction, including the logic that selected statements and values, not just the final failed statement. [Source 2]",
+        "A retry is not a promise of immediate success: contention can require repeated attempts. Other constraint errors need separate judgment rather than unconditional retries. [Source 2]"
+      ],
+      "analysis": "Treat snapshot stability and serializability as different guarantees. The consistency explanation is from PostgreSQL 16 documentation; the fetched current retry page identifies PostgreSQL 18. Both pages describe the same relevant retry principle.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: PostgreSQL repeatable read serializable transaction isolation",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Two documents from one project are not independent empirical corroboration.",
+        "No SQL workload was executed; behavior is supported by the inspected documentation.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "How do PostgreSQL Repeatable Read and Serializable differ for concurrent transactions, and what must applications retry?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "Treat snapshot stability and serializability as different guarantees. The consistency explanation is from PostgreSQL 16 documentation; the fetched current retry page identifies PostgreSQL 18. Both pages describe the same relevant retry principle.",
+              "supporting_passage_ids": [
+                "sb_aa28ca76e907be4c/S2/P2",
+                "sb_aa28ca76e907be4c/S2/P3",
+                "sb_aa28ca76e907be4c/S4/P1",
+                "sb_aa28ca76e907be4c/S4/P2"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The official retry guidance limits naive claims that a stable snapshot or one retry guarantees successful completion.",
+              "reviewed_attempts": 2,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 2
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 4,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "PostgreSQL repeatable read serializable transaction isolation",
+          "status": "insufficient_evidence",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 4,
+          "bundle_id": "sb_55e52a83c3baad41",
+          "error": "Found 4 source(s), but the evidence is insufficient for synthesis (single domain, HTML text truncated to 30000 characters.). Treat these as leads and gather more evidence."
+        },
+        {
+          "query": "PostgreSQL serialization failure retry whole transaction write skew",
+          "status": "ok",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 6,
+          "bundle_id": "sb_aa28ca76e907be4c"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://www.postgresql.org/docs/16//applevel-consistency.html",
+          "title": "PostgreSQL: Documentation: 16: 13.4. Data Consistency Checks at the Application Level",
+          "content_hash": "897ebecdc7d75162cb82a69f3f4a0ae69965ecb5970770974342633521fbdcfa",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:12:55.569760+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_aa28ca76e907be4c/S2/P1",
+            "sb_aa28ca76e907be4c/S2/P2",
+            "sb_aa28ca76e907be4c/S2/P3"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "title": "PostgreSQL: Documentation: 18: 13.5. Serialization Failure Handling",
+          "content_hash": "7d4fe7100c0cd6ee217232bf7b5534868b7caa4ff2e543de730a4a40c2eea539",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:12:55.569760+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_aa28ca76e907be4c/S4/P1",
+            "sb_aa28ca76e907be4c/S4/P2",
+            "sb_aa28ca76e907be4c/S4/P3"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "flashattention",
+      "question": "Why can FlashAttention accelerate exact attention without changing attention into an approximation, and what limits generalizing its benchmark gains?",
+      "job_id": "7dc8035bfd7347a292b5e6a554677950",
+      "status": "ok",
+      "summary": "The original dense FlashAttention speeds exact attention by reducing GPU memory traffic through tiling, not by substituting an approximate attention formula. Hardware and experiment context constrain the reported gains. [Source 1] [Source 2]",
+      "key_findings": [
+        "The original paper describes fewer transfers between high-bandwidth memory and on-chip SRAM. Its separate block-sparse extension is approximate and must not be conflated with the dense exact algorithm. [Source 1]",
+        "The authors report different end-to-end gains across BERT-large, GPT-2, and long-range tasks. Those experiments do not establish one universal speed multiplier. [Source 1]",
+        "FlashAttention-3 separately targets Hopper hardware features, including asynchronous execution and low-precision support. This newer implementation's results are not interchangeable with the original paper's benchmark. [Source 2]"
+      ],
+      "analysis": "Compare algorithm, precision, GPU generation, sequence length, baseline implementation, and end-to-end versus kernel timing before reusing a speedup claim. This is a bounded literature explanation, not a reproduction.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "PDF text was truncated at the extraction character limit; read other sources for missing evidence.",
+        "Retrieval coverage needs review for: FlashAttention IO complexity exact attention hardware sequence length limitations",
+        "Preprints are not assumed peer reviewed; inspect publication and replication status.",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Evidence includes an original-paper abstract, bounded PDF passages, and a newer paper excerpt, not a complete review of either paper.",
+        "ArXiv and conference copies of the original paper are one work, not independent corroboration; the newer paper is from related authors.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Why can FlashAttention accelerate exact attention without changing attention into an approximation, and what limits generalizing its benchmark gains?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "Compare algorithm, precision, GPU generation, sequence length, baseline implementation, and end-to-end versus kernel timing before reusing a speedup claim. This is a bounded literature explanation, not a reproduction.",
+              "supporting_passage_ids": [
+                "sb_1a6cfc2d57423511/S1/P1",
+                "sb_1a6cfc2d57423511/S1/P3",
+                "sb_1a6cfc2d57423511/S3/P1"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The original paper's task-specific gains and the newer paper's hardware-specific design narrow any universal performance claim.",
+              "reviewed_attempts": 2,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 2
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 4,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "FlashAttention fast memory efficient exact attention IO awareness",
+          "status": "ok",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 7,
+          "bundle_id": "sb_1a6cfc2d57423511"
+        },
+        {
+          "query": "FlashAttention IO complexity exact attention hardware sequence length limitations",
+          "status": "insufficient_evidence",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 2,
+          "bundle_id": "sb_b3c6b788d6483a15",
+          "error": "Found 3 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "title": "[2205.14135] FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness",
+          "content_hash": "806ffb84326d1040e9b544fdbd6af6b99fa21f02a3da8430f046ab05bfc77b3c",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:13:02.754189+00:00",
+          "source_kind": "preprint",
+          "passage_ids": [
+            "sb_1a6cfc2d57423511/S1/P1",
+            "sb_1a6cfc2d57423511/S1/P2",
+            "sb_1a6cfc2d57423511/S1/P3"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://ar5iv.labs.arxiv.org/html/2407.08608",
+          "title": "[2407.08608] FlashAttention-3:Fast and Accurate Attention with Asynchrony and Low-precision",
+          "content_hash": "cbc897f6a853f144a5aca97f9c875c70e1cc9e7c673e0c2ad4dab4f04f360a41",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:13:02.754189+00:00",
+          "source_kind": "preprint",
+          "passage_ids": [
+            "sb_1a6cfc2d57423511/S3/P1",
+            "sb_1a6cfc2d57423511/S3/P2",
+            "sb_1a6cfc2d57423511/S3/P3"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "rag",
+      "question": "How does retrieval-augmented generation combine parametric and retrieved knowledge, and why does retrieval not guarantee factual answers?",
+      "job_id": "c56fa63d33cd46ffb1eaa97860dd5a5b",
+      "status": "ok",
+      "summary": "The original RAG method combines a pretrained generator's parametric knowledge with a retrieved document index. Relevant context can improve answers without guaranteeing that the model uses it correctly. [Source 2] [Source 1]",
+      "key_findings": [
+        "Lewis and colleagues combine a pretrained sequence-to-sequence model with a dense Wikipedia index and neural retriever; the paper reports improvements over its tested parametric-only baseline. [Source 2]",
+        "Lost in the Middle reports that changing where relevant information appears can reduce performance on multi-document question answering and key-value retrieval, including for tested long-context models. [Source 1]",
+        "Inference: retrieval availability and reliable use of retrieved evidence are separate requirements. These studies support rejecting a blanket factuality guarantee, not estimating a failure rate for every current model. [Source 2] [Source 1]"
+      ],
+      "analysis": "The original paper's use of Wikipedia is a property of that experiment, not a recommendation to restrict a general research MCP to encyclopedias. Abstract-level evidence supports this high-level comparison but not detailed implementation or replication claims.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: Retrieval Augmented Generation knowledge intensive NLP tasks Lewis paper",
+        "Retrieval coverage needs review for: Retrieval Augmented Generation Lewis 2005.11401 site:arxiv.org",
+        "Retrieval coverage needs review for: Lost in the Middle language models long contexts site:arxiv.org",
+        "Retrieval coverage needs review for: RAG parametric nonparametric memory Lewis",
+        "Retrieval coverage needs review for: Lost in the Middle relevant context answer performance positional limitations",
+        "Retrieval step budget reached; additional gaps may remain.",
+        "Preprints are not assumed peer reviewed; inspect publication and replication status.",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Four searches failed to find substantive original evidence. Both paper URLs were supplied by the host.",
+        "Only abstracts and bibliographic context were inspected; no full-paper methods review or experiment reproduction was performed.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "How does retrieval-augmented generation combine parametric and retrieved knowledge, and why does retrieval not guarantee factual answers?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "The original paper's use of Wikipedia is a property of that experiment, not a recommendation to restrict a general research MCP to encyclopedias. Abstract-level evidence supports this high-level comparison but not detailed implementation or replication claims.",
+              "supporting_passage_ids": [
+                "read_1fac44906325695758fa/S1/P1",
+                "read_1fac44906325695758fa/S1/P2",
+                "read_c52d3578e2a804d95db3/S1/P1"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The positional-use study challenges the assumption that supplying relevant text automatically ensures a correct answer.",
+              "reviewed_attempts": 6,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 6
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 0,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "Retrieval Augmented Generation knowledge intensive NLP tasks Lewis paper",
+          "status": "insufficient_evidence",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 3,
+          "bundle_id": "sb_0af680f7c9ac5535",
+          "error": "Found 7 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
+        },
+        {
+          "query": "retrieval augmented generation factuality retrieval failure robustness limitations paper",
+          "status": "ok",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 2,
+          "bundle_id": "sb_7f3076454ba7f083"
+        },
+        {
+          "query": "Retrieval Augmented Generation Lewis 2005.11401 site:arxiv.org",
+          "status": "insufficient_evidence",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Locate the original method paper after metadata-only discovery.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 0,
+          "bundle_id": "sb_d64f55abf7bbae04",
+          "error": "No sources found for query: 'Retrieval Augmented Generation Lewis 2005.11401 site:arxiv.org'. Try a different phrasing."
+        },
+        {
+          "query": "Lost in the Middle language models long contexts site:arxiv.org",
+          "status": "insufficient_evidence",
+          "round": 4,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Test the assumption that merely supplying retrieved context ensures correct answers.",
+          "based_on_revision": 8,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 0,
+          "bundle_id": "sb_ad190675bc86ddba",
+          "error": "No sources found for query: 'Lost in the Middle language models long contexts site:arxiv.org'. Try a different phrasing."
+        },
+        {
+          "query": "RAG parametric nonparametric memory Lewis",
+          "status": "ok",
+          "round": 5,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "parent_passage_id": "",
+          "rationale": "Search failed; inspect the host-supplied original RAG paper abstract and preserve this discovery limitation.",
+          "based_on_revision": 10,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_1fac44906325695758fa"
+        },
+        {
+          "query": "Lost in the Middle relevant context answer performance positional limitations",
+          "status": "ok",
+          "round": 6,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "https://arxiv.org/abs/2307.03172",
+          "parent_passage_id": "",
+          "rationale": "Use a host-supplied empirical study to test whether available relevant context is reliably used; an abstract is not a full-paper replication.",
+          "based_on_revision": 12,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_c52d3578e2a804d95db3"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://arxiv.org/abs/2307.03172",
+          "title": "[2307.03172] Lost in the Middle: How Language Models Use Long Contexts",
+          "content_hash": "7a97d2d91cc3c0026796ae93166886eeedabc5550e0f4af01a87f66ff9bbd405",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:06.868208+00:00",
+          "source_kind": "preprint",
+          "passage_ids": [
+            "read_c52d3578e2a804d95db3/S1/P1",
+            "read_c52d3578e2a804d95db3/S1/P2",
+            "read_c52d3578e2a804d95db3/S1/P3"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "title": "[2005.11401] Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "content_hash": "c944a935b4d953271185c69a31074a01c6a6c0edd430a8dc13a70b0e54d0dbf4",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:06.805535+00:00",
+          "source_kind": "preprint",
+          "passage_ids": [
+            "read_1fac44906325695758fa/S1/P1",
+            "read_1fac44906325695758fa/S1/P2",
+            "read_1fac44906325695758fa/S1/P3"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "continue_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 1,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "quantization",
+      "question": "Compare the mechanisms and scope of GPTQ and AWQ for low-bit language-model inference; what should not be inferred from their reported results?",
+      "job_id": "65c6c3f6b9ce4036a3a60eac91518d7e",
+      "status": "ok",
+      "summary": "GPTQ and AWQ both address low-bit model weights, but use different quantization mechanisms. Their reported quality and speed results are tied to particular models, implementations, and hardware. [Source 1] [Source 2]",
+      "key_findings": [
+        "GPTQ describes one-shot weight quantization using approximate second-order information, with reported 3- or 4-bit results for tested large models. [Source 1]",
+        "AWQ uses activation information to identify important weight channels and choose scaling that reduces quantization error; it is weight-only quantization despite using activations to guide the choice. [Source 2]",
+        "The sources use different hardware and inference implementations. Their reported speedups do not establish a universal ranking or accuracy guarantee for arbitrary models and workloads. [Source 1] [Source 2]"
+      ],
+      "analysis": "AWQ's discussion of GPTQ calibration behavior is an author-reported comparison, not an independent verification here. The unrelated vision-transformer PDF returned by the initial GPTQ query was rejected as evidence for GPTQ.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "PDF text was truncated at the extraction character limit; read other sources for missing evidence.",
+        "Retrieval coverage needs review for: GPTQ accurate post training quantization generative pretrained transformers",
+        "Retrieval coverage needs review for: GPTQ 2210.17323 site:arxiv.org",
+        "Retrieval coverage needs review for: GPTQ one shot quantization second order approximate information",
+        "Preprints are not assumed peer reviewed; inspect publication and replication status.",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "AWQ was search-discovered; the original GPTQ URL required host input after a mismatched-paper result.",
+        "GPTQ evidence is abstract-level and AWQ evidence is a bounded excerpt. No quantization or inference benchmark was run.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Compare the mechanisms and scope of GPTQ and AWQ for low-bit language-model inference; what should not be inferred from their reported results?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "AWQ's discussion of GPTQ calibration behavior is an author-reported comparison, not an independent verification here. The unrelated vision-transformer PDF returned by the initial GPTQ query was rejected as evidence for GPTQ.",
+              "supporting_passage_ids": [
+                "read_4fbba341030d42f747e5/S1/P1",
+                "read_4fbba341030d42f747e5/S1/P2",
+                "sb_d58a849e5de6f076/S1/P1",
+                "sb_d58a849e5de6f076/S1/P2",
+                "sb_d58a849e5de6f076/S1/P3"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The reviewed sources constrain the scope of performance claims, but a matched independent comparison was not retrieved or executed.",
+              "reviewed_attempts": 4,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 4
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 2,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "GPTQ accurate post training quantization generative pretrained transformers",
+          "status": "insufficient_evidence",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 3,
+          "bundle_id": "sb_94393be1c434ebbd",
+          "error": "Found 8 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources, PDF text was truncated at the extraction character limit; read other sources for missing evidence., HTML text truncated to 30000 characters.). Treat these as leads and gather more evidence."
+        },
+        {
+          "query": "AWQ activation aware weight quantization LLM compression acceleration limitations",
+          "status": "ok",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 4,
+          "bundle_id": "sb_d58a849e5de6f076"
+        },
+        {
+          "query": "GPTQ 2210.17323 site:arxiv.org",
+          "status": "insufficient_evidence",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Resolve the mismatched-paper discovery and inspect GPTQ's own method and experiment scope.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 0,
+          "bundle_id": "sb_ca271b32fd46e7bb",
+          "error": "No sources found for query: 'GPTQ 2210.17323 site:arxiv.org'. Try a different phrasing."
+        },
+        {
+          "query": "GPTQ one shot quantization second order approximate information",
+          "status": "ok",
+          "round": 4,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "parent_passage_id": "",
+          "rationale": "The retrieved AWQ paper cites GPTQ, but search still omitted the original. Inspect the host-supplied original abstract without treating the unrelated MLSys PDF as GPTQ.",
+          "based_on_revision": 8,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_4fbba341030d42f747e5"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "title": "[2210.17323] GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers",
+          "content_hash": "b33a3d37a1d5cd9841ea278f143a35443f5ba8ba09e145bba2975b1f3a63cbf5",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:07.501803+00:00",
+          "source_kind": "preprint",
+          "passage_ids": [
+            "read_4fbba341030d42f747e5/S1/P1",
+            "read_4fbba341030d42f747e5/S1/P2",
+            "read_4fbba341030d42f747e5/S1/P3"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://arxiv.org/html/2306.00978v2",
+          "title": "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration",
+          "content_hash": "e8aa48f705b4f4363cc0bf616e8a6c016d093686a2789840b0cbfea8c4e03ae4",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:13:45.991411+00:00",
+          "source_kind": "preprint",
+          "passage_ids": [
+            "sb_d58a849e5de6f076/S1/P1",
+            "sb_d58a849e5de6f076/S1/P2",
+            "sb_d58a849e5de6f076/S1/P3"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 1,
+        "counterevidence": 1,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "semiconductor_2024",
+      "question": "What happened to global semiconductor sales in 2024, and how should a finalized annual figure be distinguished from forecasts or regional growth rates?",
+      "job_id": "ebbe104c7a57464fa18886524bd587f8",
+      "status": "ok",
+      "summary": "The inspected SIA release contains a March 3, 2025 correction raising 2024 year-end semiconductor sales to $630.5 billion. Its original headline and body still describe the earlier $627.6 billion announcement, so the revision must be preserved. [Source 1]",
+      "key_findings": [
+        "SIA originally announced $627.6 billion and 19.1% annual growth on February 7, 2025; the page's later correction changes the year-end sales total to $630.5 billion. Do not present the original total as the latest figure on that page. [Source 1]",
+        "WSTS's spring forecast projected $611 billion; its fall forecast projected $627 billion. These are forecast vintages, not final observed sales. [Source 3] [Source 2]",
+        "The original SIA release reports different regional growth rates, including 44.8% for the Americas. A regional rate is not the global annual rate, and the revised total alone does not establish a revised growth percentage. [Source 1]"
+      ],
+      "analysis": "Record the period measured, publication date, revision date, geography, and whether a number is a forecast or observed estimate. SIA cites WSTS data, so these pages are not independent measurement systems.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: global semiconductor sales 2024 site:semiconductors.org",
+        "Retrieval coverage needs review for: 2024 finalized global semiconductor sales annual result",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Search retrieved forecast pages but missed the final-year release; the SIA URL was supplied by the host.",
+        "The report uses the latest correction visible in the inspected release, not a claim that no later revision exists. It does not calculate a revised growth rate from an unverified denominator.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "What happened to global semiconductor sales in 2024, and how should a finalized annual figure be distinguished from forecasts or regional growth rates?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "Record the period measured, publication date, revision date, geography, and whether a number is a forecast or observed estimate. SIA cites WSTS data, so these pages are not independent measurement systems.",
+              "supporting_passage_ids": [
+                "read_f39a86bc70092a04da10/S1/P1",
+                "sb_a20b7209339bfb87/S1/P1",
+                "sb_a20b7209339bfb87/S3/P1"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The dated correction directly supersedes the old total. Earlier WSTS forecasts demonstrate why a search result containing a plausible annual number is not enough.",
+              "reviewed_attempts": 4,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 4
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 2,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "global semiconductor sales 2024 2025 SIA annual 19.1 percent",
+          "status": "ok",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 5,
+          "bundle_id": "sb_cd7f15a83bcea981"
+        },
+        {
+          "query": "WSTS 2024 semiconductor market actual results forecast comparison",
+          "status": "ok",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 5,
+          "bundle_id": "sb_a20b7209339bfb87"
+        },
+        {
+          "query": "global semiconductor sales 2024 site:semiconductors.org",
+          "status": "insufficient_evidence",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Find the year-end actuals rather than reuse a forecast as the final result.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 0,
+          "bundle_id": "sb_94d1d8f63f9f6cb1",
+          "error": "No sources found for query: 'global semiconductor sales 2024 site:semiconductors.org'. Try a different phrasing."
+        },
+        {
+          "query": "2024 finalized global semiconductor sales annual result",
+          "status": "ok",
+          "round": 4,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "parent_passage_id": "",
+          "rationale": "Read the host-supplied year-end industry release after searches returned only forecast vintages; this is not an automatic discovery success.",
+          "based_on_revision": 8,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "New retrieval after the review; reassess before completing.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_f39a86bc70092a04da10"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "title": "Global Semiconductor Sales Increase 19.1% in 2024; Double-Digit Growth Projected in 2025 - Semiconductor Industry Association",
+          "content_hash": "ebdf66c325c8c78190bbc16ec000abc266e7913ce6f8fd720ea4f9b92e665315",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:08.438015+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "read_f39a86bc70092a04da10/S1/P1",
+            "read_f39a86bc70092a04da10/S1/P2",
+            "read_f39a86bc70092a04da10/S1/P3"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024",
+          "title": "WSTS Semiconductor Market Forecast Fall 2024",
+          "content_hash": "52f352e4919260e356bc65a1d3acc6b6d2a246c1050fc32a0077db3cb48cc425",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:13:58.524618+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_a20b7209339bfb87/S1/P1",
+            "sb_a20b7209339bfb87/S1/P2"
+          ]
+        },
+        {
+          "citation": "[Source 3]",
+          "url": "https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Spring-2024",
+          "title": "WSTS Semiconductor Market Forecast Spring 2024",
+          "content_hash": "42bad887c38ef95f26a44862be5b97c12cad69568805592faaf28bbad0cb4488",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:13:58.524618+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_a20b7209339bfb87/S3/P1",
+            "sb_a20b7209339bfb87/S3/P2"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "prompt_injection",
+      "question": "Why is retrieved web content a prompt-injection trust boundary, and which controls reduce risk without establishing immunity?",
+      "job_id": "e6af2d2f4d55407eb0693884ec70b133",
+      "status": "ok",
+      "summary": "Retrieved content crosses a trust boundary when untrusted material can influence higher-trust instructions or actions. Controls must enforce authority outside the model; formatting and filters alone do not establish immunity. [Source 2] [Source 1]",
+      "key_findings": [
+        "NIST defines prompt injection around combining untrusted input with a prompt from a higher-trust party. A fetched page is therefore evidence to interpret, not authority to execute. [Source 2]",
+        "OWASP recommends separating trusted instructions from external content while explicitly warning that text labels are not an enforcement boundary. [Source 1]",
+        "Validate tool arguments and permissions, restrict privileges, require approval for consequential actions, and monitor relevant outcomes. Guardrail models and input/output filtering supplement those controls rather than replacing authorization. [Source 1]"
+      ],
+      "analysis": "The operational boundary is the component that decides whether an action is permitted. A model's apparent refusal or a blocked example is not a general security guarantee.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "PDF extraction limited to the first 40 pages; this is not the complete document.",
+        "PDF text was truncated at the extraction character limit; read other sources for missing evidence.",
+        "Retrieval coverage needs review for: Prompt injection retrieved external content defenses limitations",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "NIST was search-discovered; the OWASP control document was a host-supplied follow-up URL.",
+        "This is a defensive documentation review, not a penetration test or proof of complete protection.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Why is retrieved web content a prompt-injection trust boundary, and which controls reduce risk without establishing immunity?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "The operational boundary is the component that decides whether an action is permitted. A model's apparent refusal or a blocked example is not a general security guarantee.",
+              "supporting_passage_ids": [
+                "sb_d73dac67ad3c347a/S1/P1",
+                "read_22e82bb2727792ec9143/S1/P6",
+                "read_22e82bb2727792ec9143/S1/P7",
+                "read_22e82bb2727792ec9143/S1/P8",
+                "read_22e82bb2727792ec9143/S1/P9"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "OWASP explicitly limits prompt-formatting and guardrail claims and distinguishes tested attack outcomes from universal predictions.",
+              "reviewed_attempts": 3,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 3
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 3,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "OWASP prompt injection indirect retrieved external content",
+          "status": "ok",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 3,
+          "bundle_id": "sb_53446bdcd941701d"
+        },
+        {
+          "query": "NIST generative AI prompt injection risk mitigations limitations",
+          "status": "ok",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 7,
+          "bundle_id": "sb_d73dac67ad3c347a"
+        },
+        {
+          "query": "Prompt injection retrieved external content defenses limitations",
+          "status": "ok",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html",
+          "parent_passage_id": "",
+          "rationale": "Host-supplied official cheat sheet to inspect defense-in-depth and limitations after search returned mostly definitions.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_22e82bb2727792ec9143"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html",
+          "title": "LLM Prompt Injection Prevention - OWASP Cheat Sheet Series",
+          "content_hash": "caac6e2c00d624d3eca9d6d758608f35c3675b6ff8e684b2543976b683912768",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:15:38.751600+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "read_22e82bb2727792ec9143/S1/P1",
+            "read_22e82bb2727792ec9143/S1/P2",
+            "read_22e82bb2727792ec9143/S1/P3",
+            "read_22e82bb2727792ec9143/S1/P4",
+            "read_22e82bb2727792ec9143/S1/P5",
+            "read_22e82bb2727792ec9143/S1/P6",
+            "read_22e82bb2727792ec9143/S1/P7",
+            "read_22e82bb2727792ec9143/S1/P8",
+            "read_22e82bb2727792ec9143/S1/P9",
+            "read_22e82bb2727792ec9143/S1/P10"
+          ]
+        },
+        {
+          "citation": "[Source 2]",
+          "url": "https://csrc.nist.gov/glossary/term/prompt_injection",
+          "title": "prompt injection - Glossary | CSRC",
+          "content_hash": "d988541752d77192ee1b6e422dbc8d4c853c3a988abad688d1df7a3380e22fdf",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:14:09.259109+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "sb_d73dac67ad3c347a/S1/P1",
+            "sb_d73dac67ad3c347a/S1/P2"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "ssrf",
+      "question": "Why is validating a URL string alone insufficient to prevent SSRF, particularly around redirects and DNS changes?",
+      "job_id": "b2cfbe1df2534144bf4256ed2b5f152b",
+      "status": "ok",
+      "summary": "A valid-looking URL or allowed hostname does not guarantee a permitted network destination. Redirects and DNS changes can undermine validation that is disconnected from the actual connection. [Source 1]",
+      "key_findings": [
+        "OWASP recommends disabling automatic redirect following in the described allowlist design because a redirect can bypass the original validation. [Source 1]",
+        "Domain allowlisting alone does not prevent DNS rebinding. Validate resolved addresses against the destination policy and ensure the client connects only to those validated addresses; an unchecked second lookup can invalidate the earlier decision. [Source 1]",
+        "Apply the destination policy to retries and fallback connections. Preserve the original hostname for HTTP and TLS identity checks when connecting through a validated address. [Source 1]"
+      ],
+      "analysis": "Treat parsing, destination authorization, DNS resolution, connection establishment, and redirects as one security flow. Monitoring DNS changes is useful detection, not a substitute for enforcement at connection time.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: OWASP SSRF redirect DNS rebinding validation limitations",
+        "Retrieval coverage needs review for: SSRF redirects DNS pinning IPv4 IPv6 validation",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "The source was search-discovered and then read directly for missing passages; no new host-seeded source was needed.",
+        "The answer relies on one relevant primary guidance document, not independent experiments. No attack was performed.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Why is validating a URL string alone insufficient to prevent SSRF, particularly around redirects and DNS changes?",
+            "review": {
+              "question_id": "Q0",
+              "status": "supported",
+              "conclusion": "Treat parsing, destination authorization, DNS resolution, connection establishment, and redirects as one security flow. Monitoring DNS changes is useful detection, not a substitute for enforcement at connection time.",
+              "supporting_passage_ids": [
+                "read_1c4417118b7796f22398/S1/P3",
+                "read_1c4417118b7796f22398/S1/P6",
+                "read_1c4417118b7796f22398/S1/P7"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The redirect bypass and second-lookup risk directly refute the sufficiency of string-only validation.",
+              "reviewed_attempts": 3,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [],
+            "attempts": 3
+          }
+        ],
+        "ready_to_complete": true,
+        "next_action": "synthesize",
+        "remaining_steps": 3,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": []
+      },
+      "attempts": [
+        {
+          "query": "OWASP SSRF prevention DNS pinning validate IP addresses",
+          "status": "ok",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 8,
+          "bundle_id": "sb_61f93a77c9be73e1"
+        },
+        {
+          "query": "OWASP SSRF redirect DNS rebinding validation limitations",
+          "status": "insufficient_evidence",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 4,
+          "bundle_id": "sb_8b32d914f22a938f",
+          "error": "Found 4 source(s), but the evidence is insufficient for synthesis (single domain). Treat these as leads and gather more evidence."
+        },
+        {
+          "query": "SSRF redirects DNS pinning IPv4 IPv6 validation",
+          "status": "ok",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "parent_passage_id": "",
+          "rationale": "Read a longer bounded extract of the search-discovered source to inspect redirect and DNS controls omitted from ranked snippets.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_1c4417118b7796f22398"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "title": "Server Side Request Forgery Prevention - OWASP Cheat Sheet Series",
+          "content_hash": "1f5e38592d8ae33363f4f404e0af195e1a250e5bf372f0eecf93f1423f4fa11a",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:15:39.525122+00:00",
+          "source_kind": "preferred_primary",
+          "passage_ids": [
+            "read_1c4417118b7796f22398/S1/P1",
+            "read_1c4417118b7796f22398/S1/P2",
+            "read_1c4417118b7796f22398/S1/P3",
+            "read_1c4417118b7796f22398/S1/P4",
+            "read_1c4417118b7796f22398/S1/P5",
+            "read_1c4417118b7796f22398/S1/P6",
+            "read_1c4417118b7796f22398/S1/P7",
+            "read_1c4417118b7796f22398/S1/P8",
+            "read_1c4417118b7796f22398/S1/P9",
+            "read_1c4417118b7796f22398/S1/P10"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 1,
+        "counterevidence": 2,
+        "delivery": 2
+      }
+    },
+    {
+      "id": "future_share",
+      "question": "Can public evidence establish NVIDIA's exact realized AI-chip market share in 2030? Distinguish projections from observed outcomes.",
+      "job_id": "961d234ae91c42b89990e38197a3fbd0",
+      "status": "partial",
+      "summary": "This investigation cannot establish NVIDIA's exact realized AI-chip market share in 2030. The inspected company release reports an earlier fiscal quarter, not a measurement of the requested future outcome. [Source 1]",
+      "key_findings": [
+        "The retrieved primary release is dated August 27, 2025 and describes a quarter ending July 27, 2025. Its revenue figures are not a realized 2030 AI-chip market-share measurement. [Source 1]",
+        "No numeric 2030 share is supplied here: the inspected evidence does not establish the requested outcome or a comparable market denominator. A forecast would need to be labeled as a forecast, not an observed result. [Source 1]"
+      ],
+      "analysis": "Abstention is intentional. As of this October 21, 2026 investigation, 2030 is future-dated. The absence of a supported figure in this bounded record is not proof that no projections exist.",
+      "limitations": [
+        "Public-web research is bounded; inaccessible or unindexed material may be missing.",
+        "Retrieval coverage needs review for: NVIDIA forward looking statements risks actual results may differ",
+        "Q0: The host marked this question unresolved.",
+        "Source-type and preferred-domain labels are routing hints, not verified authority or truth.",
+        "Initial searches returned background sources only; the historical company release was supplied by the host.",
+        "The exact-share question remains unresolved. The bounded extract did not reach the forward-looking disclaimer, so no claim about its wording is made.",
+        "Host-authored report. Citation targets checked; semantic support was not independently verified."
+      ],
+      "review": {
+        "questions": [
+          {
+            "question_id": "Q0",
+            "question": "Can public evidence establish NVIDIA's exact realized AI-chip market share in 2030? Distinguish projections from observed outcomes.",
+            "review": {
+              "question_id": "Q0",
+              "status": "unresolved",
+              "conclusion": "Abstention is intentional. As of this October 21, 2026 investigation, 2030 is future-dated. The absence of a supported figure in this bounded record is not proof that no projections exist.",
+              "supporting_passage_ids": [
+                "read_a3215964fe57a5520ebd/S1/P1"
+              ],
+              "challenging_passage_ids": [],
+              "counterevidence_note": "The official source's reporting period prevents its historical revenue data from being used as evidence of the requested future market share.",
+              "reviewed_attempts": 3,
+              "assessment_origin": "host",
+              "follow_up_queries": []
+            },
+            "gaps": [
+              "The host marked this question unresolved."
+            ],
+            "attempts": 3
+          }
+        ],
+        "ready_to_complete": false,
+        "next_action": "investigate_gaps",
+        "remaining_steps": 3,
+        "assessment_scope": "host_declared_evidence_links_not_semantic_verification",
+        "suggested_queries": [
+          {
+            "question_id": "Q0",
+            "purpose": "explore",
+            "query": "Can public evidence establish NVIDIA's exact realized AI-chip market share in 2030? Distinguish projections from observed outcomes. primary source official documentation",
+            "reason": "research_plan_gap"
+          },
+          {
+            "question_id": "Q0",
+            "purpose": "counterevidence",
+            "query": "Can public evidence establish NVIDIA's exact realized AI-chip market share in 2030? Distinguish projections from observed outcomes. limitations conflicting evidence replication",
+            "reason": "counterevidence_check"
+          }
+        ]
+      },
+      "attempts": [
+        {
+          "query": "NVIDIA 2030 AI chip market share projection forecast",
+          "status": "ok",
+          "round": 1,
+          "question_id": "Q0",
+          "purpose": "explore",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Establish primary evidence.",
+          "based_on_revision": 1,
+          "prior_gaps": [
+            "No investigation linked to this question.",
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 4,
+          "bundle_id": "sb_ab5e4eefe5ccbb8c"
+        },
+        {
+          "query": "NVIDIA forward looking statements risks actual results may differ",
+          "status": "ok",
+          "round": 2,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "",
+          "parent_passage_id": "",
+          "rationale": "Investigate scope, exceptions, and limits before drawing conclusions.",
+          "based_on_revision": 3,
+          "prior_gaps": [
+            "Evidence has not been assessed by the host.",
+            "No completed counterevidence search/read is linked to this question."
+          ],
+          "prior_review_status": null,
+          "substantive_sources": 3,
+          "bundle_id": "sb_58ff66aa8d344bed"
+        },
+        {
+          "query": "NVIDIA forward looking statements risks actual results may differ",
+          "status": "ok",
+          "round": 3,
+          "question_id": "Q0",
+          "purpose": "counterevidence",
+          "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2026",
+          "parent_passage_id": "",
+          "rationale": "Inspect a host-supplied official financial release for the explicit distinction between reported results and forward-looking statements; no future market-share number will be invented.",
+          "based_on_revision": 6,
+          "prior_gaps": [
+            "The host marked this question unresolved.",
+            "Substantive evidence beyond background/metadata is missing; inspect primary full text."
+          ],
+          "prior_review_status": "unresolved",
+          "substantive_sources": 1,
+          "bundle_id": "read_a3215964fe57a5520ebd"
+        }
+      ],
+      "sources": [
+        {
+          "citation": "[Source 1]",
+          "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2026",
+          "title": "NVIDIA Announces Financial Results for Second Quarter Fiscal 2026 | NVIDIA Newsroom",
+          "content_hash": "f3174db75ff091f6af5f5eac3f263c3cfa6df2abe773a0db8d969d75fcfa134f",
+          "content_origin": "direct_fetch",
+          "retrieved_at": "2026-10-21T22:16:56.555989+00:00",
+          "source_kind": "web",
+          "passage_ids": [
+            "read_a3215964fe57a5520ebd/S1/P1",
+            "read_a3215964fe57a5520ebd/S1/P2",
+            "read_a3215964fe57a5520ebd/S1/P3",
+            "read_a3215964fe57a5520ebd/S1/P4",
+            "read_a3215964fe57a5520ebd/S1/P5",
+            "read_a3215964fe57a5520ebd/S1/P6",
+            "read_a3215964fe57a5520ebd/S1/P7",
+            "read_a3215964fe57a5520ebd/S1/P8",
+            "read_a3215964fe57a5520ebd/S1/P9",
+            "read_a3215964fe57a5520ebd/S1/P10"
+          ]
+        }
+      ],
+      "tool_sequence": [
+        "start_research",
+        "continue_research",
+        "continue_research",
+        "assess_research",
+        "continue_research",
+        "get_research",
+        "assess_research",
+        "complete_research",
+        "save_report",
+        "save_report"
+      ],
+      "export_checks": {
+        "markdown": true,
+        "json": true,
+        "findings_match": true
+      },
+      "scores": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 1,
+        "counterevidence": 1,
+        "delivery": 1
+      }
+    }
+  ]
+}

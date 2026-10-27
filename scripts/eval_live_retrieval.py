@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 """Run the model-free live launch gate against public web retrieval."""
+
 from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime, timezone
 import json
 import os
-from pathlib import Path
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 from sibyl import __version__
 from sibyl.live_retrieval_eval import LiveRetrievalCase, evaluate_live_retrieval
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASETS = [
@@ -102,9 +102,9 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "sibyl_version": __version__,
         "metric_version": "2",
-        "configured_search_provider": os.environ.get(
-            "SIBYL_SEARCH_PROVIDER", "keyless"
-        ).strip().lower(),
+        "configured_search_provider": os.environ.get("SIBYL_SEARCH_PROVIDER", "keyless")
+        .strip()
+        .lower(),
         "datasets": [
             str(path.resolve().relative_to(ROOT))
             if path.resolve().is_relative_to(ROOT)

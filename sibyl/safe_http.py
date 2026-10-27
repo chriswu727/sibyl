@@ -1,4 +1,5 @@
 """HTTP transport that connects only to pre-validated public IP addresses."""
+
 from __future__ import annotations
 
 import ipaddress
@@ -84,9 +85,7 @@ class PinnedDNSNetworkBackend(httpcore.AsyncNetworkBackend):
         await self._backend.sleep(seconds)
 
 
-_CORE_EXCEPTION_MAP: Tuple[
-    Tuple[Type[Exception], Type[httpx.HTTPError]], ...
-] = (
+_CORE_EXCEPTION_MAP: Tuple[Tuple[Type[Exception], Type[httpx.HTTPError]], ...] = (
     (httpcore.ConnectTimeout, httpx.ConnectTimeout),
     (httpcore.ReadTimeout, httpx.ReadTimeout),
     (httpcore.WriteTimeout, httpx.WriteTimeout),
@@ -114,9 +113,7 @@ def _ssl_context() -> ssl.SSLContext:
 
 def _raise_mapped_exception(exc: Exception, request: httpx.Request) -> NoReturn:
     mapped = next(
-        target
-        for source, target in _CORE_EXCEPTION_MAP
-        if isinstance(exc, source)
+        target for source, target in _CORE_EXCEPTION_MAP if isinstance(exc, source)
     )
     raise mapped(str(exc), request=request) from exc
 

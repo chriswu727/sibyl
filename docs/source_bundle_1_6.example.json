@@ -93,7 +93,8 @@
     "content_cluster_method": "token_5gram_containment_v1",
     "evidence_sufficiency": "limited",
     "sufficiency_reasons": [
-      "fewer_than_two_substantive_sources"
+      "fewer_than_two_substantive_sources",
+      "single_domain"
     ],
     "search_queries": [
       "example evidence query"
@@ -107,7 +108,8 @@
     "query_complexity": "single_step",
     "recommended_action": "refine_query",
     "refinement_searches": 0,
-    "refinement_failures": 0
+    "refinement_failures": 0,
+    "substantive_domains": 1
   },
-  "error": "Found 2 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources). Treat these as leads and gather more evidence."
+  "error": "Found 2 source(s), but the evidence is insufficient for synthesis (fewer than two substantive sources, single domain). Treat these as leads and gather more evidence."
 }

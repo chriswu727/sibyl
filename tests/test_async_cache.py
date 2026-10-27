@@ -1,4 +1,5 @@
 """Async single-flight and TTL cache tests. No network."""
+
 import asyncio
 import unittest
 
@@ -58,7 +59,9 @@ class TestAsyncSingleFlightTTL(unittest.IsolatedAsyncioTestCase):
             calls += 1
             return calls
 
-        should_cache = lambda value: value > 1
+        def should_cache(value):
+            return value > 1
+
         self.assertEqual(
             await cache.get_or_create("key", factory, should_cache),
             1,

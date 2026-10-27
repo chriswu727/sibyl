@@ -1,10 +1,11 @@
 """Bounded retrieval traces for MCP hosts that perform the reasoning."""
+
 from __future__ import annotations
 
 import asyncio
+import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
-import time
 from typing import Awaitable, Callable, Optional
 from uuid import uuid4
 
@@ -18,7 +19,6 @@ from .evidence import (
     SourceBundle,
 )
 from .retrieval import query_requires_decomposition
-
 
 Gather = Callable[[str, int, int, str, bool], Awaitable[SourceBundle]]
 
@@ -168,9 +168,13 @@ class EvidenceLoopManager:
         if not clean_question:
             return self.invalid(clean_question, "question must not be empty.")
         if len(clean_question) > 1000:
-            return self.invalid(clean_question, "question must be at most 1000 characters.")
+            return self.invalid(
+                clean_question, "question must be at most 1000 characters."
+            )
         if isinstance(max_steps, bool) or not isinstance(max_steps, int):
-            return self.invalid(clean_question, "max_steps must be an integer from 1 to 4.")
+            return self.invalid(
+                clean_question, "max_steps must be an integer from 1 to 4."
+            )
         if max_steps < 1 or max_steps > 4:
             return self.invalid(clean_question, "max_steps must be between 1 and 4.")
 
@@ -257,7 +261,9 @@ class EvidenceLoopManager:
             )
         if state.status == "ready":
             return self._snapshot(state)
-        unique_ids = list(dict.fromkeys(str(value).strip() for value in supporting_step_ids))
+        unique_ids = list(
+            dict.fromkeys(str(value).strip() for value in supporting_step_ids)
+        )
         if not unique_ids or any(not value for value in unique_ids):
             return self._snapshot(
                 state,
@@ -296,7 +302,9 @@ class EvidenceLoopManager:
         if len(state.steps) >= state.max_steps:
             state.status = "budget_exhausted"
             state.next_action = "none"
-            return self._snapshot(state, error="The retrieval-step budget is exhausted.")
+            return self._snapshot(
+                state, error="The retrieval-step budget is exhausted."
+            )
         clean_query = str(query or "").strip()
         if not clean_query:
             return self._snapshot(state, error="query must not be empty.")
@@ -310,7 +318,9 @@ class EvidenceLoopManager:
             )
         previous_queries = {step.query.casefold() for step in state.steps}
         if clean_query.casefold() in previous_queries:
-            return self._snapshot(state, error="Follow-up queries must not repeat a prior step.")
+            return self._snapshot(
+                state, error="Follow-up queries must not repeat a prior step."
+            )
 
         bundle = await gather(
             clean_query,

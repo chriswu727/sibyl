@@ -9,15 +9,15 @@ body:
   - type: input
     id: version
     attributes:
-      label: Sibyl version
-      placeholder: 0.4.0
+      label: Sibyl version and source commit
+      placeholder: "Host-only source: git rev-parse --short HEAD; or exact published package version (0.4.0b1/0.3.0 use older architectures)"
     validations:
       required: true
   - type: input
     id: environment
     attributes:
       label: Environment
-      placeholder: macOS 15, Python 3.12, Claude Code
+      placeholder: "OS, Python version, MCP host, profile, installed extras"
     validations:
       required: true
   - type: textarea
@@ -31,4 +31,4 @@ body:
     id: diagnostics
     attributes:
       label: Diagnostics
-      description: Include SourceBundle status and diagnostics with secrets or private data removed.
+      description: Include relevant SourceBundle/research-job status, extraction warnings, or sanitized monitoring outcomes. Remove tokens, provider keys, private queries, and evidence text before sharing.

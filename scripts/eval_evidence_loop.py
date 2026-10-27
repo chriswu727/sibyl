@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 """Evaluate the fixed host-planned multi-step evidence workflows."""
+
 from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime, timezone
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sibyl import __version__
 from sibyl.evidence_loop_eval import EvidenceLoopEvalCase, evaluate_evidence_loops
-
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = ROOT / "evals" / "gold" / "evidence_loop_4.jsonl"
@@ -62,9 +62,9 @@ def main() -> int:
         "sibyl_version": __version__,
         "method": "fixed_host_plans_model_free_retrieval_only",
         "method_limitations": "Does not evaluate host query planning or final synthesis; single repeat.",
-        "configured_search_provider": os.environ.get(
-            "SIBYL_SEARCH_PROVIDER", "keyless"
-        ).strip().lower(),
+        "configured_search_provider": os.environ.get("SIBYL_SEARCH_PROVIDER", "keyless")
+        .strip()
+        .lower(),
         "repeats": 1,
         "dataset": str(args.dataset.resolve().relative_to(ROOT)),
         **result.to_dict(),
