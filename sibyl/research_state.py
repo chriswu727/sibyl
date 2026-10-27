@@ -25,6 +25,7 @@ class ResearchNotebook:
     bundles: list[SourceBundle] = field(default_factory=list)
     attempts: list[RetrievalAttempt] = field(default_factory=list)
     max_steps: int = 8
+    # Retain legacy accounting when loading/exporting older checkpoints.
     model_calls: int = 0
     reserved_output_tokens: int = 0
     max_model_calls: int = 40
@@ -35,6 +36,8 @@ class ResearchNotebook:
     preferred_domains: list[str] = field(default_factory=list)
     reviews: dict[str, EvidenceReview] = field(default_factory=dict)
     require_review: bool = False
+    # Older checkpoints omit this field; new MCP jobs explicitly select version 2.
+    claim_contract_version: int = 1
 
     def begin_search(self, query: str) -> None:
         if len(self.attempts) >= self.max_steps:
@@ -64,15 +67,6 @@ class ResearchNotebook:
             attempt["error"] = bundle.error
         if bundle is not None:
             self.bundles.append(bundle)
-
-    def reserve_model_call(self, tokens: int) -> None:
-        if (
-            self.model_calls >= self.max_model_calls
-            or self.reserved_output_tokens + tokens > self.max_output_tokens
-        ):
-            raise ResearchBudgetExceeded("Research model budget exhausted.")
-        self.model_calls += 1
-        self.reserved_output_tokens += tokens
 
     def selected_sources(self) -> list[EvidenceSource]:
         # Interleave query results, newest first: gap-filling sources must not be

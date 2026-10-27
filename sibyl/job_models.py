@@ -47,6 +47,8 @@ class EvidenceReview(TypedDict):
     reviewed_attempts: int
     assessment_origin: Literal["host"]
     follow_up_queries: list[str]
+    claims: NotRequired[list[dict[str, Any]]]
+    basis_fingerprints: NotRequired[dict[str, str]]
 
 
 class QuestionPlan(TypedDict):
@@ -90,6 +92,16 @@ class JobPayload(TypedDict):
     elapsed_seconds: float
 
 
+class JobOwner(TypedDict):
+    instance_id: str
+    claimed_at: float
+
+
 class JobRecord(JobPayload):
     job_id: str
     revision: int
+    # Present only while running: the runtime instance that claimed the job.
+    owner: NotRequired[JobOwner]
+    # Read-time projections for views; never persisted.
+    running_elsewhere: NotRequired[bool]
+    unsaved_result: NotRequired[bool]

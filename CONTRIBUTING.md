@@ -5,12 +5,24 @@ or documentation are welcome.
 
 ## Development setup
 
+English is the canonical language for maintained documentation, code comments and
+messages, MCP descriptions, metadata, and maintainer-authored issues/PRs/releases.
+README.zh-CN.md is the sole Chinese documentation file; keep its installation,
+capabilities and limitations aligned with README.md. Original-language sources,
+proper names, multilingual fixtures and matching literals retain their language.
+Do not change evidence or remove language support to satisfy this policy.
+
+For the current refactor, read the [functional goals](docs/REFACTOR_GOALS.md) and
+[implementation sequence](docs/QUALITY_BUILD_PLAN.md) before proposing features.
+Planned claim-support checks must not be advertised as implemented or as a
+guarantee of factual truth.
+
 ```bash
 git clone https://github.com/chriswu727/sibyl.git
 cd sibyl
 python3.12 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e '.[report,finance,extract,pdf,monitor]' ruff==0.17.1 mypy==2.4.0
+python -m pip install -e '.[report,extract,pdf,monitor]' ruff==0.17.1 mypy==2.4.0
 ruff check sibyl tests scripts
 ruff format --check sibyl tests scripts
 mypy
@@ -41,7 +53,7 @@ The [workflow replay](docs/examples/sqlite-wal/README.md) uses recorded official
 excerpts over real MCP stdio, without a model or live retrieval. For distribution
 changes, build a wheel into a fresh directory and run
 `python scripts/check_wheel.py /absolute/path/to/sibyl_research-0.4.0-py3-none-any.whl 0.4.0`.
-This installs core, PDF/monitoring, and report/finance/extraction profiles in
+This installs core, PDF/monitoring, and report/extraction profiles in
 separate temporary environments and removes each after checking it. It downloads
 package dependencies but no ranking models; do not substitute an editable install.
 Read the [module map and extension guide](docs/MCP_ARCHITECTURE.md) before adding

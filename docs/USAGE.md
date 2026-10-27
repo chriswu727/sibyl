@@ -8,9 +8,9 @@ This reference follows the `main` branch. See the [landing page](../README.md)
 for release status and the [architecture guide](MCP_ARCHITECTURE.md) for current
 execution limits.
 
-**Deep research through MCP — persistent investigations and traceable reports.**
+**Deep research tools for AI agents — persistent investigations and reusable evidence.**
 
-Sibyl is a local MCP server for public-web research and cited reports. Its CLI and Python API also expose evidence retrieval and model-backed research. A shared `SourceBundle` pipeline searches, extracts, ranks, and preserves provenance. Persistent jobs support host-assisted writing or an explicitly configured autonomous model; Sibyl is not a hosted service.
+Sibyl is a local research MCP for an existing AI agent. The host plans and reasons; Sibyl retrieves evidence, preserves reviews and gaps, and exports optional host-authored reports. No internal model or subscription credentials are used.
 
 [![Tests](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml/badge.svg)](https://github.com/chriswu727/sibyl/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/sibyl-research?color=blue)](https://pypi.org/project/sibyl-research/)
@@ -25,26 +25,25 @@ Sibyl is a local MCP server for public-web research and cited reports. Its CLI a
 
 Sibyl combines a research workflow with an inspectable evidence boundary:
 
-> Research produces a report. Evidence makes that report inspectable—not automatically true.
+> Research produces evidence-linked conclusions and visible gaps. A report is optional; neither output is automatically true.
 
 The core path is `gather_bundle()`: a keyless retrieval tool that returns a typed, versioned `SourceBundle`. It does not generate an answer. The bundle carries source and passage identities, hashes, offsets, retrieval and publication metadata, content-origin labels, near-duplicate clusters, relevance signals, and explicit failure states. For dependent questions, `gather_evidence()` adds a bounded, auditable sequence of atomic retrieval steps while leaving planning and synthesis to the host agent.
 
-Persistent jobs are the report-oriented workflow. The existing `research()` tool remains a blocking configured-model interface. Both use the same retrieval pipeline. Report quality depends on evidence and model behavior; no current-model comparative quality claim has been established.
+Persistent jobs maintain agent research state without requiring a report. SourceBundle retrieval is shared by MCP, the inspection CLI and the Python API.
 
 | Mode | Tool | API key | Who reasons? | Best for |
 |---|---|---:|---|---|
 | Structured retrieval | `gather_bundle()` | No | Your agent | Pipelines, contracts, machine-readable citations |
 | Readable retrieval | `gather_sources()` | No | Your agent | Conversational hosts and manual inspection |
 | Bounded evidence loop | `gather_evidence()` | No | Your agent | Multi-step questions and auditable follow-ups |
-| Host-assisted report | `start_research(mode="host")` | No | Your agent | Persistent research and Markdown/JSON delivery |
-| Autonomous report | `start_research(mode="autonomous")` | Configured backend | Sibyl's model | Background research, progress, explicit resume |
-| Blocking report | `research()` | Configured backend | Sibyl's model | Existing one-call integrations |
+| Persistent investigation | `start_research(mode="host")` | No | Your agent | Reusable research state and optional reports |
 
 ## Quick start
 
 ### 1. Install the current source checkout
 
-This guide describes unreleased `main`. The published 0.3.0 package does not
+This guide follows main, including the unreleased agent profile and research views.
+These additions are not in 0.4.0b1. The older 0.3.0 package does not
 provide the current CLI subcommands, capability profiles, or evidence-loop API.
 
 ```bash
@@ -55,22 +54,23 @@ python -m venv .venv
 python -m pip install -e .
 ```
 
-Sibyl requires Python 3.11 or newer. The default installation is the lightweight keyless retrieval product. Optional features are installed explicitly:
+Sibyl requires Python 3.11 or newer. The default installation includes persistent
+host-led research and keyless retrieval, without a model SDK. Optional features
+are installed explicitly:
 
 ```bash
-python -m pip install -e '.[report]'   # experimental LLM report + PDF
-python -m pip install -e '.[finance]'  # market data, trends, charts
+python -m pip install -e '.[report]'   # PDF rendering only
 python -m pip install -e '.[rerank]'   # local cross-encoder ranking
 python -m pip install -e '.[pdf,monitor]'  # text-PDF reads and local operational endpoints
 python -m pip install -e '.[all]'      # every optional capability
 ```
 
-### 2. Add the keyless MCP server
+### 2. Add the research MCP server
 
 For Claude Code:
 
 ```bash
-claude mcp add sibyl -- /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile keyless
+claude mcp add sibyl -- /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile agent
 ```
 
 For clients that accept an MCP server configuration, replace the absolute path:
@@ -80,13 +80,13 @@ For clients that accept an MCP server configuration, replace the absolute path:
   "mcpServers": {
     "sibyl": {
       "command": "/absolute/path/to/sibyl/.venv/bin/sibyl-mcp",
-      "args": ["--profile", "keyless"]
+      "args": ["--profile", "agent"]
     }
   }
 }
 ```
 
-No search or model key is required for the twelve keyless tools, including host
+No search or model key is required for the eight default tools, including host
 research jobs, evidence primitives, and Markdown/JSON export.
 
 For an optional configured search-provider path, opt into Tavily explicitly:
@@ -104,7 +104,7 @@ Verify the isolated installation:
 
 ```bash
 sibyl-mcp --version
-sibyl-mcp --profile keyless --list-tools
+sibyl-mcp --profile agent --list-tools
 ```
 
 ### 3. Use the keyless CLI or Python API
@@ -139,37 +139,35 @@ That policy matters more than a long system prompt: it tells the agent when evid
 
 ## MCP profiles and tools
 
-MCP report/chart exports use `SIBYL_OUTPUT_ROOT` (default `reports/`).
+MCP report exports use the output root: `SIBYL_OUTPUT_ROOT` when set, otherwise
+the per-user data directory described under [shared research store](#shared-research-store).
 `save_report(output_dir=...)` selects a relative subdirectory of that root, not
 an absolute path. Stateful report operations reject overlapping calls.
-The CLI's explicit `--output` option remains an operator-controlled path.
 
-Without an LLM credential, the default `auto` profile exposes twelve tools: five evidence primitives, six research-job operations, and report export. Host jobs and Markdown/JSON export need no model key. Autonomous mode requires `[report]` and a configured model; PDF requires the rendering extra. A configured `[report]` installation also exposes the legacy model tools. Finance tools remain explicit.
+The default `agent` profile exposes eight tools with compact structured research
+briefs, returned in MCP `structuredContent` and mirrored as serialized JSON text.
+`--profile keyless` keeps readable full text responses and twelve compatibility tools.
+`--profile auto` is an alias for agent and never inspects model credentials.
+`report`, `finance` and `full` are no longer valid profiles.
 
-Use `sibyl-mcp --profile keyless|report|finance|full` to select a surface directly. Missing extras or credentials fail at startup with an actionable installation message.
+| Tool | Result |
+|---|---|
+| `start_research` | Persistent host-led investigation |
+| `continue_research` | Focused search or direct source read |
+| `get_research` | Brief, exact passage, paged catalog, full state or job list |
+| `assess_research` | Host conclusion with stable support/challenge links |
+| `complete_research` | Optional immutable host-authored report |
+| `save_report` | Markdown (default), JSON or optional PDF |
+| `cancel_research` | Cancel or explicitly remove checkpoint |
+| `gather_bundle` | Standalone SourceBundle 1.6 |
 
-| Group | Tool | Result | LLM key |
-|---|---|---|---:|
-| Jobs | `start_research(question)` | Persistent host or autonomous job | Autonomous only |
-| Jobs | `get_research(job_id)` | Progress, evidence, revision, report; omit ID to list | No |
-| Jobs | `continue_research(job_id, query)` | Focused host search or explicit autonomous resume | Autonomous only |
-| Jobs | `complete_research(job_id, revision, ...)` | Immutable host-authored report | No |
-| Jobs | `assess_research(job_id, revision, question_id, ...)` | Host assessment with stable support/challenge links | No |
-| Jobs | `cancel_research(job_id, delete=false)` | Cancel or explicitly remove checkpoint | No |
-| Retrieval | `gather_evidence(question)` | Bounded multi-step evidence loop | No |
-| Retrieval | `gather_bundle(query)` | Structured SourceBundle 1.6 | No |
-| Retrieval | `gather_sources(query)` | Readable `[Source N]` evidence blocks | No |
-| Retrieval | `quick_search(query)` | Titles, URLs, and search snippets | No |
-| Retrieval | `read_url(url)` | Public HTML or optional text PDF, with extraction warnings | No |
-| Research | `research(query, depth)` | Synthesized and cited report | Yes |
-| Research | `analyze(text, question)` | Analysis of supplied text | Yes |
-| Analysis | `compare(items, query)` | Researched comparison | Yes |
-| Analysis | `swot(subject)` | Researched SWOT | Yes |
-| Analysis | `timeline(topic)` | Researched event timeline | Yes |
-| Data | `trends(keywords)` | Google Trends series and related queries | No |
-| Data | `fetch_market_data(symbols)` | Yahoo Finance market summary | No |
-| Data | `chart(symbols)` | Local PNG price chart | No |
-| Output | `save_report(format, job_id)` | Markdown, JSON, or optional PDF; omit ID for last one-shot report | No |
+The keyless compatibility profile also includes `gather_evidence`,
+`gather_sources`, `quick_search` and `read_url`. Neither profile calls models.
+Read exact passages with `get_research(passage_ids=[...])` (up to twelve per call)
+before assessing them.
+`view="sources"` pages the complete saved catalog; use the current revision to
+reject stale pagination. `view="full"` returns the full compatible snapshot.
+See [Agent protocol](agent-protocol.md).
 
 ## Persistent research jobs
 
@@ -186,7 +184,16 @@ Search snippets are leads and are excluded from report source selection.
 
 Choose `source_policy="academic"` to enable scholarly discovery through the existing
 search/Crossref path, or `primary` (default) for general research. Supply up to
-sixteen `preferred_domains` such as a relevant official documentation host. Match
+sixteen `preferred_domains` such as a relevant official documentation host. The
+first two also receive bounded domain-focused discovery searches, unless the
+query already contains an explicit `site:` constraint. Preferences prioritize
+relevant candidates before fetching; they are not an allowlist and do not exclude
+useful sources from other domains. All preferences still apply during final
+source selection. Ranked retrieval prioritizes a relevant full-text representative
+from each preferred domain within the existing period constraints; other slots
+retain relevance and content/domain diversity. Snippets, metadata and community
+archives do not receive that representative boost. `ranker="none"` keeps its
+original ordering. Domain preference does not establish authority. Match
 the source type to the claim: papers for methods and experiments, current official
 docs for product capabilities and pricing. Preprints and publisher-platform entries
 are not automatically peer reviewed. Crossref metadata does not count as full text.
@@ -215,53 +222,100 @@ are host-declared; the server does not prove that a hyperlink existed in the par
 The source catalog retains passage IDs even when a source falls out of the selected
 report window. Inspect one with `get_research(job_id="...", passage_id="...")`.
 
-After reading the evidence, call `assess_research` for each question:
+After reading the evidence, call `assess_research` for each question, including
+atomic material claims:
 
 ```text
 assess_research(job_id="...", revision=the_current_revision, question_id="Q1",
-                status="disputed", supporting_passage_ids=["bundle/S1/P1"],
-                challenging_passage_ids=["other/S1/P2"],
-                conclusion="The results differ under these experimental conditions...",
-                counterevidence_note="Compared the original study and the replication...")
+  status="disputed",
+  conclusion="The findings differ under the recorded conditions.",
+  counterevidence_note="Compared the original result and contrary evidence.",
+  claims=[{
+    "claim_id": "Q1.C1", "kind": "fact", "status": "disputed",
+    "text": "The available sources disagree on the requested result.",
+    "supporting_passage_ids": ["bundle/S1/P1"],
+    "challenging_passage_ids": ["other/S1/P2"],
+    "quotes": [
+      {"passage_id": "bundle/S1/P1", "text": "exact text copied from P1"},
+      {"passage_id": "other/S1/P2", "text": "exact text copied from P2"}
+    ]
+  }])
 ```
 
-Use `supported`, `disputed`, or `unresolved`. A supported review needs supporting
-passages; disputed needs both sides; unresolved needs an explanation, not invented
-evidence. Only cite passages actually inspected. The server checks link integrity,
-revision freshness, and structural completeness, **not semantic correctness**.
-New evidence for a reviewed question makes that review stale. Linked sources stay
-in the report window; more than twelve distinct reviewed sources or contradictory
-duplicate snapshots require narrowing the review rather than silently losing links.
+Facts link exact evidence and quote it; Sibyl rejects a quote it cannot find in
+the cited passage. Inferences and recommendations link `basis_claim_ids`
+and explain their rationale; recommendations also declare criteria with origin
+`user` or `host_assumption`. Unknown information uses `status="unresolved"`
+with an explanation in `rationale`. Each assessment replaces the question's claim
+set; preserve IDs that other judgments depend on. The
+[claim contract](research-claims.md) defines fields, limits and a complete example.
 
-After investigating and reviewing all questions, get the latest job and submit:
+A supported review needs supporting evidence; disputed needs both sides;
+unresolved preserves missing evidence. Claim links and transitive reasoning
+premises supply the question-level evidence links automatically. Only cite passages
+actually inspected. The server checks reference integrity, revision freshness and
+structural completeness, **not semantic correctness**.
+
+New retrieval makes the question's review stale. Changed premises and new evidence
+also invalidate dependent judgments across questions. Reviewed evidence stays in
+the report window; more than twelve distinct reviewed sources or conflicting
+duplicate snapshots require narrowing the references instead of losing them.
+
+The claim ledger is usable without a report. To finalize a new job, get the latest
+revision and submit:
 
 ```text
-complete_research(
-  job_id="the returned ID",
-  revision=the_current_revision,
-  summary="An evidence-backed answer [Source 1].",
-  key_findings=["A supported finding [Source 2]."],
-  analysis="Interpretation, explicitly distinguished from sourced facts.",
-  limitations=["A specific unresolved question."]
-)
-save_report(job_id="the returned ID", format="json")
+complete_research(job_id="...", revision=the_current_revision,
+                  claim_ids=["Q1.C1"], allow_incomplete=true,
+                  limitations=["A specific unresolved question."])
+save_report(job_id="...", format="json")
 ```
 
-Summary and each finding must cite a selected `[Source N]`. Numbering may change
-after retrieval; the revision check prevents stale submissions. Citation target
-validation is not entailment checking. Host reports state
-`verification_scope="citation_targets_only"`; the host owns semantic judgment.
-Completed reports are immutable. Start another job for a new edition.
-New host jobs reject completion when required reviews or counterevidence checks are
-missing. `allow_incomplete=true` explicitly permits delivery with every remaining
-gap recorded in report limitations and `report.status="partial"`; it is not a quality
-pass. The job remains `status="completed"` because its report is finalized and immutable.
-Markdown/PDF exports visibly label partial reports. Existing pre-upgrade
-checkpoints remain readable and retain their former completion behavior. JSON exports
-preserve exact selected passages, hashes, offsets, the review ledger, and investigation
-steps. Markdown includes reviews and compact source references instead of dumping
-large source excerpts. PDF retains the narrative and limitations; use JSON for the
-complete machine-readable evidence package.
+New MCP jobs use `claim_contract_version=2`. Omit the legacy summary/findings/analysis
+arguments; the report renders the host-authored claims, their premises, current
+source citations, reasoning, criteria and assumptions. Unknown/disputed claims
+remain included even if not selected. A partial report can explicitly abstain
+without inventing sources. Unknown claim IDs, dependency cycles and stale
+revisions fail. An old checkpoint retains contract 1 and its prose-based completion.
+
+Completion normally requires current question reviews, resolved claim gaps and
+substantive counterevidence investigations. `allow_incomplete=true` permits delivery
+with all remaining gaps and `report.status="partial"`; it is not a quality pass.
+Job `status="completed"` means the report is immutable. Start another job for
+a new edition.
+
+Report JSON schema 1.1 adds the claim ledger and freshness flags, alongside exact
+selected passages, hashes, offsets, reviews and investigation steps. Markdown/PDF
+retain the reasoning, criteria, assumptions and limitations in the generated
+analysis, presented once under Evidence-linked conclusions rather than repeated
+in summary, findings and analysis. JSON keeps the compatible fields and full
+machine-readable evidence package; old prose reports retain their layout.
+PDF export tries available Arial Unicode, DejaVu Sans or Noto Sans fonts and
+otherwise uses the core font. Font coverage and required rendering failures
+are explicit errors, not saved PDFs with missing report text. Use Markdown/JSON
+when a suitable font is unavailable. A combined PDF/Markdown export may be partial
+with only the confirmed Markdown artifact; inspect the manifest failures.
+`verification_scope="citation_targets_only"` means reference checks, not proof
+of semantic support or factual truth.
+
+Retrieval diagnostics keep `unique_domains` for all returned sources and expose
+`substantive_domains` for relevant extracted-text sources used by readiness.
+Crossref metadata and search-snippet origins do not count as substantive text,
+independent content or full-text domain diversity. They remain inspectable leads.
+Downloaded HTML may itself be an abstract or catalog entry; the host still needs
+to judge the actual evidence scope rather than infer a full paper was read.
+
+Markdown, PDF, and plain-text reports separate **Cited Sources** from **Uncited
+Background** using citation markers in the report. Source numbers stay unchanged,
+including gaps between numbers; JSON retains the original source inventory and
+evidence. Being cited is not a verdict that a source supports a claim.
+
+HTML reads fall back from placeholder document titles to metadata or headings.
+Prose whitespace is normalized before the character limit is applied. Excessive
+horizontal whitespace runs (80 or more characters) in preformatted text are
+normalized with a warning; ordinary code spacing remains. Extracted text is not
+a verbatim code copy. HTML truncation is explicitly reported, just like PDF
+truncation; later sections may still be missing from a bounded read.
 
 ### Multi-round retrieval
 
@@ -307,12 +361,6 @@ Budget exhaustion returns no more suggestions and asks for review or explicit
 limitations; it never silently grants a quality pass. Resuming a checkpoint does
 not reset the budget or lose the earlier rounds.
 
-Autonomous mode already uses a configured model to reflect on a draft, generate
-follow-up queries, retrieve, and re-synthesize when usable evidence changes. It
-allows at most two reflection rounds, also bounded by retrieval/model/time budgets;
-fast mode skips reflection. No additional usable evidence stops the loop with a
-limitation. Model reflection remains fallible and incurs configured-provider usage.
-Offline tests mock model calls and verify the loop, not research quality.
 
 ### Comparing with ordinary web search
 
@@ -330,27 +378,12 @@ contracts only. No controlled same-model report-quality A/B has yet established 
 Sibyl advantage over ordinary web search. Model-backed evaluations require explicit
 operator approval; do not spend a subscription/API budget implicitly.
 
-For `mode="autonomous"`, the optional report installation and configured model
-are required. The server runs research asynchronously; poll `get_research`.
-It decomposes the question, retrieves shared source bundles, drafts, performs
-one bounded coverage-review round by default, and checks report blocks against
-the cited evidence. Unsupported or unassessed blocks are visibly marked.
-Model verification is fallible and does not establish source truth.
-
-`continue_research(job_id=...)` with no query explicitly resumes an autonomous
-job. Saved evidence, completed plan, and consumed budgets survive restart;
-unfinished synthesis may run again and incur additional model charges.
-There is no automatic restart of interrupted work and no exactly-once model call
-guarantee. Source pages remain untrusted data, including during resume.
-
 | Limit | Default / ceiling |
 |---|---|
 | Retrieval attempts | 8 per job, caller-selectable from 1 to 12 |
-| Selected report sources | 12; one-shot configuration can select up to 24 |
-| Simultaneous job workers | 2 |
+| Selected report sources | 12 |
+| Simultaneous job workers | 2 per research store, shared by every session using it |
 | Active execution time | 600 seconds across continuations; host thinking time excluded |
-| Autonomous model calls | 40 attempts, including retries and verification |
-| Reserved completion tokens | 60,000 across attempts; not an exact charge or input-token limit |
 | Checkpoint records | 64; explicit deletion required when full |
 | Checkpoint payload | 1 MiB per job, plus 64 KiB reserved for failure recovery metadata |
 | SQLite database | 16,384 pages; approximately 64 MiB with default page size |
@@ -361,21 +394,98 @@ guarantee. Source pages remain untrusted data, including during resume.
 | Exports per output directory | 256 files / 128 MiB; explicit retention required |
 
 A retrieval attempt can itself issue multiple search-provider requests. These
-limits do not promise an exact dollar budget; external search/model pricing,
-input tokens, provider retries, and already-dispatched requests still matter.
+limits do not promise an exact dollar budget; external search pricing,
+provider retries and already-dispatched requests still matter.
 Cancelled requests may still be billed by the provider.
 
-The private database lives in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`.
-Only one runtime may own that directory at a time. Cancellation preserves the
-checkpoint; `cancel_research(job_id=..., delete=true)` removes it and reclaims
+The private database lives in `<output root>/.research/jobs.sqlite3`.
+Cancellation preserves the checkpoint; `cancel_research(job_id=..., delete=true)` removes it and reclaims
 history capacity, but does not remove exported files. SQLite deletion is not
 guaranteed forensic erasure. See [Privacy](../PRIVACY.md).
 
+### Shared research store
+
+Without `SIBYL_OUTPUT_ROOT`, the output root is the per-user data directory:
+`$XDG_DATA_HOME/sibyl` (absolute values only, otherwise `~/.local/share/sibyl`)
+on Linux and other POSIX systems, `~/Library/Application Support/sibyl` on macOS,
+and `%LOCALAPPDATA%\sibyl` on Windows. A newly created root is private (0700).
+An explicit `SIBYL_OUTPUT_ROOT` always wins. Earlier versions defaulted to
+`./reports` in the host's working directory; that store is never moved, deleted
+or merged. The MCP server only warns when it finds one; set `SIBYL_OUTPUT_ROOT`
+to its absolute path to keep using it.
+
+Several local sessions (for example two agent windows, or two different hosts)
+can use one store at the same time. It is a shared research space for one
+trusted user, **not isolation between projects**: `get_research()` lists every
+retained job with only its ID, question, mode, status and revision, and any
+session can read a job's evidence, review ledger and report by ID.
+
+- Each runtime holds a private instance lock under `.research/instances/` for its
+  lifetime. The lock is taken before the runtime's ID is published, and a running
+  job records the instance that claimed it.
+- A job running in another live session is read-only: reads work and report
+  `running_elsewhere=true`, while `continue_research`, `assess_research`,
+  `complete_research` and `cancel_research` (including `delete=true`) fail with
+  `job_running_elsewhere`. Retry after that retrieval finishes. Cancelling
+  another session's retrieval is not supported.
+- When the owner exits or is killed, its lock is released and the job becomes an
+  orphan. Startup and the next change recover it to `interrupted`. Recovery,
+  claiming a job and every other write are conditional on the saved revision
+  inside an immediate SQLite transaction, so when sessions race exactly one wins.
+- If the owner lock cannot be checked (permissions, unexpected file type or I/O
+  errors) the job is not taken over and the change fails with `owner_unknown`.
+  Only an acquired lock or a missing lock file counts as an exited owner.
+- Job creation counts capacity inside the same transaction as the insert, so the
+  64-job limit holds across sessions. Deletion re-checks inside its transaction
+  that the job is not running.
+- The two job workers are a limit for the whole store: a claim counts running jobs
+  whose owners are alive. The 600-second active-execution budget belongs to each
+  job. Per-call concurrency (eight active calls), caches, search throttling and
+  PDF workers remain per process.
+- Stale instance lock files of exited runtimes are removed at startup. Do not
+  delete or replace lock files of running sessions: that removes their ownership.
+- The database uses SQLite WAL mode and needs a local filesystem, not a network
+  share. Store calls wait at most two seconds for another session's write and
+  block their own process while waiting. A write that times out fails with
+  `store_busy` before anything changes, including before a retrieval starts;
+  retrying the same request is safe. (Creating a job is a single write, so a
+  failed `start_research` never leaves a job behind.) If a retrieval already
+  finished but its result cannot be saved, the call fails with `result_pending`
+  instead. Do not repeat the retrieval: its session holds the result,
+  `get_research(job_id)` shows it with `unsaved_result=true` (keeping the stored
+  revision, so reload after it is saved before assessing), and a repeated
+  `continue_research` is refused until then.
+  Any later call in that session, on any job, retries the save. Other sessions
+  still see the job running meanwhile. If saving fails for another reason (for
+  example a full disk), the session releases its claim as `interrupted`, on that
+  call or its next one, so the job and its worker slot are not held. A cancel or
+  delete whose final write meets a busy store after stopping the local
+  retrieval says so; retrying it starts no retrieval. A held result that turns
+  out to exceed the checkpoint limit is logged as discarded while the prior
+  state is saved. If the session shuts down before the save succeeds, it logs
+  that the result was NOT saved and is lost; the job is then recovered as
+  `interrupted` without that evidence. A full database reports the SQLite error
+  itself, not a rollback error.
+- Runtimes of the previous version take an exclusive directory lock. On POSIX the
+  current version holds a shared lock on the same file, so the two generations
+  refuse to run on one directory together. Windows checks only at startup;
+  stop older runtimes before upgrading there. Windows locking has not yet been
+  verified with real multi-process runs.
+
 JSON, Markdown, and PDF use the same `ResearchReport` contract. JSON retains
-source passage IDs, timestamps, limitations, verification scope, and model-call
-counters. PDF export requires `[report]`; text-PDF input separately requires `[pdf]`.
-If PDF-only export fails, the MCP call returns a tool error. With `format="both"`,
-a PDF failure is disclosed while a successful Markdown artifact is retained.
+source passage IDs, timestamps, limitations, verification scope, and legacy model-call
+counters when reading old records. New work makes no model calls. PDF export requires `[report]`; text-PDF input separately requires `[pdf]`.
+For Markdown and JSON, call `save_report` twice with `format="md"` and
+`format="json"`. The legacy `format="both"` means PDF plus Markdown only.
+Each export gets an independent filename; use its returned path, not a guessed
+path with another extension. If PDF-only export fails, the MCP call returns a
+tool error. With `format="both"`, a PDF failure is disclosed while a successful
+Markdown artifact is retained.
+The agent profile returns an [export manifest](agent-protocol.md#export-manifest-10)
+with confirmed artifacts and per-format failures; `report_status` remains separate
+from export success. Failed calls also carry [structured recovery](agent-protocol.md#structured-recovery)
+instead of requiring the host to infer state from a text error. The keyless
+profile retains its text response format.
 Input is extracted in an isolated child process without inherited credentials,
 then split into the same hashed passages as HTML. Scanned pages have no OCR;
 text order, columns, tables, and formulas still need source inspection.
@@ -513,88 +623,34 @@ Sibyl retrieves untrusted URLs, so the fetch path is deliberately constrained:
 - decompressed response bodies are capped at 2 MiB;
 - Jina rendering has bounded concurrency and request start-rate limits.
 
-When Jina Reader is used, the target URL is sent to that external service. It is disabled by default in every workflow. Set `render_thin_pages=true` for retrieval or `js_render: true`/`--js-render` for experimental report generation only when this disclosure is acceptable.
+When Jina Reader is used, the target URL is sent to that external service. It is disabled by default in every workflow. Set `render_thin_pages=true` for retrieval or `js_render: true` for the compatibility read tool only when this disclosure is acceptable.
 
-## Configured-model one-shot reports
+## Migration
 
-The compatible `research()` tool and `sibyl` CLI run a blocking pipeline:
+See the [migration and legacy boundary](MIGRATION.md) for the canonical inventory
+of removed capabilities and intentionally retained data compatibility.
 
-```text
-plan → shared source bundles → draft → coverage review / follow-up → report-wide audit → report
-```
+This source preview removes internal model execution, LiteLLM, provider routing,
+the `research/analyze/compare/swot/timeline` tools and finance/chart tools.
+The `sibyl research` CLI and implicit `sibyl "question"` report command are gone;
+use MCP for research or `sibyl gather` for evidence inspection.
 
-They require an LLM provider key or a configured local/API-compatible backend. Sibyl auto-detects common provider environment variables:
+Install in a new virtual environment to leave old transitive dependencies behind.
+The `report` extra now contains only PDF rendering dependencies. No model key,
+API base, subscription token or model profile is needed. Old model environment
+variables are ignored, not used to enable capabilities.
 
-Install the report capability first:
+`SIBYL_CONFIG` is optional and only accepts `search_engine`, `extractor`,
+`jina_fallback` and `js_render` for the compatibility `quick_search/read_url` tools.
+Unsupported legacy fields cause an actionable error without echoing values.
+Persistent research uses its explicit tool arguments and safe defaults.
+See [configuration example](../sibyl.yaml.example).
 
-```bash
-python -m pip install -e '.[report]'
-```
-
-| Provider | Environment variable |
-|---|---|
-| DeepSeek | `DEEPSEEK_API_KEY` |
-| OpenAI | `OPENAI_API_KEY` |
-| Anthropic | `ANTHROPIC_API_KEY` |
-| Gemini | `GEMINI_API_KEY` |
-| ZhipuAI / GLM | `ZHIPUAI_API_KEY` |
-
-Run the MCP server with one-shot tools enabled:
-
-Select a model explicitly through `SIBYL_MODEL` / `SIBYL_API_KEY` (and
-`SIBYL_API_BASE` when needed), or `SIBYL_CONFIG` with role-specific providers.
-Provider autodetection defaults exist for compatibility; they are not a claim
-that those models are current or optimal. Measure a candidate model on the same
-research tasks and budget before changing defaults.
-
-```bash
-claude mcp add sibyl -- \
-  /absolute/path/to/sibyl/.venv/bin/sibyl-mcp --profile report
-```
-
-Or use the CLI:
-
-```bash
-sibyl research "Canadian housing market outlook" --depth 2
-sibyl research "Changes to Canadian immigration policy" --language en --md --output reports/
-```
-
-Market symbols and charts also require `sibyl-research[finance]`. The historical `sibyl "query"` report form remains supported, but the explicit `gather` and `research` subcommands make the model and network boundary clearer.
-
-Depth controls the amount of decomposition and review work:
-
-| Depth | Intended use |
-|---:|---|
-| `1` | Quick research with tight query and source limits |
-| `2` | Standard research with review and claim verification |
-| `3` | Deeper gap-filling and prediction scenarios |
-
-For role-specific model routing, point `SIBYL_CONFIG` at a YAML file:
-
-```yaml
-providers:
-  - model: deepseek/deepseek-v4-flash
-    api_key: sk-...
-    role: general
-  - model: anthropic/claude-sonnet-4-20250514
-    api_key: sk-ant-...
-    role: synthesis
-  - model: anthropic/claude-sonnet-4-20250514
-    api_key: sk-ant-...
-    role: verify
-
-search_engine: all
-max_sources: 15
-max_depth: 2
-reranker: lexical
-```
-
-Supply credentials through the host's secret/environment mechanism; do not put
-real keys in command arguments or committed files. Model IDs above illustrate
-role routing, not a recommendation or current availability guarantee. For YAML,
-use provider-supported environment credentials or a private configuration file;
-`${VARIABLE}` substitution is not performed by Sibyl's YAML loader.
-The keyless tools remain available when no LLM provider is configured.
+Existing checkpoints and completed reports remain readable/exportable. An old
+autonomous checkpoint cannot resume model execution and is not silently converted
+or deleted. Start a new host job to investigate further. Old host checkpoints
+retain their prior completion rules. Historical model verdicts remain historical,
+not new independent verification.
 
 ## Evaluation and reproducibility
 
@@ -617,7 +673,21 @@ answerable runs containing both `ok` and expected evidence, ready-state precisio
 and p50/p95 latency. It records configured and actual provider paths. Save dated
 results; public search and publisher availability vary between runs.
 
-The latest formal keyless three-repeat run is retained in [`evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json`](../evals/results/live-retrieval-keyless-post-crossref-2026-07-21.json). Answer coverage improved from 75.9% in the [original baseline](../evals/results/live-retrieval-2026-07-21.json) to 85.2%, trap safety remained 100%, and p95 latency was 11.0 seconds. A subsequent [105-request Tavily pilot](../evals/results/live-retrieval-tavily-pilot-2026-07-21.json) reached 88.9% answer coverage and 10.7-second p95 latency. Recomputed under metric version 2, Tavily produced synthesis-ready answer evidence on 70.4% of answerable cases with 92.7% ready-state precision; the gates are 75% and 95%. Sibyl therefore remains a public beta until a dated three-repeat run clears every threshold; offline checks or a single-repeat pilot are not release evidence.
+The latest retained full keyless gate is the [2026-10-26 body-selection run](../evals/results/live-retrieval-body-selection-2026-10-26.json):
+66 cases, three repeats, 81.5% answer coverage and 97.9% ready-state answer
+precision, but 57.4% answerable readiness (gate 75%) and 51.5% repeat stability
+(gate 90%). It failed. Gold/alias matches do not measure semantic report accuracy.
+This run predates the subsequent query, metadata-classification and excerpt-hint
+changes; there is no replacement full-gate pass on the latest source.
+Historical July keyless/Tavily runs remain linked in
+[launch readiness](LAUNCH_READINESS.md#historical-live-evidence), not presented
+as current measurements. The host-only source is not cleared for stable release.
+
+The [two-workflow low-effort host retest](../evals/results/host-agent-structured-retest-2026-10-26.json)
+delivered partial Markdown/JSON for both tasks and recovered from a rejected
+inference. Its SQLite report still cited an excerpt missing a material
+qualification. Delivery success is not semantic-quality success; later hints
+have offline coverage, not a new host-model measurement.
 
 The repository also contains an exploratory 30-question SimpleQA comparison: the measured host workflow answered 26/30 correctly and the configured one-shot workflow 5/30. This small, agent-graded, model/configuration-confounded experiment does not establish the quality of this new workflow or current models. Read the [method and caveats](https://github.com/chriswu727/sibyl/blob/main/docs/EVAL_HOST_CLAUDE.md). A fresh comparison must use the same model, source access, budget, and realistic research questions; report coverage, citation support, contradictions, freshness, cost, and latency separately.
 
@@ -631,7 +701,7 @@ The bounded evidence loop also has a [four-case keyless retrieval run](../evals/
 - `quality_score` is intentionally unpopulated; no production credibility score is provided.
 - Publication dates are extracted from explicit page metadata and may be wrong at the publisher.
 - Near-duplicate clustering is content-based and can miss heavily rewritten syndication.
-- Autonomous reports are only as capable and reliable as their configured model and retrieved evidence. Offline workflow tests do not measure live report accuracy.
+- Host conclusions depend on host reasoning and evidence quality; offline tests do not measure semantic report accuracy.
 - Live web results are not deterministic; use the offline fixtures for regression testing.
 
 ## Development
@@ -641,7 +711,7 @@ git clone https://github.com/chriswu727/sibyl.git
 cd sibyl
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install -e '.[report,finance,extract,pdf,monitor]'
+python -m pip install -e '.[report,extract,pdf,monitor]'
 python scripts/check_docs.py
 python -m unittest discover tests -v
 ```

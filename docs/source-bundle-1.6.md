@@ -1,6 +1,6 @@
 # SourceBundle 1.6 consumer contract
 
-Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a contract fixture for consuming agents and applications. Sibyl's tests validate it against the typed MCP model and check serialization. This describes unreleased `main`; see the [documentation index](README.md) for installation and release status.
+Use [`source_bundle_1_6.example.json`](source_bundle_1_6.example.json) as a contract fixture for consuming agents and applications. Sibyl's tests validate it against the typed MCP model and check serialization. This describes the current source contract; the published 0.4.0b1 predates some additive diagnostics. See the [documentation index](README.md) for installation and release status.
 
 ## Compatibility rules
 
@@ -36,7 +36,20 @@ Consumers should use `search_snippet` as a lead for additional retrieval and avo
 
 Search snippets still participate in relevance ranking when full pages are available. Their origin label and the substantive-source diagnostics prevent a precise metadata result from being discarded while preserving the distinction from retrieved full text.
 
-`substantive_sources` counts retrieved full-text sources that also contain every detected key query anchor. A long page about the general topic does not count as corroboration for a quoted paper, named entity, or other anchored target when that target is absent.
+`substantive_sources` counts substantive extracted-text sources that also contain
+every detected key query anchor. Known `crossref_api` and `search_snippet` origins
+do not count, regardless of their length or number of domains. They remain in
+the catalog as leads. A long page about the general topic does not count as
+corroboration for an anchored target when that target is absent. Downloaded HTML
+may itself be an abstract or catalog entry; this heuristic does not certify that
+a complete paper was read.
+
+`unique_domains` counts all returned source domains. The additive
+`substantive_domains` counts only relevant substantive-text domains; metadata or
+snippet domains cannot satisfy full-text diversity. Readiness and
+`independent_content_clusters` use substantive text, not those leads. Older
+payloads without the new field remain readable and default it to zero; that
+default is not a fresh domain measurement of historical evidence.
 
 Historical role questions with an explicit year require one local statement that connects the requested role to that year or to a tenure range covering it. Mentions of the role and year in unrelated sections do not satisfy this check, and modified roles such as `honorary`, `acting`, or `vice` do not substitute for the requested role.
 

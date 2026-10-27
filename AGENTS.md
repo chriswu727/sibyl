@@ -1,34 +1,62 @@
 # Sibyl — Agent Guide
 
-Sibyl is a local deep-research MCP server. It turns bounded public-web
-investigations into reports with inspectable evidence and explicit limitations.
+Sibyl is a local deep-research MCP tool for AI agents. It maintains bounded
+public-web investigations, evidence-linked conclusions, and explicit gaps.
+Human-readable reports are optional outputs of the same research state.
 
-## Installation
+## Installation and interface
 
-Use Python 3.11 or newer. Report/finance extras require Pillow 13.0.0 or newer;
-do not restore Python 3.10 compatibility by weakening the security floor.
+This checkout is an unreleased host-only source preview. Published 0.4.0b1 and
+0.3.0 still contain the old architecture. Use Python 3.11+ and a fresh environment
+with `python -m pip install -e .`. Default `sibyl-mcp` exposes eight tools with
+compact MCP `structuredContent`, mirrored as JSON text; `--profile keyless` keeps
+readable text responses and twelve compatibility tools.
+See README.md and docs/agent-protocol.md.
 
-The current workflow is on unreleased `main`; PyPI 0.3.0 predates these APIs.
-Use the source-checkout installation in README.md. The core installation needs
-no search or model key. Install `.[report]` for autonomous model-backed research
-and PDF export; Markdown/JSON host reports need no optional model dependency.
+Sibyl never calls a generative model or reads subscription credentials. Reasoning
+and any model usage stay in the calling host under its own terms and limits.
+Search keys are optional; Tavily can incur separate charges. Markdown/JSON reports
+need no extra; `[report]` is PDF rendering only, with Pillow >=13.0.0.
+
+Read `research_plan.questions[].review` for host-authored conclusions and stable
+support/challenge links. Inspect gaps before reuse. Use
+`get_research(passage_ids=[...])` for exact evidence: briefs omit raw text.
+Use `view="sources"` with the current revision to page the full catalog, and
+`view="full"` for the compatible snapshot. Each brief is self-contained, not a delta.
 
 ## Default workflow: host-assisted research
 
 1. Call `start_research(question, sub_questions=[...])`. Host mode is the default.
-2. Call `continue_research(job_id, query, question_id)` with focused questions. Follow leads,
-   investigate contradictions, and look for original sources.
+2. Find sources with your own web search when available and read them with
+   `continue_research(job_id, url=..., query=..., question_id=...)`; a query alone
+   uses keyless search. Follow leads, investigate contradictions, and look for
+   original sources.
 3. Inspect `get_research(job_id)`: evidence passages, citation numbers, progress,
    retrieval limitations, and the current revision.
 4. Call `assess_research` for each question with stable supporting/challenging
-   passage IDs, a conclusion, and a counterevidence note. Investigate counterevidence
+   passage IDs, atomic claims, a conclusion, and a counterevidence note. Facts cite
+   passages and quote exact text from them (unverifiable quotes are rejected);
+   reasoning cites basis_claim_ids with a rationale. Recommendations
+   declare criteria and their user/host_assumption origin. Unknowns remain
+   unresolved with an explanation. See docs/research-claims.md. Investigate counterevidence
    with `continue_research(purpose="counterevidence")`; inspect `research_plan` gaps.
    For unresolved gaps, supply focused `follow_up_queries`, then use
    `continue_research(..., rationale="the gap this round addresses")`. Inspect the
    new evidence and reassess; a repeated call alone does not establish deeper research.
-5. Submit `complete_research(job_id, revision, summary, key_findings, analysis,
-   limitations)`. Summary and each finding must cite selected `[Source N]`.
+5. Optionally submit `complete_research(job_id, revision, claim_ids=[...],
+   limitations=[...])`. New jobs render reports from recorded claims and their
+   evidence, reasoning and criteria; omit summary/key_findings/analysis. Unknown
+   and disputed claims remain included. Old contract-1 jobs retain prose completion
+   through the keyless profile; the agent profile rejects undeclared arguments.
 6. Export with `save_report(job_id=..., format="md"|"json"|"pdf")`.
+
+Agent failures retain `isError=true` and structured recovery. For `view="error"`,
+inspect `error.code/field/claim_id`, `current_revision` and `recovery.read`; reload
+the current brief and repair rejected claims before finalizing. Never guess a
+revision. Agent exports return `view="export"` with confirmed `artifacts`
+(format/path/size_bytes/sha256) and `failures`. Only use listed artifact paths.
+Export status `saved` does not upgrade a partial `report_status`. Keyless keeps
+its text export/error responses. See docs/agent-protocol.md.
 
 Use `source_policy="academic"` to enable scholarly discovery, and
 `preferred_domains` for topic-appropriate primary publishers. These are routing
@@ -44,8 +72,8 @@ New host jobs require per-question reviews and a substantive counterevidence
 investigation; use `allow_incomplete=true` only to deliver explicit gaps.
 Such reports have `report.status="partial"`; job `status="completed"` only means
 the report is finalized. Inspect report status and the review ledger before reuse.
-Legacy checkpoints retain their previous completion behavior. The autonomous
-pipeline does not populate the new host review ledger.
+Legacy host checkpoints retain their previous completion behavior. Old autonomous
+records remain readable/exportable but cannot resume execution.
 
 Text-PDF reads require `[pdf]` on POSIX. Preserve page markers and extraction
 warnings; a bounded extraction is not the complete paper. No OCR or automatic
@@ -53,25 +81,13 @@ reference-link crawling is performed. Monitoring is optional (`[monitor]`),
 authenticated, read-only, and loopback-only; see docs/OPERATIONS.md.
 
 The host plans and writes. Sibyl persists the investigation and checks citation
-targets, not semantic entailment. Do not describe host reports as independently
-verified. Citation numbering can change after retrieval: always use the current
+targets and reasoning dependency integrity, not semantic entailment. Do not describe
+host reports as independently verified. New jobs use stable claim/evidence IDs;
+report citation numbering is generated at finalization. Always use the current
 revision. Completed reports are immutable.
 
 `get_research()` lists retained jobs. `cancel_research(job_id)` cancels work while
 keeping its evidence; `delete=true` explicitly removes a checkpoint, not exports.
-
-## Autonomous research
-
-`start_research(question, mode="autonomous")` uses the operator-configured model
-and can incur API charges. It does not inherit a host subscription or invoke
-hidden MCP sampling. Poll `get_research` for progress and the eventual report.
-`continue_research(job_id)` explicitly resumes interrupted work and may incur
-additional charges. Existing evidence and consumed budgets are preserved;
-unfinished synthesis may be regenerated.
-
-The compatible blocking `research(query, depth=2)` tool uses the same source
-pipeline but retains only the last report in memory. Prefer persistent jobs for
-long investigations.
 
 ## Evidence rules
 
@@ -82,7 +98,7 @@ long investigations.
 - Investigate missing evidence, disclose uncertainty, and abstain when needed.
 - Never manufacture findings, numbers, dates, probabilities, or source citations
   to fill a report template.
-- Model source-support checks are fallible; preserve inline unverified markers.
+- Preserve the verification scope; citation checks do not establish entailment.
 - Preserve passage IDs, hashes, offsets, and provenance through export.
 
 ## Evidence primitives
@@ -94,17 +110,23 @@ long investigations.
 - `quick_search(query)`: search hits without full-page extraction.
 - `read_url(url)`: text from one public HTTP(S) page.
 
-Use a primitive for a focused fact lookup; use persistent jobs for reports.
-These APIs remain available alongside the research workflow.
+Use a primitive for a focused fact lookup; use persistent jobs for deeper research
+and reusable evidence-linked conclusions, with optional reports.
+Only gather_bundle is in the default agent profile; the other primitives require
+the keyless compatibility profile.
 
 ## Operational boundaries
 
 One trusted local host owns a runtime. This is not a multi-tenant service.
-Checkpoints are private local files below `SIBYL_OUTPUT_ROOT/.research`.
-One runtime owns a research directory at a time. The default job allows eight
-retrieval attempts, two active job workers, 600 seconds of active execution,
-40 model attempts, and 60,000 reserved completion tokens. The token counter is
-not a complete monetary budget. Storage holds at most 64 jobs with a 1 MiB
+Checkpoints are private local files below `<output root>/.research`; the output
+root is `SIBYL_OUTPUT_ROOT`, or the per-user data directory when unset. Local
+sessions of one user share the store: a job running in another live session is
+read-only (`job_running_elsewhere`) until it finishes or its owner exits, and
+lock-check failures never count as an exited owner. The store is a shared research
+space, not project isolation. The default job allows eight retrieval attempts,
+two running jobs per store across sessions, 600 seconds of active execution,
+with no internal model attempts. Search-provider usage is not an exact monetary
+budget. Storage holds at most 64 jobs with a 1 MiB
 payload limit each. Explicit deletion reclaims history capacity.
 Recovery has a separate 64 KiB metadata reserve. Exports are limited to 16 MiB
 per file and 256 files / 128 MiB per selected output directory.
@@ -116,7 +138,21 @@ historical experiment notes are not current-model quality guarantees.
 
 ## Development
 
-Keep evidence contracts and report models independent of optional LLM imports.
+Read docs/REFACTOR_GOALS.md for the functional target and
+docs/QUALITY_BUILD_PLAN.md for the complete implementation approach before extending this refactor.
+Use docs/MCP_ARCHITECTURE.md for current design and docs/MIGRATION.md for the
+removed-execution versus retained-data boundary. Do not restore old capabilities
+because a historical checklist or serialized field mentions them.
+Keep maintained repository documentation, code comments/messages, MCP descriptions,
+metadata and maintainer-authored PR/release text in English. README.zh-CN.md is
+the sole Chinese documentation file and must track the English README's scope,
+installation and limitations. Preserve original-language evidence, proper names,
+multilingual fixtures and matching literals; this policy does not remove language
+support or rewrite historical results. Do not advertise zero hallucinations or
+treat citation-target validation as proof of semantic support.
+
+Keep model execution out of the server. Evidence contracts and report models
+must remain independent of host model providers.
 Implement job lifecycle changes in research_jobs.py, persistence in job_store.py,
 and evidence selection/checkpoints in research_state.py. Persistent MCP handlers
 belong in research_tools.py, typed records in job_models.py, deterministic

@@ -39,6 +39,8 @@ def bundle(
         query_complexity=query_complexity,
         recommended_action=recommended_action,
         refinement_searches=1,
+        substantive_sources=1,
+        substantive_domains=1,
     )
     passage = EvidencePassage("P1", "sb/S1/P1", text, "hash")
     source = EvidenceSource(
@@ -87,6 +89,8 @@ class TestLiveRetrievalEval(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.cases[0].runs[0].recommended_action, "synthesize")
         self.assertEqual(result.cases[0].runs[0].refinement_searches, 1)
         self.assertEqual(result.cases[0].runs[0].refinement_failures, 0)
+        self.assertEqual(result.cases[0].runs[0].substantive_sources, 1)
+        self.assertEqual(result.cases[0].runs[0].substantive_domains, 1)
 
     async def test_safe_traps_do_not_distort_answer_readiness(self):
         cases = [

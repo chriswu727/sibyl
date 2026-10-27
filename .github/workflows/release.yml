@@ -3,6 +3,17 @@ name: Release Sibyl
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published release tag whose existing assets should be validated and published
+        required: true
+        type: string
+      registry_only:
+        description: Publish corrected Registry metadata from main for an existing PyPI version
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -10,23 +21,24 @@ permissions:
 jobs:
   build:
     name: Build and validate distributions
+    if: ${{ !inputs.registry_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name || inputs.release_tag }}
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
       - name: Install release tooling
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 ruff==0.17.1 mypy==2.4.0 -e '.[report,finance,extract,pdf,monitor]'
+          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 ruff==0.17.1 mypy==2.4.0 -e '.[report,extract,pdf,monitor]'
       - name: Audit release environment
         run: python -m pip_audit --vulnerability-service osv --skip-editable --progress-spinner off
       - name: Validate tag and package version
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: python scripts/check_release.py "$RELEASE_TAG" --require-release-note
       - name: Run release tests and offline evaluations
         run: |
@@ -39,12 +51,34 @@ jobs:
           python scripts/eval_retrieval_pipeline.py --ranker lexical
           python scripts/eval_source_quality.py
       - name: Build distributions
+        if: github.event_name == 'release'
         run: python -m build
+      - name: Retrieve immutable GitHub release distributions
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          WHEEL="sibyl_research-${VERSION}-py3-none-any.whl"
+          SDIST="sibyl_research-${VERSION}.tar.gz"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > release-assets.json
+          jq --exit-status --arg tag "$RELEASE_TAG" --arg wheel "$WHEEL" --arg sdist "$SDIST" '
+            .tag_name == $tag and .draft == false and
+            ([.assets[] | select(.name == $wheel or .name == $sdist)] |
+              length == 2 and all(.digest | test("^sha256:[a-f0-9]{64}$")))
+          ' release-assets.json
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$WHEEL" --pattern "$SDIST" --dir dist
+          jq --raw-output --arg wheel "$WHEEL" --arg sdist "$SDIST" '
+            .assets[] | select(.name == $wheel or .name == $sdist) |
+            (.digest | ltrimstr("sha256:")) + "  dist/" + .name
+          ' release-assets.json | shasum -a 256 -c
       - name: Validate distribution metadata
         run: python -m twine check dist/*
       - name: Smoke-test core and optional wheel profiles in clean environments
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: |
           python scripts/check_wheel.py dist/*.whl "${RELEASE_TAG#v}"
       - name: Store release distributions
@@ -57,6 +91,7 @@ jobs:
 
   github-assets:
     name: Attach GitHub release assets
+    if: github.event_name == 'release'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -88,11 +123,12 @@ jobs:
           name: release-distributions
           path: dist/
       - name: Publish distributions
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
 
   mcp-registry:
     name: Publish to the official MCP Registry
     needs: publish
+    if: ${{ !cancelled() && (needs.publish.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.registry_only && github.ref == 'refs/heads/main')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -100,10 +136,17 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ inputs.registry_only && github.sha || github.event.release.tag_name || inputs.release_tag }}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Validate Registry release metadata
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+        run: python scripts/check_release.py "$RELEASE_TAG" --require-release-note
       - name: Wait for PyPI indexing
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: |
           VERSION="${RELEASE_TAG#v}"
           for attempt in {1..20}; do

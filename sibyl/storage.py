@@ -3,12 +3,42 @@
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 from uuid import uuid4
 
 from .async_cache import CapacityError
+
+LEGACY_OUTPUT_ROOT = Path("reports")
+
+
+def user_data_root() -> Path:
+    """The platform's per-user application data directory for Sibyl."""
+    if sys.platform == "win32":
+        base = os.environ.get("LOCALAPPDATA", "")
+        parent = (
+            Path(base) if os.path.isabs(base) else Path.home() / "AppData" / "Local"
+        )
+    elif sys.platform == "darwin":
+        parent = Path.home() / "Library" / "Application Support"
+    else:
+        # XDG requires absolute paths; relative values are ignored.
+        base = os.environ.get("XDG_DATA_HOME", "")
+        parent = Path(base) if os.path.isabs(base) else Path.home() / ".local" / "share"
+    return parent / "sibyl"
+
+
+def default_output_root() -> Path:
+    """SIBYL_OUTPUT_ROOT when set, otherwise the per-user data directory.
+
+    Nothing is created, moved or merged here; an older ./reports store stays put.
+    """
+    configured = os.environ.get("SIBYL_OUTPUT_ROOT", "")
+    if configured:
+        return Path(configured).expanduser().absolute()
+    return user_data_root()
 
 
 class ArtifactStore:
@@ -18,6 +48,8 @@ class ArtifactStore:
 
     def __init__(self, root: Path | str, subdirectory: str = "."):
         base = Path(root).expanduser().resolve()
+        # A newly created root is private; existing directories keep their mode.
+        base.mkdir(mode=0o700, parents=True, exist_ok=True)
         relative = Path(subdirectory)
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError("Output directory must be relative to SIBYL_OUTPUT_ROOT.")

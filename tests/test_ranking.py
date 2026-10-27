@@ -9,6 +9,7 @@ import sibyl.ranking as ranking
 from sibyl.ranking import (
     flashrank_relevance_scores,
     lexical_query_coverage,
+    lexical_query_terms,
     lexical_relevance_scores,
 )
 
@@ -87,6 +88,22 @@ class TestLexicalRelevance(unittest.TestCase):
             lexical_relevance_scores("alpha beta", documents),
             lexical_relevance_scores("alpha beta", documents),
         )
+
+    def test_decimal_versions_are_distinct_query_terms(self):
+        self.assertEqual(lexical_query_terms("Patch 0.7"), {"patch", "0.7"})
+        self.assertEqual(
+            lexical_query_terms("client v0.4.0-rc.1"), {"client", "v0.4.0-rc.1"}
+        )
+        self.assertEqual(lexical_query_terms("client 0.4.0b1"), {"client", "0.4.0b1"})
+        exact, wrong = lexical_relevance_scores(
+            "Patch 0.7 Crusader Strike",
+            [
+                ("Patch 0.7", "Crusader Strike changed in Patch 0.7."),
+                ("Patch 0.8", "Crusader Strike changed in Patch 0.8."),
+            ],
+        )
+        self.assertGreater(exact, wrong)
+        self.assertLess(lexical_query_coverage("0.7", ["0.8"]).score, 1)
 
 
 class TestLexicalCoverage(unittest.TestCase):

@@ -19,7 +19,7 @@ from typing import List, Mapping, Optional
 from urllib.parse import urljoin
 
 import httpx
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment, Doctype
 
 from .safe_http import PinnedDNSAsyncClient
 from .url_safety import resolve_public_url
@@ -161,6 +161,47 @@ def _clean_lines(text: str, max_chars: int) -> str:
 _CONTENT_SELECTOR = (
     ".model-card, .markdown-body, main, [role=main], article, [itemprop=articleBody]"
 )
+
+
+def _extract_title(soup: BeautifulSoup) -> str:
+    candidates = [soup.title.get_text(" ", strip=True) if soup.title else ""]
+    for selector in ('meta[property="og:title"]', 'meta[name="twitter:title"]'):
+        tag = soup.select_one(selector)
+        candidates.append(str(tag.get("content", "")) if tag else "")
+    candidates.extend(tag.get_text(" ", strip=True) for tag in soup.find_all("h1"))
+    for candidate in candidates:
+        title = " ".join(candidate.split())
+        if title.casefold() in {
+            "",
+            "untitled",
+            "undefined",
+            "null",
+            "loading",
+            "document",
+        }:
+            continue
+        if re.fullmatch(
+            r"[\w:.-]+[-_:](?:empty|placeholder|undefined|null)", title, re.I
+        ):
+            continue
+        return title
+    return ""
+
+
+def _normalize_html_whitespace(soup: BeautifulSoup) -> bool:
+    normalized_code = False
+    for node in list(soup.find_all(string=True)):
+        if isinstance(node, (Comment, Doctype)):
+            continue
+        text = str(node)
+        if node.find_parent(["pre", "code"]):
+            cleaned = re.sub(r"[^\S\r\n]{80,}", " ", text)
+            normalized_code |= cleaned != text
+        else:
+            cleaned = re.sub(r"\s+", " ", text)
+        if cleaned != text:
+            node.replace_with(cleaned)
+    return normalized_code
 
 
 def _bs4_body_text(soup: BeautifulSoup, max_chars: int) -> str:
@@ -378,11 +419,11 @@ def _extract_content(
     ``extractor='trafilatura'`` runs trafilatura (favor_recall) and takes the
     LONGER of trafilatura vs the BeautifulSoup body — a length-comparison
     fallback, so a short-but-non-empty trafilatura result can never shrink the
-    usable text below what bs4 would have extracted. Title always comes from the
-    cheap <title> tag.
+    usable text below what bs4 would have extracted.
     """
     soup = BeautifulSoup(html, "lxml")
     published_at, published_at_method = _extract_published_at(soup)
+    title = _extract_title(soup)
     for tag in reversed(
         soup(["script", "style", "noscript", "iframe", "input", "select", "textarea"])
     ):
@@ -399,11 +440,12 @@ def _extract_content(
         else:
             button.decompose()
 
-    title = ""
-    if soup.title and soup.title.string:
-        title = soup.title.string.strip()
-
-    bs4_text = _bs4_body_text(soup, max_chars)
+    warnings = []
+    if _normalize_html_whitespace(soup):
+        warnings.append(
+            "Excessive whitespace in preformatted text was normalized; consult the original for exact code formatting."
+        )
+    bs4_text = _bs4_body_text(soup, max_chars + 1)
     text = bs4_text
 
     if extractor == "trafilatura":
@@ -412,7 +454,7 @@ def _extract_content(
 
             traf = (
                 trafilatura.extract(
-                    html,
+                    str(soup),
                     favor_recall=True,
                     output_format="txt",
                     include_comments=False,
@@ -420,18 +462,21 @@ def _extract_content(
                 )
                 or ""
             )
-            traf_text = _clean_lines(traf, max_chars)
+            traf_text = _clean_lines(traf, max_chars + 1)
             if len(traf_text) > len(bs4_text):
                 text = traf_text
         except Exception:
             pass  # any trafilatura failure keeps the bs4 result
 
+    if len(text) > max_chars:
+        warnings.append(f"HTML text truncated to {max_chars} characters.")
     return WebPage(
         url=url,
         title=title,
-        text=text,
+        text=text[:max_chars],
         published_at=published_at,
         published_at_method=published_at_method,
+        extraction_warnings=tuple(warnings),
     )
 
 

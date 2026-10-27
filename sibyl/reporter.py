@@ -6,7 +6,19 @@ from pathlib import Path
 
 from .privacy import display_url
 from .report_models import ResearchReport
+from .report_references import reference_groups
+from .report_sections import (
+    CLAIM_SECTION_NOTICE,
+    CLAIM_SECTION_TITLE,
+    LEGACY_VERDICT_NOTICE,
+    claim_report_body,
+    legacy_verdict_tag,
+)
 from .storage import ArtifactStore
+
+
+class PDFRenderingError(ValueError):
+    pass
 
 
 def _report_to_markdown(report: ResearchReport) -> str:
@@ -32,34 +44,35 @@ def _report_to_markdown(report: ResearchReport) -> str:
         "---",
         "",
         *notice,
-        "## Summary",
-        "",
-        report.summary,
-        "",
-        "## Key Findings",
-        "",
     ]
-    fv = report.finding_verifications or []
-    if report.key_findings and not fv:
-        lines.append("> Claim verification was not performed for this report.")
+    if report.claims:
+        lines.extend(
+            [
+                f"## {CLAIM_SECTION_TITLE}",
+                "",
+                CLAIM_SECTION_NOTICE,
+                "",
+                claim_report_body(report, markdown=True),
+                "",
+            ]
+        )
+    else:
+        lines.extend(["## Summary", "", report.summary, "", "## Key Findings", ""])
+        fv = report.finding_verifications or []
+        if fv:
+            lines.extend(["> " + LEGACY_VERDICT_NOTICE, ""])
+        if report.key_findings and not fv:
+            lines.append("> Claim verification was not performed for this report.")
+            lines.append("")
+        for i, finding in enumerate(report.key_findings, 1):
+            v = fv[i - 1] if i - 1 < len(fv) else None
+            tag = ""
+            if v is not None:
+                tag = "  _" + legacy_verdict_tag(v) + "_"
+            lines.append(f"{i}. {finding}{tag}")
         lines.append("")
-    for i, finding in enumerate(report.key_findings, 1):
-        v = fv[i - 1] if i - 1 < len(fv) else None
-        tag = ""
-        if v is not None:
-            tag = (
-                f"  _[confidence: {v.confidence}]_"
-                if v.supported
-                else "  _(unverified)_"
-            )
-        lines.append(f"{i}. {finding}{tag}")
-    lines.append("")
-
-    if report.analysis:
-        lines.append("## Analysis")
-        lines.append("")
-        lines.append(report.analysis)
-        lines.append("")
+        if report.analysis:
+            lines.extend(["## Analysis", "", report.analysis, ""])
 
     if report.predictions:
         lines.append("## Uncertainties and Outlook")
@@ -67,7 +80,7 @@ def _report_to_markdown(report: ResearchReport) -> str:
         lines.append(report.predictions)
         lines.append("")
 
-    if report.research_plan:
+    if report.research_plan and not report.claims:
         lines.extend(
             [
                 "## Evidence Review",
@@ -114,21 +127,22 @@ def _report_to_markdown(report: ResearchReport) -> str:
     lines.extend(f"- {note}" for note in report.limitations)
     lines.append("")
 
-    lines.append("## References")
-    lines.append("")
-    for i, src in enumerate(report.sources, 1):
-        lines.append(f"{i}. **{src.title}**  ")
-        lines.append(f"   {display_url(src.url)}")
-        if src.retrieved_at:
-            lines.append(
-                f"   Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}"
-            )
-        if src.source_kind:
-            lines.append(f"   Source-type hint: {src.source_kind}")
-        if src.passage_ids:
-            lines.append(f"   Passages: {', '.join(src.passage_ids)}")
-        if src.content_hash:
-            lines.append(f"   Content SHA-256: {src.content_hash}")
+    for title, note, sources in reference_groups(report):
+        lines.extend([f"## {title} ({len(sources)})", "", note, ""])
+        for i, src in sources:
+            lines.append(f"- **[Source {i}] {src.title}**  ")
+            lines.append(f"  {display_url(src.url)}")
+            if src.retrieved_at:
+                lines.append(
+                    f"  Retrieved: {src.retrieved_at}; published: {src.published_at or 'unknown'}"
+                )
+            if src.source_kind:
+                lines.append(f"  Source-type hint: {src.source_kind}")
+            if src.passage_ids:
+                lines.append(f"  Passages: {', '.join(src.passage_ids)}")
+            if src.content_hash:
+                lines.append(f"  Content SHA-256: {src.content_hash}")
+        lines.append("")
     lines.append("")
 
     if report.search_queries:
@@ -144,7 +158,7 @@ def _safe_filename(query: str) -> str:
 
 
 def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
-    """Generate a PDF report using fpdf2 (pure Python, no system deps)."""
+    """Generate a PDF with explicit font-coverage and required-rendering failures."""
     if report.status not in {"ok", "partial"}:
         raise ValueError(
             report.error or "Cannot generate a PDF without a completed report"
@@ -152,28 +166,91 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     from fpdf import FPDF
 
     pdf = FPDF()
+    pdf.core_fonts_encoding = "cp1252"
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
 
     # Try to use a Unicode font, fall back to Helvetica
-    try:
-        pdf.add_font(
-            "NotoSans", "", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+    font_name = "Helvetica"
+    for regular, bold in (
+        (
+            "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+            "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        ),
+        (
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        ),
+        (
+            "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+        ),
+    ):
+        if not Path(regular).is_file() or not Path(bold).is_file():
+            continue
+        try:
+            pdf.add_font("ReportUnicode", "", regular)
+            pdf.add_font("ReportUnicode", "B", bold)
+            font_name = "ReportUnicode"
+            break
+        except Exception:
+            continue
+
+    required_text = [
+        report.query[:200],
+        *(
+            [claim_report_body(report)]
+            if report.claims
+            else [report.summary, *report.key_findings, report.analysis]
+        ),
+        report.predictions,
+        report.cross_analysis,
+        report.market_data_summary,
+        report.verification_scope,
+        *(
+            [
+                LEGACY_VERDICT_NOTICE,
+                *map(legacy_verdict_tag, report.finding_verifications),
+            ]
+            if report.finding_verifications and not report.claims
+            else []
+        ),
+        *report.limitations,
+        *(
+            text
+            for source in report.sources
+            for text in (
+                source.title,
+                display_url(source.url),
+                source.snippet[:200],
+            )
+        ),
+    ]
+    pdf.set_font(font_name, "", 10)
+    cmap = getattr(pdf.current_font, "cmap", None)
+    if cmap is not None:
+        unsupported = bool(
+            {ord(char) for text in required_text for char in text if not char.isspace()}
+            - cmap.keys()
         )
-        pdf.add_font(
-            "NotoSans", "B", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+    else:
+        try:
+            "\n".join(required_text).encode(pdf.core_fonts_encoding)
+            unsupported = False
+        except UnicodeEncodeError:
+            unsupported = True
+    if unsupported:
+        raise PDFRenderingError(
+            "PDF font cannot render required report text; use Markdown/JSON or a compatible Unicode font."
         )
-        font_name = "NotoSans"
-    except Exception:
-        font_name = "Helvetica"
 
     def heading(text, size=18, style="B"):
         try:
             pdf.set_font(font_name, style, size)
             pdf.multi_cell(0, 8, text[:200], new_x="LMARGIN", new_y="NEXT")
             pdf.ln(2)
-        except Exception:
-            pass
+        except Exception as exc:
+            raise PDFRenderingError("PDF could not render a report heading.") from exc
 
     def _plain(line, size):
         # Last-resort render if markdown parsing raises: strip the syntax.
@@ -184,8 +261,10 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         try:
             pdf.set_font(font_name, "", size)
             pdf.multi_cell(0, 6, clean, new_x="LMARGIN", new_y="NEXT")
-        except Exception:
-            pass
+        except Exception as exc:
+            raise PDFRenderingError(
+                "PDF could not render required report text; use Markdown/JSON or a compatible Unicode font."
+            ) from exc
 
     def body(text, size=10):
         """Render markdown text preserving structure: ## headers become sub-
@@ -257,8 +336,12 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
 
     # Table of Contents
     heading("Table of Contents", 12)
-    toc_items = ["1. Summary", "2. Key Findings"]
-    if report.analysis:
+    toc_items = (
+        [f"1. {CLAIM_SECTION_TITLE}"]
+        if report.claims
+        else ["1. Summary", "2. Key Findings"]
+    )
+    if report.analysis and not report.claims:
         toc_items.append("3. Analysis")
     if report.cross_analysis:
         toc_items.append(f"{len(toc_items) + 1}. Source Cross-Analysis")
@@ -267,39 +350,50 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
     toc_items.append(f"{len(toc_items) + 1}. Research Limitations")
     if report.market_data_summary or report.charts:
         toc_items.append(f"{len(toc_items) + 1}. Market Data")
-    toc_items.append(f"{len(toc_items) + 1}. Sources ({len(report.sources)})")
+    for title, _, sources in reference_groups(report):
+        toc_items.append(f"{len(toc_items) + 1}. {title} ({len(sources)})")
     for item in toc_items:
         pdf.set_font(font_name, "", 10)
         try:
             pdf.cell(0, 6, item, new_x="LMARGIN", new_y="NEXT")
-        except Exception:
-            pass
+        except Exception as exc:
+            raise PDFRenderingError(
+                "PDF could not render the table of contents."
+            ) from exc
     pdf.ln(4)
     separator()
 
-    # Summary
-    heading("Summary", 14)
-    body(report.summary)
-    separator()
-
-    # Key Findings — annotate each with its verification verdict (if present).
-    heading("Key Findings", 14)
-    fv = report.finding_verifications or []
-    if report.key_findings and not fv:
-        body("Claim verification was not performed for this report.")
-    for i, finding in enumerate(report.key_findings, 1):
-        v = fv[i - 1] if i - 1 < len(fv) else None
-        tag = ""
-        if v is not None:
-            tag = f"  [confidence: {v.confidence}]" if v.supported else "  (unverified)"
-        body(f"{i}. {finding}{tag}")
-    separator()
-
-    # Analysis
-    if report.analysis:
-        heading("Analysis", 14)
-        body(report.analysis)
+    if report.claims:
+        heading(CLAIM_SECTION_TITLE, 14)
+        body(CLAIM_SECTION_NOTICE)
+        body(claim_report_body(report))
         separator()
+    else:
+        # Summary
+        heading("Summary", 14)
+        body(report.summary)
+        separator()
+
+        # Stored verdicts are history, not an audit performed during export.
+        heading("Key Findings", 14)
+        fv = report.finding_verifications or []
+        if fv:
+            body(LEGACY_VERDICT_NOTICE)
+        if report.key_findings and not fv:
+            body("Claim verification was not performed for this report.")
+        for i, finding in enumerate(report.key_findings, 1):
+            v = fv[i - 1] if i - 1 < len(fv) else None
+            tag = ""
+            if v is not None:
+                tag = "  " + legacy_verdict_tag(v)
+            body(f"{i}. {finding}{tag}")
+        separator()
+
+        # Analysis
+        if report.analysis:
+            heading("Analysis", 14)
+            body(report.analysis)
+            separator()
 
     # Cross-analysis
     if report.cross_analysis:
@@ -342,8 +436,10 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
                     try:
                         pdf.set_font(font_name, "", 9)
                         pdf.multi_cell(0, 5, line, new_x="LMARGIN", new_y="NEXT")
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        raise PDFRenderingError(
+                            "PDF could not render retained market data."
+                        ) from exc
             pdf.ln(4)
 
         for chart_path in report.charts:
@@ -358,21 +454,22 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
         separator()
 
     # Sources
-    heading(f"Sources ({len(report.sources)})", 14)
-    for i, src in enumerate(report.sources, 1):
+    def reference(i, src):
         try:
             pdf.set_font(font_name, "B", 9)
-            pdf.multi_cell(0, 5, f"{i}. {src.title}", new_x="LMARGIN", new_y="NEXT")
-        except Exception:
-            pass
+            pdf.multi_cell(
+                0, 5, f"[Source {i}] {src.title}", new_x="LMARGIN", new_y="NEXT"
+            )
+        except Exception as exc:
+            raise PDFRenderingError("PDF could not render a source title.") from exc
         try:
             pdf.set_font(font_name, "", 7)
             pdf.set_text_color(30, 30, 180)
             pdf.write(4, display_url(src.url))
             pdf.ln(4)
             pdf.set_text_color(0, 0, 0)
-        except Exception:
-            pass
+        except Exception as exc:
+            raise PDFRenderingError("PDF could not render a source URL.") from exc
         if src.snippet:
             try:
                 pdf.set_font(font_name, "", 7)
@@ -380,9 +477,17 @@ def generate_pdf(report: ResearchReport, output_dir: str = ".") -> str:
                 pdf.write(4, src.snippet[:200])
                 pdf.ln(4)
                 pdf.set_text_color(0, 0, 0)
-            except Exception:
-                pass
+            except Exception as exc:
+                raise PDFRenderingError(
+                    "PDF could not render a source excerpt."
+                ) from exc
         pdf.ln(3)
+
+    for title, note, sources in reference_groups(report):
+        heading(f"{title} ({len(sources)})", 14)
+        body(note, 9)
+        for i, src in sources:
+            reference(i, src)
 
     # Save
     return str(ArtifactStore(output_dir).write(bytes(pdf.output()), "report", ".pdf"))

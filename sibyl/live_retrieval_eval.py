@@ -50,6 +50,8 @@ class LiveRetrievalRun:
     recommended_action: str = "not_assessed"
     refinement_searches: int = 0
     refinement_failures: int = 0
+    substantive_sources: int = 0
+    substantive_domains: int = 0
 
 
 @dataclass(frozen=True)
@@ -147,6 +149,8 @@ def evaluate_bundle(
         recommended_action=bundle.diagnostics.recommended_action,
         refinement_searches=bundle.diagnostics.refinement_searches,
         refinement_failures=bundle.diagnostics.refinement_failures,
+        substantive_sources=bundle.diagnostics.substantive_sources,
+        substantive_domains=bundle.diagnostics.substantive_domains,
     )
 
 

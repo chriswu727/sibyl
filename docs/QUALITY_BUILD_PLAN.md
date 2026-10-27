@@ -1,116 +1,309 @@
-# Sibyl roadmap
+# Sibyl implementation plan
 
-Reviewed 2026-10-21. This is the active roadmap for the unreleased 0.4.0
-development line. Implemented features are documented in [Usage](USAGE.md);
-release blockers are governed by [Launch readiness](LAUNCH_READINESS.md).
-The [earlier implementation plan](https://github.com/chriswu727/sibyl/blob/d343267/docs/QUALITY_BUILD_PLAN.md)
-is preserved in Git history, not a source of current defaults or quality claims.
+Updated 2026-10-26. The objective is a complete research MCP that an existing AI
+agent can install, understand and use to investigate questions, make evidence-based
+recommendations and produce optional reports. The [functional goals](REFACTOR_GOALS.md)
+define the requirements; [launch readiness](LAUNCH_READINESS.md#release-gates)
+governs publication.
 
-## Implemented baseline
+Work toward that complete user experience through tested, reviewable changes.
+Cases, contracts, retrieval fixes and host usability are parts of the same product
+implementation. A case collection, a new schema or a passing test suite alone
+does not complete the refactor.
 
-- Persistent host-assisted investigations with multi-round retrieval, question
-  reviews, counterevidence requirements, explicit gaps, and partial reports.
-- Shared source/passages contracts, hashes, offsets, provenance, date hints,
-  duplicate-content clusters, and source inspection.
-- Optional configured-model research with bounded reflection and visible
-  source-support audit limitations; no hidden host sampling or subscription reuse.
-- Optional text-PDF reads through the safe fetch boundary, page markers,
-  bounded parsing workers, and explicit extraction limitations.
-- Private SQLite checkpoints, cancellation/resume, retained budgets on oversized
-  checkpoints, bounded exports, and single-runtime ownership.
-- Authenticated loopback monitoring, content-free metrics, structured stderr
-  events, and documented recovery procedures. Monitoring is opt-in; an alert
-  service and dashboard are not installed automatically.
-- Consistent formatting/import checks and typed core job/state/review contracts.
-- Recorded-source full MCP workflow replay and clean-wheel core,
-  PDF/monitoring, and report/finance/extraction verification.
-- Bounded fault tests for abrupt process termination, failed writes before/after
-  retrieval dispatch, transaction rollback, repeated cancellation, and export cleanup.
+## Current source implementation
 
-## Before release
+The implementation below exists on main, not in a new published package.
+[Architecture](MCP_ARCHITECTURE.md) is the current design; [migration](MIGRATION.md)
+separates removed behavior from intentional old-record compatibility. The dated
+paragraphs in this section are evidence history, not separate unfinished phases.
 
-### 1. Establish a current research-quality baseline
+### Remaining implementation priorities
 
-Select 10–15 representative investigations covering academic synthesis, market
-research, technical comparison, multi-hop facts, conflicting sources, and missing
-evidence. Include official HTML and text PDFs. Freeze the questions, scoring
-rubric, host/model configuration, allowed sources, and budget before execution.
+1. Diagnose original-source discovery and readiness instability against retained
+   failures without changing frozen thresholds or hiding host-supplied URL rescues.
+2. Improve qualification/section coverage in bounded reading and make exact
+   claim-to-passage support reliable in real host use. Do not infer entailment
+   from structural validation; the latest SQLite sample still fails this criterion.
+3. Verify natural research, recovery, counterevidence, follow-ups, unknown delivery
+   and optional exports on supported host configurations. New model-backed runs
+   require fresh explicit consent. The 2026-10-27 Claude Code paired smoke used
+   its allowance; it showed working quote checks and native-search discovery but
+   also weaker source choice on one task and about five times the baseline cost.
+4. Retain the declared same-host/provider/budget comparison and a new full live
+   retrieval pass before the stable release decision. Then choose a fresh version,
+   verify distributions and reconcile public channels through the release runbook.
 
-Run the complete MCP workflow: plan, retrieve, inspect, identify gaps, retrieve
-again, assess, and export. Retain tool traces and reports with secrets removed.
-Score question coverage, claim-to-passage support, primary-source discovery,
-counterevidence, time/metric consistency, correct abstention, latency, and cost.
-Use human spot-checks; an LLM judge is not ground truth.
+These are connected acceptance gaps in the same product, not permission to
+restore internal models, add an unrelated UI or ship another beta. The design,
+README, migration and operations documents must remain aligned throughout.
 
-Acceptance: dated, reproducible evidence of the whole workflow, including failures.
-A comparison with ordinary search must hold model, source access, and budget
-constant. Model/API/subscription consumption requires explicit budget approval.
+### Implemented contracts and retained measurements
 
-### 2. Fix measured retrieval and report failures
+New MCP jobs now connect atomic facts, reasoning and recommendation criteria
+through the [claim contract](research-claims.md). The source implementation checks
+references and reasoning cycles, detects changed/stale premises, retains unknowns
+and disputes, and renders optional reports from the same ledger. Old checkpoints
+retain their completion behavior. Focused query variants also preserve a leading
+entity name when the question word occurs later in the query.
 
-Prioritize false-ready states, missing query anchors, concentrated or duplicated
-sources, ineffective follow-ups, and conclusions that overlook PDF truncation.
-Turn each reproducible failure into an offline regression. Preserve unknowns
-and unsupported claims rather than weakening the readiness checks.
+Recorded-source MCP replay covers this workflow and export/restart. Broader host
+usability, reliable live discovery and a paired native-search comparison remain
+acceptance gaps; the bounded host results below do not meet the complete-product criteria.
 
-Acceptance: targeted regressions pass, followed by the committed 66-case,
-three-repeat live retrieval gate with its existing thresholds. The small research
-baseline supplements that gate; it does not replace or waive it.
+An [anonymous three-query smoke record](../evals/results/source-discovery-claims-2026-10-26.json)
+retains source identities and diagnostics before/after final-source preference
+changes. The final check returned original SQLite/Stripe documentation, but a
+PostgreSQL 17 question still returned version 16 documentation. These sequential
+single runs are exploratory; they do not clear the live gate or establish causality.
 
-### 3. Validate sustained operation and faults
+A [four-request Codex Luna low-effort smoke](../evals/results/host-agent-luna-low-2026-10-26.json)
+completed one live SQLite investigation with partial Markdown/JSON reports, but
+both unknown-case deliveries failed. The first guessed a nonexistent JSON path;
+after export instructions were clarified, the next attempted the correct formats
+but did not repair rejected claims or stale revisions. The fourth request exhausted
+the approved allowance. CLI exit zero did not establish delivery success.
+Explicit choice schemas and export semantics are implemented. Agent calls now
+also return structured claim/revision recovery and confirmed artifact manifests,
+with real stdio regression coverage for rejected assessments, reload, repair and
+explicit unknown-report export. Validation rules remain intact and keyless text
+responses are preserved. The subsequently authorized two-workflow retest below
+measured improved delivery, not a complete semantic-quality pass. The original
+four-request smoke remains a retained usability failure, not a paired comparison.
 
-Extend the existing bounded cancellation, oversize, process termination,
-write-failure, and authentication tests with sustained concurrency, resource
-pressure, and repeated upstream failure. Measure child-process, socket, task,
-and file growth over longer runs. Test backup/restore with the runtime stopped.
+Body selection now chooses disjoint passages across the bounded extracted source
+instead of splitting one head-biased window. Unicode lexical matches and
+prose/table context reduce navigation-only matches; this is not translation or
+semantic verification. Query-targeted URL reads inspect up to 60,000 extracted
+characters with at most 16,000 evidence characters and explicit unread sections.
+The [two-case real-MCP record](../evals/results/body-evidence-2026-10-26.json)
+retains unchanged SQLite/AWS source hashes and before/after passage spans. Both
+after runs include the declared writer-limit and retry-contract qualifications,
+without host-supplied URLs or model calls. These are narrow reading regressions,
+not a complete research, host-usability or stable-release gate pass.
 
-Add bounded retrieval-stage metrics where needed: fetch outcomes, parser
-failures, investigation rounds, and insufficient-evidence rates. Keep questions,
-URLs, job IDs, and evidence out of metric labels.
+The subsequent [frozen 66-case, three-repeat live gate](../evals/results/live-retrieval-body-selection-2026-10-26.json)
+still fails: 81.5% answer coverage, 97.9% ready-state answer precision and 100%
+trap-safe rate, but 57.4% answerable readiness and 51.5% repeat stability. Thresholds
+are unchanged. Diagnose discovery/readiness misses without treating the two
+targeted reading fixes as a complete-product pass.
 
-Acceptance: reproducible fault scenarios, documented recovery outcomes and
-resource measurements. Optional live scraping, alerts, or a dashboard require an
-operator-selected deployment and retention policy; a runbook example is not a
-deployed monitoring service.
+Claim-based human reports now present the generated claim narrative once, while
+JSON retains compatible summary/findings/analysis fields and the full ledger.
+PDF rendering checks font coverage and reports failures instead of silently losing
+required text. Legacy prose layouts and saved research state remain unchanged.
 
-### 4. Review dependencies and distribution compatibility
+Tracing three live misses found separate discovery failures rather than only a
+passage-window problem. Contracted question words such as What's skipped the
+existing quoted-title fallback, and focused patch queries split 0.7 into 0 7
+while lexical ranking discarded both digits. Targeted regressions now preserve
+those query identifiers and recognize contractions. Missing historical tenure and
+unreadable/metadata-only papers still need investigation; these parsing fixes do
+not clear the retained live gate or establish version-specific semantic support.
+The [three-case tracing record](../evals/results/query-identifiers-2026-10-26.json)
+retains the before/after queries, failed reads and after-run outcomes. None of
+the three after runs contains a frozen gold/alias match; two nevertheless return
+retrieval status ok. Do not present query preservation or those heuristic statuses
+as successful answers. The 66-case gate has not been rerun after this parsing fix.
 
-Review dependency proposals individually. Major MCP SDK and data-library updates
-need dedicated compatibility tests; a green dependency audit alone is insufficient.
-Keep the implemented core, PDF/monitoring, and report/finance/extraction clean-wheel
-checks passing for each release candidate. Extend adversarial input tests without claiming prompt-injection
-immunity or treating a parser process as a security sandbox.
+An additional controlled regression reproduced a readiness mismatch: three
+distinct Crossref metadata records could be counted as three substantive sources
+and return ok even when every page read failed. Retrieval now excludes known
+metadata/snippet origins from substantive-source, independent-content and
+substantive-domain gates, consistent with persistent-job accounting. Catalog
+leads remain available. This stricter classification does not identify every HTML
+abstract/catalog page, prove semantic support or clear the frozen live gate.
 
-Acceptance: supported Python matrices, clean-wheel checks, audit results, and
-documented upgrade behavior. No release/version changes merely to clear a queue.
+A renewed, explicitly bounded [two-workflow low-effort host retest](../evals/results/host-agent-structured-retest-2026-10-26.json)
+delivered confirmed Markdown/JSON files for both tasks in 44.9/49.9 seconds. The
+unknown-outcome task recovered from a rejected inference and preserved uncertainty.
+Both reports remain partial. Manual review found that the SQLite single-writer
+qualification was not supported by its cited excerpt, so this is not a two-case
+research-quality pass. The same source's qualification lay outside the selected
+passages for the host's broad query. Discovery, evidence coverage and exact
+claim-to-passage semantic support remain unfinished quality work.
 
-### 5. Complete beta validation and publish
+Exact passage reads now expose their bounded-source length, excerpt status and
+a budgeted read-more hint, and host instructions explicitly require support for
+each qualification. This makes the scope/recovery path visible; it does not
+implement semantic verification or establish a fixed host outcome. The approved
+two-workflow allowance is exhausted, and those subsequent changes have not been
+retested with another model request.
 
-At least three external beta users must independently install the product,
-complete a representative investigation, and explain its evidence/citation states.
-Convert friction into fixes or documentation. Satisfy every release gate before
-dating the changelog, tagging, publishing PyPI/Registry metadata, or expanding
-directory promotion. Follow [Releasing](RELEASING.md).
+## The finished user experience
 
-Acceptance: recorded beta feedback, all required checks, and consistent GitHub,
-PyPI, Registry, and product-page descriptions. External participation is a real
-dependency; automated local tests do not substitute for it.
+A user installs Sibyl in an existing local MCP-capable agent and asks an ordinary
+question or requests a recommendation. The agent can identify the user's needs,
+investigate focused questions, read original sources, examine contrary evidence
+and return a useful answer whose material factual premises have inspectable
+support. The user can ask a follow-up and reuse the ongoing investigation.
+A human-readable report is available when requested.
 
-## Subsequent enhancements
+The agent should learn this workflow from tool descriptions and concise server
+instructions. Users should not have to call tools manually or repeatedly explain
+how to connect evidence to a conclusion. Sibyl stores evidence and research state;
+all semantic reasoning and writing remain in the host.
 
-These are candidates, not implemented capabilities or release commitments:
+## Start with a complete investigation
 
-1. Selective PDF page/range reads so a host can investigate beyond a truncated
-   extraction without repeatedly downloading/parsing the same full input.
-2. Extracted citation-link traversal with explicit parent/child provenance;
-   current citation lineage is host-declared.
-3. Incremental research editions that distinguish retained from refreshed
-   evidence; current completed reports remain immutable.
-4. Optional OCR and layout-aware tables/formulas with explicit resource and
-   confidence limits; no automatic model downloads.
-5. A research-progress interface built on appropriately scoped state access;
-   current monitoring deliberately excludes research content.
+Begin implementation with a representative suitability/recommendation request
+that exercises the whole path: user constraints, focused questions, source
+discovery, passage reads, factual premises, counterevidence, a conditional
+recommendation, follow-up investigation and optional export.
 
-Select these based on observed research failures and user needs. Keep the local
-runtime, network policy, evidence contracts, and persistence boundaries clear;
-see [Architecture](MCP_ARCHITECTURE.md) for where each extension belongs.
+Use this investigation as a working example while connecting the missing pieces
+of the existing code. Keep the eight-tool default and extend the current review
+ledger and evidence store. Establish meaningful cases and expected outcomes
+alongside the behavior being implemented, then retain each fixed failure as a
+regression. Do not make an isolated test-package delivery the stopping point.
+
+Use recorded sources for repeatable development and reserve separate held-out
+questions for live quality measurements. Include technical suitability, factual
+investigation and recommendations, with conflicting sources, stale information,
+copied content, missing numbers, unclear preferences, unreadable documents,
+prompt injection, provider failure and restart. Record whether sources were
+automatically discovered or manually supplied.
+
+## Connect conclusions and recommendations to evidence
+
+The implemented claim contract extends question-level conclusions and passage
+links with individual factual assertions, deductions and recommendation criteria.
+The requirements below describe invariants to preserve while closing the remaining
+quality gaps, not an instruction to build a second claim store.
+
+Represent the minimum information needed by the host: stable statement identity,
+statement text and type, support/challenge references, dependencies on other
+statements, assessment status, reasoning and applicable assumptions or scope.
+Keep missing or disputed information visible. Maintain the concrete additive
+[schema and examples](research-claims.md); avoid redundant fields and uncalibrated
+numerical confidence scores.
+
+For recommendations, record the user's criteria and distinguish them from
+host-supplied assumptions. Connect each material advantage, disadvantage and
+comparison premise to its supporting evidence. If a price or performance figure
+is unavailable, preserve the unknown and explain its effect on the recommendation.
+If priorities are missing, the host should ask or offer conditional choices.
+
+Apply the contract throughout Sibyl-managed conclusions and deliverables,
+including analysis and recommendation rationale. Existing evidence IDs, revisions
+and provenance remain the common reference system. Unknown references and stale
+submissions fail clearly; new evidence marks affected assessments for review.
+Structural validation and host-declared semantic support must stay distinguishable.
+
+Implementation belongs in the existing job models, research state/review,
+persistent handlers and result projections. Keep persistence in the job store.
+Version new records explicitly, preserve old checkpoints and exports, and keep
+old autonomous execution disabled. Historical records must not acquire a fresh
+verification verdict merely because they can be loaded.
+
+## Make useful original evidence easier to obtain
+
+Improve source discovery and reading as actual investigations reveal failures.
+Trace each miss through query generation, candidate selection, relevance ranking,
+fetching and extraction before choosing the fix. Prioritize relevant original
+documentation, papers and first-party disclosures while retaining useful contrary
+evidence. Source labels remain heuristics rather than authority guarantees.
+
+Preserve canonical source identity, exact passages, hashes/offsets, timestamps,
+available publication metadata, content origin and extraction warnings.
+Search snippets and abstracts are leads; a truncated document is only partially
+read. Duplicate content must not become independent corroboration.
+
+Keep direct reads and explicit citation-following in the same investigation and
+budget. Add selective PDF page/range reading if observed tasks need evidence
+beyond a truncated read. Any new reader must use the existing safe network and
+bounded-parser boundary. Expose failed reads and the remaining evidence gap.
+Keep paid providers and third-party rendering explicit.
+
+Judge discovery separately from reading a host-supplied URL. Track the unresolved
+weakness shown by the retained host suite, where seven of ten cases needed
+manually supplied URLs. A successful manual rescue must not hide a discovery miss.
+
+## Make the research loop clear to the host
+
+After each action, return enough current state for the host to decide what to do:
+what was found, which judgments have evidence, which questions remain unresolved,
+what conflicts or limitations matter, and what retrieval budget remains.
+The next query should address a specific gap. A repeated query or a larger source
+count alone must not be treated as progress.
+
+Keep compact self-contained briefs, on-demand exact passages and the complete
+saved-source catalog. Preserve evidence outside the selected report window.
+Make failures and incomplete outcomes actionable, and let the host stop with
+uncertainty when more retrieval is unlikely to resolve the question.
+
+Support both focused lookups and persistent investigations without making a
+simple factual query require a long form. Add or change a tool only when a real
+user task cannot be expressed clearly through the current surface.
+
+## Preserve useful answers and optional reports
+
+The structured investigation must be useful before a report is finalized.
+Keep conclusions, evidence links, recommendation criteria, assumptions, conflicts
+and gaps available to downstream agent work.
+
+Markdown, JSON and optional PDF should render from the same saved state.
+Human-readable outputs can summarize evidence but must preserve material
+qualifications and partial status. JSON retains the machine-readable evidence
+package. Completed reports remain immutable; new editions need an explicit
+research/update design rather than a silent rewrite.
+
+## Verify the complete product during implementation
+
+Exercise the actual MCP journey as the capabilities are connected. Retain
+regressions for missing support, invalid IDs, stale judgments, contradictory
+sources, incomplete reads, failed providers, cancellation, restart and exports.
+Existing Python, type, lint, security, runtime and distribution checks stay in force.
+
+Record real host/version configurations, including a subscription-backed workflow
+and text-oriented compatibility where supported. Check installation, tool discovery,
+structured results, natural research requests, follow-ups, explicit uncertainty
+and optional export. Record prompt scaffolding and manual intervention so that
+a fixture success is not mistaken for autonomous host usability.
+Obtain explicit approval before consuming model/subscription usage.
+
+Measure answer quality with the same host/model/effort, dated questions, provider
+access and overall budget against ordinary search. Declare scoring, stopping and
+retry rules before inspecting results. Where native-search access cannot be
+matched, disclose the confound and limit the claim.
+
+Assess original-source discovery, important-question coverage, material-claim
+support, counterevidence, justified recommendations, appropriate abstention,
+latency and actual usage. Keep subjective preferences separate from empirical
+facts. Retain both outputs and failures; blind scoring to the condition where
+practical. Smaller tool responses are not automatically lower token cost or better
+answers. The existing dated 66-case, three-repeat retrieval gate remains applicable.
+
+## What counts as done
+
+The refactor is complete when the supported installation and host configurations
+can perform the intended investigation end to end, and retained evidence shows:
+
+- Material factual premises can be traced to exact evidence; inferences,
+  recommendation criteria, assumptions and unknowns remain explicit.
+- The host can find/read useful sources, investigate counterevidence, address gaps
+  and continue after a follow-up without per-call human coaching.
+- Discovery failures, conflicting evidence, stale claims, incomplete reads and
+  exhausted budgets produce useful, honest outcomes.
+- Structured results and optional reports preserve the same evidence and limitations.
+- Existing records remain usable, and runtime, security and clean-install checks pass.
+- Research-quality and real-host acceptance results meet their declared criteria,
+  with any superiority claim limited to what the comparison establishes.
+- English repository documentation, the sole Chinese README, GitHub About, package
+  and Registry metadata, and the separately maintained product page agree with
+  the actual candidate.
+- Applicable [release gates](LAUNCH_READINESS.md#release-gates) are satisfied and
+  published artifacts are verified through the [release runbook](RELEASING.md).
+
+## Delivery rules
+
+Continue toward the complete product through scoped commits and reviewable PRs.
+An intermediate artifact or successful subsystem check is progress, not completion.
+Keep development, live measurements and publication accurately documented.
+
+Use English for maintained repository prose and metadata. README.zh-CN.md is the
+only Chinese documentation; retain original-language evidence and multilingual
+fixtures. Do not alter historical results, weaken gates or add hidden billable
+actions. Keep internal model execution and subscription-token handling out of
+Sibyl. Independent chat UI, model orchestration, financial-analysis tools, OCR and
+automatic publication are outside the current requirements.

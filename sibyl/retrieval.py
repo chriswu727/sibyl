@@ -12,7 +12,6 @@ from urllib.parse import urlsplit
 import httpx
 
 from .content_clusters import cluster_content
-from .context import relevant_window_span
 from .dedup import canonical_url, dedup_pages
 from .evidence import (
     BundleDiagnostics,
@@ -24,7 +23,7 @@ from .evidence import (
     RecommendedAction,
     SourceBundle,
 )
-from .passages import TextPassage, split_passages
+from .passages import select_passages
 from .queries import (
     focused_site_query,
     query_requires_decomposition,
@@ -57,6 +56,7 @@ from .search import (
     search_wikipedia,
     wikipedia_lookup,
 )
+from .source_policy import matches_domain, normalize_domains, source_kind
 from .temporal import period_match
 
 _ACADEMIC_QUERY_RE = re.compile(
@@ -110,6 +110,7 @@ def _diagnostics(
     recommended_action: RecommendedAction = "not_assessed",
     refinement_searches: int = 0,
     refinement_failures: int = 0,
+    substantive_domains: int = 0,
 ) -> BundleDiagnostics:
     return BundleDiagnostics(
         search_results=search_results,
@@ -155,6 +156,7 @@ def _diagnostics(
         recommended_action=recommended_action,
         refinement_searches=refinement_searches,
         refinement_failures=refinement_failures,
+        substantive_domains=substantive_domains,
     )
 
 
@@ -177,6 +179,14 @@ async def _score_documents(
         return lexical_relevance_scores(query, documents), "lexical_v1", warning
 
 
+def _has_substantive_text(page: WebPage) -> bool:
+    return (
+        len(page.text) > 200
+        and not page.error
+        and page.content_origin not in {"search_snippet", "crossref_api"}
+    )
+
+
 async def gather_source_bundle(
     query: str,
     max_sources: int = 10,
@@ -188,6 +198,7 @@ async def gather_source_bundle(
     extractor: str = "bs4",
     jina_fallback: bool = False,
     include_academic: bool | None = None,
+    preferred_domains: list[str] | None = None,
 ) -> SourceBundle:
     started_at = time.monotonic()
     requested_ranker = str(ranker or "").strip().lower()
@@ -221,6 +232,7 @@ async def gather_source_bundle(
     url_attempt_limit = max(effective_max_sources + 2, 12)
     clean_query = str(query or "").strip()
     site_hosts = query_site_hosts(clean_query)
+    preferred_hosts = normalize_domains(preferred_domains or [])
     search_queries = search_query_variants(clean_query)
     multi_step_query = query_requires_decomposition(clean_query)
     query_complexity: QueryComplexity = (
@@ -304,6 +316,24 @@ async def gather_source_bundle(
                     include_academic=include_academic,
                 )
             )
+        if preferred_hosts and not site_hosts:
+            base_query = search_queries[-1]
+            for domain in preferred_hosts[:2]:
+                focused_query = f"{base_query} site:{domain}"
+                search_queries.append(focused_query)
+                refinement_searches += 1
+                try:
+                    search_batches.append(
+                        await search_web(
+                            focused_query,
+                            search_engine,
+                            max_results=4,
+                            client=client,
+                            include_academic=include_academic,
+                        )
+                    )
+                except Exception:
+                    refinement_failures += 1
         if len(site_hosts) > 1:
             result_hosts = {
                 (urlsplit(result.url).hostname or "").lower()
@@ -358,6 +388,27 @@ async def gather_source_bundle(
                 if result_key not in seen_results:
                     seen_results.add(result_key)
                     results.append(result)
+        if selected_ranker != "none":
+            scores = lexical_relevance_scores(
+                clean_query, [(result.title, result.snippet) for result in results]
+            )
+            results = [
+                result
+                for _, result in sorted(
+                    zip(scores, results),
+                    key=lambda item: (
+                        -period_match(clean_query, item[1].title, item[1].url, None),
+                        -int(
+                            item[0] > 0
+                            and matches_domain(
+                                (urlsplit(item[1].url).hostname or "").lower(),
+                                preferred_hosts,
+                            )
+                        ),
+                        -item[0],
+                    ),
+                )
+            ]
         if len(site_hosts) > 1:
             representatives = []
             for domain in site_hosts:
@@ -462,8 +513,7 @@ async def gather_source_bundle(
             urlsplit(page.url).netloc.casefold().removeprefix("www.")
             for page in good
             if (
-                len(page.text) > 200
-                and page.content_origin != "search_snippet"
+                _has_substantive_text(page)
                 and (
                     not query_anchor_terms
                     or query_anchor_terms <= lexical_query_terms(page.text)
@@ -549,7 +599,7 @@ async def gather_source_bundle(
                     else:
                         snippet_fallbacks += 1
                 good = dedup_pages(good)
-        substantive = [page for page in good if len(page.text) > 200]
+        substantive = [page for page in good if _has_substantive_text(page)]
         if len(substantive) < 3 and not site_hosts:
             wiki_pages = await wikipedia_lookup(
                 search_queries[-1], client=client, max_pages=2
@@ -557,7 +607,7 @@ async def gather_source_bundle(
             wikipedia_fallbacks += len(wiki_pages)
             if wiki_pages:
                 good = dedup_pages(good + wiki_pages)
-                substantive = [page for page in good if len(page.text) > 200]
+                substantive = [page for page in good if _has_substantive_text(page)]
         candidates = good
 
     except Exception:
@@ -607,21 +657,24 @@ async def gather_source_bundle(
 
     content_clusters = cluster_content([page.text for page in candidates])
     cluster_id_by_source_hash = {}
+    passage_size = min(2500, max(500, effective_chars_per_source // 3))
+    max_passages_per_source = min(3, max(1, effective_chars_per_source // passage_size))
 
     source_candidates = []
     ranking_documents = []
     for page, cluster_id in zip(candidates, content_clusters.cluster_ids):
-        representative_start, representative_end = relevant_window_span(
-            clean_query, page.text, width=effective_chars_per_source
+        chunks = select_passages(
+            clean_query,
+            page.text,
+            max_chars=effective_chars_per_source,
+            max_passages=max_passages_per_source,
         )
-        representative = page.text[representative_start:representative_end]
+        representative = "\n\n".join(chunk.text for chunk in chunks)
         page_key = canonical_url(page.url)
         title = page.title or result_titles.get(page_key, page.url)
         source_hash = _sha256(page.text)
         cluster_id_by_source_hash[source_hash] = cluster_id
-        source_candidates.append(
-            (page, title, source_hash, representative_start, representative)
-        )
+        source_candidates.append((page, title, source_hash, chunks))
         ranking_documents.append((title, representative))
 
     (
@@ -629,6 +682,44 @@ async def gather_source_bundle(
         source_ranking_method,
         source_ranking_warning,
     ) = await _score_documents(clean_query, ranking_documents, selected_ranker)
+
+    preferred_representatives: set[int] = set()
+    preferred_order = sorted(
+        range(len(source_candidates)),
+        key=lambda index: (
+            -period_match(
+                clean_query,
+                source_candidates[index][1],
+                source_candidates[index][0].url,
+                source_candidates[index][0].published_at,
+            ),
+            -(relevance_scores[index] or 0.0),
+            index,
+        ),
+    )
+    for domain in preferred_hosts:
+        representative_index = next(
+            (
+                index
+                for index in preferred_order
+                if (relevance_scores[index] or 0.0) > 0
+                and source_candidates[index][0].content_origin
+                not in {"search_snippet", "crossref_api"}
+                and source_kind(source_candidates[index][0], preferred_hosts)
+                not in {"community", "encyclopedia"}
+                and matches_domain(
+                    (urlsplit(source_candidates[index][0].url).hostname or "").lower(),
+                    [domain],
+                )
+            ),
+            None,
+        )
+        if representative_index is not None:
+            preferred_representatives.add(representative_index)
+
+    def source_preference(index: int) -> int:
+        return int(index in preferred_representatives)
+
     ranked_indices = sorted(
         range(len(source_candidates)),
         key=lambda index: (
@@ -640,6 +731,7 @@ async def gather_source_bundle(
             )
             if selected_ranker != "none"
             else 0,
+            -source_preference(index) if selected_ranker != "none" else 0,
             -(relevance_scores[index] or 0.0),
             index,
         ),
@@ -673,7 +765,8 @@ async def gather_source_bundle(
                     source_candidates[index][1],
                     source_candidates[index][0].url,
                     source_candidates[index][0].published_at,
-                )
+                ),
+                -source_preference(index),
             ),
         )[:effective_max_sources]
     selected_sources = [
@@ -681,28 +774,9 @@ async def gather_source_bundle(
         for index in selected_indices
     ]
 
-    passage_size = min(2500, max(500, effective_chars_per_source // 3))
-    max_passages_per_source = min(3, max(1, effective_chars_per_source // passage_size))
     chunk_groups = []
     chunk_documents = []
-    for (
-        page,
-        title,
-        source_hash,
-        representative_start,
-        representative,
-        relevance_score,
-    ) in selected_sources:
-        chunks = split_passages(representative, max_chars=passage_size, overlap_chars=0)
-        if len(chunks) > max_passages_per_source:
-            tail_start = chunks[max_passages_per_source - 1].start_char
-            chunks = chunks[: max_passages_per_source - 1] + [
-                TextPassage(
-                    representative[tail_start:],
-                    tail_start,
-                    len(representative),
-                )
-            ]
+    for page, title, source_hash, chunks, relevance_score in selected_sources:
         score_start = len(chunk_documents)
         chunk_documents.extend((title, chunk.text) for chunk in chunks)
         chunk_groups.append(
@@ -710,7 +784,6 @@ async def gather_source_bundle(
                 page,
                 title,
                 source_hash,
-                representative_start,
                 relevance_score,
                 chunks,
                 score_start,
@@ -747,7 +820,6 @@ async def gather_source_bundle(
         page,
         title,
         source_hash,
-        representative_start,
         relevance_score,
         chunks,
         score_start,
@@ -766,11 +838,7 @@ async def gather_source_bundle(
                 continue
             selected_passages.append(
                 (
-                    TextPassage(
-                        chunk.text,
-                        representative_start + chunk.start_char,
-                        representative_start + chunk.end_char,
-                    ),
+                    chunk,
                     content_hash,
                     chunk_scores[chunk_index],
                 )
@@ -829,12 +897,16 @@ async def gather_source_bundle(
             prepared, source_evidence_terms
         )
         if (
-            len(page.text) > 200
-            and page.content_origin != "search_snippet"
+            _has_substantive_text(page)
             and (not query_anchor_terms or query_anchor_terms <= source_terms)
         )
     ]
     substantive_sources = len(substantive_prepared)
+    substantive_domains = {
+        urlsplit(page.url).netloc.lower().removeprefix("www.")
+        for page, _ in substantive_prepared
+        if urlsplit(page.url).netloc
+    }
     selected_cluster_ids = {
         cluster_id_by_source_hash[source_hash] for _, _, source_hash, _, _ in prepared
     }
@@ -855,7 +927,7 @@ async def gather_source_bundle(
         evidence_chars=evidence_chars,
         query_terms=coverage.query_terms,
         query_term_coverage=coverage.score,
-        unique_domains=len(domains),
+        unique_domains=len(substantive_domains),
         independent_content_clusters=independent_content_clusters,
         missing_anchor_terms=missing_anchor_terms,
         future_outcome_unobservable=_future_outcome_is_unobservable(clean_query),
@@ -965,6 +1037,7 @@ async def gather_source_bundle(
         query_term_coverage=coverage.score if sources else None,
         unique_domains=len(domains),
         substantive_sources=substantive_sources,
+        substantive_domains=len(substantive_domains),
         evidence_chars=evidence_chars,
         candidate_content_clusters=content_clusters.cluster_count,
         duplicate_candidates=content_clusters.duplicate_count,

@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from mcp.server.fastmcp.exceptions import ToolError
-from test_researcher import evidence_bundle
+from research_fixtures import evidence_bundle
 
 from sibyl.config import Config
 from sibyl.mcp_server import create_server
@@ -109,6 +109,18 @@ class TestSourceSelection(unittest.TestCase):
         for value in ["https://vendor.com", "vendor.com/path", "localhost", "x..com"]:
             with self.assertRaises(ValueError):
                 normalize_domains([value])
+
+    def test_mailing_archives_and_qa_remain_community_on_preferred_domains(self):
+        source = evidence_bundle(count=1).sources[0]
+        for url, preferred in (
+            ("https://www.postgresql.org/message-id/question", ["postgresql.org"]),
+            ("https://stackoverflow.com/questions/1", ["stackoverflow.com"]),
+            ("https://dba.stackexchange.com/questions/1", ["stackexchange.com"]),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(
+                    source_kind(replace(source, url=url), preferred), "community"
+                )
 
     def test_reviewed_source_is_not_evicted_by_later_search(self):
         notebook = ResearchNotebook(
@@ -243,6 +255,58 @@ class TestDirectEvidence(unittest.IsolatedAsyncioTestCase):
             bundle = await read_source_bundle("https://example.com", "q")
         self.assertEqual(bundle.status, "insufficient_evidence")
         self.assertFalse(bundle.sources)
+
+    async def test_targeted_read_reaches_beyond_the_old_head_limit(self):
+        text = (
+            "General introductory background. " * 650
+            + "\nToken retention\n"
+            + "Late retries can arrive after token expiry; retention is not indefinite. "
+            * 50
+            + "\nOther considerations\n"
+            + "Other implementation material. " * 650
+        )
+        page = WebPage(
+            "https://example.com/retries",
+            "Retries",
+            text,
+            extraction_warnings=("HTML text truncated to 60000 characters.",),
+        )
+        with mock.patch(
+            "sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=page)
+        ) as read:
+            first = await read_source_bundle(
+                page.url, "token retention expiry late retries"
+            )
+            second = await read_source_bundle(page.url, "other implementation material")
+        read.assert_awaited_with(page.url, max_chars=60000)
+        evidence = first.sources[0].evidence
+        self.assertTrue(
+            any(
+                "retention is not indefinite" in p.text and p.start_char > 16000
+                for p in evidence
+            )
+        )
+        self.assertLessEqual(sum(len(p.text) for p in evidence), 16000)
+        self.assertLessEqual(len(evidence), 9)
+        self.assertEqual(
+            first.diagnostics.evidence_chars, sum(len(p.text) for p in evidence)
+        )
+        self.assertNotEqual(first.bundle_id, second.bundle_id)
+        self.assertEqual(first.sources[0].content_hash, second.sources[0].content_hash)
+        self.assertIn(
+            page.extraction_warnings[0], first.diagnostics.sufficiency_reasons
+        )
+        self.assertTrue(
+            any(
+                "omitted sections remain unread" in reason
+                for reason in first.diagnostics.sufficiency_reasons
+            )
+        )
+        for passage in evidence:
+            self.assertEqual(text[passage.start_char : passage.end_char], passage.text)
+            self.assertEqual(
+                hashlib.sha256(passage.text.encode()).hexdigest(), passage.content_hash
+            )
 
     async def test_site_query_does_not_fetch_or_fallback_to_wikipedia(self):
         results = [

@@ -1,12 +1,12 @@
 [project]
 name = "sibyl-research"
 dynamic = ["version"]
-description = "Deep Research MCP for multi-round investigations, traceable evidence, and cited reports"
+description = "A research MCP for AI agents: persistent evidence, counterevidence and gap tracking, with optional host-authored reports"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Yichen Wu", email = "yichenwujob@gmail.com"}]
-urls = {Homepage = "https://github.com/chriswu727/sibyl", Repository = "https://github.com/chriswu727/sibyl"}
+urls = {Homepage = "https://yichenwu.dev/projects/sibyl", Documentation = "https://github.com/chriswu727/sibyl#readme", Repository = "https://github.com/chriswu727/sibyl", Issues = "https://github.com/chriswu727/sibyl/issues"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -17,6 +17,7 @@ classifiers = [
 keywords = ["research", "evidence", "retrieval", "mcp", "citations", "agents"]
 dependencies = [
     "mcp>=1.30.0,<2.0.0",
+    "pydantic>=2.11,<3",
     "httpx>=0.27.0",
     "httpcore>=1.0.0,<2.0.0",
     "certifi>=2024.0.0",
@@ -28,18 +29,8 @@ dependencies = [
 
 [project.optional-dependencies]
 report = [
-    # Floor tested to pass response_format json_object through to deepseek/ and
-    # register v4-flash; ceiling protects the provider-specific thinking contract.
-    "litellm>=1.96.2,<2.0.0",
     "fpdf2>=2.7.0",
     "pillow>=13.0.0",
-]
-finance = [
-    "pillow>=13.0.0",
-    "yfinance>=0.2.0",
-    "matplotlib>=3.8.0",
-    "pandas>=2.0.0",
-    "pytrends>=4.9.0",
 ]
 extract = ["trafilatura>=2.0,<3.0"]
 pdf = ["pypdf>=6.21.2,<7"]
@@ -49,12 +40,7 @@ all = [
     "pypdf>=6.21.2,<7",
     "uvicorn>=0.54.0,<1",
     "pillow>=13.0.0",
-    "litellm>=1.96.2,<2.0.0",
     "fpdf2>=2.7.0",
-    "yfinance>=0.2.0",
-    "matplotlib>=3.8.0",
-    "pandas>=2.0.0",
-    "pytrends>=4.9.0",
     "trafilatura>=2.0,<3.0",
     "flashrank>=0.2.10,<0.3",
 ]
@@ -78,7 +64,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["sibyl/job_models.py", "sibyl/job_store.py", "sibyl/research_state.py", "sibyl/research_review.py", "sibyl/research_jobs.py"]
+files = ["sibyl/job_models.py", "sibyl/job_store.py", "sibyl/research_state.py", "sibyl/research_review.py", "sibyl/research_jobs.py", "sibyl/research_views.py", "sibyl/research_claims.py", "sibyl/mcp_errors.py", "sibyl/report_exports.py"]
 follow_imports = "silent"
 check_untyped_defs = true
 disallow_untyped_defs = true

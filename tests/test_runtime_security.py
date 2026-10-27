@@ -13,7 +13,6 @@ import httpx
 from mcp.server.fastmcp.exceptions import ToolError
 
 from sibyl.async_cache import AsyncSingleFlightTTL, CapacityError
-from sibyl.config import Config, Provider
 from sibyl.mcp_server import create_server
 from sibyl.privacy import display_url
 from sibyl.report_models import ResearchReport
@@ -112,6 +111,32 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             finally:
                 await runtime.aclose()
 
+    async def test_markdown_and_json_need_separate_exports_and_return_real_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
+            runtime.last_report = ResearchReport("q", "summary", [], [])
+            server = create_server(runtime)
+            try:
+                with mock.patch(
+                    "sibyl.reporter.generate_pdf",
+                    side_effect=RuntimeError("unavailable"),
+                ):
+                    _, combined = await server.call_tool(
+                        "save_report", {"format": "both"}
+                    )
+                self.assertIn("PDF failed", combined["result"])
+                self.assertNotIn("JSON saved", combined["result"])
+                self.assertFalse(list(Path(directory).glob("*.json")))
+                md_path = Path(combined["result"].split("Markdown saved: ")[1])
+                self.assertTrue(md_path.is_file())
+                _, exported = await server.call_tool("save_report", {"format": "json"})
+                json_path = Path(exported["result"].removeprefix("JSON saved: "))
+                self.assertTrue(json_path.is_file())
+                self.assertNotEqual(json_path, md_path.with_suffix(".json"))
+                self.assertIn('"summary": "summary"', json_path.read_text())
+            finally:
+                await runtime.aclose()
+
     async def test_export_uses_runtime_root_and_rejects_escape(self):
         with tempfile.TemporaryDirectory() as directory:
             runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)))
@@ -200,7 +225,7 @@ class TestRuntime(unittest.IsolatedAsyncioTestCase):
             started.set()
             await release.wait()
 
-        first = asyncio.create_task(runtime.execute("research", report))
+        first = asyncio.create_task(runtime.execute("save_report", report))
         await started.wait()
         with self.assertRaises(CapacityError):
             await runtime.execute("save_report", report)
@@ -314,12 +339,6 @@ class TestArtifacts(unittest.TestCase):
                 with store.staging(".md"):
                     raise RuntimeError("failed")
             self.assertEqual(list(Path(directory).iterdir()), [])
-
-    def test_credentials_are_hidden_in_configuration_repr(self):
-        config = Config(
-            providers=[Provider("model", api_key="SECRET", api_base="http://SECRET")]
-        )
-        self.assertNotIn("SECRET", repr(config))
 
     def test_url_metadata_redacts_credentials_but_preserves_query(self):
         result = display_url(

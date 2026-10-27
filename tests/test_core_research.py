@@ -1,11 +1,42 @@
 """Host research must not import optional model or rendering SDKs."""
 
+import ast
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 
 
 class TestCoreResearch(unittest.TestCase):
+    def test_runtime_source_has_no_removed_provider_imports_or_modules(self):
+        root = Path(__file__).resolve().parents[1] / "sibyl"
+        forbidden = {"litellm", "openai", "anthropic", "yfinance", "pytrends"}
+        removed = {
+            "context",
+            "analyzer",
+            "async_utils",
+            "data",
+            "researcher",
+            "tools",
+            "verifier",
+        }
+        for path in root.glob("*.py"):
+            with self.subTest(module=path.name):
+                self.assertNotIn(path.stem, removed | forbidden)
+                for node in ast.walk(ast.parse(path.read_text())):
+                    if isinstance(node, ast.Import):
+                        names = [alias.name for alias in node.names]
+                    elif isinstance(node, ast.ImportFrom):
+                        names = [node.module or ""]
+                        if node.level:
+                            self.assertNotIn((node.module or "").split(".")[0], removed)
+                    else:
+                        continue
+                    self.assertFalse(
+                        {name.split(".")[0] for name in names} & forbidden,
+                        f"Removed execution dependency imported by {path.name}",
+                    )
+
     def test_host_report_roundtrip_with_optional_imports_blocked(self):
         script = """
 import asyncio
@@ -16,7 +47,7 @@ from pathlib import Path
 
 class BlockOptional(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
-        if fullname.split('.')[0] in {'litellm', 'fpdf', 'matplotlib', 'pandas', 'yfinance', 'pytrends', 'flashrank', 'pypdf'}:
+        if fullname.split('.')[0] in {'litellm', 'openai', 'anthropic', 'fpdf', 'matplotlib', 'pandas', 'yfinance', 'pytrends', 'flashrank', 'pypdf'}:
             raise ImportError('Optional dependency blocked: ' + fullname)
 
 sys.meta_path.insert(0, BlockOptional())
@@ -40,9 +71,16 @@ async def main():
                 BundleDiagnostics(1,1,1,1,0,0,0,1,8,8,4000,4000,1)))
             job['notebook'] = notebook.to_dict()
             runtime.research_jobs.store.save(job)
-            _, completed = await server.call_tool('complete_research', {
+            _, reviewed = await server.call_tool('assess_research', {
                 'job_id': job['job_id'], 'revision': job['revision'],
-                'summary': 'Summary [Source 1]', 'key_findings': ['Finding [Source 1]'],
+                'question_id': 'Q0', 'status': 'supported',
+                'conclusion': 'Finding', 'counterevidence_note': 'Further investigation needed.',
+                'claims': [{'claim_id': 'Q0.C1', 'kind': 'fact', 'status': 'supported',
+                    'text': 'Finding', 'supporting_passage_ids': ['bundle/S1/P1'],
+                    'quotes': [{'passage_id': 'bundle/S1/P1', 'text': 'Actual evidence text.'}]}]})
+            _, completed = await server.call_tool('complete_research', {
+                'job_id': job['job_id'], 'revision': reviewed['revision'],
+                'claim_ids': ['Q0.C1'],
                 'allow_incomplete': True})
             assert completed['status'] == 'completed'
             for format in ('md', 'json'):

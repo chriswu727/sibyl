@@ -1,10 +1,18 @@
 # Example: does SQLite WAL eliminate write contention?
 
+![Diagram of the two-round offline MCP replay](../../../assets/research-replay.svg)
+
 This example demonstrates a complete host-assisted investigation, not a model
 benchmark. Read the [exported report](report.md) and [recorded source excerpts](sources.json).
 The original pages were read through Sibyl on 2026-10-21. Excerpts are selected
 and whitespace-normalized; they are not full-page snapshots. Both pages are from
 SQLite's documentation, so two URLs do not imply two independent publishers.
+
+The replay uses claim contract 2: it records individual facts with verbatim
+quotes, resolves an explicit unknown and adds a conditional recommendation with
+declared assumptions. The checked-in report is the agent-profile claim export.
+The agent replay also submits a fact quoting "only a single writer" against the WAL
+page, which never says that, and requires Sibyl to reject it.
 
 ## Investigation
 

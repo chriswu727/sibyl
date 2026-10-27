@@ -1,0 +1,654 @@
+{
+  "recorded_at": "2026-10-26 18:46:38 UTC",
+  "scope": "Exploratory anonymous-source discovery smoke check during the evidence-linked research implementation.",
+  "formal_release_gate": false,
+  "controlled_comparison": false,
+  "method": {
+    "queries_fixed_before_first_run": true,
+    "model_calls": 0,
+    "search_provider": "keyless",
+    "max_sources": 5,
+    "chars_per_source": 4000,
+    "preferred_domains": [
+      [
+        "sqlite.org"
+      ],
+      [
+        "postgresql.org"
+      ],
+      [
+        "docs.stripe.com"
+      ]
+    ],
+    "repeats_per_run": 1,
+    "execution": "Sequential live calls; public results and provider availability can change.",
+    "raw_page_bodies_committed": false
+  },
+  "limitations": [
+    "SourceBundle ok/synthesize is a retrieval signal, not semantic answer validation.",
+    "These sequential runs do not isolate a causal treatment effect or satisfy the 66-case three-repeat release gate.",
+    "The PostgreSQL 17 query still returned PostgreSQL 16 documentation in the final result. Version-specific support remains unestablished.",
+    "The host must read exact passages, inspect applicability and retain unknowns; preferred domains do not certify authority.",
+    "No subscription-host or native-search comparison was run."
+  ],
+  "runs": [
+    {
+      "label": "Before final-source preference fix",
+      "code_commit": "5204948",
+      "bundles": [
+        {
+          "query": "SQLite WAL: how does writer concurrency work?",
+          "status": "ok",
+          "error_type": null,
+          "diagnostics": {
+            "search_results": 21,
+            "unique_urls": 21,
+            "urls_attempted": 12,
+            "pages_scraped": 12,
+            "scrape_failures": 1,
+            "snippet_fallbacks": 3,
+            "wikipedia_fallbacks": 2,
+            "sources_returned": 5,
+            "requested_max_sources": 5,
+            "effective_max_sources": 5,
+            "requested_chars_per_source": 4000,
+            "effective_chars_per_source": 4000,
+            "latency_ms": 5483,
+            "requested_ranking_method": "lexical",
+            "ranking_method": "lexical_v1",
+            "ranking_warning": "",
+            "candidates_ranked": 12,
+            "chunks_ranked": 15,
+            "passages_returned": 15,
+            "passage_size": 1333,
+            "max_passages_per_source": 3,
+            "coverage_method": "lexical_query_terms_v1",
+            "query_terms": 6,
+            "matched_query_terms": 6,
+            "query_term_coverage": 1,
+            "unique_domains": 5,
+            "substantive_sources": 5,
+            "evidence_chars": 19990,
+            "candidate_content_clusters": 12,
+            "duplicate_candidates": 0,
+            "independent_content_clusters": 5,
+            "duplicate_sources": 0,
+            "content_cluster_method": "token_5gram_containment_v1",
+            "evidence_sufficiency": "sufficient",
+            "sufficiency_reasons": [],
+            "search_queries": [
+              "SQLite WAL: how does writer concurrency work?",
+              "SQLite WAL writer concurrency work",
+              "SQLite WAL writer concurrency work site:sqlite.org"
+            ],
+            "search_providers": [
+              "duckduckgo",
+              "google_news",
+              "wikipedia"
+            ],
+            "max_source_query_term_coverage": 1,
+            "metadata_fallbacks": 0,
+            "query_complexity": "single_step",
+            "recommended_action": "synthesize",
+            "refinement_searches": 1,
+            "refinement_failures": 0
+          },
+          "sources": [
+            {
+              "url": "https://coddy.tech/docs/sqlite/wal-mode-and-concurrency",
+              "title": "Runnable SQLite Docs: WAL & Concurrency | Coddy",
+              "content_hash": "91d3a443cf5addf205611894dec9ce8cd1af86b7a46700fe13d702db343deacd",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.703222,
+              "retrieved_at": "2026-10-26T18:36:40.968742+00:00"
+            },
+            {
+              "url": "https://nalar.dev/sqlite-wal-mode-concurrency-checkpoints-and-operational-pitfalls/",
+              "title": "SQLite WAL Mode: Concurrency, Checkpoints, and Operational Pitfalls",
+              "content_hash": "36b0f533987142dcc8ba02d8536c97b09155c338ef81e1a447e462a7673f4f4f",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.703222,
+              "retrieved_at": "2026-10-26T18:36:40.968742+00:00"
+            },
+            {
+              "url": "https://www.kunalganglani.com/blog/sqlite-production-api-wal",
+              "title": "SQLite WAL Concurrency for APIs [2026]: Limits & Tuning",
+              "content_hash": "ba623ec32f66c4fb05e2be534c52df693063423e0d7d47136da65c603e2288b4",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.703222,
+              "retrieved_at": "2026-10-26T18:36:40.968742+00:00"
+            },
+            {
+              "url": "https://sqldocs.org/sqlite-write-ahead-logging/",
+              "title": "SQLite WAL Mode: How Write-Ahead Logging Works and When to Use It - SQL Docs",
+              "content_hash": "e7454eb367fad867d1a612b03b304719d616ce8d6947b0cb0db8402693d0bb7f",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.648815,
+              "retrieved_at": "2026-10-26T18:36:40.968742+00:00"
+            },
+            {
+              "url": "https://en.wikipedia.org/wiki/SQLite",
+              "title": "SQLite - Wikipedia",
+              "content_hash": "89186b73baed2a4d19abe4f01426e338bce3531d601f9748fd8d763e4169e27e",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.594407,
+              "retrieved_at": "2026-10-26T18:36:40.968742+00:00"
+            }
+          ]
+        },
+        {
+          "query": "PostgreSQL 17: how does Repeatable Read differ from Serializable?",
+          "status": "ok",
+          "error_type": null,
+          "diagnostics": {
+            "search_results": 18,
+            "unique_urls": 18,
+            "urls_attempted": 12,
+            "pages_scraped": 12,
+            "scrape_failures": 4,
+            "snippet_fallbacks": 5,
+            "wikipedia_fallbacks": 3,
+            "sources_returned": 5,
+            "requested_max_sources": 5,
+            "effective_max_sources": 5,
+            "requested_chars_per_source": 4000,
+            "effective_chars_per_source": 4000,
+            "latency_ms": 4758,
+            "requested_ranking_method": "lexical",
+            "ranking_method": "lexical_v1",
+            "ranking_warning": "",
+            "candidates_ranked": 13,
+            "chunks_ranked": 11,
+            "passages_returned": 11,
+            "passage_size": 1333,
+            "max_passages_per_source": 3,
+            "coverage_method": "lexical_query_terms_v1",
+            "query_terms": 7,
+            "matched_query_terms": 6,
+            "query_term_coverage": 0.857143,
+            "unique_domains": 5,
+            "substantive_sources": 3,
+            "evidence_chars": 11720,
+            "candidate_content_clusters": 13,
+            "duplicate_candidates": 0,
+            "independent_content_clusters": 3,
+            "duplicate_sources": 0,
+            "content_cluster_method": "token_5gram_containment_v1",
+            "evidence_sufficiency": "sufficient",
+            "sufficiency_reasons": [],
+            "search_queries": [
+              "PostgreSQL 17: how does Repeatable Read differ from Serializable?",
+              "PostgreSQL 17 Repeatable Read differ Serializable",
+              "PostgreSQL 17 Repeatable Read differ Serializable site:postgresql.org"
+            ],
+            "search_providers": [
+              "duckduckgo",
+              "google_news",
+              "wikipedia",
+              "yahoo"
+            ],
+            "max_source_query_term_coverage": 0.857143,
+            "metadata_fallbacks": 0,
+            "query_complexity": "single_step",
+            "recommended_action": "synthesize",
+            "refinement_searches": 1,
+            "refinement_failures": 0
+          },
+          "sources": [
+            {
+              "url": "https://www.postgresql.org/message-id/20201126234509.b856ad06c6c532f843163a57%40magnetkern.de",
+              "title": "PostgreSQL: Transaction isolation level Repeatable Read Read Only vs Serializable Read Only",
+              "content_hash": "a1e2c6c0fae6e898fdd171bb35612f8e392eb69130c172d99b7cc4a693c014f8",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.562944,
+              "retrieved_at": "2026-10-26T18:36:45.727588+00:00"
+            },
+            {
+              "url": "https://thesev1database.com/interview-prep/questions/explain-repeatable-read-vs-serializable",
+              "title": "REPEATABLE READ vs SERIALIZABLE in PostgreSQL: how to answer it · thesev1database",
+              "content_hash": "4ba3eea5cc7e025b3649492a912e30e3025353c5d3730ef9dc6e15a328f06c3e",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.427423,
+              "retrieved_at": "2026-10-26T18:36:45.727588+00:00"
+            },
+            {
+              "url": "https://en.wikipedia.org/wiki/PostgreSQL",
+              "title": "PostgreSQL - Wikipedia",
+              "content_hash": "20b0c29661bf85e343b0ed8ccb13c2812289c9de7d10939249a34cdede6d7747",
+              "content_origin": "wikipedia_api",
+              "relevance_score": 0.250708,
+              "retrieved_at": "2026-10-26T18:36:45.727588+00:00"
+            },
+            {
+              "url": "https://stackoverflow.com/questions/30668991/are-postgresql-transaction-levels-repeatable-read-and-serializable-the-same",
+              "title": "Are postgresql transaction levels repeatable read and serializable the ...",
+              "content_hash": "a0fd3f885046668f1f925e2658f32b3f9fc8e8d42a9b0d0afb9772ba3da6ff45",
+              "content_origin": "search_snippet",
+              "relevance_score": 0.215943,
+              "retrieved_at": "2026-10-26T18:36:45.727588+00:00"
+            },
+            {
+              "url": "https://dba.stackexchange.com/questions/284744/postgres-repeatable-read-vs-serializable",
+              "title": "postgresql - Postgres Repeatable Read vs Serializable - Database ...",
+              "content_hash": "ab5063805a56ff670f4dbc487f06ac077cf6e9b8f73a36e0ca9503da2b8a2fb3",
+              "content_origin": "search_snippet",
+              "relevance_score": 0.174766,
+              "retrieved_at": "2026-10-26T18:36:45.727588+00:00"
+            }
+          ]
+        },
+        {
+          "query": "Stripe: how long are idempotency keys retained?",
+          "status": "ok",
+          "error_type": null,
+          "diagnostics": {
+            "search_results": 14,
+            "unique_urls": 14,
+            "urls_attempted": 12,
+            "pages_scraped": 12,
+            "scrape_failures": 0,
+            "snippet_fallbacks": 0,
+            "wikipedia_fallbacks": 2,
+            "sources_returned": 5,
+            "requested_max_sources": 5,
+            "effective_max_sources": 5,
+            "requested_chars_per_source": 4000,
+            "effective_chars_per_source": 4000,
+            "latency_ms": 3863,
+            "requested_ranking_method": "lexical",
+            "ranking_method": "lexical_v1",
+            "ranking_warning": "",
+            "candidates_ranked": 10,
+            "chunks_ranked": 15,
+            "passages_returned": 15,
+            "passage_size": 1333,
+            "max_passages_per_source": 3,
+            "coverage_method": "lexical_query_terms_v1",
+            "query_terms": 5,
+            "matched_query_terms": 5,
+            "query_term_coverage": 1,
+            "unique_domains": 5,
+            "substantive_sources": 5,
+            "evidence_chars": 19990,
+            "candidate_content_clusters": 9,
+            "duplicate_candidates": 1,
+            "independent_content_clusters": 5,
+            "duplicate_sources": 0,
+            "content_cluster_method": "token_5gram_containment_v1",
+            "evidence_sufficiency": "sufficient",
+            "sufficiency_reasons": [],
+            "search_queries": [
+              "Stripe: how long are idempotency keys retained?",
+              "Stripe long idempotency keys retained",
+              "Stripe long idempotency keys retained site:docs.stripe.com"
+            ],
+            "search_providers": [
+              "duckduckgo",
+              "google_news",
+              "wikipedia"
+            ],
+            "max_source_query_term_coverage": 1,
+            "metadata_fallbacks": 0,
+            "query_complexity": "single_step",
+            "recommended_action": "synthesize",
+            "refinement_searches": 1,
+            "refinement_failures": 0
+          },
+          "sources": [
+            {
+              "url": "https://dev.to/axrisi/idempotency-keys-in-stripe-safe-retries-after-lost-responses-5659",
+              "title": "Idempotency keys in Stripe: safe retries after lost responses - DEV Community",
+              "content_hash": "2dfffd46e4a2f6418f3a01403aac0b602f645a2f7c85a1f1f5d734488e157f31",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.62058,
+              "retrieved_at": "2026-10-26T18:36:49.591121+00:00"
+            },
+            {
+              "url": "https://clixo.sh/blog/stripe-idempotency-keys-deep-dive",
+              "title": "Stripe Idempotency Keys: How They Work and When You Must Use Them",
+              "content_hash": "97fb21a071aeec7c4b72957eb8fec2fddd8fb5fb7784fe66e777e5105804e3e2",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.514768,
+              "retrieved_at": "2026-10-26T18:36:49.591121+00:00"
+            },
+            {
+              "url": "https://stripe.com/blog/idempotency",
+              "title": "Designing robust and predictable APIs with idempotency",
+              "content_hash": "e8bb742cdb95c8d3ff32cd293e3140e313d855f601ab75c62b078fea0684fea9",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.411556,
+              "retrieved_at": "2026-10-26T18:36:49.591121+00:00"
+            },
+            {
+              "url": "https://docs.stripe.com/api/idempotent_requests",
+              "title": "Idempotent requests | Stripe API Reference",
+              "content_hash": "9ad7683cc09b56dfc43c3a4d67358fdb1bc1ed77a57f520f5ee49c264ef0ff21",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.39662,
+              "retrieved_at": "2026-10-26T18:36:49.591121+00:00"
+            },
+            {
+              "url": "https://deepwiki.com/stripe/stripe-node/3.5-idempotency-and-retry-logic",
+              "title": "Idempotency and Retry Logic | stripe/stripe-node | DeepWiki",
+              "content_hash": "08e24916eeee4527f6d244b9e2408ed973ca6469a4df1053ee2349ff2ab927cf",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.356308,
+              "retrieved_at": "2026-10-26T18:36:49.591121+00:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Final representative selection and community classification",
+      "code_commit": "5d3ee77c75aa3ca5c51e432ec4dfcf0ae5dd2bd4",
+      "bundles": [
+        {
+          "query": "SQLite WAL: how does writer concurrency work?",
+          "status": "ok",
+          "error_type": null,
+          "diagnostics": {
+            "search_results": 23,
+            "unique_urls": 23,
+            "urls_attempted": 12,
+            "pages_scraped": 12,
+            "scrape_failures": 1,
+            "snippet_fallbacks": 4,
+            "wikipedia_fallbacks": 2,
+            "sources_returned": 5,
+            "requested_max_sources": 5,
+            "effective_max_sources": 5,
+            "requested_chars_per_source": 4000,
+            "effective_chars_per_source": 4000,
+            "latency_ms": 4721,
+            "requested_ranking_method": "lexical",
+            "ranking_method": "lexical_v1",
+            "ranking_warning": "",
+            "candidates_ranked": 14,
+            "chunks_ranked": 15,
+            "passages_returned": 15,
+            "passage_size": 1333,
+            "max_passages_per_source": 3,
+            "coverage_method": "lexical_query_terms_v1",
+            "query_terms": 6,
+            "matched_query_terms": 6,
+            "query_term_coverage": 1,
+            "unique_domains": 5,
+            "substantive_sources": 5,
+            "evidence_chars": 19990,
+            "candidate_content_clusters": 14,
+            "duplicate_candidates": 0,
+            "independent_content_clusters": 5,
+            "duplicate_sources": 0,
+            "content_cluster_method": "token_5gram_containment_v1",
+            "evidence_sufficiency": "sufficient",
+            "sufficiency_reasons": [
+              "HTML text truncated to 30000 characters."
+            ],
+            "search_queries": [
+              "SQLite WAL: how does writer concurrency work?",
+              "SQLite WAL writer concurrency work",
+              "SQLite WAL writer concurrency work site:sqlite.org"
+            ],
+            "search_providers": [
+              "duckduckgo",
+              "google_news",
+              "wikipedia"
+            ],
+            "max_source_query_term_coverage": 1,
+            "metadata_fallbacks": 0,
+            "query_complexity": "single_step",
+            "recommended_action": "synthesize",
+            "refinement_searches": 1,
+            "refinement_failures": 0
+          },
+          "sources": [
+            {
+              "url": "https://sqlite.org/wal.html",
+              "title": "Write-Ahead Logging",
+              "content_hash": "63aa97d9207e9e971feb457563a5ba7a33b9febed6ae8f77439c72e100128fba",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.54,
+              "retrieved_at": "2026-10-26T18:43:56.725533+00:00"
+            },
+            {
+              "url": "https://coddy.tech/docs/sqlite/wal-mode-and-concurrency",
+              "title": "Runnable SQLite Docs: WAL & Concurrency | Coddy",
+              "content_hash": "91d3a443cf5addf205611894dec9ce8cd1af86b7a46700fe13d702db343deacd",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.692628,
+              "retrieved_at": "2026-10-26T18:43:56.725533+00:00"
+            },
+            {
+              "url": "https://nalar.dev/sqlite-wal-mode-concurrency-checkpoints-and-operational-pitfalls/",
+              "title": "SQLite WAL Mode: Concurrency, Checkpoints, and Operational Pitfalls",
+              "content_hash": "36b0f533987142dcc8ba02d8536c97b09155c338ef81e1a447e462a7673f4f4f",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.692628,
+              "retrieved_at": "2026-10-26T18:43:56.725533+00:00"
+            },
+            {
+              "url": "https://www.kunalganglani.com/blog/sqlite-production-api-wal",
+              "title": "SQLite WAL Concurrency for APIs [2026]: Limits & Tuning",
+              "content_hash": "ba623ec32f66c4fb05e2be534c52df693063423e0d7d47136da65c603e2288b4",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.692628,
+              "retrieved_at": "2026-10-26T18:43:56.725533+00:00"
+            },
+            {
+              "url": "https://sqldocs.org/sqlite-write-ahead-logging/",
+              "title": "SQLite WAL Mode: How Write-Ahead Logging Works and When to Use It - SQL Docs",
+              "content_hash": "e7454eb367fad867d1a612b03b304719d616ce8d6947b0cb0db8402693d0bb7f",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.639431,
+              "retrieved_at": "2026-10-26T18:43:56.725533+00:00"
+            }
+          ]
+        },
+        {
+          "query": "PostgreSQL 17: how does Repeatable Read differ from Serializable?",
+          "status": "ok",
+          "error_type": null,
+          "diagnostics": {
+            "search_results": 19,
+            "unique_urls": 19,
+            "urls_attempted": 12,
+            "pages_scraped": 12,
+            "scrape_failures": 3,
+            "snippet_fallbacks": 6,
+            "wikipedia_fallbacks": 3,
+            "sources_returned": 5,
+            "requested_max_sources": 5,
+            "effective_max_sources": 5,
+            "requested_chars_per_source": 4000,
+            "effective_chars_per_source": 4000,
+            "latency_ms": 4962,
+            "requested_ranking_method": "lexical",
+            "ranking_method": "lexical_v1",
+            "ranking_warning": "",
+            "candidates_ranked": 14,
+            "chunks_ranked": 11,
+            "passages_returned": 11,
+            "passage_size": 1333,
+            "max_passages_per_source": 3,
+            "coverage_method": "lexical_query_terms_v1",
+            "query_terms": 7,
+            "matched_query_terms": 6,
+            "query_term_coverage": 0.857143,
+            "unique_domains": 5,
+            "substantive_sources": 3,
+            "evidence_chars": 12418,
+            "candidate_content_clusters": 14,
+            "duplicate_candidates": 0,
+            "independent_content_clusters": 3,
+            "duplicate_sources": 0,
+            "content_cluster_method": "token_5gram_containment_v1",
+            "evidence_sufficiency": "sufficient",
+            "sufficiency_reasons": [
+              "HTML text truncated to 30000 characters."
+            ],
+            "search_queries": [
+              "PostgreSQL 17: how does Repeatable Read differ from Serializable?",
+              "PostgreSQL 17 Repeatable Read differ Serializable",
+              "PostgreSQL 17 Repeatable Read differ Serializable site:postgresql.org"
+            ],
+            "search_providers": [
+              "duckduckgo",
+              "google_news",
+              "wikipedia",
+              "yahoo"
+            ],
+            "max_source_query_term_coverage": 0.857143,
+            "metadata_fallbacks": 0,
+            "query_complexity": "single_step",
+            "recommended_action": "synthesize",
+            "refinement_searches": 1,
+            "refinement_failures": 0
+          },
+          "sources": [
+            {
+              "url": "https://www.postgresql.org/docs/16//applevel-consistency.html",
+              "title": "PostgreSQL: Documentation: 16: 13.4. Data Consistency Checks at the Application Level",
+              "content_hash": "897ebecdc7d75162cb82a69f3f4a0ae69965ecb5970770974342633521fbdcfa",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.44714,
+              "retrieved_at": "2026-10-26T18:44:01.688185+00:00"
+            },
+            {
+              "url": "https://adamdjellouli.com/articles/databases_notes/07_concurrency_control/05_serializable_vs_repeatable_read",
+              "title": "Serializable and Repeatable Read | Adam Djellouli",
+              "content_hash": "6ffbbb2bf5eafbed75ddfa951790030a3b10e70bc7e42a9dbad7ddcf4b13d053",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.404706,
+              "retrieved_at": "2026-10-26T18:44:01.688185+00:00"
+            },
+            {
+              "url": "https://en.wikipedia.org/wiki/PostgreSQL",
+              "title": "PostgreSQL - Wikipedia",
+              "content_hash": "20b0c29661bf85e343b0ed8ccb13c2812289c9de7d10939249a34cdede6d7747",
+              "content_origin": "wikipedia_api",
+              "relevance_score": 0.257576,
+              "retrieved_at": "2026-10-26T18:44:01.688185+00:00"
+            },
+            {
+              "url": "https://stackoverflow.com/questions/30668991/are-postgresql-transaction-levels-repeatable-read-and-serializable-the-same",
+              "title": "Are postgresql transaction levels repeatable read and serializable the ...",
+              "content_hash": "a0fd3f885046668f1f925e2658f32b3f9fc8e8d42a9b0d0afb9772ba3da6ff45",
+              "content_origin": "search_snippet",
+              "relevance_score": 0.230428,
+              "retrieved_at": "2026-10-26T18:44:01.688185+00:00"
+            },
+            {
+              "url": "https://dbdecoded.com/lessons/using-repeatable-read-and-serializable",
+              "title": "Understanding REPEATABLE READ and SERIALIZABLE",
+              "content_hash": "00e4cbe513c23370af42ccd72c1bf2f1b6347b4c226fafc1ad9e767d37b30d83",
+              "content_origin": "search_snippet",
+              "relevance_score": 0.135741,
+              "retrieved_at": "2026-10-26T18:44:01.688185+00:00"
+            }
+          ]
+        },
+        {
+          "query": "Stripe: how long are idempotency keys retained?",
+          "status": "ok",
+          "error_type": null,
+          "diagnostics": {
+            "search_results": 14,
+            "unique_urls": 14,
+            "urls_attempted": 12,
+            "pages_scraped": 12,
+            "scrape_failures": 0,
+            "snippet_fallbacks": 0,
+            "wikipedia_fallbacks": 2,
+            "sources_returned": 5,
+            "requested_max_sources": 5,
+            "effective_max_sources": 5,
+            "requested_chars_per_source": 4000,
+            "effective_chars_per_source": 4000,
+            "latency_ms": 3459,
+            "requested_ranking_method": "lexical",
+            "ranking_method": "lexical_v1",
+            "ranking_warning": "",
+            "candidates_ranked": 10,
+            "chunks_ranked": 15,
+            "passages_returned": 15,
+            "passage_size": 1333,
+            "max_passages_per_source": 3,
+            "coverage_method": "lexical_query_terms_v1",
+            "query_terms": 5,
+            "matched_query_terms": 5,
+            "query_term_coverage": 1,
+            "unique_domains": 5,
+            "substantive_sources": 5,
+            "evidence_chars": 19990,
+            "candidate_content_clusters": 9,
+            "duplicate_candidates": 1,
+            "independent_content_clusters": 5,
+            "duplicate_sources": 0,
+            "content_cluster_method": "token_5gram_containment_v1",
+            "evidence_sufficiency": "sufficient",
+            "sufficiency_reasons": [],
+            "search_queries": [
+              "Stripe: how long are idempotency keys retained?",
+              "Stripe long idempotency keys retained",
+              "Stripe long idempotency keys retained site:docs.stripe.com"
+            ],
+            "search_providers": [
+              "duckduckgo",
+              "google_news",
+              "wikipedia"
+            ],
+            "max_source_query_term_coverage": 1,
+            "metadata_fallbacks": 0,
+            "query_complexity": "single_step",
+            "recommended_action": "synthesize",
+            "refinement_searches": 1,
+            "refinement_failures": 0
+          },
+          "sources": [
+            {
+              "url": "https://docs.stripe.com/api/idempotent_requests",
+              "title": "Idempotent requests | Stripe API Reference",
+              "content_hash": "9ad7683cc09b56dfc43c3a4d67358fdb1bc1ed77a57f520f5ee49c264ef0ff21",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.39662,
+              "retrieved_at": "2026-10-26T18:44:05.147505+00:00"
+            },
+            {
+              "url": "https://dev.to/axrisi/idempotency-keys-in-stripe-safe-retries-after-lost-responses-5659",
+              "title": "Idempotency keys in Stripe: safe retries after lost responses - DEV Community",
+              "content_hash": "2dfffd46e4a2f6418f3a01403aac0b602f645a2f7c85a1f1f5d734488e157f31",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.62058,
+              "retrieved_at": "2026-10-26T18:44:05.147505+00:00"
+            },
+            {
+              "url": "https://clixo.sh/blog/stripe-idempotency-keys-deep-dive",
+              "title": "Stripe Idempotency Keys: How They Work and When You Must Use Them",
+              "content_hash": "97fb21a071aeec7c4b72957eb8fec2fddd8fb5fb7784fe66e777e5105804e3e2",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.514768,
+              "retrieved_at": "2026-10-26T18:44:05.147505+00:00"
+            },
+            {
+              "url": "https://stripe.com/blog/idempotency",
+              "title": "Designing robust and predictable APIs with idempotency",
+              "content_hash": "e8bb742cdb95c8d3ff32cd293e3140e313d855f601ab75c62b078fea0684fea9",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.411556,
+              "retrieved_at": "2026-10-26T18:44:05.147505+00:00"
+            },
+            {
+              "url": "https://deepwiki.com/stripe/stripe-node/3.5-idempotency-and-retry-logic",
+              "title": "Idempotency and Retry Logic | stripe/stripe-node | DeepWiki",
+              "content_hash": "08e24916eeee4527f6d244b9e2408ed973ca6469a4df1053ee2349ff2ab927cf",
+              "content_origin": "direct_fetch",
+              "relevance_score": 0.356308,
+              "retrieved_at": "2026-10-26T18:44:05.147505+00:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

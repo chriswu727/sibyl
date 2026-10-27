@@ -9,7 +9,7 @@ import math
 import os
 import time
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Awaitable, Callable, TypeVar
 
@@ -19,6 +19,7 @@ from .evidence import SourceBundle
 from .evidence_loop import EvidenceLoopManager
 from .observability import RuntimeMetrics
 from .report_models import ResearchReport
+from .storage import default_output_root
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class RuntimePolicy:
     tool_timeout: float = 60.0
     report_timeout: float = 600.0
     max_query_chars: int = 1000
-    output_root: Path = Path("reports")
+    output_root: Path = field(default_factory=default_output_root)
     monitor_port: int | None = None
 
     def __post_init__(self) -> None:
@@ -60,9 +61,7 @@ class SibylRuntime:
     def __init__(
         self, policy: RuntimePolicy | None = None, config: Config | None = None
     ):
-        self.policy = policy or RuntimePolicy(
-            output_root=Path(os.environ.get("SIBYL_OUTPUT_ROOT", "reports")).absolute()
-        )
+        self.policy = policy or RuntimePolicy()
         self._config = config
         self.bundle_cache = AsyncSingleFlightTTL[tuple, SourceBundle](
             30,
@@ -145,11 +144,7 @@ class SibylRuntime:
             if path:
                 self._config = Config.from_yaml(path)
             else:
-                self._config = Config.from_env(
-                    model=os.environ.get("SIBYL_MODEL", ""),
-                    api_key=os.environ.get("SIBYL_API_KEY", ""),
-                    api_base=os.environ.get("SIBYL_API_BASE", ""),
-                )
+                self._config = Config.from_env()
         return self._config
 
     def validate_query(self, query: str) -> None:
@@ -165,7 +160,7 @@ class SibylRuntime:
         if len(self._tasks) >= self.policy.max_active:
             self.metrics.record(name, "rejected", 0)
             raise CapacityError("Server capacity is busy. Retry later.")
-        stateful = name in {"research", "save_report", "chart", "fetch_market_data"}
+        stateful = name == "save_report"
         if stateful and self._report_lock.locked():
             self.metrics.record(name, "rejected", 0)
             raise CapacityError(
@@ -180,11 +175,7 @@ class SibylRuntime:
             if stateful:
                 await self._report_lock.acquire()
                 locked = True
-            timeout = (
-                self.policy.report_timeout
-                if name in {"research", "analyze", "compare", "swot", "timeline"}
-                else self.policy.tool_timeout
-            )
+            timeout = self.policy.tool_timeout
             result = await asyncio.wait_for(operation(), timeout)
             self.completed += 1
             outcome = "completed"

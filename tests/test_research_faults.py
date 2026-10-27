@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from test_researcher import evidence_bundle
+from research_fixtures import evidence_bundle
 
 from sibyl.async_cache import CapacityError
 from sibyl.config import Config
@@ -30,9 +30,10 @@ public = jobs.start('Crash recovery', [], 'host', 1, 'en', 3)
 job = jobs.store.get(public['job_id'])
 notebook = ResearchNotebook.from_dict(job['notebook'])
 notebook.begin_search('reserved before dispatch')
-notebook.reserve_model_call(100)
-job.update(status='running', notebook=notebook.to_dict())
-jobs.store.save(job)
+notebook.model_calls = 1
+notebook.reserved_output_tokens = 100
+job.update(notebook=notebook.to_dict())
+jobs.store.claim(job)
 print(job['job_id'], flush=True)
 time.sleep(60)
 """
@@ -57,7 +58,7 @@ class TestResearchFaults(unittest.IsolatedAsyncioTestCase):
         with (
             mock.patch.object(
                 self.jobs.store,
-                "save",
+                "claim",
                 side_effect=sqlite3.OperationalError("disk is full"),
             ),
             mock.patch(
@@ -74,18 +75,13 @@ class TestResearchFaults(unittest.IsolatedAsyncioTestCase):
 
     async def test_write_failure_after_dispatch_retains_reservation_on_restart(self):
         job = self.start()
-        save = self.jobs.store.save
-        calls = 0
-
-        def fail_result(record, **kwargs):
-            nonlocal calls
-            calls += 1
-            if calls > 1:
-                raise sqlite3.OperationalError("disk is full")
-            save(record, **kwargs)
-
+        # The running claim commits; every later checkpoint write fails.
         with (
-            mock.patch.object(self.jobs.store, "save", side_effect=fail_result),
+            mock.patch.object(
+                self.jobs.store,
+                "save",
+                side_effect=sqlite3.OperationalError("disk is full"),
+            ),
             mock.patch(
                 "sibyl.research_jobs.gather_source_bundle",
                 mock.AsyncMock(return_value=evidence_bundle()),
@@ -172,8 +168,15 @@ class TestResearchFaults(unittest.IsolatedAsyncioTestCase):
                 line, "Crash worker failed before committing its reservation"
             )
             job_id = line.decode().strip()
-            with self.assertRaises(CapacityError):
-                JobStore(self.root)
+            # A second runtime shares the store but leaves the live job alone.
+            observer = JobStore(self.root)
+            try:
+                live = observer.get(job_id)
+                self.assertEqual(live["status"], "running")
+                self.assertTrue(observer.running_elsewhere(live))
+                self.assertIsNone(observer.recover(live))
+            finally:
+                observer.close()
             process.kill()
             await asyncio.wait_for(process.wait(), 5)
         finally:

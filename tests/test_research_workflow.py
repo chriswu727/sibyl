@@ -7,6 +7,23 @@ from pathlib import Path
 
 
 class TestResearchWorkflow(unittest.TestCase):
+    def test_agent_stdio_research_and_export_replay(self):
+        root = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(root / "scripts/check_research_workflow.py"),
+                "--agent",
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=45,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("agent successful replay response bytes", result.stdout)
+        self.assertIn("no network/model calls", result.stdout)
+
     def test_real_stdio_research_and_export_replay(self):
         root = Path(__file__).resolve().parents[1]
         result = subprocess.run(

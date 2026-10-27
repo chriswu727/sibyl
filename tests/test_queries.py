@@ -54,6 +54,17 @@ class TestSearchQueryVariants(unittest.TestCase):
 
         self.assertEqual(search_query_variants(query), [query])
 
+    def test_preserves_explicit_search_constraints(self):
+        for query in (
+            "What are idempotency limits site:docs.stripe.com?",
+            'What explains "safe API retries" -site:wikipedia.org?',
+            "Which papers discuss retries filetype:pdf?",
+            "What is the protocol -obsolete?",
+            'What is supported (site:first.example OR site:"second.example")?',
+        ):
+            with self.subTest(query=query):
+                self.assertEqual(search_query_variants(query), [query])
+
     def test_rewrites_prepositional_question(self):
         query = "In what year was the company that created CUDA founded?"
 
@@ -69,6 +80,20 @@ class TestSearchQueryVariants(unittest.TestCase):
             search_query_variants(query),
             [query, "distributed systems algorithm easier than Paxos"],
         )
+
+    def test_preserves_entity_before_question_word(self):
+        for query, focused in (
+            (
+                "SQLite WAL: how does writer concurrency work?",
+                "SQLite WAL writer concurrency work",
+            ),
+            (
+                "PostgreSQL 17, which isolation level prevents write skew?",
+                "PostgreSQL 17 isolation level prevents write skew",
+            ),
+        ):
+            with self.subTest(query=query):
+                self.assertEqual(search_query_variants(query), [query, focused])
 
     def test_quoted_title_becomes_the_focused_variant(self):
         query = (
@@ -86,6 +111,21 @@ class TestSearchQueryVariants(unittest.TestCase):
 
     def test_empty_query_has_no_variants(self):
         self.assertEqual(search_query_variants("  "), [])
+
+    def test_contracted_question_keeps_the_quoted_title_fallback(self):
+        title = "Articulatory constraints on stop insertion and elision in consonant clusters"
+        for opener in ("What's", "What’s", "Where's", "Who’s"):
+            query = f'{opener} the publication date of the paper "{title}"?'
+            with self.subTest(opener=opener):
+                self.assertEqual(search_query_variants(query), [query, title])
+
+    def test_versions_are_not_split_in_focused_queries(self):
+        for version in ("0.7", "3.12", "v0.4.0-rc.1", "0.4.0b1", "3.13.0rc1"):
+            query = f"What changed in Patch {version} for the supported client?"
+            self.assertEqual(
+                search_query_variants(query),
+                [query, f"changed Patch {version} supported client"],
+            )
 
     def test_detects_dependent_relative_clause(self):
         self.assertTrue(

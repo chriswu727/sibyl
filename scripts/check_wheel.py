@@ -12,7 +12,7 @@ from pathlib import Path
 PROFILES = {
     "core": "",
     "pdf-monitor": "pdf,monitor",
-    "report-finance-extract": "report,finance,extract",
+    "report-extract": "report,extract",
 }
 SCRIPTS = Path(__file__).resolve().parent
 
@@ -30,7 +30,6 @@ def check(wheel: Path, version: str, profile: str) -> None:
             for key, value in os.environ.items()
             if not key.startswith("SIBYL_") and key not in {"PYTHONPATH", "PYTHONHOME"}
         }
-        env["MPLCONFIGDIR"] = str(root / "matplotlib")
 
         def run(*arguments: str | Path) -> None:
             subprocess.run(
@@ -66,28 +65,10 @@ def check(wheel: Path, version: str, profile: str) -> None:
         run(
             python,
             SCRIPTS / "check_research_workflow.py",
-            *(["--pdf"] if profile == "report-finance-extract" else []),
+            *(["--pdf"] if profile == "report-extract" else []),
         )
-        if profile == "report-finance-extract":
-            env.update(
-                SIBYL_MCP_PROFILE="full",
-                SIBYL_MODEL="openai/fixture",
-                SIBYL_API_BASE="http://127.0.0.1:1",
-            )
-            result = subprocess.run(
-                [str(executable), "--list-tools"],
-                cwd=root,
-                env=env,
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=30,
-            )
-            if (
-                "fetch_market_data" not in result.stdout
-                or "research" not in result.stdout
-            ):
-                raise RuntimeError("Installed full profile omitted optional tools")
+        run(python, SCRIPTS / "check_research_workflow.py", "--agent")
+        run(python, SCRIPTS / "check_mcp_stdio.py", executable, "--agent")
         print(
             f"Clean-wheel {profile} passed; temporary environment removed on exit",
             flush=True,

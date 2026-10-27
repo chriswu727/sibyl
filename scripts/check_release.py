@@ -43,6 +43,13 @@ def validate_release(
         date.fromisoformat(heading[1])
 
     server = json.loads((root / "server.json").read_text(encoding="utf-8"))
+    description = server.get("description")
+    if (
+        not isinstance(description, str)
+        or not description.strip()
+        or len(description) > 100
+    ):
+        raise ValueError("server.json description must contain 1–100 characters")
     if server.get("version") != version:
         raise ValueError("server.json version must match the package version")
     packages = server.get("packages") or []

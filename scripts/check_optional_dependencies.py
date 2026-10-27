@@ -1,4 +1,4 @@
-"""Offline installed-extra checks; no models, finance APIs, or browser downloads."""
+"""Offline installed-extra checks; no model calls or browser downloads."""
 
 from __future__ import annotations
 
@@ -38,22 +38,15 @@ async def check_pdf() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "profile", choices=["core", "pdf-monitor", "report-finance-extract"]
-    )
+    parser.add_argument("profile", choices=["core", "pdf-monitor", "report-extract"])
     profile = parser.parse_args().profile
     if profile == "pdf-monitor":
         importlib.import_module("uvicorn")
         asyncio.run(check_pdf())
-    if profile == "report-finance-extract":
+    if profile == "report-extract":
         for module in (
-            "litellm",
             "fpdf",
             "PIL",
-            "yfinance",
-            "matplotlib",
-            "pandas",
-            "pytrends",
             "trafilatura",
         ):
             importlib.import_module(module)

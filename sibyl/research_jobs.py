@@ -1,10 +1,12 @@
-"""Durable host-assisted and model-backed research orchestration."""
+"""Durable host-led research orchestration."""
 
 from __future__ import annotations
 
 import asyncio
+import copy
+import logging
+import sqlite3
 import time
-from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
 from .job_models import JobRecord, ResearchMode, SearchPurpose
@@ -13,16 +15,39 @@ if TYPE_CHECKING:
     from .runtime import SibylRuntime
 
 from .async_cache import CapacityError
-from .job_store import JobStore
+from .job_store import CheckpointTooLarge, JobStore, StoreBusy, WorkerCapacity
 from .privacy import display_url
 from .report_audit import citation_errors
 from .report_models import ResearchReport
+from .research_claims import render_claims
 from .research_errors import ResearchRequestError
 from .research_review import evidence_index, questions, research_plan, review_question
 from .research_sources import read_source_bundle
 from .research_state import ResearchBudgetExceeded, ResearchNotebook
 from .retrieval import gather_source_bundle
 from .source_policy import normalize_domains, source_kind
+
+logger = logging.getLogger(__name__)
+
+PENDING_RESULT_MESSAGE = (
+    "The retrieval finished, but the research store is busy, so its result is held "
+    "only by this session and is not saved yet. Do not repeat the retrieval: call "
+    "get_research(job_id) to read the result, which also saves it once the store "
+    "is free. If this session exits first, the result is lost and the job becomes "
+    "interrupted."
+)
+
+
+class CheckpointDiscarded(CapacityError):
+    """New evidence exceeded the checkpoint limit; the prior state was saved."""
+
+    code = "capacity_exceeded"
+
+
+class ResultPending(CapacityError):
+    """A finished retrieval is held unsaved in this session; read, do not retry."""
+
+    code = "result_pending"
 
 
 class ResearchJobs:
@@ -31,6 +56,11 @@ class ResearchJobs:
         self.store = JobStore(runtime.policy.output_root)
         self.tasks: dict[str, asyncio.Task[Any]] = {}
         self.closed = False
+        # Finished retrievals whose checkpoint met a busy store; retried later.
+        self._pending: dict[str, JobRecord] = {}
+        # Jobs this runtime still owns in the store although no task runs them,
+        # because releasing the claim failed; released on the next call.
+        self._stale_claims: set[str] = set()
 
     def _event(self, job: JobRecord, message: str) -> None:
         job["events"] = [
@@ -41,7 +71,7 @@ class ResearchJobs:
     def _checkpoint(self, job: JobRecord) -> None:
         try:
             self.store.save(job)
-        except CapacityError:
+        except CheckpointTooLarge:
             retained = self.store.get(job["job_id"])
             previous = retained["notebook"]
             current = job["notebook"]
@@ -67,19 +97,96 @@ class ResearchJobs:
             self.store.save(retained, recovery=True)
             cast(dict[str, Any], job).clear()
             job.update(retained)
-            raise CapacityError(
+            raise CheckpointDiscarded(
                 "Checkpoint size limit reached; prior evidence and consumed budgets retained."
             ) from None
 
-    def _idle(self, job: JobRecord) -> None:
+    def _flush_pending(self) -> None:
+        for job_id, job in list(self._pending.items()):
+            try:
+                self._checkpoint(job)
+            except StoreBusy:
+                continue
+            except CheckpointDiscarded:
+                logger.warning(
+                    "Research result for job %s exceeded the checkpoint limit; its new "
+                    "evidence was discarded and the prior state was saved.",
+                    job_id,
+                )
+            except Exception:
+                logger.warning(
+                    "Research result for job %s was NOT saved and has been discarded; "
+                    "its claim is released as interrupted.",
+                    job_id,
+                )
+                self._stale_claims.add(job_id)
+            del self._pending[job_id]
+
+    def _release_stale_claims(self) -> None:
+        """Release claims whose final checkpoint failed, so other sessions are not
+        blocked and the store-wide worker slot is freed."""
+        for job_id in list(self._stale_claims):
+            if job_id in self.tasks or job_id in self._pending:
+                continue
+            try:
+                job = self.store.get(job_id)
+                if (
+                    job["status"] == "running"
+                    and self.store.job_owner(job) == self.store.instance_id
+                ):
+                    self.store.recover(job, owner_exited=True)
+            except (StoreBusy, sqlite3.Error):
+                continue
+            except ValueError:
+                pass
+            self._stale_claims.discard(job_id)
+
+    def _maintain(self) -> None:
+        """Retry held results and claim releases for every job on any call."""
+        if self._pending:
+            self._flush_pending()
+        if self._stale_claims:
+            self._release_stale_claims()
+
+    def current_state(self, job_id: str) -> tuple[int, str]:
+        """Revision and status as this session's views report them."""
+        job, _ = self._load(job_id)
+        return job["revision"], job["status"]
+
+    def list_jobs(self) -> list[JobRecord]:
+        self._maintain()
+        return self.store.list_jobs()
+
+    def _idle(self, job: JobRecord) -> JobRecord:
+        """Return the job ready for a change, recovering it if its owner exited.
+
+        A job running in another live session stays read-only here.
+        """
         if self.closed:
             raise ValueError("Research runtime is closed.")
         if job["job_id"] in self.tasks:
             raise CapacityError("Research job is busy.")
-        if job["status"] == "completed":
-            raise ValueError(
-                "Completed reports are immutable. Start a new research job."
+        if self._pending or self._stale_claims:
+            self._maintain()
+            if job["job_id"] in self._pending:
+                raise ResultPending(PENDING_RESULT_MESSAGE)
+            job = self.store.get(job["job_id"])
+        if job["status"] == "running":
+            recovered = self.store.recover(
+                job, owner_exited=self.store.job_owner(job) == self.store.instance_id
             )
+            if recovered is None or recovered["status"] == "running":
+                raise ResearchRequestError(
+                    "This job is running in another session. Read it, or retry after that retrieval finishes.",
+                    code="job_running_elsewhere",
+                )
+            job = recovered
+        if job["status"] == "completed":
+            raise ResearchRequestError(
+                "Completed reports are immutable. Start a new research job.",
+                code="immutable_report",
+            )
+        return job
 
     def start(
         self,
@@ -91,37 +198,35 @@ class ResearchJobs:
         max_steps: int,
         source_policy: str = "primary",
         preferred_domains: list[str] | None = None,
+        claim_contract_version: int = 1,
     ) -> dict[str, Any]:
+        self._maintain()
         self.runtime.validate_query(question)
-        if (
-            not question.strip()
-            or mode not in {"host", "autonomous"}
-            or depth not in {1, 2, 3}
-        ):
+        if mode != "host":
+            raise ResearchRequestError(
+                "Sibyl no longer calls models. Use host mode from your MCP agent."
+            )
+        if not question.strip() or depth not in {1, 2, 3}:
             raise ValueError("Invalid research request.")
         if not 1 <= max_steps <= 12 or len(sub_questions) > 5:
             raise ValueError("Use 1-12 retrieval steps and at most five sub-questions.")
         if source_policy not in {"primary", "academic"}:
             raise ValueError("Source policy must be primary or academic.")
+        if claim_contract_version not in {1, 2}:
+            raise ResearchRequestError("Unknown research result contract version.")
         preferred_domains = normalize_domains(preferred_domains or [])
         for item in sub_questions:
             self.runtime.validate_query(item)
             if not item.strip():
                 raise ValueError("Sub-questions must not be empty.")
-        if mode == "autonomous":
-            if not self.runtime.config.has_llm_credentials():
-                raise ValueError("Autonomous research requires a configured model.")
-            from .researcher import Researcher  # noqa: F401
-
-            if len(self.tasks) >= 2:
-                raise CapacityError("Research worker capacity reached.")
         notebook = ResearchNotebook(
             question,
             sub_questions=list(dict.fromkeys(sub_questions)),
             max_steps=max_steps,
             source_policy=source_policy,
             preferred_domains=preferred_domains,
-            require_review=mode == "host",
+            require_review=True,
+            claim_contract_version=claim_contract_version,
         )
         job = self.store.create(
             {
@@ -132,34 +237,98 @@ class ResearchJobs:
                 "status": "awaiting_input",
                 "notebook": notebook.to_dict(),
                 "report": None,
-                "events": [],
+                # Part of the single creating transaction: a failed create
+                # leaves no job behind, so retrying never duplicates one.
+                "events": [
+                    {
+                        "message": "Research created; sources are untrusted data.",
+                        "time": time.time(),
+                    }
+                ],
                 "elapsed_seconds": 0.0,
             }
         )
-        self._event(job, "Research created; sources are untrusted data.")
-        self.store.save(job)
-        if mode == "autonomous":
-            self._launch(job)
         return self.get(job["job_id"])
 
-    def get(self, job_id: str, passage_id: str = "") -> dict[str, Any]:
-        job = self.store.get(job_id)
-        if job["status"] == "running" and job_id not in self.tasks:
+    def _load(self, job_id: str) -> tuple[JobRecord, ResearchNotebook]:
+        self._maintain()
+        pending = self._pending.get(job_id)
+        job = copy.deepcopy(pending) if pending else self.store.get(job_id)
+        # A held view keeps the stored revision on purpose: any later write
+        # (saving the result, or releasing the claim without it) moves past it,
+        # so a request made against the held view can never match another state.
+        job["unsaved_result"] = pending is not None
+        job["running_elsewhere"] = self.store.running_elsewhere(job)
+        if (
+            job["status"] == "running"
+            and job_id not in self.tasks
+            and not job["running_elsewhere"]
+        ):
             job["status"] = "interrupted"
-        notebook = ResearchNotebook.from_dict(job["notebook"])
-        if passage_id:
-            item = evidence_index(notebook).get(passage_id)
-            if item is None:
-                raise ValueError("Unknown evidence passage.")
-            source, passage = item
-            return dict(
-                job_id=job_id,
-                revision=job["revision"],
-                url=display_url(source.url),
-                title=source.title,
-                passage=passage.__dict__,
-                source_kind=source_kind(source, notebook.preferred_domains),
+        job.pop("owner", None)
+        return job, ResearchNotebook.from_dict(job["notebook"])
+
+    def _passage(
+        self, job: JobRecord, notebook: ResearchNotebook, passage_id: str
+    ) -> dict[str, Any]:
+        item = evidence_index(notebook).get(passage_id)
+        if item is None:
+            raise ValueError("Unknown evidence passage.")
+        source, passage = item
+        job_id = job["job_id"]
+        return dict(
+            job_id=job_id,
+            revision=job["revision"],
+            url=display_url(source.url),
+            title=source.title,
+            passage=passage.__dict__,
+            source_char_count=source.char_count,
+            is_excerpt=passage.start_char > 0 or passage.end_char < source.char_count,
+            read_more={
+                "tool": "continue_research",
+                "job_id": job_id,
+                "url": display_url(source.url),
+                "requires_focused_query": True,
+                "uses_retrieval_step": True,
+            }
+            if job["mode"] == "host"
+            and job["status"] in {"awaiting_input", "interrupted"}
+            and len(notebook.attempts) < notebook.max_steps
+            else None,
+            source_kind=source_kind(source, notebook.preferred_domains),
+            source_id=source.source_id,
+            content_hash=source.content_hash,
+            content_origin=source.content_origin,
+            content_cluster_id=source.content_cluster_id,
+            retrieved_at=source.retrieved_at,
+            published_at=source.published_at,
+        )
+
+    def passages(self, job_id: str, passage_ids: list[str]) -> dict[str, Any]:
+        """Read several exact passages in one call, in the requested order."""
+        passage_ids = list(dict.fromkeys(passage_ids))
+        if not 1 <= len(passage_ids) <= 12:
+            raise ResearchRequestError(
+                "Read 1-12 passage IDs at a time.", field="passage_ids"
             )
+        job, notebook = self._load(job_id)
+        index = evidence_index(notebook)
+        for position, key in enumerate(passage_ids):
+            if key not in index:
+                raise ResearchRequestError(
+                    f"passage_ids[{position}] is unknown or a search-snippet passage; "
+                    "snippets are leads, not readable evidence.",
+                    field="passage_ids",
+                )
+        items = [self._passage(job, notebook, key) for key in passage_ids]
+        for item in items:
+            del item["job_id"], item["revision"]
+        return {"job_id": job_id, "revision": job["revision"], "passages": items}
+
+    def get(self, job_id: str, passage_id: str = "") -> dict[str, Any]:
+        job, notebook = self._load(job_id)
+        if passage_id:
+            return self._passage(job, notebook, passage_id)
         public: dict[str, Any] = {
             key: value for key, value in job.items() if key != "notebook"
         }
@@ -183,8 +352,12 @@ class ResearchJobs:
             research_plan=research_plan(notebook),
             source_policy=notebook.source_policy,
             preferred_domains=notebook.preferred_domains,
+            claim_contract_version=notebook.claim_contract_version,
             source_catalog=[
                 dict(
+                    source_id=source.source_id,
+                    content_hash=source.content_hash,
+                    content_cluster_id=source.content_cluster_id,
                     url=display_url(source.url),
                     title=source.title,
                     source_kind=source_kind(source, notebook.preferred_domains),
@@ -204,84 +377,6 @@ class ResearchJobs:
                 source["url"] = display_url(source["url"])
         return public
 
-    def _launch(self, job: JobRecord) -> None:
-        self._idle(job)
-        if len(self.tasks) >= 2:
-            raise CapacityError("Research worker capacity reached.")
-        if job["elapsed_seconds"] >= self.runtime.policy.report_timeout:
-            raise ResearchBudgetExceeded("Research wall-time budget exhausted.")
-        job["status"] = "running"
-        self._event(job, "Autonomous research running.")
-        self.store.save(job)
-        task = asyncio.create_task(self._run(job))
-        self.tasks[job["job_id"]] = task
-
-        def finished(completed: asyncio.Task[None]) -> None:
-            if self.tasks.get(job["job_id"]) is completed:
-                self.tasks.pop(job["job_id"], None)
-            if not completed.cancelled():
-                completed.exception()
-
-        task.add_done_callback(finished)
-
-    async def _run(self, job: JobRecord) -> None:
-        from .researcher import Researcher
-
-        started = time.monotonic()
-        elapsed = job["elapsed_seconds"]
-        notebook = ResearchNotebook.from_dict(job["notebook"])
-
-        def checkpoint(state: ResearchNotebook) -> None:
-            job["notebook"] = state.to_dict()
-            job["elapsed_seconds"] = elapsed + time.monotonic() - started
-            self._checkpoint(job)
-
-        def progress(message: str) -> None:
-            self._event(job, message)
-            checkpoint(notebook)
-
-        try:
-            config = replace(
-                self.runtime.config, providers=list(self.runtime.config.providers)
-            )
-            researcher = Researcher(config, notebook=notebook, on_checkpoint=checkpoint)
-            report = await asyncio.wait_for(
-                researcher.research(
-                    job["question"],
-                    depth=job["depth"],
-                    language=job["language"],
-                    on_progress=progress,
-                ),
-                self.runtime.policy.report_timeout - elapsed,
-            )
-            job["report"] = report.to_dict()
-            job["status"] = "completed" if report.status == "ok" else "failed"
-            self._event(
-                job,
-                "Report ready."
-                if report.status == "ok"
-                else "No complete report produced.",
-            )
-        except asyncio.CancelledError:
-            job["status"] = "interrupted"
-            self._event(
-                job, "Research interrupted; completed evidence checkpoints retained."
-            )
-            raise
-        except (asyncio.TimeoutError, ResearchBudgetExceeded):
-            job["status"] = "budget_exhausted"
-            self._event(job, "Research budget exhausted.")
-        except Exception:
-            job["status"] = "failed"
-            self._event(
-                job, "Research failed. Check model configuration and retry explicitly."
-            )
-        finally:
-            try:
-                checkpoint(notebook)
-            finally:
-                self.tasks.pop(job["job_id"], None)
-
     async def continue_job(
         self,
         job_id: str,
@@ -292,22 +387,11 @@ class ResearchJobs:
         parent_passage_id: str = "",
         rationale: str = "",
     ) -> dict[str, Any]:
-        job = self.store.get(job_id)
-        self._idle(job)
-        if job["mode"] == "autonomous":
-            if (
-                query
-                or url
-                or question_id
-                or parent_passage_id
-                or rationale
-                or purpose != "explore"
-            ):
-                raise ValueError(
-                    "Autonomous continuation reuses its saved plan; omit query."
-                )
-            self._launch(job)
-            return self.get(job_id)
+        job = self._idle(self.store.get(job_id))
+        if job["mode"] != "host":
+            raise ResearchRequestError(
+                "Autonomous execution has been removed. Read or export the saved job; start a new host research job to continue investigating."
+            )
         self.runtime.validate_query(query)
         if not query.strip() and not url:
             raise ValueError(
@@ -322,7 +406,7 @@ class ResearchJobs:
                 "Retrieval rationale must be at most 1000 characters."
             )
         if len(self.tasks) >= 2:
-            raise CapacityError("Research worker capacity reached.")
+            raise WorkerCapacity("Research worker capacity reached.")
         remaining = self.runtime.policy.report_timeout - job["elapsed_seconds"]
         if remaining <= 0:
             raise ResearchBudgetExceeded("Research wall-time budget exhausted.")
@@ -361,9 +445,9 @@ class ResearchJobs:
             }
         )
         job["notebook"] = notebook.to_dict()
-        job["status"] = "running"
         self._event(job, f"Retrieving evidence: {query}")
-        self.store.save(job)
+        self.store.claim(job)
+        cancelled = False
         started = time.monotonic()
         task = asyncio.current_task()
         assert task is not None
@@ -379,6 +463,7 @@ class ResearchJobs:
                     include_academic=True
                     if notebook.source_policy == "academic"
                     else None,
+                    preferred_domains=notebook.preferred_domains,
                 ),
                 min(remaining, self.runtime.policy.tool_timeout * 0.9),
             )
@@ -389,6 +474,7 @@ class ResearchJobs:
                 f"Retrieval finished: {bundle.status}; inspect evidence before writing.",
             )
         except asyncio.CancelledError:
+            cancelled = True
             notebook.finish_search(query, None)
             job["status"] = "interrupted"
             raise
@@ -404,6 +490,20 @@ class ResearchJobs:
             job["elapsed_seconds"] += time.monotonic() - started
             try:
                 self._checkpoint(job)
+            except StoreBusy:
+                # Keep the finished result instead of losing it; it is saved on
+                # this session's next call or at shutdown. Never ask the host to
+                # retry the retrieval: that would search (and spend) again.
+                self._pending[job_id] = job
+                if not cancelled:
+                    raise ResultPending(PENDING_RESULT_MESSAGE) from None
+            except Exception:
+                # The result could not be saved; release the claim now (or on
+                # the next call) so the job does not stay running elsewhere.
+                self._stale_claims.add(job_id)
+                self.tasks.pop(job_id, None)
+                self._release_stale_claims()
+                raise
             finally:
                 self.tasks.pop(job_id, None)
         return self.get(job_id)
@@ -419,12 +519,20 @@ class ResearchJobs:
         conclusion: str,
         counterevidence_note: str,
         follow_up_queries: list[str] | None = None,
+        claims: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
-        job = self.store.get(job_id)
-        self._idle(job)
-        if job["mode"] != "host" or revision != job["revision"]:
+        job = self._idle(self.store.get(job_id))
+        if job["mode"] != "host":
             raise ResearchRequestError(
-                "Reload the host research job and use its current revision."
+                "Legacy autonomous jobs cannot be assessed. Read/export the saved state or start a new host job.",
+                code="unsupported_mode",
+                field="mode",
+            )
+        if revision != job["revision"]:
+            raise ResearchRequestError(
+                "Reload the host research job and use its current revision.",
+                code="stale_revision",
+                field="revision",
             )
         notebook = ResearchNotebook.from_dict(job["notebook"])
         review_question(
@@ -436,6 +544,7 @@ class ResearchJobs:
             conclusion,
             counterevidence_note,
             follow_up_queries,
+            claims,
         )
         job["notebook"] = notebook.to_dict()
         self._event(
@@ -454,20 +563,47 @@ class ResearchJobs:
         analysis: str,
         limitations: list[str],
         allow_incomplete: bool = False,
+        claim_ids: list[str] | None = None,
+        *,
+        prose_allowed: bool = True,
     ) -> dict[str, Any]:
         import re
 
-        job = self.store.get(job_id)
-        self._idle(job)
-        if job["mode"] != "host" or job["revision"] != revision:
+        job = self._idle(self.store.get(job_id))
+        if job["mode"] != "host":
             raise ResearchRequestError(
-                "Reload the host research job and use its current revision."
+                "Legacy autonomous jobs cannot be finalized. Read/export the saved state or start a new host job.",
+                code="unsupported_mode",
+                field="mode",
             )
-        if not summary.strip() or not key_findings:
-            raise ValueError("Provide a summary and evidence-backed findings.")
+        if job["revision"] != revision:
+            raise ResearchRequestError(
+                "Reload the host research job and use its current revision.",
+                code="stale_revision",
+                field="revision",
+            )
         if len(key_findings) > 32 or len(limitations) > 32:
             raise ValueError("At most 32 findings and limitations are supported.")
         notebook = ResearchNotebook.from_dict(job["notebook"])
+        if notebook.claim_contract_version < 2 and not prose_allowed:
+            raise ResearchRequestError(
+                "This job predates evidence-linked claims. Finalize it with the keyless profile's prose completion (summary, key_findings, analysis).",
+                code="legacy_contract",
+            )
+        report_claims: list[dict[str, Any]] = []
+        if notebook.claim_contract_version >= 2:
+            if summary or key_findings or analysis:
+                raise ResearchRequestError(
+                    "This job uses evidence-linked claims. Record prose with assess_research(claims=...), then complete with claim_ids and omit summary/key_findings/analysis."
+                )
+            report_claims, key_findings, analysis = render_claims(notebook, claim_ids)
+            summary = "\n\n".join(key_findings)
+        elif claim_ids is not None:
+            raise ResearchRequestError(
+                "Claim-based report completion requires a new evidence-linked job."
+            )
+        if not summary.strip() or not key_findings:
+            raise ValueError("Provide a summary and evidence-backed findings.")
         plan = research_plan(notebook)
         if (
             notebook.require_review
@@ -475,12 +611,17 @@ class ResearchJobs:
             and not allow_incomplete
         ):
             raise ResearchRequestError(
-                "Research gaps remain. Inspect research_plan, review the evidence, or set allow_incomplete=true to disclose the gaps."
+                "Research gaps remain. Inspect research_plan, review the evidence, or set allow_incomplete=true to disclose the gaps.",
+                code="research_gaps",
             )
         sources = notebook.report_sources()
-        if not sources:
+        if not sources and not (
+            notebook.claim_contract_version >= 2 and allow_incomplete
+        ):
             raise ValueError("Cannot complete a report without substantive sources.")
-        for text in [summary, *key_findings]:
+        for text in (
+            [] if notebook.claim_contract_version >= 2 else [summary, *key_findings]
+        ):
             if not re.search(r"\[Source\s+\d+\]", text, re.IGNORECASE):
                 raise ValueError(
                     "Summary and each finding must cite a selected [Source N]."
@@ -500,6 +641,8 @@ class ResearchJobs:
                 "Host-authored report. Citation targets checked; semantic support was not independently verified.",
             ],
             verification_scope="citation_targets_only",
+            schema_version="1.1" if report_claims else "1.0",
+            claims=report_claims,
             research_stats={
                 "retrieval_attempts": len(notebook.attempts),
                 "steps": notebook.attempts,
@@ -521,19 +664,37 @@ class ResearchJobs:
         return self.get(job_id)
 
     async def cancel(self, job_id: str, delete: bool = False) -> dict[str, Any]:
-        job = self.store.get(job_id)
+        self._maintain()
         task = self.tasks.get(job_id)
         if task is not None:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
-            job = self.store.get(job_id)
+        # Load after any local cancellation: another session may have claimed
+        # the job meanwhile, and its retrieval cannot be cancelled from here.
+        job = self.store.get(job_id)
+        if job["status"] == "running":
+            job = self._idle(job)
+        stopped = (
+            "The local retrieval was stopped and recorded as interrupted, but the "
+            "store was busy when {}. Retry cancel_research; no retrieval will run."
+        )
         if delete:
-            self.store.delete(job_id)
+            try:
+                self.store.delete(job_id)
+            except StoreBusy:
+                if task is None:
+                    raise
+                raise StoreBusy(stopped.format("deleting the job")) from None
             return {"job_id": job_id, "status": "deleted"}
         if job["status"] != "completed":
             job["status"] = "cancelled"
             self._event(job, "Research cancelled by the caller.")
-            self.store.save(job)
+            try:
+                self.store.save(job)
+            except StoreBusy:
+                if task is None:
+                    raise
+                raise StoreBusy(stopped.format("marking the job cancelled")) from None
         return self.get(job_id)
 
     async def close(self) -> None:
@@ -542,4 +703,12 @@ class ResearchJobs:
         for task in tasks:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        self._flush_pending()
+        for job_id in self._pending:
+            logger.warning(
+                "Research result for job %s was NOT saved: the research store stayed "
+                "busy. It is lost when this process exits; the job will show as "
+                "interrupted.",
+                job_id,
+            )
         self.store.close()

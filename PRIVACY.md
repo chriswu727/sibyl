@@ -11,8 +11,7 @@ for current installation and [Operations](docs/OPERATIONS.md) for local retentio
 
 Sibyl may process research queries, search results, public URLs, downloaded page
 content, extracted passages, publication metadata, and citation identifiers. The
-optional report mode also processes model prompts and generated reports. Finance
-tools process the ticker symbols and trend keywords supplied by the user.
+host can submit assessments and reports, which Sibyl stores without model calls.
 
 `gather_evidence` keeps its question, atomic follow-up queries, and retrieved
 public evidence in the local MCP process for up to ten minutes so the host can
@@ -21,7 +20,10 @@ written to disk and disappear when the process exits.
 
 Persistent research is separate: `start_research` stores questions, plans,
 retrieval attempts, selected public evidence, progress events, counters, and
-reports in `SIBYL_OUTPUT_ROOT/.research/jobs.sqlite3`. These records survive
+reports in `<output root>/.research/jobs.sqlite3`. The output root is
+`SIBYL_OUTPUT_ROOT`, or the per-user data directory when unset. Every local
+session of the same user using that root can list and read these records; they
+are not separated by project. These records survive
 restart and have no automatic time-based expiry. At most 64 jobs are retained,
 with a 1 MiB payload limit per job plus 64 KiB reserved for recovery metadata;
 new jobs are rejected when history is full.
@@ -30,8 +32,8 @@ delete exported reports, backups, host conversation history, or provider records
 SQLite deletion is not a guarantee of forensic erasure. The database uses
 owner-only file permissions, not encryption at rest.
 
-MCP reports and charts are written below the operator-selected
-`SIBYL_OUTPUT_ROOT` (default: `reports/`); calling agents can select only relative
+MCP reports are written below the operator-selected
+output root; calling agents can select only relative
 subdirectories for report export. CLI/Python callers may explicitly select their
 own output directory. Sibyl does not upload artifacts to the project maintainer.
 
@@ -60,16 +62,11 @@ environment credentials. No raw PDF files or OCR models are saved automatically.
   associated with that traffic and applies its own privacy and retention terms.
   Failed or empty Tavily requests fall back to the keyless search chain.
 - Jina rendering is disabled by default. When `render_thin_pages`, `js_render`,
-  or the `--js-render` CLI flag is explicitly enabled, the destination URL is
+  or the `--render-thin-pages` CLI flag is explicitly enabled, the destination URL is
   sent to Jina Reader for extraction.
-- Optional report and analysis tools send prompts and selected source text to
-  the LLM provider configured by the user. A local or API-compatible backend can
-  be used instead.
-- `start_research(mode="autonomous")` and explicit autonomous continuation
-  authorize configured-model calls. Host mode does not call a Sibyl model.
-  Checkpoints contain no configured provider keys, but public evidence and user
-  queries can themselves contain sensitive text; review them before retaining.
-- Optional finance tools contact Yahoo Finance and Google Trends.
+- Sibyl does not send prompts or evidence to a generative-model provider and does
+  not read the host subscription login. Stored public evidence and user queries
+  can themselves contain sensitive text; review before retaining.
 - The MCP host may send Sibyl tool inputs and outputs to its own configured model
   provider. The host and provider privacy terms apply independently.
 - Installing through PyPI, `pip`, or `uvx` contacts those distribution services.
@@ -80,8 +77,8 @@ send private target URLs to third-party search, rendering, or model services.
 
 ## Credentials
 
-Sibyl reads provider credentials from environment variables or a user-selected
-configuration file. It does not intentionally include credentials in reports or
+Sibyl reads optional search/rendering credentials from environment variables,
+not model or subscription credentials. Retrieval YAML accepts no credentials. It does not intentionally include credentials in reports or
 send them to the project maintainer. Keep configuration files outside source
 control and follow the selected provider's key-rotation guidance.
 

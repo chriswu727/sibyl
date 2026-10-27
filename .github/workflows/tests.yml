@@ -25,7 +25,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install ruff==0.17.1 mypy==2.4.0 -e '.[report,finance,extract,pdf,monitor]'
+          python -m pip install ruff==0.17.1 mypy==2.4.0 -e '.[report,extract,pdf,monitor]'
       - name: Check Python correctness
         run: ruff check sibyl tests scripts
       - name: Check consistent formatting
@@ -38,8 +38,13 @@ jobs:
         run: python -m unittest discover tests -v
       - name: Smoke-test the keyless MCP stdio surface
         run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
+      - name: Smoke-test the agent MCP stdio surface
+        run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --agent
       - name: Smoke-test authenticated monitoring and MCP shutdown
         run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
+      - name: Check bounded runtime resource recovery
+        if: matrix.python-version == '3.12'
+        run: python scripts/check_runtime_soak.py --rounds 100 --monitor --pdf
       - name: Check lexical retrieval regression floor
         run: python scripts/eval_retrieval.py --ranker lexical
       - name: Check end-to-end retrieval pipeline regression floor
@@ -57,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [core, report-finance-extract-pdf-monitor]
+        profile: [core, report-extract-pdf-monitor]
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,7 +80,7 @@ jobs:
           if [ "$PROFILE" = "core" ]; then
             /tmp/sibyl-app/bin/pip install .
           else
-            /tmp/sibyl-app/bin/pip install '.[report,finance,extract,pdf,monitor]'
+            /tmp/sibyl-app/bin/pip install '.[report,extract,pdf,monitor]'
           fi
           /tmp/sibyl-app/bin/pip check
       - name: Audit installed application dependencies
