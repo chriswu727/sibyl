@@ -84,8 +84,10 @@ not a complete research, host-usability or stable-release gate pass.
 
 The subsequent [frozen 66-case, three-repeat live gate](../evals/results/live-retrieval-body-selection-2026-10-26.json)
 still fails: 81.5% answer coverage, 97.9% ready-state answer precision and 100%
-trap-safe rate, but 57.4% answerable readiness and 51.5% repeat stability. Thresholds
-are unchanged. Diagnose discovery/readiness misses without treating the two
+trap-safe rate, but 57.4% answerable readiness and 51.5% repeat stability. The
+[2026-10-27 GitHub-runner rerun](../evals/results/live-retrieval-github-runner-2026-10-27.json) also fails, with 72.2%
+coverage, 30.2% answerable readiness, 47.0% stability and 90.7% ready-state
+precision on a network that blocked more page reads. Thresholds are unchanged. Diagnose discovery/readiness misses without treating the two
 targeted reading fixes as a complete-product pass.
 
 Claim-based human reports now present the generated claim narrative once, while
