@@ -31,15 +31,18 @@ def markdown_literal(text: str) -> str:
     return _MARKDOWN_INLINE.sub(r"\\\1", text)
 
 
-def claim_report_body(report: ResearchReport, markdown: bool = False) -> str:
-    body = report.analysis or "\n\n".join(
-        dict.fromkeys([report.summary, *report.key_findings])
-    )
-    if not markdown or not report.claims:
-        return body
+def escape_quote_lines(body: str) -> str:
+    """Escape the quoted source text in each claim quote line for Markdown."""
     return "\n".join(
         match[1] + markdown_literal(match[2]) + match[3]
         if (match := _QUOTE_LINE.match(line))
         else line
         for line in body.split("\n")
     )
+
+
+def claim_report_body(report: ResearchReport, markdown: bool = False) -> str:
+    body = report.analysis or "\n\n".join(
+        dict.fromkeys([report.summary, *report.key_findings])
+    )
+    return escape_quote_lines(body) if markdown and report.claims else body

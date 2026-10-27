@@ -140,6 +140,44 @@ class TestMarkdownReport(unittest.TestCase):
         self.assertNotIn("## Summary", md)
 
 
+class TestSharedReportDocument(unittest.TestCase):
+    def test_every_format_renders_the_same_sections(self):
+        from sibyl.report_document import build_document
+
+        report = _report()
+        report.cross_analysis = "Sources agree on the limit."
+        report.predictions = "Throughput remains uncertain."
+        report.limitations = ["Bounded public-web research."]
+        document = build_document(report)
+        titles = [section.title for section in document.sections]
+        self.assertEqual(
+            titles,
+            [
+                "Summary",
+                "Key Findings",
+                "Analysis",
+                "Source Cross-Analysis",
+                "Uncertainties and Outlook",
+                "Research Limitations",
+                "Cited Sources (1)",
+            ],
+        )
+        markdown, text = _report_to_markdown(report), _format_report(report)
+        for title in titles:
+            self.assertIn(f"## {title}", markdown)
+            self.assertIn(f"## {title}", text)
+        self.assertIn("Sources agree on the limit.", markdown)
+        self.assertIn("[Source 1] [Example](https://ex.com/1)", text)
+
+    def test_claim_quotes_are_escaped_only_for_markdown(self):
+        report = _claim_report()
+        report.analysis += '\nQuote [Source 1]: "see [link](https://evil.example)"'
+        self.assertIn(
+            r"see \[link\](https://evil.example)", _report_to_markdown(report)
+        )
+        self.assertIn("see [link](https://evil.example)", _format_report(report))
+
+
 class TestVerificationRendering(unittest.TestCase):
     def test_unverified_marker_in_markdown(self):
         from sibyl.report_models import FindingVerification
@@ -248,15 +286,16 @@ class TestPdfGeneration(unittest.TestCase):
             tempfile.TemporaryDirectory() as directory,
             mock.patch("fpdf.FPDF.add_font", side_effect=OSError("font unavailable")),
         ):
-            manifest = export_report(report, Path(directory), ".", "both", "test-job")
-            self.assertEqual(manifest.status, "partial")
-            self.assertEqual([a.format for a in manifest.artifacts], ["md"])
-            self.assertEqual([f.format for f in manifest.failures], ["pdf"])
-            self.assertIn("PDF font cannot render", manifest.failures[0].message)
-            self.assertIn("Markdown/JSON", manifest.failures[0].message)
+            failed = export_report(report, Path(directory), ".", "pdf", "test-job")
+            self.assertEqual(failed.status, "failed")
+            self.assertEqual([f.format for f in failed.failures], ["pdf"])
+            self.assertIn("PDF font cannot render", failed.failures[0].message)
+            self.assertIn("Markdown/JSON", failed.failures[0].message)
+            saved = export_report(report, Path(directory), ".", "md", "test-job")
+            self.assertEqual([a.format for a in saved.artifacts], ["md"])
             self.assertIn(
                 "缺少工作负载数据",
-                Path(manifest.artifacts[0].path).read_text(encoding="utf-8"),
+                Path(saved.artifacts[0].path).read_text(encoding="utf-8"),
             )
             self.assertEqual(list(Path(directory).glob("*.pdf")), [])
 
