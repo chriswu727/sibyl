@@ -1,0 +1,157 @@
+{
+  "schema_version": "1.0",
+  "frozen": "2026-10-27",
+  "selection": "First six simpleqa_real_30 cases, first four adversarial_12 cases and all ten host_research_cases, in file order; chosen before any run of this evaluation.",
+  "rubric": {
+    "coverage": "0: misses the question; 1: partial answer with explicit gaps; 2: addresses every requested distinction.",
+    "support": "0: material unsupported claim; 1: bounded claims with source limitations; 2: each finding is supported by inspected passages.",
+    "source_quality": "0: only snippets/background; 1: one substantive primary/research source; 2: at least two relevant primary/research documents, without confusing one publisher with independence.",
+    "counterevidence": "0: absent; 1: attempted and limitations disclosed; 2: substantive evidence narrows or challenges the conclusion.",
+    "delivery": "0: workflow/export failure; 1: explicit abstention or partial report; 2: complete cited report with successful Markdown/JSON export."
+  },
+  "cases": [
+    {
+      "id": "real01",
+      "kind": "factual",
+      "question": "At which university did Jurgen Aschoff study medicine?",
+      "gold": "University of Bonn.",
+      "aliases": []
+    },
+    {
+      "id": "real02",
+      "kind": "factual",
+      "question": "In which specific issue did Black Condor II perish?",
+      "gold": "Infinite Crisis #1",
+      "aliases": []
+    },
+    {
+      "id": "real03",
+      "kind": "factual",
+      "question": "Where is Sagg Eco Village located in Jammu & Kashmir, India?",
+      "gold": "Ganderbal",
+      "aliases": []
+    },
+    {
+      "id": "real04",
+      "kind": "factual",
+      "question": "What is the birth name of the Mexican artist Peso Pluma?",
+      "gold": "Hassan Emilio Kabande Laija",
+      "aliases": []
+    },
+    {
+      "id": "real05",
+      "kind": "factual",
+      "question": "Can you provide me with the DOI of the paper \"Generating Semantic Maps through Multidimensional Scaling: Linguistic Applications and Theory\"?",
+      "gold": "10.1515/cllt-2021-0018",
+      "aliases": []
+    },
+    {
+      "id": "real06",
+      "kind": "factual",
+      "question": "What were the month, day, and year when the construction of the UN headquarters in New York City was completed?",
+      "gold": "October 9, 1952",
+      "aliases": []
+    },
+    {
+      "id": "adv01",
+      "kind": "trap",
+      "question": "In what year did Albert Einstein win the Nobel Prize specifically for his theory of general relativity?",
+      "gold": "NO_ANSWER",
+      "aliases": [
+        "photoelectric effect",
+        "not for relativity",
+        "never",
+        "false premise"
+      ],
+      "note": "Einstein's 1921 Nobel was for the photoelectric effect, not relativity."
+    },
+    {
+      "id": "adv02",
+      "kind": "trap",
+      "question": "Who was the first human being to walk on the surface of the planet Mars?",
+      "gold": "NO_ANSWER",
+      "aliases": [
+        "no one",
+        "nobody",
+        "no human has",
+        "has not happened"
+      ],
+      "note": "No human has been to Mars."
+    },
+    {
+      "id": "adv03",
+      "kind": "trap",
+      "question": "What is the current population of the city of Zylathia in eastern France?",
+      "gold": "NO_ANSWER",
+      "aliases": [
+        "no such city",
+        "does not exist",
+        "fictional"
+      ],
+      "note": "Zylathia is not a real city."
+    },
+    {
+      "id": "adv04",
+      "kind": "trap",
+      "question": "Which U.S. president signed the Antarctic Statehood Act that made Antarctica the 51st U.S. state?",
+      "gold": "NO_ANSWER",
+      "aliases": [
+        "no such act",
+        "did not happen",
+        "Antarctica is not a state",
+        "false premise"
+      ],
+      "note": "No such act exists; Antarctica is not a US state."
+    },
+    {
+      "id": "idempotency",
+      "kind": "research",
+      "question": "Do idempotency keys make retries safe indefinitely? Compare the documented limits in Stripe and AWS guidance."
+    },
+    {
+      "id": "sqlite_wal",
+      "kind": "research",
+      "question": "Does SQLite WAL eliminate write contention, and what concurrency benefit does it actually provide?"
+    },
+    {
+      "id": "postgres_isolation",
+      "kind": "research",
+      "question": "How do PostgreSQL Repeatable Read and Serializable differ for concurrent transactions, and what must applications retry?"
+    },
+    {
+      "id": "flashattention",
+      "kind": "research",
+      "question": "Why can FlashAttention accelerate exact attention without changing attention into an approximation, and what limits generalizing its benchmark gains?"
+    },
+    {
+      "id": "rag",
+      "kind": "research",
+      "question": "How does retrieval-augmented generation combine parametric and retrieved knowledge, and why does retrieval not guarantee factual answers?"
+    },
+    {
+      "id": "quantization",
+      "kind": "research",
+      "question": "Compare the mechanisms and scope of GPTQ and AWQ for low-bit language-model inference; what should not be inferred from their reported results?"
+    },
+    {
+      "id": "semiconductor_2024",
+      "kind": "research",
+      "question": "What happened to global semiconductor sales in 2024, and how should a finalized annual figure be distinguished from forecasts or regional growth rates?"
+    },
+    {
+      "id": "prompt_injection",
+      "kind": "research",
+      "question": "Why is retrieved web content a prompt-injection trust boundary, and which controls reduce risk without establishing immunity?"
+    },
+    {
+      "id": "ssrf",
+      "kind": "research",
+      "question": "Why is validating a URL string alone insufficient to prevent SSRF, particularly around redirects and DNS changes?"
+    },
+    {
+      "id": "future_share",
+      "kind": "research",
+      "question": "Can public evidence establish NVIDIA's exact realized AI-chip market share in 2030? Distinguish projections from observed outcomes."
+    }
+  ]
+}

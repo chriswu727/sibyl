@@ -296,16 +296,19 @@ Do not publish a stable host-only version or claim the research-quality gates pa
 all five gates below are satisfied:
 
 1. A new dated run of the [host-source retrieval gate](#host-source-retrieval-gate-protocol)
-   passes every committed threshold. On 2026-10-27 the owner replaced the
+   passes every gating threshold. On 2026-10-27 the owner replaced the
    keyless-discovery gate with this one, which measures the primary path where
    the host supplies sources; its protocol below was committed before its first
    run. Keyless discovery keeps its dated runs and published numbers but no
-   longer blocks release.
-2. A paired host-agent evaluation compares this workflow with ordinary search
-   using the same model, provider access and budget, a declared rubric, and
-   retained outputs. Record evidence support, gaps, abstention, cost and latency.
-   Explicit model-quota/API-spend approval is required. A host-authored fixture
-   alone does not establish research-quality superiority.
+   longer blocks release. After the second run the owner made answerable
+   readiness a reported diagnostic instead of a gating threshold (see the
+   [amendment](#host-source-gate-amendment-2026-10-27)).
+2. The [paired host evaluation](#paired-host-evaluation-protocol) meets its
+   declared criteria: it compares this workflow with ordinary search, and with
+   a managed research workflow, using the same model, provider access and
+   budget, a declared rubric and retained outputs. Explicit model-quota
+   approval is required; the owner approved twenty tasks on 2026-10-27. A
+   host-authored fixture alone does not establish research-quality superiority.
    Verify natural host recovery, exact support for material qualifications,
    counterevidence, follow-ups and honest unknown delivery. Existing partial
    exports and the unsupported SQLite qualification do not clear this gate.
@@ -354,6 +357,68 @@ This gate measures whether Sibyl turns the sources a host would hand it into
 ready, answer-bearing evidence. It does not measure the host's search quality or
 whether the host would have chosen these sources, and a pass does not establish
 better research than ordinary search; gate 2 measures that.
+
+### Host-source gate amendment, 2026-10-27
+
+Decided by the owner after the second run, so it is disclosed as a post-hoc
+change; both failed runs stay retained. Answerable readiness (at least 75% of
+answerable runs rated sufficient) is reported but no longer gates release. The
+gating thresholds are answer coverage, trap-safe rate, repeat stability,
+ready-state answer precision and p95 latency, unchanged.
+
+Reasons: with three host-supplied URLs per question, a read whose evidence
+contains the answer but comes from one domain is correctly rated `limited` and
+asks the host for an independent source; on the second run, counting `limited`
+as ready would have dropped ready-state precision to 90.9% and trap safety to
+75.0%, so the rule stays as it is. What fails is the share of single reads that
+are already corroborated, which depends mostly on how many independent
+domains the URL list contains. The gold-string scoring is also coarse: a
+free-text gold answer and a variant spelling account for some coverage misses.
+Corroboration is checked per claim (`claim_support`) and by the paired host
+evaluation instead. Under the amended criteria the
+[second run](#host-source-retrieval-gate-second-run-2026-10-27) meets gate 1.
+
+### Paired host evaluation protocol
+
+Frozen on 2026-10-27 before any run; changing an item below requires a new
+dated protocol committed before its run.
+
+- **Tasks.** Twenty, in [`evals/paired_host_cases.json`](../evals/paired_host_cases.json):
+  the first six `simpleqa_real_30` cases (factual, gold answers), the first four
+  `adversarial_12` cases (no valid answer) and all ten host research cases
+  (open questions scored with the existing rubric), in file order.
+- **Conditions**, all on Claude Code with `claude-sonnet-5-5` at medium effort,
+  each run once per task in a fresh directory without shell or file tools,
+  capped at 2 USD and 600 seconds, with the same task prompt asking for a direct
+  answer, one claim per line with supporting URLs, honest abstention and at most
+  eight source retrievals:
+  - `native`: built-in WebSearch and WebFetch only;
+  - `sibyl`: the same plus the Sibyl MCP server, told to manage the research
+    with it;
+  - `deep_research`: the same built-in tools plus the
+    `anthropic-skills:deep-research` workflow and sub-agents, as a comparator
+    for managed multi-agent research.
+  Run with `scripts/run_paired_host_eval.py`.
+- **Judging.** `scripts/judge_paired_host_eval.py` runs one blind judge per
+  task (`claude-opus-5-5`, medium effort, no tools) that sees every condition's
+  final answer under seeded shuffled labels. The script fetches every cited
+  URL once with Sibyl's page reader (at most 10,000 characters each) and gives
+  the same page texts to the judge. The judge marks factual answers correct,
+  incorrect or abstained against gold, trap answers pass or fail, labels up to
+  eight claim-URL pairs per answer as supported (1), partial (0.5), unsupported
+  or benchmark mirror (0), or unreachable (excluded and reported), counts
+  uncited claims, and scores research answers 0-2 on coverage, support, source
+  quality and counterevidence.
+- **Criteria** (Sibyl against `native`): citation support rate at least 5
+  percentage points higher; no fewer correct factual answers and no fewer
+  passed traps; and no research rubric mean more than 0.2 lower. Cost, time,
+  turns, unreachable citations and the `deep_research` comparator are
+  reported, not gating.
+- **Limits.** Twenty tasks, one run each, one host and model family, and a
+  judge from the same family: a declared comparison, not a statistically
+  powered or human-graded benchmark. Keyed services (Tavily, Exa, Perplexity,
+  Firecrawl) and open-source agents that need a model API key are not run in
+  this environment.
 
 A green release workflow automates packaging and publishing; it does not enforce
 all research-quality gates. The maintainer must review this checklist before

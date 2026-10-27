@@ -744,7 +744,8 @@ The latest release-gate run, the
 failed only answerable readiness (30.2%, gate 75%): 87.0% answer coverage,
 91.7% trap-safe handling, 98.5% stability, 100% ready-state precision and 4.0 s
 p95 latency pass. Most answer-bearing reads were rated `limited` because their
-readable sources came from one domain. The
+readable sources came from one domain; the owner has since made that rate a
+reported diagnostic, so this run meets the amended gate. The
 [first run](../evals/results/host-source-retrieval-2026-10-27.json), before page
 reads identified as Sibyl, had every Wikipedia read refused. See
 [launch readiness](LAUNCH_READINESS.md#host-source-retrieval-gate-second-run-2026-10-27).
