@@ -624,9 +624,9 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
                 "follow_up_queries": ["independent replication methods"],
             },
         )
-        self.assertEqual(job["view"], "brief")
+        self.assertEqual(job["view"], "update")
         self.assertEqual(
-            job["research_plan"]["suggested_queries"][0]["query"],
+            job["suggested_queries"][0]["query"],
             "independent replication methods",
         )
         await self.runtime.aclose()
@@ -648,7 +648,7 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
                     "rationale": "Resolve the missing independent replication evidence.",
                 },
             )
-        step = updated["latest_attempt"]
+        step = updated["attempt"]
         updated = self.jobs.get(job["job_id"])
         self.assertEqual(updated["attempts"][-1], step)
         self.assertEqual(step["round"], 2)
@@ -827,7 +827,65 @@ class TestDeepResearchWorkflow(unittest.IsolatedAsyncioTestCase):
                 "claims": self.claims(job, "supported", support, []),
             },
         )
-        self.assertTrue(response["research_plan"]["ready_to_complete"])
+        self.assertEqual(response["view"], "update")
+        self.assertTrue(response["ready_to_complete"])
+        self.assertEqual(response["open_questions"], [])
+        self.assertNotIn("retrieved", response)
+        self.assertEqual(response["question"]["review"]["status"], "supported")
+
+    async def test_mcp_retrieval_returns_new_passages_inline(self):
+        server = create_server(self.runtime)
+        job = self.start()
+        with mock.patch(
+            "sibyl.research_jobs.read_sources",
+            mock.AsyncMock(return_value=evidence_bundle("inline", 2)),
+        ):
+            update = await self.structured(
+                server,
+                "continue_research",
+                {
+                    "job_id": job["job_id"],
+                    "query": "inline",
+                    "urls": ["https://example.com/a", "https://example.com/b"],
+                },
+            )
+        self.assertEqual(update["view"], "update")
+        self.assertEqual(update["attempt"]["status"], "ok")
+        self.assertEqual(update["question"]["question_id"], "Q0")
+        first = update["retrieved"][0]
+        self.assertEqual(first["citation"], "[Source 1]")
+        self.assertEqual(first["passages"][0]["passage_id"], "inline/0/P1")
+        self.assertTrue(first["passages"][0]["text"].startswith("Evidence inline 0."))
+        self.assertFalse(first["passages"][0]["truncated"])
+        self.assertEqual(first["omitted_passage_ids"], [])
+        full = self.jobs.passages(job["job_id"], ["inline/0/P1"])["passages"][0]
+        self.assertTrue(
+            full["passage"]["text"].startswith(first["passages"][0]["text"])
+        )
+        self.assertNotIn("sources", update)
+
+    def test_inline_passages_share_a_bounded_budget(self):
+        from sibyl.research_views import INLINE_CHARS, INLINE_PASSAGES, _inline_sources
+
+        retrieved = [
+            {
+                "source_id": f"S{source}",
+                "passages": [
+                    {"passage_id": f"S{source}/P{rank}", "text": "x" * 1000}
+                    for rank in range(9)
+                ],
+            }
+            for source in range(5)
+        ]
+        inline = _inline_sources(retrieved)
+        shown = [p for source in inline for p in source["passages"]]
+        self.assertEqual(len(shown), INLINE_PASSAGES)
+        self.assertLessEqual(sum(len(p["text"]) for p in shown), INLINE_CHARS)
+        # Round-robin: every source shows its best passage first.
+        self.assertTrue(
+            all(s["passages"][0]["passage_id"].endswith("P0") for s in inline)
+        )
+        self.assertEqual(len(inline[0]["omitted_passage_ids"]), 6)
 
     async def test_mcp_gaps_and_stale_revision_are_actionable(self):
         server = create_server(self.runtime)

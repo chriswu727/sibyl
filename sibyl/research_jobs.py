@@ -518,7 +518,38 @@ class ResearchJobs:
                 raise
             finally:
                 self.tasks.pop(job_id, None)
-        return self.get(job_id)
+        snapshot = self.get(job_id)
+        snapshot["retrieved"] = self._retrieved(notebook)
+        return snapshot
+
+    @staticmethod
+    def _retrieved(notebook: ResearchNotebook) -> dict[str, Any]:
+        """The latest retrieval's readable sources with passage text, and its notes."""
+        bundle_id = notebook.attempts[-1].get("bundle_id")
+        if not bundle_id or notebook.bundles[-1].bundle_id != bundle_id:
+            return {"sources": [], "notes": [], "evidence_sufficiency": None}
+        bundle = notebook.bundles[-1]
+        sources = [
+            dict(
+                source_id=source.source_id,
+                url=display_url(source.url),
+                title=source.title,
+                source_kind=source_kind(source, notebook.preferred_domains),
+                content_origin=source.content_origin,
+                published_at=source.published_at,
+                passages=[
+                    {"passage_id": passage.citation_id, "text": passage.text}
+                    for passage in source.evidence
+                ],
+            )
+            for source in bundle.sources
+            if source.content_origin != "search_snippet" and source.evidence
+        ]
+        return {
+            "sources": sources,
+            "notes": bundle.diagnostics.sufficiency_reasons,
+            "evidence_sufficiency": bundle.diagnostics.evidence_sufficiency,
+        }
 
     def assess(
         self,

@@ -47,8 +47,8 @@ investigation spanning several questions or sessions, findings handed to
 someone else, or a report. For a quick fact lookup, your agent's own search is
 enough. Sibyl adds steps; it pays off when the evidence trail matters.
 
-The default MCP surface has **eight tools**, compact structured briefs and
-on-demand passage reads. A research result does not need to become a long report
+The default MCP surface has **eight tools**, compact structured briefs, per-question
+updates after each read or assessment, and on-demand passage reads. A research result does not need to become a long report
 before another agent can use it.
 
 ## Quick start
@@ -116,7 +116,9 @@ Start with `question` and `sub_questions`. Find sources with your agent's own
 search when it has one and read them with `continue_research(url=..., query=...)`;
 a query alone uses Sibyl's keyless search. Link each retrieval to `question_id`;
 use `purpose="counterevidence"` for an actual investigation of alternatives.
-The brief intentionally omits raw text: read up to twelve passages at once with
+Each read returns an update with the new sources' top passages inline (long
+passages are cut) and the question's gaps and next searches. The full brief omits
+raw text: read up to twelve exact passages at once with
 `get_research(job_id, passage_ids=[...])` before assessing support.
 
 Each assessment preserves stable supporting/challenging passage IDs, a conclusion

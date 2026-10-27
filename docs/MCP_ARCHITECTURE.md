@@ -87,7 +87,7 @@ flowchart TD
 | `research_jobs.py` | Host job lifecycle, progress, cancellation, continuation |
 | `job_store.py` | Private bounded SQLite shared by local runtimes, instance locks, job claims, orphan recovery, optimistic revisions |
 | `report_audit.py` | Deterministic citation-target validation |
-| `research_views.py` | Compact briefs, revision-pinned source pages and compatibility views |
+| `research_views.py` | Compact briefs, per-question updates, revision-pinned source pages and compatibility views |
 | `report_sections.py`, `report_references.py` | Shared claim presentation and cited/background source grouping |
 | `report_exports.py` | Per-format export results, actual artifact paths, hashes and failures |
 | `storage.py` | Output-root policy, private staging, atomic publication |

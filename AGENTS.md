@@ -22,7 +22,10 @@ Read `research_plan.questions[].review` for host-authored conclusions and stable
 support/challenge links. Inspect gaps before reuse. Use
 `get_research(passage_ids=[...])` for exact evidence: briefs omit raw text.
 Use `view="sources"` with the current revision to page the full catalog, and
-`view="full"` for the compatible snapshot. Each brief is self-contained, not a delta.
+`view="full"` for the compatible snapshot. Each brief is self-contained.
+`continue_research` and `assess_research` return a `view="update"` for one
+question: new sources with top passages inline (cut ones marked `truncated`),
+retrieval notes, that question's gaps and checks, readiness and next searches.
 
 ## Default workflow: host-assisted research
 

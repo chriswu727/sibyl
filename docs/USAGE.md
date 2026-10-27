@@ -142,7 +142,8 @@ the per-user data directory described under [shared research store](#shared-rese
 `save_report(output_dir=...)` selects a relative subdirectory of that root, not
 an absolute path. Stateful report operations reject overlapping calls.
 
-Sibyl exposes eight tools with compact structured research briefs, returned in
+Sibyl exposes eight tools with compact structured research briefs and
+per-question updates (see [Agent protocol](agent-protocol.md#update-10)), returned in
 MCP `structuredContent` and mirrored as serialized JSON text. The former keyless
 text profile and its `gather_evidence`, `gather_sources`, `quick_search` and
 `read_url` tools were removed; `--profile keyless` (or `report`, `finance`, `full`)

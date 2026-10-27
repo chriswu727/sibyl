@@ -19,7 +19,7 @@ from .mcp_errors import AgentMCP, SafeToolError, json_text
 from .report_exports import ExportManifest, ReportExportError
 from .research_errors import ResearchRequestError
 from .research_state import ResearchBudgetExceeded
-from .research_views import research_brief
+from .research_views import research_brief, research_update
 from .runtime import SibylRuntime, current_runtime, get_runtime
 
 
@@ -163,7 +163,15 @@ class ToolCatalog:
                             "complete_research",
                             "cancel_research",
                         }:
-                            if (
+                            if tool_name == "continue_research":
+                                result = research_update(
+                                    result, result["attempts"][-1]["question_id"], True
+                                )
+                            elif tool_name == "assess_research":
+                                result = research_update(
+                                    result, kwargs["question_id"], False
+                                )
+                            elif (
                                 "research_plan" in result
                                 and kwargs.get("view", "auto") == "auto"
                             ):

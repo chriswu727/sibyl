@@ -248,7 +248,9 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
                 }
             ],
         )
-        self.assertFalse(job["research_plan"]["ready_to_complete"])
+        self.assertEqual(job["view"], "update")
+        self.assertFalse(job["ready_to_complete"])
+        self.assertIn("Q0", job["open_questions"])
         refused = await self.rejected(
             "complete_research", job_id=job["job_id"], revision=job["revision"]
         )
@@ -276,7 +278,8 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
             result = await self.call(
                 "continue_research", job_id=job["job_id"], query="q"
             )
-        self.assertEqual(result["latest_attempt"]["status"], "failed")
+        self.assertEqual(result["attempt"]["status"], "failed")
+        self.assertEqual(result["retrieved"], [])
         self.assertEqual(result["remaining_steps"], 2)
         self.assertNotIn("private", json.dumps(result))
         result = await self.call("cancel_research", job_id=job["job_id"])
@@ -334,7 +337,8 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
                 }
             ],
         )
-        self.assertTrue(reviewed["research_plan"]["ready_to_complete"])
+        self.assertTrue(reviewed["ready_to_complete"])
+        self.assertEqual(reviewed["question"]["review"]["claims"], 1)
         await self.retrieve(job, "fresh")
         updated = await self.call("get_research", job_id=job["job_id"])
         self.assertFalse(updated["research_plan"]["ready_to_complete"])

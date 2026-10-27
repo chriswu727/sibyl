@@ -43,6 +43,12 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             raise ToolError(response.structuredContent["error"]["message"])
         return response.structuredContent
 
+    async def mutate(self, name, **arguments):
+        """Run continue/assess, check its update view, then read the brief."""
+        update = await self.call(name, **arguments)
+        self.assertEqual(update["view"], "update")
+        return await self.call("get_research", job_id=update["job_id"])
+
     async def start(self, sub_questions=None):
         return await self.call(
             "start_research",
@@ -56,7 +62,7 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
             "sibyl.research_jobs.gather_source_bundle",
             AsyncMock(return_value=evidence_bundle("observed", 3)),
         ):
-            return await self.call(
+            return await self.mutate(
                 "continue_research",
                 job_id=job["job_id"],
                 question_id=question_id,
@@ -97,7 +103,7 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         }
 
     async def assess(self, job, claims, question_id="Q0", status="supported"):
-        return await self.call(
+        return await self.mutate(
             "assess_research",
             job_id=job["job_id"],
             revision=job["revision"],
@@ -378,7 +384,7 @@ class TestResearchClaims(unittest.IsolatedAsyncioTestCase):
         with patch(
             "sibyl.research_jobs.gather_source_bundle", AsyncMock(return_value=bundle)
         ):
-            job = await self.call(
+            job = await self.mutate(
                 "continue_research",
                 job_id=job["job_id"],
                 question_id="Q0",
