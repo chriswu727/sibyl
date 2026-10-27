@@ -149,7 +149,7 @@ async def assess_research(
     )
 
 
-@_catalog.tool()
+@_catalog.tool(profile="keyless")
 async def complete_research(
     job_id: str,
     revision: int,
@@ -178,6 +178,35 @@ async def complete_research(
         limitations or [],
         allow_incomplete,
         claim_ids,
+    )
+
+
+@_catalog.tool(name="complete_research", profile="agent")
+async def complete_research_claims(
+    job_id: str,
+    revision: int,
+    claim_ids: list[str] | None = None,
+    limitations: list[str] | None = None,
+    allow_incomplete: bool = False,
+) -> dict[str, Any]:
+    """Optionally finalize recorded claims into an immutable report.
+
+    Pass the current revision and claim_ids (omit to select all). Sibyl renders
+    the claims, quotes, reasoning and citations; unknown and disputed claims stay
+    included. Record content with assess_research(claims=...) first. Unmet
+    research gates require allow_incomplete=true and give report.status=partial.
+    Citation targets are checked; semantic support is not independently verified.
+    """
+    return get_runtime().research_jobs.complete(
+        job_id,
+        revision,
+        "",
+        [],
+        "",
+        limitations or [],
+        allow_incomplete,
+        claim_ids,
+        prose_allowed=False,
     )
 
 

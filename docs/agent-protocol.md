@@ -186,8 +186,11 @@ it because the budget ended. Source kinds and duplicate clusters are heuristics.
 For a person-facing deliverable, call `complete_research` with the current
 revision and optional `claim_ids`, then `save_report`. The report renders the
 host-authored claim ledger, transitive premises and all unknown/disputed claims.
-New jobs omit summary/findings/analysis arguments; old contract-1 checkpoints
-retain those prose fields. See [Claim reports](research-claims.md#optional-reports).
+The agent profile's `complete_research` has no summary/findings/analysis
+parameters. Old contract-1 checkpoints keep prose completion through the keyless
+profile; the agent profile refuses them with `legacy_contract`. The agent profile
+also rejects any undeclared tool argument with `invalid_parameters` naming the
+field, instead of silently ignoring it. See [Claim reports](research-claims.md#optional-reports).
 `allow_incomplete=true` explicitly preserves unmet gates; it is not a quality pass.
 
 For Markdown and JSON, call `save_report` separately with `format="md"` and

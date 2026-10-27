@@ -161,12 +161,43 @@ def error_result(
     )
 
 
+LEGACY_PROSE_FIELDS = {"summary", "key_findings", "analysis"}
+
+
 class AgentMCP(FastMCP):
     def __init__(self, runtime: SibylRuntime, **kwargs: Any) -> None:
         self.runtime = runtime
+        self._parameters: dict[str, set[str]] = {}
         super().__init__("sibyl", **kwargs)
 
+    async def _unknown_parameter(
+        self, name: str, arguments: dict[str, Any]
+    ) -> str | None:
+        """FastMCP drops undeclared arguments; the agent profile rejects them so a
+        host never believes an ignored field (such as legacy prose) was used."""
+        if not self._parameters:
+            self._parameters = {
+                tool.name: set(tool.inputSchema.get("properties", {}))
+                for tool in await self.list_tools()
+            }
+        known = self._parameters.get(name)
+        unknown = sorted(set(arguments) - known) if known is not None else []
+        return unknown[0] if unknown else None
+
     async def call_tool(self, name: str, arguments: dict[str, Any]) -> Any:
+        unknown = await self._unknown_parameter(name, arguments)
+        if unknown is not None:
+            message = f"Unknown parameter for {name}; remove it."
+            if name == "complete_research" and unknown in LEGACY_PROSE_FIELDS:
+                message = (
+                    "complete_research renders the report from recorded claims; it "
+                    "takes no summary, key_findings or analysis. Record content with "
+                    "assess_research(claims=...)."
+                )
+            error = ResearchRequestError(
+                message, code="invalid_parameters", field=unknown
+            )
+            return error_result(self.runtime, name, arguments, SafeToolError(error))
         try:
             return await super().call_tool(name, arguments)
         except ToolError as exc:

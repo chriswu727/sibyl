@@ -236,13 +236,16 @@ class TestAgentResearch(unittest.IsolatedAsyncioTestCase):
 
     async def test_finalized_partial_report_is_not_a_quality_pass(self):
         job = await self.retrieve(self.start())
-        result = await self.call(
+        # Legacy contract-1 jobs keep prose completion on the keyless profile.
+        _, result = await create_server(self.runtime).call_tool(
             "complete_research",
-            job_id=job["job_id"],
-            revision=job["revision"],
-            summary="Summary [Source 1]",
-            key_findings=["Finding [Source 1]"],
-            allow_incomplete=True,
+            {
+                "job_id": job["job_id"],
+                "revision": job["revision"],
+                "summary": "Summary [Source 1]",
+                "key_findings": ["Finding [Source 1]"],
+                "allow_incomplete": True,
+            },
         )
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["report"]["status"], "partial")

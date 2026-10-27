@@ -37,7 +37,7 @@ disclosures. The persistent host-led job is the primary agent workflow.
 | Stored `depth` / `language` job fields | Preserve checkpoint shape; new MCP jobs do not expose model-effort or internal synthesis controls |
 | Old report fields such as `predictions`, `cross_analysis`, `model_used`, `charts`, `market_data_summary` | Keep historical JSON load/export compatibility; no removed producer is restored |
 | `FindingVerification` | Preserve recorded historical verdicts; rendering identifies them as historical, not fresh validation |
-| Claim contract 1 and prose completion | Existing host checkpoints retain their contract; new MCP jobs explicitly use claim contract 2 |
+| Claim contract 1 and prose completion | Existing host checkpoints retain their contract and finalize through the keyless profile; new MCP jobs explicitly use claim contract 2 |
 | `keyless` profile, Python retrieval exports and `last_report` fallback | Explicit supported compatibility, not a hidden autonomous mode |
 | Dated changelog, experiments, evaluation JSON and original-language evidence | Preserve provenance and failures; historical feature descriptions are not current product promises |
 
