@@ -1,12 +1,20 @@
 name: live retrieval gate
 
-# Model-free, keyless 66-case gate with frozen thresholds, run on a GitHub-hosted
-# runner so results do not depend on a developer machine's network. It uses
-# public search providers and costs no model usage. Results are uploaded as an
-# artifact; a failed gate still uploads its raw metrics.
+# Model-free 66-case gates with frozen thresholds, run on a GitHub-hosted runner
+# so results do not depend on a developer machine's network. "keyless" measures
+# Sibyl's own discovery through public search providers; "host_sources" reads
+# each case's frozen host-supplied URLs (the release gate). Neither uses a
+# model. Results are uploaded as an artifact; a failed gate still uploads them.
 on:
   workflow_dispatch:
     inputs:
+      gate:
+        description: Which gate to run
+        type: choice
+        options:
+          - host_sources
+          - keyless
+        default: host_sources
       repeats:
         description: Repeats per case
         default: "3"
@@ -24,19 +32,30 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install
+        env:
+          GATE: ${{ inputs.gate }}
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install -e .
+          # Host-supplied sources may be PDFs; keyless runs keep their old install.
+          if [ "$GATE" = "host_sources" ]; then
+            python -m pip install -e ".[pdf]"
+          else
+            python -m pip install -e .
+          fi
       - name: Run the frozen live retrieval gate
         env:
+          GATE: ${{ inputs.gate }}
           REPEATS: ${{ inputs.repeats }}
         run: |
-          python scripts/eval_live_retrieval.py --repeats "$REPEATS" \
+          if [ "$GATE" = "host_sources" ]; then
+            SOURCES="--host-sources evals/host_source_cases.jsonl"
+          fi
+          python scripts/eval_live_retrieval.py --repeats "$REPEATS" $SOURCES \
             --output live-retrieval.json
       - name: Upload raw metrics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: live-retrieval-${{ github.sha }}
+          name: live-retrieval-${{ inputs.gate }}-${{ github.sha }}
           path: live-retrieval.json
           if-no-files-found: warn

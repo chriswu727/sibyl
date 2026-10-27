@@ -295,14 +295,12 @@ dependency checks for the optional packages.
 Do not publish a stable host-only version or claim the research-quality gates passed until
 all five gates below are satisfied:
 
-1. A new dated 66-case, three-repeat live retrieval run passes every committed
-   threshold. Freeze thresholds before inspecting results.
-   On 2026-10-27 the owner decided to replace this keyless-discovery gate with one
-   that measures the primary path, where the host supplies sources: a frozen
-   per-question source list, chosen without inspecting Sibyl output, evaluated
-   with the same six thresholds. The replacement must be committed before its
-   first run; until then this gate stands unchanged. Keyless discovery keeps its
-   dated runs and published numbers but will not block release.
+1. A new dated run of the [host-source retrieval gate](#host-source-retrieval-gate-protocol)
+   passes every committed threshold. On 2026-10-27 the owner replaced the
+   keyless-discovery gate with this one, which measures the primary path where
+   the host supplies sources; its protocol below was committed before its first
+   run. Keyless discovery keeps its dated runs and published numbers but no
+   longer blocks release.
 2. A paired host-agent evaluation compares this workflow with ordinary search
    using the same model, provider access and budget, a declared rubric, and
    retained outputs. Record evidence support, gaps, abstention, cost and latency.
@@ -316,6 +314,46 @@ all five gates below are satisfied:
 4. Required GitHub CI passes on Python 3.11–3.13 at the release commit.
 5. README, package metadata, Registry metadata, and the product page agree on
    capabilities, maturity, installation, version, and limitations.
+
+### Host-source retrieval gate protocol
+
+Frozen on 2026-10-27, before any run. Changing any item below requires a new
+dated protocol committed before that protocol's first run; earlier runs stay
+retained.
+
+- **Cases.** The same 66 questions, gold answers and aliases as the keyless gate
+  (`simpleqa_real_30`, `hard_24`, `adversarial_12`), in
+  [`evals/host_source_cases.jsonl`](../evals/host_source_cases.jsonl), SHA-256
+  `a70aa35c1fbd6f9a4a2ee0018625b519aa5261d69083fbc8fac000a188b26de4`.
+- **Sources.** For each case, one web search by the host agent on 2026-10-27
+  with the question text verbatim, keeping the first three http(s) results in
+  order. Pages were not opened, and neither gold answers nor Sibyl output were
+  consulted. Results that republish evaluation questions with their answers
+  (`hub.harborframework.com` task pages and `huggingface.co/datasets` pages;
+  five URLs, in `real08`, `real11`, `real12`, `real16` and `real22`) were
+  replaced with the next result of the same verbatim search. Two URLs lost a
+  stray quote character or had spaces percent-encoded, and one non-ASCII path
+  was percent-encoded. Dead or unreadable URLs count against the run; the list
+  is not repaired after a run.
+- **Procedure.** Each repeat reads a case's three URLs in one
+  `research_sources.read_sources` call with the case question as the query, as
+  `continue_research(urls=[...])` does. Three repeats, concurrency two, with the
+  `[pdf]` extra installed. Run `scripts/eval_live_retrieval.py --host-sources
+  evals/host_source_cases.jsonl --repeats 3`, or the `live retrieval gate`
+  workflow with `gate=host_sources`. Results report `metric_version`
+  `host-source-1` and the case file's SHA-256.
+- **Readiness.** A run counts as ready (`status` `ok`) only when the read's
+  `evidence_sufficiency` is `sufficient`, the rule discovery bundles already
+  use. The read's own status is kept in `read_status`. Trap cases are safe when
+  the run is not ready or its evidence contains a refutation alias.
+- **Thresholds.** Unchanged: answer coverage at least 80%, trap-safe outcomes at
+  least 80%, repeat stability at least 90%, answerable ready rate at least 75%,
+  ready-state answer precision at least 95%, p95 latency at most 30 s.
+
+This gate measures whether Sibyl turns the sources a host would hand it into
+ready, answer-bearing evidence. It does not measure the host's search quality or
+whether the host would have chosen these sources, and a pass does not establish
+better research than ordinary search; gate 2 measures that.
 
 A green release workflow automates packaging and publishing; it does not enforce
 all research-quality gates. The maintainer must review this checklist before
