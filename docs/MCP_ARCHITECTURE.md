@@ -8,6 +8,12 @@ is no internal generative-model execution. This document specifies current sourc
 not the older published packages; [migration](MIGRATION.md) defines the retained
 legacy-data boundary.
 
+The product role changed on 2026-10-27: Sibyl is to manage the host's whole
+research loop, guiding its searches and checking its claims, not only store
+evidence (see [functional goals](REFACTOR_GOALS.md#phased-refactor)). This
+document describes the implementation as it stands; sections change as each
+refactor phase lands.
+
 ## Product contract
 
 The primary deliverable is reusable research state for the calling agent. A human
@@ -242,9 +248,13 @@ cancellation, blocking optional libraries, and OS-level resource isolation.
 
 ## Design decisions
 
-**Host reasoning, not hidden sampling.** Retrieval works in local stdio clients
-without host sampling or another model credential. The host performs all planning,
-semantic judgment and writing; Sibyl never reads its subscription credentials.
+**Deterministic guidance, host reasoning, no hidden sampling.** Retrieval works in
+local stdio clients without host sampling or another model credential. An MCP
+server cannot call host tools, so Sibyl guides the host's own search through its
+responses. Today the host still performs most planning; the refactor moves
+question structure, search suggestions and claim checks into deterministic Sibyl
+code. Semantic judgment and writing stay with the host, and Sibyl never reads its
+subscription credentials.
 
 **Single process, local durability.** SQLite provides checkpoint persistence
 without a task broker, cloud deployment, or tenant identity system.

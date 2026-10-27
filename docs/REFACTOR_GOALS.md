@@ -1,7 +1,9 @@
 # Sibyl host agent research goals
 
-Recorded 2026-10-26. This is the functional target for the current refactor,
-not a description of features that have all shipped. The implementation baseline
+Recorded 2026-10-26; the product role was revised on 2026-10-27 (see
+[product role](#product-purpose) and [phased refactor](#phased-refactor)). This is
+the functional target for the current refactor, not a description of features
+that have all shipped. The implementation baseline
 is [314e721](https://github.com/chriswu727/sibyl/commit/314e721), which removed
 internal model execution. The [implementation plan](QUALITY_BUILD_PLAN.md)
 connects the requirements into a complete product; [launch readiness](LAUNCH_READINESS.md#release-gates)
@@ -9,23 +11,38 @@ continues to govern publication.
 
 ## Product purpose
 
-Sibyl is a local research MCP for an AI agent the user already uses. It helps that
-agent investigate a question through public sources, inspect exact evidence,
-pursue counterevidence, preserve conclusions and gaps, and optionally export a
-human-readable report. The primary output is reusable research state, not a long
-document or an independently generated answer.
+Sibyl is a local research MCP for an AI agent the user already uses. It manages
+that agent's whole research loop so the result is better than the agent would
+reach alone: it structures the investigation, tells the agent what to search
+for next and why, reads the sources the agent finds, assesses those sources,
+checks the agent's claims against the exact evidence, and keeps conclusions,
+gaps and unknowns. A human-readable report is an optional projection of the same
+research state, not a long document or an independently generated answer.
 
-The intended advantage over a single search call is continuity and accountability:
-each investigation connects a question, retrieved evidence, host judgment,
-remaining gaps and the reason for the next retrieval. More sources, more rounds
+Sibyl never runs a model, so every part of that management is deterministic:
+templates, rules, source classification and text checks over stored evidence.
+An MCP server also cannot call the host's tools. Sibyl therefore guides the host's
+own web search through its responses; it does not execute that search. Its
+keyless search is a fallback for hosts without one: public search pages often
+refuse keyless requests, most visibly from datacenter networks.
+
+The intended advantage over the host's ordinary search is evidence-directed
+discipline: original sources found through targeted searches, exact passages
+instead of model-summarized pages, explicit counterevidence, claims checked
+against quotes, and gaps that drive the next search. That advantage is a
+hypothesis until the paired evaluation measures it. More sources, more rounds
 or more prose do not by themselves establish better research.
 
 ## Responsibility and subscription boundary
 
-The host agent understands the request, decomposes questions, selects queries,
-reads evidence, judges support, chooses tradeoffs and writes the final answer.
-Sibyl retrieves and stores evidence, exposes structured research state, checks
-reference integrity, enforces resource limits and exports host-authored reports.
+The host agent understands the request, runs web searches with its own tools,
+judges semantic support, chooses tradeoffs and writes the final answer. Sibyl
+proposes a question plan, names the next searches with their purpose and reason,
+reads and selects evidence from the sources the host supplies, classifies and
+assesses those sources, checks claims deterministically, persists the research
+state, enforces resource limits and exports reports built from recorded claims.
+Sibyl's suggestions are guidance; the host may override them, and Sibyl records
+what was actually searched and read.
 
 A subscription-backed agent can call Sibyl through a compatible local MCP
 integration. Sibyl must not read subscription tokens, reuse login sessions,
@@ -76,8 +93,11 @@ revisions, malformed records and undeclared workflow gaps. They can validate an
 exact excerpt against stored text and preserve extraction limitations. Hashes
 identify stored content; they do not authenticate the publisher's claims.
 
-Semantic entailment, source credibility and recommendation quality remain host
-judgments evaluated separately. Claim-to-evidence records distinguish
+Deterministic checks can also flag lexical inconsistencies between a claim and
+its quotes (a number, date or name in the claim that no quote contains) and
+disagreements between sources on the same number or date. Such flags are warnings
+about text, not semantic verdicts. Semantic entailment, source credibility and
+recommendation quality remain host judgments evaluated separately. Claim-to-evidence records distinguish
 structural validation from host-declared semantic support. It must not acquire a
 “verified” label merely by passing citation checks. The source implementation now
 provides an additive [claim contract](research-claims.md), explicit migration
@@ -109,8 +129,10 @@ completed-looking answers.
 Keep a small core installation, local stdio transport and no required model/search
 key. Document source preview versus published packages, the host's structured
 content requirement, absolute executable/storage paths, optional extras and a
-startup check. Maintain the eight-tool default and the text-oriented keyless
-compatibility surface until measured host usability justifies a change.
+startup check. Before the first stable release, remove the text-oriented keyless
+compatibility profile and the contract-1 prose completion path; old checkpoints
+stay readable and exportable. Keyless search remains available as an explicit
+fallback tool.
 
 Acceptance: a fresh installation can discover tools, start/read/cancel a job and
 complete a recorded evidence workflow without model SDKs or secret provisioning.
@@ -118,8 +140,12 @@ Real-host usability must be tested separately from a synthetic MCP client.
 
 ### G2 Source discovery and reading
 
-Improve the ability to find topic-appropriate original sources before spending
-the fetch budget. Preserve source identity, canonical URL, retrieval time,
+Guide the host to topic-appropriate original sources: every research response
+names the next searches (gap, primary source, counterevidence, date or language
+variant, site-specific) with the gap or reason that produced them. Sources the
+host supplies receive the same passage selection, clustering and assessment as
+sources Sibyl finds itself, and several URLs can be read in one call. Preserve
+source identity, canonical URL, retrieval time,
 available publication metadata, content origin, exact passages and extraction
 limits. Distinguish search snippets, metadata, abstracts and full text.
 
@@ -136,7 +162,8 @@ Keep focused questions, retrieval attempts, rationale, evidence, reviews and gap
 in a bounded job. The host can investigate contrary evidence, compare conditions,
 follow a supplied source URL and revise a judgment after new evidence arrives.
 The next retrieval should address a named gap rather than merely increment a
-round counter. Repeated searches and duplicate publishers must remain visible.
+round counter, and Sibyl should propose that retrieval rather than leave the host
+to invent it. Repeated searches and duplicate publishers must remain visible.
 
 Acceptance: a replay preserves the path from gap to retrieval to revised review
 across process restart. Stale judgments cannot silently retain an old readiness
@@ -146,7 +173,11 @@ decision. Cancellation and failures retain evidence and consumed budgets.
 
 Extend the existing question-review ledger only where needed to represent the
 statement distinctions above, material claim-to-passage links, assumptions,
-conflicting evidence and recommendation criteria. Reuse stable evidence IDs and
+conflicting evidence and recommendation criteria. Add deterministic checks for
+claim-to-quote consistency of numbers, dates and names; surface source
+disagreements; mark facts that rest only on secondary or background sources; and
+require counterevidence to be read and assessed, or declared not found, rather
+than merely searched for. Reuse stable evidence IDs and
 revision protection instead of creating a separate report-only evidence store.
 
 Acceptance: controlled cases reject nonexistent references and stale submissions;
@@ -157,8 +188,9 @@ evaluation, not inferred from schema validity or keyword overlap.
 
 ### G5 Agent-facing results and stopping behavior
 
-Return a compact, self-contained current brief: questions, reviews, gaps, relevant
-evidence IDs, latest retrieval outcome, remaining budget and actionable next steps.
+Return a compact result: what changed, the passages just read, current gaps and a
+ranked list of next actions (search, read, assess or stop) with reasons. The full
+brief with every review stays available on request.
 Read exact passages and the full source catalog on demand. Preserve failure details
 and partial status; smaller output must not mean hidden contrary evidence.
 
@@ -203,6 +235,9 @@ Model/subscription-backed evaluations require explicit approval for usage.
 | Explicit claim/inference/recommendation contract | Implemented in the source preview; host-declared semantic support |
 | Natural tool use inside real subscription-backed hosts | Two bounded low-effort workflows delivered partial reports; broader usability and exact claim support remain unproven |
 | Better research than built-in search | Hypothesis; paired evaluation not established |
+| Search guidance to the host | Fixed suffix templates only; not shown in agent instructions |
+| Full assessment of host-supplied URLs | Not implemented; URL reads skip ranking, clustering and sufficiency |
+| Source quality per claim; claim/quote consistency; source disagreement | Not implemented |
 
 The retained ten-case host suite needed host-supplied URLs in seven cases. The
 dated live retrieval gates still have failures. See [launch evidence](LAUNCH_READINESS.md)
@@ -214,6 +249,31 @@ improved delivery and error recovery but retained a material SQLite citation-sup
 gap. Later excerpt-scope hints have offline coverage, not another model test.
 The [architecture](MCP_ARCHITECTURE.md) specifies the implemented design;
 [migration](MIGRATION.md) inventories intentional legacy data compatibility.
+
+## Phased refactor
+
+Agreed on 2026-10-27 after an audit of the current source. Each phase lands as
+separate reviewed pull requests with tests; none waives a release gate.
+
+0. **Direction and cleanup.** Record this role; remove the keyless compatibility
+   profile, contract-1 prose completion, never-written autonomous-era report
+   fields and dead code; expose keyless search as an explicit fallback tool.
+1. **Bundle builder.** Split the retrieval pipeline so any set of pages, including
+   host-supplied URLs, gets passage selection, clustering and assessment; keyless
+   discovery becomes one caller. Allow batched URL reads.
+2. **Search guidance.** A deterministic module turns gaps, source kinds, claims and
+   question structure into ranked search suggestions with reasons, returned in
+   every response and described in the agent instructions.
+3. **Source assessment.** Classify primary, secondary, aggregator and background
+   sources; carry source quality to each claim; base readiness on quoted claims
+   rather than lexical query coverage.
+4. **Claim checks.** Number/date/name consistency between claims and quotes,
+   source-disagreement flags and a counterevidence gate that requires assessed
+   counterevidence or an explicit "none found" unknown.
+5. **Compact responses.** Delta results with inline passages, measured with real
+   host usage; one shared report document for Markdown, JSON and PDF.
+6. **Gates.** Freeze the replacement retrieval gate before running it, then run
+   the approved paired host evaluation.
 
 ## Non-goals for this refactor
 

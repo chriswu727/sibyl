@@ -297,6 +297,12 @@ all five gates below are satisfied:
 
 1. A new dated 66-case, three-repeat live retrieval run passes every committed
    threshold. Freeze thresholds before inspecting results.
+   On 2026-10-27 the owner decided to replace this keyless-discovery gate with one
+   that measures the primary path, where the host supplies sources: a frozen
+   per-question source list, chosen without inspecting Sibyl output, evaluated
+   with the same six thresholds. The replacement must be committed before its
+   first run; until then this gate stands unchanged. Keyless discovery keeps its
+   dated runs and published numbers but will not block release.
 2. A paired host-agent evaluation compares this workflow with ordinary search
    using the same model, provider access and budget, a declared rubric, and
    retained outputs. Record evidence support, gaps, abstention, cost and latency.
