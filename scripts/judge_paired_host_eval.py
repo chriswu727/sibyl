@@ -28,11 +28,41 @@ ROOT = Path(__file__).resolve().parent.parent
 LABELS = "XYZW"
 MIRRORS = ("hub.harborframework.com", "huggingface.co/datasets")
 PAGE_CHARS = 10000
-_URL_RE = re.compile(r"https?://[^\s<>()\[\]\"'`]+")
+_URL_RE = re.compile(r"https?://[^\s<>\[\]\"'`]+")
+
+
+def _trim_url(url: str) -> str:
+    """Drop trailing prose or Markdown delimiters, keeping balanced parentheses."""
+    while True:
+        trimmed = url.rstrip(".,;:*_")
+        if trimmed.endswith(")") and trimmed.count(")") > trimmed.count("("):
+            trimmed = trimmed[:-1]
+        if trimmed == url:
+            return url
+        url = trimmed
 
 
 def cited_urls(text: str) -> list[str]:
-    return list(dict.fromkeys(url.rstrip(".,;:*_") for url in _URL_RE.findall(text)))
+    return list(dict.fromkeys(_trim_url(url) for url in _URL_RE.findall(text)))
+
+
+class IncompleteJudgment(RuntimeError):
+    """The judge did not return a complete verdict for every condition."""
+
+
+def validate_verdicts(result: dict, verdicts: dict, mapping: dict) -> str:
+    """The reason a judge result is incomplete, or an empty string."""
+    if result.get("subtype") != "success" or result.get("is_error"):
+        return f"judge ended with {result.get('subtype')}"
+    answers = verdicts.get("answers")
+    if not isinstance(answers, dict) or set(answers) != set(mapping):
+        return "verdicts do not cover every answer label"
+    for label, value in answers.items():
+        if not isinstance(value, dict) or "verdict" not in value:
+            return f"answer {label} has no verdict"
+        if not isinstance(value.get("claims", []), list):
+            return f"answer {label} has malformed claims"
+    return ""
 
 
 async def fetch_pages(urls: list[str]) -> dict[str, str]:
@@ -162,6 +192,13 @@ def judge_task(case, records, args, out_dir: Path) -> dict:
         verdicts = json.loads(match.group(0)) if match else {}
     except json.JSONDecodeError:
         verdicts = {}
+    problem = validate_verdicts(result, verdicts, mapping)
+    if problem:
+        # Keep the attempt for inspection, but never cache it as a judgment.
+        (out_dir / f"{case['id']}.incomplete.json").write_text(
+            json.dumps({"problem": problem, "raw": text}, ensure_ascii=False), "utf-8"
+        )
+        raise IncompleteJudgment(f"{case['id']}: {problem}")
     judged = {
         "case_id": case["id"],
         "kind": case["kind"],
@@ -285,14 +322,27 @@ def main() -> int:
     }
     out_dir = args.runs / "judged"
     out_dir.mkdir(exist_ok=True)
+
+    def attempt(case):
+        try:
+            return judge_task(case, runs[case["id"]], args, out_dir)
+        except IncompleteJudgment as exc:
+            print(f"incomplete: {exc}", file=sys.stderr, flush=True)
+            return None
+
     with ThreadPoolExecutor(max_workers=args.parallel) as pool:
-        judged = {
-            j["case_id"]: j
-            for j in pool.map(
-                lambda case: judge_task(case, runs[case["id"]], args, out_dir),
-                [case for case in cases if runs[case["id"]]],
-            )
-        }
+        results = list(pool.map(attempt, cases))
+    judged = {j["case_id"]: j for j in results if j}
+    missing = [
+        case["id"]
+        for case in cases
+        if case["id"] not in judged
+        or set(runs[case["id"]]) != set(judged[case["id"]]["by_condition"])
+    ]
+    if missing:
+        # Never report a comparison over unequal task sets.
+        print(f"Incomplete evaluation; rerun to judge: {missing}", file=sys.stderr)
+        return 1
     summary = aggregate(cases, runs, judged)
     (args.runs / "summary.json").write_text(json.dumps(summary, indent=2), "utf-8")
     print(json.dumps(summary, indent=2))

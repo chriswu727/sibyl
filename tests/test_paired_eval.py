@@ -23,6 +23,43 @@ class TestPairedEval(unittest.TestCase):
             ["https://a.example/x", "https://b.example/y", "https://c.example/z"],
         )
 
+    def test_balanced_parentheses_stay_in_cited_urls(self):
+        text = (
+            "See https://en.wikipedia.org/wiki/Black_Condor_(character). "
+            "Also [docs](https://example.com/a_(b)) and (https://x.example/y)."
+        )
+        self.assertEqual(
+            judge.cited_urls(text),
+            [
+                "https://en.wikipedia.org/wiki/Black_Condor_(character)",
+                "https://example.com/a_(b)",
+                "https://x.example/y",
+            ],
+        )
+
+    def test_incomplete_judge_results_are_rejected(self):
+        mapping = {"X": "native", "Y": "sibyl"}
+        complete = {
+            "answers": {
+                "X": {"verdict": "pass", "claims": []},
+                "Y": {"verdict": "fail", "claims": []},
+            }
+        }
+        ok = {"subtype": "success", "is_error": False}
+        self.assertEqual(judge.validate_verdicts(ok, complete, mapping), "")
+        self.assertIn(
+            "error_max_budget_usd",
+            judge.validate_verdicts(
+                {"subtype": "error_max_budget_usd", "is_error": True}, complete, mapping
+            ),
+        )
+        partial = {"answers": {"X": complete["answers"]["X"]}}
+        self.assertIn(
+            "every answer label", judge.validate_verdicts(ok, partial, mapping)
+        )
+        missing = {"answers": {"X": {"claims": []}, "Y": complete["answers"]["Y"]}}
+        self.assertIn("no verdict", judge.validate_verdicts(ok, missing, mapping))
+
     def test_aggregate_weights_support_and_excludes_unreachable(self):
         cases = [
             {"id": "f", "kind": "factual"},
