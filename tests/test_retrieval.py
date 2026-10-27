@@ -1306,7 +1306,8 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
                 "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
             ),
             mock.patch(
-                "sibyl.retrieval.flashrank_relevance_scores", side_effect=fake_scores
+                "sibyl.bundle_builder.flashrank_relevance_scores",
+                side_effect=fake_scores,
             ),
         ):
             bundle = await gather_source_bundle(
@@ -1340,7 +1341,7 @@ class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
                 "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
             ),
             mock.patch(
-                "sibyl.retrieval.flashrank_relevance_scores",
+                "sibyl.bundle_builder.flashrank_relevance_scores",
                 side_effect=ImportError("optional dependency missing"),
             ),
         ):

@@ -69,7 +69,8 @@ flowchart TD
 | `monitoring.py`, `observability.py` | Read-only authenticated HTTP lifecycle and bounded operational metrics |
 | `pdf_reader.py`, `pdf_worker.py` | Parser process supervision and isolated optional text-PDF extraction |
 | `async_cache.py` | Event-loop-local single-flight, TTL, capacity, waiter cancellation |
-| `retrieval.py` | Search/extraction/ranking coordination |
+| `retrieval.py` | Keyless discovery: search, refinement searches and page fetches |
+| `bundle_builder.py` | Candidate pages to a ranked, deduplicated, assessed SourceBundle |
 | `retrieval_policy.py` | Deterministic query constraints, source identity, and evidence sufficiency rules |
 | `evidence.py` | Versioned source, passage and diagnostic contracts |
 | `url_safety.py`, `safe_http.py` | Destination validation and DNS-pinned connections |
