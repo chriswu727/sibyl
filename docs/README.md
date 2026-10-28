@@ -1,8 +1,7 @@
 # Sibyl documentation
 
 These documents follow main. Development paused on 2026-10-28 after the paired
-host evaluation did not pass; Sibyl is kept as a personal showcase and no stable
-release is planned (see [launch readiness](LAUNCH_READINESS.md#project-status--2026-10-28)).
+host evaluation did not pass, and no stable release is planned (see [launch readiness](LAUNCH_READINESS.md#project-status--2026-10-28)).
 The host-only architecture, eight-tool set and research views are unreleased;
 the published 0.4.0b1 beta does not contain them. PyPI 0.3.0 is an older stable package.
 See [installation](../llms-install.md) and [channel status](RELEASING.md). Sibyl is a local

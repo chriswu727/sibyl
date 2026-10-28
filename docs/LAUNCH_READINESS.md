@@ -11,9 +11,8 @@ order and [Releasing](RELEASING.md) for publication mechanics.
 Development is paused and no stable release is planned. Gate 1 meets its
 amended criteria; gate 2, the paired host evaluation, did not pass in either of
 its two runs (see below). The owner decided not to rerun it until it passes and
-not to pursue a release; Sibyl is kept as a working personal showcase of the
-design, its safety boundaries and this evaluation record. A rewrite into a
-narrower claim-checking skill was merged as #72 and reverted in #73.
+not to pursue a release. A rewrite into a narrower claim-checking skill was
+merged as #72 and reverted in #73.
 
 ## Host-only scope update — 2026-10-26
 

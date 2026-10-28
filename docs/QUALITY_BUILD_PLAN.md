@@ -1,9 +1,9 @@
 # Sibyl implementation plan
 
 **Paused 2026-10-28.** Gate 2 did not pass in two runs and the owner stopped
-development; Sibyl is kept as a personal showcase without a planned release
-(see [project status](LAUNCH_READINESS.md#project-status--2026-10-28)). The plan
-below records where the work stood.
+development; no release is planned (see
+[project status](LAUNCH_READINESS.md#project-status--2026-10-28)). The plan below
+records where the work stood.
 
 Updated 2026-10-26. The objective is a complete research MCP that an existing AI
 agent can install, understand and use to investigate questions, make evidence-based
