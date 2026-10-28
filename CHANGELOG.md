@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Development paused on 2026-10-28 after the paired host evaluation did not pass
+  in two runs; Sibyl is kept as a personal showcase and no stable release is
+  planned. A claim-checker rewrite (#72) was reverted (#73).
 - Answer guidance: each question lists `reading_needs` (an initial, primary,
   independent, counterevidence or corroborating source it still lacks), every
   update turns them into `before_answering` steps, and an assessment update

@@ -17,11 +17,16 @@ credentials, or require a second model API key. The host's own usage rules still
 [Design](docs/MCP_ARCHITECTURE.md) · [Documentation](docs/README.md) ·
 [Quality limits](#quality-and-limitations)
 
-> **Source preview, not a new PyPI release.** This README describes the host-only
-> architecture in this checkout. Published beta 0.4.0b1 and stable 0.3.0 still
-> contain the older architecture. Use the source installation below to try this
-> version. No paired evaluation yet shows that adding Sibyl to your agent's own
-> search yields better-supported answers.
+> **Personal project; development paused (2026-10-28).** Sibyl works and is
+> kept as a showcase of the design, its safety boundaries and its evaluation
+> record, but no stable release is planned. Its preregistered paired evaluation
+> did not pass in either of two runs: pooled, an agent using Sibyl cited sources
+> that supported its claims somewhat more often (79.4% against 74.9%) than the
+> same agent with only built-in search, at about twice the cost, a difference
+> within run-to-run noise ([details](#quality-and-limitations)). Agents' own
+> research has caught up with what Sibyl set out to add. This README describes
+> the source checkout; published beta 0.4.0b1 and stable 0.3.0 contain older
+> architectures.
 
 ## Research for the agent, reports for the person
 

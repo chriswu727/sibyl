@@ -6,8 +6,10 @@ Human-readable reports are optional outputs of the same research state.
 
 ## Installation and interface
 
-This checkout is an unreleased host-only source preview. Published 0.4.0b1 and
-0.3.0 still contain the old architecture. Use Python 3.11+ and a fresh environment
+This checkout is an unreleased host-only source preview, kept as a personal
+showcase: development paused on 2026-10-28 after the paired host evaluation
+did not pass, and no stable release is planned. Published 0.4.0b1 and 0.3.0
+still contain the old architecture. Use Python 3.11+ and a fresh environment
 with `python -m pip install -e .`. `sibyl-mcp` exposes eight tools with compact
 MCP `structuredContent`, mirrored as JSON text. The former keyless compatibility
 profile was removed; `--profile keyless` now exits with an error.

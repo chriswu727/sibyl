@@ -6,6 +6,15 @@ This record separates implemented behavior, verified engineering checks, and
 unmet product-quality gates. See the [roadmap](QUALITY_BUILD_PLAN.md) for execution
 order and [Releasing](RELEASING.md) for publication mechanics.
 
+## Project status — 2026-10-28
+
+Development is paused and no stable release is planned. Gate 1 meets its
+amended criteria; gate 2, the paired host evaluation, did not pass in either of
+its two runs (see below). The owner decided not to rerun it until it passes and
+not to pursue a release; Sibyl is kept as a working personal showcase of the
+design, its safety boundaries and this evaluation record. A rewrite into a
+narrower claim-checking skill was merged as #72 and reverted in #73.
+
 ## Host-only scope update — 2026-10-26
 
 The current source preview removes internal model execution and the finance
