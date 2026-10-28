@@ -1,0 +1,123 @@
+"""SourceBundle 1.6 consumer contract tests."""
+
+import hashlib
+import json
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from pydantic import TypeAdapter
+
+import sibyl.mcp_server as mcp_server
+from sibyl.evidence import SourceBundle
+
+ROOT = Path(__file__).resolve().parent.parent
+EXAMPLE = ROOT / "docs" / "source_bundle_1_6.example.json"
+
+
+class TestSourceBundleContract(unittest.TestCase):
+    def test_example_round_trips_through_typed_contract(self):
+        expected = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+
+        bundle = TypeAdapter(SourceBundle).validate_python(expected)
+
+        self.assertEqual(bundle.to_dict(), expected)
+        evidence_chars = 0
+        for source in bundle.sources:
+            for passage in source.evidence:
+                evidence_chars += len(passage.text)
+                self.assertEqual(
+                    passage.content_hash,
+                    hashlib.sha256(passage.text.encode("utf-8")).hexdigest(),
+                )
+                self.assertEqual(
+                    passage.end_char - passage.start_char,
+                    len(passage.text),
+                )
+        self.assertEqual(bundle.diagnostics.evidence_chars, evidence_chars)
+        self.assertEqual(
+            bundle.diagnostics.content_cluster_method,
+            "token_5gram_containment_v1",
+        )
+        self.assertTrue(
+            all(
+                source.content_cluster_id.startswith("cc_") for source in bundle.sources
+            )
+        )
+
+    def test_older_payload_without_substantive_domains_remains_readable(self):
+        expected = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+        expected["diagnostics"].pop("substantive_domains")
+        bundle = TypeAdapter(SourceBundle).validate_python(expected)
+        self.assertEqual(bundle.diagnostics.substantive_domains, 0)
+        self.assertEqual(
+            bundle.sources[0].evidence[0].text,
+            expected["sources"][0]["evidence"][0]["text"],
+        )
+
+    def test_contract_schema_exposes_consumer_enums(self):
+        schema = TypeAdapter(SourceBundle).json_schema()
+
+        self.assertEqual(schema["properties"]["schema_version"]["const"], "1.6")
+        self.assertEqual(
+            set(
+                schema["$defs"]["EvidenceSource"]["properties"]["content_origin"][
+                    "enum"
+                ]
+            ),
+            {
+                "direct_fetch",
+                "jina_reader",
+                "wikipedia_api",
+                "search_snippet",
+                "crossref_api",
+            },
+        )
+        self.assertEqual(
+            set(schema["properties"]["status"]["enum"]),
+            {"ok", "insufficient_evidence", "invalid_request", "failed"},
+        )
+        self.assertIn(
+            "meta_article_published_time",
+            schema["$defs"]["EvidenceSource"]["properties"]["published_at_method"][
+                "enum"
+            ],
+        )
+        self.assertEqual(
+            set(
+                schema["$defs"]["BundleDiagnostics"]["properties"][
+                    "recommended_action"
+                ]["enum"]
+            ),
+            {
+                "not_assessed",
+                "synthesize",
+                "refine_query",
+                "decompose_query",
+                "revise_request",
+                "retry",
+            },
+        )
+
+
+class TestMcpSourceBundleContract(unittest.IsolatedAsyncioTestCase):
+    async def test_mcp_serialization_matches_contract_example(self):
+        expected = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+        bundle = TypeAdapter(SourceBundle).validate_python(expected)
+
+        with mock.patch(
+            "sibyl.mcp_tools.gather_source_bundle",
+            new=mock.AsyncMock(return_value=bundle),
+        ):
+            result = await mcp_server.mcp.call_tool(
+                "gather_bundle",
+                {"query": expected["query"]},
+            )
+
+        self.assertFalse(result.isError)
+        self.assertEqual(result.structuredContent, expected)
+        self.assertEqual(json.loads(result.content[0].text), expected)
+
+
+if __name__ == "__main__":
+    unittest.main()

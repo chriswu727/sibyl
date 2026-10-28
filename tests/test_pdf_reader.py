@@ -8,7 +8,9 @@ from importlib.util import find_spec
 from unittest import mock
 
 from sibyl.pdf_reader import read_pdf
-from sibyl.scraper import _ResponseSnapshot, scrape_url
+from sibyl.research_sources import read_source_bundle
+from sibyl.research_state import ResearchNotebook
+from sibyl.scraper import WebPage, _ResponseSnapshot, scrape_url
 
 
 def document(
@@ -106,6 +108,61 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
         process.kill.assert_called_once()
         process.wait.assert_awaited_once()
 
+    async def test_source_read_discloses_pdf_warnings_and_failures(self):
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from sibyl.config import Config
+        from sibyl.mcp_server import create_server
+        from sibyl.runtime import RuntimePolicy, SibylRuntime
+
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = SibylRuntime(RuntimePolicy(output_root=Path(directory)), Config())
+            server = create_server(runtime)
+            try:
+                job = (
+                    await server.call_tool("start_research", {"question": "q"})
+                ).structuredContent
+                page = WebPage(
+                    "https://example.com/paper.pdf",
+                    "Paper",
+                    "evidence " * 100,
+                    source_type="pdf",
+                    extraction_warnings=("PDF text was truncated.",),
+                )
+                arguments = {
+                    "job_id": job["job_id"],
+                    "url": page.url,
+                    "query": "evidence",
+                }
+                with mock.patch(
+                    "sibyl.research_sources.scrape_url",
+                    mock.AsyncMock(return_value=page),
+                ):
+                    result = await server.call_tool("continue_research", arguments)
+                self.assertFalse(result.isError)
+                self.assertEqual(result.structuredContent["attempt"]["status"], "ok")
+                self.assertIn("PDF text was truncated", result.content[0].text)
+                full = await server.call_tool(
+                    "get_research", {"job_id": job["job_id"], "view": "full"}
+                )
+                self.assertIn(
+                    "PDF text was truncated", json.dumps(full.structuredContent)
+                )
+                page.error = "Encrypted PDF is not supported."
+                with mock.patch(
+                    "sibyl.research_sources.scrape_url",
+                    mock.AsyncMock(return_value=page),
+                ):
+                    result = await server.call_tool("continue_research", arguments)
+                attempt = result.structuredContent["attempt"]
+                self.assertNotEqual(attempt["status"], "ok")
+                self.assertEqual(attempt["substantive_sources"], 0)
+                self.assertIn("Encrypted PDF", attempt["error"])
+            finally:
+                await runtime.aclose()
+
     async def test_cancel_kills_and_reaps_worker_without_secrets(self):
         process = mock.Mock(returncode=None)
         entered = asyncio.Event()
@@ -133,3 +190,20 @@ class TestPDFLifecycle(unittest.IsolatedAsyncioTestCase):
         process.wait.assert_awaited_once()
         self.assertEqual(spawn.call_args.kwargs["env"], {})
         self.assertIn("-I", spawn.call_args.args)
+
+    async def test_warnings_and_pdf_type_survive_evidence_and_report_limits(self):
+        warning = "PDF text was truncated at the extraction character limit."
+        page = WebPage(
+            "https://example.com/a.pdf",
+            "Paper",
+            "[PDF page 1]\n" + "evidence " * 100,
+            source_type="pdf",
+            extraction_warnings=(warning,),
+        )
+        with mock.patch(
+            "sibyl.research_sources.scrape_url", mock.AsyncMock(return_value=page)
+        ):
+            bundle = await read_source_bundle(page.url, "question")
+        self.assertEqual(bundle.sources[0].source_type, "pdf")
+        self.assertIn("[PDF page 1]", bundle.sources[0].evidence[0].text)
+        self.assertIn(warning, ResearchNotebook("q", bundles=[bundle]).limitations())

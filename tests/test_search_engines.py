@@ -1,0 +1,662 @@
+"""Search-engine parser tests — the most external-format-fragile code.
+
+Each engine scrapes a live HTML/JSON format that can change silently and
+degrade results without raising. These pin the parsing against canned responses
+using an injected mock client (no network).
+
+Run: python -m unittest discover tests
+"""
+
+import asyncio
+import unittest
+from unittest import mock
+
+from sibyl.search import (
+    SearchResult,
+    _configured_search_provider,
+    _search_configured_general_web,
+    _search_general_web,
+    fetch_wikipedia_extract,
+    record_search_attempts,
+    search_crossref,
+    search_duckduckgo,
+    search_google_news,
+    search_mojeek,
+    search_reddit,
+    search_tavily,
+    search_web,
+    search_wikipedia,
+    search_yahoo,
+    wikipedia_lookup,
+)
+
+
+def _client_returning(text=None, payload=None, status=200):
+    """A stand-in httpx.AsyncClient whose .get() returns a canned response."""
+    resp = mock.Mock()
+    resp.status_code = status
+    resp.text = text or ""
+    resp.json = mock.Mock(return_value=payload or {})
+    client = mock.Mock()
+    client.get = mock.AsyncMock(return_value=resp)
+    client.post = mock.AsyncMock(return_value=resp)
+    return client
+
+
+class TestTavily(unittest.IsolatedAsyncioTestCase):
+    async def test_requires_an_explicit_key(self):
+        with mock.patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "TAVILY_API_KEY"):
+                await search_tavily("q", client=_client_returning())
+
+    async def test_posts_basic_search_and_parses_results(self):
+        client = _client_returning(
+            payload={
+                "results": [
+                    {
+                        "title": "Relevant result",
+                        "url": "https://example.com/relevant",
+                        "content": "Evidence returned by Tavily.",
+                    }
+                ]
+            }
+        )
+
+        results = await search_tavily("question", 5, client=client, api_key="tvly-test")
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].provider, "tavily")
+        self.assertEqual(results[0].snippet, "Evidence returned by Tavily.")
+        request = client.post.call_args
+        self.assertEqual(request.args[0], "https://api.tavily.com/search")
+        self.assertEqual(request.kwargs["headers"]["Authorization"], "Bearer tvly-test")
+        self.assertEqual(request.kwargs["json"]["search_depth"], "basic")
+        self.assertFalse(request.kwargs["json"]["include_answer"])
+        self.assertFalse(request.kwargs["json"]["include_raw_content"])
+
+    async def test_explicit_provider_falls_back_when_tavily_fails(self):
+        keyless = [SearchResult("K", "https://keyless.example", "fallback")]
+        with (
+            mock.patch(
+                "sibyl.search.search_tavily",
+                new=mock.AsyncMock(side_effect=RuntimeError("unavailable")),
+            ),
+            mock.patch(
+                "sibyl.search._search_general_web",
+                new=mock.AsyncMock(return_value=keyless),
+            ) as fallback,
+        ):
+            results = await _search_configured_general_web(
+                "q", 5, "tavily", client=object()
+            )
+
+        self.assertEqual(results, keyless)
+        fallback.assert_awaited_once()
+
+    async def test_slow_tavily_reserves_keyless_fallback_budget(self):
+        cancelled = asyncio.Event()
+
+        async def slow(*args, **kwargs):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+
+        with (
+            # Longer than Windows' ~16 ms monotonic clock tick, so elapsed time shows.
+            mock.patch("sibyl.search._TAVILY_TIMEOUT_SECONDS", 0.05),
+            mock.patch("sibyl.search.search_tavily", slow),
+            mock.patch(
+                "sibyl.search._search_general_web", mock.AsyncMock(return_value=[])
+            ) as fallback,
+        ):
+            await _search_configured_general_web("q", 5, "tavily", client=object())
+
+        self.assertTrue(cancelled.is_set())
+        self.assertGreater(fallback.call_args.kwargs["timeout"], 0)
+        self.assertLess(fallback.call_args.kwargs["timeout"], 7.0)
+
+    def test_provider_is_keyless_by_default_and_tavily_is_explicit(self):
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(_configured_search_provider(), "keyless")
+        with mock.patch.dict(
+            "os.environ",
+            {"SIBYL_SEARCH_PROVIDER": "tavily", "TAVILY_API_KEY": "tvly-test"},
+            clear=True,
+        ):
+            self.assertEqual(_configured_search_provider(), "tavily")
+
+    def test_tavily_provider_requires_key_at_configuration_boundary(self):
+        with mock.patch.dict(
+            "os.environ",
+            {"SIBYL_SEARCH_PROVIDER": "tavily"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(ValueError, "TAVILY_API_KEY"):
+                _configured_search_provider()
+
+    def test_unknown_provider_is_rejected(self):
+        with mock.patch.dict(
+            "os.environ",
+            {"SIBYL_SEARCH_PROVIDER": "unknown"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(ValueError, "keyless, tavily"):
+                _configured_search_provider()
+
+
+class TestCrossref(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_doi_and_online_publication_date(self):
+        title = "Articulatory constraints on stop insertion and elision in consonant clusters"
+        client = _client_returning(
+            payload={
+                "message": {
+                    "items": [
+                        {
+                            "title": [title],
+                            "DOI": "10.1017/S0025100311000118",
+                            "published-online": {"date-parts": [[2011, 9, 5]]},
+                            "container-title": [
+                                "Journal of the International Phonetic Association"
+                            ],
+                            "author": [{"given": "Example", "family": "Author"}],
+                        }
+                    ]
+                }
+            }
+        )
+
+        results = await search_crossref(title, client=client)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].provider, "crossref")
+        self.assertIn("10.1017/S0025100311000118", results[0].snippet)
+        self.assertIn("5th September, 2011", results[0].snippet)
+        self.assertEqual(results[0].source, "academic")
+
+    async def test_rejects_an_unrelated_crossref_match(self):
+        client = _client_returning(
+            payload={
+                "message": {
+                    "items": [
+                        {"title": ["A completely unrelated paper"], "DOI": "10.1/nope"}
+                    ]
+                }
+            }
+        )
+
+        results = await search_crossref(
+            "Generating Semantic Maps through Multidimensional Scaling",
+            client=client,
+        )
+
+        self.assertEqual(results, [])
+
+    async def test_rejects_a_related_but_different_title(self):
+        query = (
+            "Generating Semantic Maps through Multidimensional Scaling: "
+            "Linguistic Applications and Theory"
+        )
+        client = _client_returning(
+            payload={
+                "message": {
+                    "items": [
+                        {
+                            "title": ["Semantic Maps and Multidimensional Scaling"],
+                            "DOI": "10.1163/9789004363533_009",
+                        }
+                    ]
+                }
+            }
+        )
+
+        self.assertEqual(await search_crossref(query, client=client), [])
+
+
+class TestDuckDuckGo(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_results(self):
+        html = """
+        <table>
+          <tr><td><a class="result-link" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fa.com">Result A</a></td></tr>
+          <tr><td class="result-snippet">Snippet for A</td></tr>
+          <tr><td><a class="result-link" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fb.com">Result B</a></td></tr>
+          <tr><td class="result-snippet">Snippet for B</td></tr>
+        </table>
+        """
+        res = await search_duckduckgo(
+            "q", max_results=5, client=_client_returning(text=html)
+        )
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0].url, "https://a.com")
+        self.assertEqual(res[0].title, "Result A")
+        self.assertEqual(res[0].snippet, "Snippet for A")
+        self.assertEqual(res[0].source, "web")
+
+    async def test_non_200_returns_empty(self):
+        res = await search_duckduckgo("q", client=_client_returning(status=503))
+        self.assertEqual(res, [])
+
+    async def test_parses_html_endpoint_results(self):
+        html = """
+        <div class="result">
+          <a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fa.com">Result A</a>
+          <a class="result__snippet">A useful answer snippet.</a>
+        </div>
+        """
+        res = await search_duckduckgo("q", client=_client_returning(text=html))
+        self.assertEqual(
+            [(item.title, item.url) for item in res], [("Result A", "https://a.com")]
+        )
+        self.assertEqual(res[0].snippet, "A useful answer snippet.")
+
+
+class TestWikipediaExtract(unittest.IsolatedAsyncioTestCase):
+    async def test_non_wiki_url_returns_none_without_network(self):
+        client = mock.Mock()
+        client.get = mock.AsyncMock(
+            side_effect=AssertionError("should not hit network")
+        )
+        self.assertIsNone(
+            await fetch_wikipedia_extract("https://example.com/x", client=client)
+        )
+
+    async def test_returns_full_extract(self):
+        payload = {
+            "query": {"pages": {"123": {"extract": "Full clean article text. " * 30}}}
+        }
+        out = await fetch_wikipedia_extract(
+            "https://en.wikipedia.org/wiki/Some_Article",
+            client=_client_returning(payload=payload),
+        )
+        self.assertIn("Full clean article text.", out)
+
+    async def test_parses_lang_and_title_from_url(self):
+        client = _client_returning(
+            payload={"query": {"pages": {"1": {"extract": "x" * 300}}}}
+        )
+        await fetch_wikipedia_extract(
+            "https://de.wikipedia.org/wiki/J%C3%BCrgen_Aschoff", client=client
+        )
+        called_url = client.get.call_args[0][0]
+        self.assertIn("de.wikipedia.org", called_url)
+        self.assertEqual(client.get.call_args[1]["params"]["titles"], "Jürgen Aschoff")
+
+    async def test_short_extract_rejected(self):
+        payload = {"query": {"pages": {"1": {"extract": "too short"}}}}
+        self.assertIsNone(
+            await fetch_wikipedia_extract(
+                "https://en.wikipedia.org/wiki/X",
+                client=_client_returning(payload=payload),
+            )
+        )
+
+
+class TestWikipediaLookup(unittest.IsolatedAsyncioTestCase):
+    async def test_opensearch_then_extract(self):
+        # A client that answers opensearch vs extract calls by their params.
+        def dispatch(url, params=None, **kw):
+            resp = mock.Mock()
+            resp.status_code = 200
+            if params.get("action") == "opensearch":
+                resp.json = mock.Mock(
+                    return_value=[
+                        "kinoko",
+                        ["Kinoko Teikoku"],
+                        ["desc"],
+                        ["https://en.wikipedia.org/wiki/Kinoko_Teikoku"],
+                    ]
+                )
+            else:
+                resp.json = mock.Mock(
+                    return_value={
+                        "query": {
+                            "pages": {
+                                "1": {
+                                    "extract": "Kinoko Teikoku released Taikutsu Shinogi in 2012. "
+                                    * 10
+                                }
+                            }
+                        }
+                    }
+                )
+            return resp
+
+        client = mock.Mock()
+        client.get = mock.AsyncMock(side_effect=dispatch)
+        pages = await wikipedia_lookup("Kinoko Teikoku", client=client)
+        self.assertEqual(len(pages), 1)
+        self.assertIn("Kinoko Teikoku", pages[0].title)
+        self.assertIn("2012", pages[0].text)
+        self.assertEqual(pages[0].content_origin, "wikipedia_api")
+
+
+class TestReddit(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_json(self):
+        payload = {
+            "data": {
+                "children": [
+                    {
+                        "data": {
+                            "title": "Post one",
+                            "permalink": "/r/x/1",
+                            "selftext": "body",
+                            "subreddit": "x",
+                            "score": 42,
+                        }
+                    },
+                ]
+            }
+        }
+        res = await search_reddit(
+            "q", max_results=5, client=_client_returning(payload=payload)
+        )
+        self.assertEqual(len(res), 1)
+        self.assertIn("r/x", res[0].title)
+        self.assertIn("42 upvotes", res[0].title)
+        self.assertEqual(res[0].url, "https://reddit.com/r/x/1")
+        self.assertEqual(res[0].source, "reddit")
+
+    async def test_bad_status_swallowed(self):
+        res = await search_reddit("q", client=_client_returning(status=429))
+        self.assertEqual(res, [])
+
+
+class TestWikipedia(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_and_builds_url(self):
+        payload = {
+            "query": {
+                "search": [
+                    {
+                        "title": "Machine learning",
+                        "snippet": "the <b>field</b> of study",
+                    },
+                ]
+            }
+        }
+        res = await search_wikipedia("q", client=_client_returning(payload=payload))
+        self.assertEqual(len(res), 1)
+        self.assertIn("Wikipedia", res[0].title)
+        self.assertIn("Machine_learning", res[0].url)
+        self.assertNotIn("<b>", res[0].snippet)  # HTML stripped from snippet
+
+
+class TestMojeek(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_results(self):
+        html = """
+        <ul class="results-standard">
+          <li><h2><a href="https://a.com/x">Title A</a></h2><p class="i">breadcrumb</p><p class="s">Snippet A here</p></li>
+          <li><h2><a href="https://b.com/y">Title B</a></h2><p class="s">Snippet B here</p></li>
+        </ul>
+        """
+        res = await search_mojeek(
+            "q", max_results=5, client=_client_returning(text=html)
+        )
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0].title, "Title A")
+        self.assertEqual(res[0].url, "https://a.com/x")
+        self.assertEqual(res[0].snippet, "Snippet A here")
+        self.assertEqual(res[0].source, "web")
+
+    async def test_non_200_returns_empty(self):
+        res = await search_mojeek("q", client=_client_returning(status=503))
+        self.assertEqual(res, [])
+
+
+class TestYahoo(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_results_and_unwraps_redirect(self):
+        html = """
+        <div class="algo">
+          <div class="compTitle">
+            <a href="https://r.search.yahoo.com/x/RU=https%3A%2F%2Fa.com%2Fanswer/RK=2/RS=x">
+              <h3>Title A</h3>
+            </a>
+          </div>
+          <div class="compText"><p>Snippet A here</p></div>
+        </div>
+        """
+        res = await search_yahoo("q", client=_client_returning(text=html))
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].title, "Title A")
+        self.assertEqual(res[0].url, "https://a.com/answer")
+        self.assertEqual(res[0].snippet, "Snippet A here")
+
+
+class TestGeneralWebFailover(unittest.IsolatedAsyncioTestCase):
+    async def test_slow_providers_leave_time_for_last_fallback(self):
+        cancelled = []
+
+        async def slow(name):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.append(name)
+
+        yahoo = mock.AsyncMock(
+            return_value=[SearchResult("Y", "https://y.com", "s", "web")]
+        )
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", lambda *a, **kw: slow("ddg")),
+            mock.patch("sibyl.search.search_mojeek", lambda *a, **kw: slow("mojeek")),
+            mock.patch("sibyl.search.search_yahoo", yahoo),
+        ):
+            results = await _search_general_web("q", timeout=0.15)
+
+        self.assertEqual(results[0].url, "https://y.com")
+        self.assertEqual(cancelled, ["ddg", "mojeek"])
+        yahoo.assert_awaited_once()
+
+    async def test_slow_provider_is_hedged_without_waiting_for_its_timeout(self):
+        cancelled = asyncio.Event()
+
+        async def hanging(*args, **kwargs):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.set()
+
+        mojeek = mock.AsyncMock(
+            return_value=[SearchResult("M", "https://m.com", "s", "web")]
+        )
+        started = asyncio.get_running_loop().time()
+        with (
+            mock.patch("sibyl.search._GENERAL_WEB_HEDGE_SECONDS", 0.05),
+            mock.patch("sibyl.search.search_duckduckgo", hanging),
+            mock.patch("sibyl.search.search_mojeek", mojeek),
+        ):
+            results = await _search_general_web("q", timeout=5.0)
+        self.assertEqual(results[0].url, "https://m.com")
+        self.assertLess(asyncio.get_running_loop().time() - started, 1.0)
+        self.assertTrue(cancelled.is_set())
+
+    async def test_earlier_provider_answering_after_the_hedge_still_wins(self):
+        async def late_ddg(*args, **kwargs):
+            await asyncio.sleep(0.1)
+            return [SearchResult("D", "https://d.com", "s", "web")]
+
+        async def hanging(*args, **kwargs):
+            await asyncio.Event().wait()
+
+        with (
+            mock.patch("sibyl.search._GENERAL_WEB_HEDGE_SECONDS", 0.02),
+            mock.patch("sibyl.search.search_duckduckgo", late_ddg),
+            mock.patch("sibyl.search.search_mojeek", hanging),
+            mock.patch("sibyl.search.search_yahoo", hanging),
+        ):
+            results = await _search_general_web("q", timeout=5.0)
+        self.assertEqual(results[0].url, "https://d.com")
+
+    async def test_provider_request_outcomes_are_recorded_only_when_asked(self):
+        client = _client_returning(status=403)
+        self.assertEqual(await search_mojeek("q", client=client), [])
+        with record_search_attempts() as attempts:
+            await search_mojeek("q", client=client)
+        self.assertEqual(len(attempts), 1)
+        self.assertEqual(attempts[0]["provider"], "mojeek")
+        self.assertEqual(attempts[0]["outcome"], "403")
+
+    async def test_cancellation_does_not_start_fallback(self):
+        started = asyncio.Event()
+        stopped = asyncio.Event()
+
+        async def slow(*args, **kwargs):
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                stopped.set()
+
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", slow),
+            mock.patch("sibyl.search.search_mojeek", mock.AsyncMock()) as fallback,
+        ):
+            task = asyncio.create_task(_search_general_web("q"))
+            await started.wait()
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+        self.assertTrue(stopped.is_set())
+        fallback.assert_not_awaited()
+
+    async def test_no_budget_does_not_issue_requests(self):
+        with mock.patch("sibyl.search.search_duckduckgo", mock.AsyncMock()) as ddg:
+            self.assertEqual(await _search_general_web("q", timeout=0), [])
+        ddg.assert_not_awaited()
+
+    async def test_ddg_results_skip_mojeek(self):
+        ddg = mock.AsyncMock(
+            return_value=[SearchResult("T", "https://x.com", "s", "web")]
+        )
+        moj = mock.AsyncMock(return_value=[])
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", ddg),
+            mock.patch("sibyl.search.search_mojeek", moj),
+        ):
+            res = await _search_general_web("q", 5)
+        self.assertEqual(len(res), 1)
+        moj.assert_not_called()  # DDG worked → no failover
+
+    async def test_ddg_empty_fails_over_to_mojeek(self):
+        ddg = mock.AsyncMock(return_value=[])
+        moj = mock.AsyncMock(
+            return_value=[SearchResult("M", "https://m.com", "s", "web")]
+        )
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", ddg),
+            mock.patch("sibyl.search.search_mojeek", moj),
+        ):
+            res = await _search_general_web("q", 5)
+        moj.assert_called_once()
+        self.assertEqual(res[0].url, "https://m.com")
+
+    async def test_ddg_raises_still_fails_over(self):
+        # A DDG timeout/reset (raises) must still fail over to Mojeek, not propagate.
+        import httpx
+
+        ddg = mock.AsyncMock(side_effect=httpx.ConnectError("reset"))
+        moj = mock.AsyncMock(
+            return_value=[SearchResult("M", "https://m.com", "s", "web")]
+        )
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", ddg),
+            mock.patch("sibyl.search.search_mojeek", moj),
+        ):
+            res = await _search_general_web("q", 5)
+        moj.assert_called_once()
+        self.assertEqual(res[0].url, "https://m.com")
+
+    async def test_empty_ddg_and_mojeek_fall_over_to_yahoo(self):
+        ddg = mock.AsyncMock(return_value=[])
+        moj = mock.AsyncMock(return_value=[])
+        yahoo = mock.AsyncMock(
+            return_value=[SearchResult("Y", "https://y.com", "s", "web")]
+        )
+        with (
+            mock.patch("sibyl.search.search_duckduckgo", ddg),
+            mock.patch("sibyl.search.search_mojeek", moj),
+            mock.patch("sibyl.search.search_yahoo", yahoo),
+        ):
+            res = await _search_general_web("q", 5)
+        yahoo.assert_called_once()
+        self.assertEqual(res[0].url, "https://y.com")
+
+
+class TestSearchBatchBudget(unittest.IsolatedAsyncioTestCase):
+    async def test_parent_cancellation_awaits_all_provider_cleanup(self):
+        started = set()
+        stopped = set()
+        all_started = asyncio.Event()
+
+        async def hanging(name):
+            started.add(name)
+            if len(started) == 4:
+                all_started.set()
+            try:
+                await asyncio.Event().wait()
+            finally:
+                stopped.add(name)
+
+        with (
+            mock.patch(
+                "sibyl.search._search_general_web", lambda *a, **kw: hanging("web")
+            ),
+            mock.patch(
+                "sibyl.search.search_google_news", lambda *a, **kw: hanging("news")
+            ),
+            mock.patch(
+                "sibyl.search.search_reddit", lambda *a, **kw: hanging("reddit")
+            ),
+            mock.patch(
+                "sibyl.search.search_wikipedia", lambda *a, **kw: hanging("wiki")
+            ),
+        ):
+            task = asyncio.create_task(search_web("q"))
+            await asyncio.wait_for(all_started.wait(), timeout=2)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+        self.assertEqual(stopped, started)
+
+    async def test_returns_completed_sources_without_waiting_for_slow_helper(self):
+        async def hanging(*args, **kwargs):
+            await asyncio.Event().wait()
+
+        wiki_result = SearchResult(
+            "[Wikipedia] Answer",
+            "https://en.wikipedia.org/wiki/Answer",
+            "answer",
+            "wikipedia",
+        )
+        with (
+            mock.patch("sibyl.search._SEARCH_BATCH_TIMEOUT_SECONDS", 0.01),
+            mock.patch("sibyl.search._search_general_web", hanging),
+            mock.patch(
+                "sibyl.search.search_google_news", mock.AsyncMock(return_value=[])
+            ),
+            mock.patch("sibyl.search.search_reddit", mock.AsyncMock(return_value=[])),
+            mock.patch(
+                "sibyl.search.search_wikipedia",
+                mock.AsyncMock(return_value=[wiki_result]),
+            ),
+        ):
+            result = await search_web("q")
+
+        self.assertEqual(result, [wiki_result])
+
+
+class TestGoogleNews(unittest.IsolatedAsyncioTestCase):
+    async def test_parses_rss(self):
+        rss = """<?xml version="1.0"?><rss><channel>
+          <item><title>Headline one</title><link>https://n.com/1</link><description>desc one</description></item>
+          <item><title>Headline two</title><link>https://n.com/2</link><description>desc two</description></item>
+        </channel></rss>"""
+        res = await search_google_news(
+            "q", max_results=5, client=_client_returning(text=rss)
+        )
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0].title, "Headline one")
+        self.assertEqual(res[0].url, "https://n.com/1")
+        self.assertEqual(res[0].source, "news")
+
+
+if __name__ == "__main__":
+    unittest.main()

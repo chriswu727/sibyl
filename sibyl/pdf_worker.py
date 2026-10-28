@@ -55,7 +55,7 @@ def main():
         if len(data) > 2 * 1024 * 1024 or not data.startswith(b"%PDF-"):
             result = {"error": "Invalid or oversized PDF."}
         else:
-            result = extract(data, max(200, min(int(sys.argv[1]), 200000)))
+            result = extract(data, max(200, min(int(sys.argv[1]), 60000)))
     except Exception:
         result = {"error": "PDF parsing failed or exceeded a resource limit."}
     print(json.dumps(result, ensure_ascii=True))

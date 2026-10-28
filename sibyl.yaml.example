@@ -1,0 +1,9 @@
+# Optional compatibility-tool retrieval settings.
+# Set SIBYL_CONFIG to this file's absolute path; no file is loaded implicitly.
+# These settings affect quick_search/read_url in the keyless profile.
+# Persistent research uses its explicit tool arguments and safe defaults.
+# No model credentials or subscription login belong in this file.
+search_engine: all
+extractor: bs4
+jina_fallback: false
+js_render: false

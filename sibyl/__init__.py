@@ -1,9 +1,24 @@
-"""Check research claims against the pages they quote."""
+"""Evidence retrieval for AI agents with auditable source provenance."""
 
-__version__ = "0.5.0.dev0"
+from .api import gather_bundle, gather_sources
+from .evidence import (
+    BundleDiagnostics,
+    BundleStatus,
+    EvidencePassage,
+    EvidenceSource,
+    EvidenceSufficiency,
+    SourceBundle,
+)
 
-from .checks import check, run_check  # noqa: E402
-from .ledger import Ledger, LedgerError, read_ledger  # noqa: E402
-from .report import render  # noqa: E402
+__all__ = [
+    "BundleDiagnostics",
+    "BundleStatus",
+    "EvidencePassage",
+    "EvidenceSufficiency",
+    "EvidenceSource",
+    "SourceBundle",
+    "gather_bundle",
+    "gather_sources",
+]
 
-__all__ = ["Ledger", "LedgerError", "check", "read_ledger", "render", "run_check"]
+__version__ = "0.4.0b1"

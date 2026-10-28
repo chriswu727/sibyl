@@ -10,10 +10,10 @@ venv/
 .env
 .env.*
 !.env.example
+*.yaml
+!sibyl.yaml.example
 reports/
 *.pdf
-# Ledgers, check results and reports written while trying Sibyl locally
-research/
 *.md
 !README.md
 !README.zh-CN.md
@@ -22,8 +22,7 @@ research/
 !CONTRIBUTING.md
 !PRIVACY.md
 !SECURITY.md
-!sibyl/skill/SKILL.md
-!evals/**/*.md
+!llms-install.md
 !docs/*.md
 !docs/**/*.md
 !.github/dependabot.yml

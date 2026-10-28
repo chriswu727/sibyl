@@ -1,11 +1,13 @@
-"""Pure-function tests — HTML extraction. No network.
+"""Pure-function tests — HTML extraction, URL decoding, formatting. No network.
 
 Run: python -m unittest discover tests
 """
 
 import unittest
+from unittest import mock
 
 from sibyl.scraper import _extract_content, scrape_url
+from sibyl.search import _extract_ddg_url
 
 
 class TestExtractContent(unittest.TestCase):
@@ -73,6 +75,20 @@ class TestExtractContent(unittest.TestCase):
             "HTML text truncated to 100 characters.", page.extraction_warnings
         )
 
+    def test_optional_extractor_receives_cleaned_html(self):
+        fake = mock.Mock()
+        fake.extract.return_value = "Optional extractor text " * 20
+        with mock.patch.dict("sys.modules", {"trafilatura": fake}):
+            page = _extract_content(
+                "<main>word" + " " * 500 + "text</main>",
+                "https://example.com",
+                100,
+                "trafilatura",
+            )
+        self.assertNotIn(" " * 500, fake.extract.call_args.args[0])
+        self.assertEqual(len(page.text), 100)
+        self.assertTrue(page.extraction_warnings)
+
     def test_article_survives_navigation_wrapper(self):
         html = (
             "<body><nav><a>Menu</a><main><p>"
@@ -114,6 +130,60 @@ class TestExtractContent(unittest.TestCase):
         self.assertIn("Real news", page.text)
         self.assertNotIn("Stock quote", page.text)
 
+    def test_epoch_placeholder_falls_back_to_explicit_issue_date(self):
+        html = """<html><head><script type="application/ld+json">
+        {"datePublished":"1970-01-01T08:00:00+08:00"}</script></head>
+        <body><main><div>Issued on: <time><div><time datetime="2026-10-15T12:00:00Z">2026/10/15</time></div></time></div></main></body></html>"""
+        page = _extract_content(html, "https://example.com", 6000)
+        self.assertEqual(page.published_at, "2026-10-15T12:00:00+00:00")
+        self.assertEqual(page.published_at_method, "time_date_published")
+
+    def test_does_not_guess_publication_date_from_unlabelled_or_modified_time(self):
+        for label in ("", "Last modified: "):
+            page = _extract_content(
+                f'<main>{label}<time datetime="2026-10-15">2026-10-15</time></main>',
+                "https://example.com",
+                6000,
+            )
+            self.assertIsNone(page.published_at)
+
+    def test_genuine_historical_publication_date_is_preserved(self):
+        page = _extract_content(
+            '<meta name="date" content="1970-04-15"><body>Historical paper</body>',
+            "https://example.com",
+            6000,
+        )
+        self.assertEqual(page.published_at, "1970-04-15")
+
+    def test_nearby_publication_label_does_not_relabel_modified_time(self):
+        page = _extract_content(
+            """<main><div>Last modified: <time datetime="2026-10-20">October 20</time></div>
+        <div>Issued on: <time datetime="2026-10-15">October 15</time></div></main>""",
+            "https://example.com",
+            6000,
+        )
+        self.assertEqual(page.published_at, "2026-10-15")
+
+    def test_explicit_article_date_text_is_not_a_related_story_date(self):
+        page = _extract_content(
+            """<div class="article-date">August 26, 2026</div>
+        <aside><span class="article-date">October 20, 2026</span></aside>
+        <span class="index-item-text-info-date">October 19, 2026</span>""",
+            "https://example.com",
+            6000,
+        )
+        self.assertEqual(page.published_at, "2026-08-26")
+        self.assertEqual(page.published_at_method, "article_date_text")
+
+    def test_ambiguous_article_dates_remain_unknown(self):
+        page = _extract_content(
+            """<div class="article-date">August 26, 2026</div>
+        <div class="article-date">October 20, 2026</div>""",
+            "https://example.com",
+            6000,
+        )
+        self.assertIsNone(page.published_at)
+
     def test_strips_noise_and_extracts_article(self):
         html = """
         <html><head><title>My Title</title></head>
@@ -142,12 +212,80 @@ class TestExtractContent(unittest.TestCase):
         page = _extract_content(html, "https://ex.com/b", max_chars=200)
         self.assertLessEqual(len(page.text), 200)
 
+    def test_extracts_and_normalizes_article_publication_time(self):
+        html = """
+        <html><head>
+          <meta property="article:published_time" content="2026-07-13T18:30:00Z">
+          <script type="application/ld+json">
+            {"datePublished": "2025-01-01"}
+          </script>
+        </head><body><article>Substantive article body text.</article></body></html>
+        """
 
-class TestBodyExtraction(unittest.TestCase):
+        page = _extract_content(html, "https://ex.com/published", 6000)
+
+        self.assertEqual(page.published_at, "2026-07-13T18:30:00+00:00")
+        self.assertEqual(
+            page.published_at_method,
+            "meta_article_published_time",
+        )
+
+    def test_extracts_json_ld_publication_date(self):
+        html = """
+        <html><head><script type="application/ld+json">
+          {"@graph": [{"@type": "NewsArticle", "datePublished": "20260712"}]}
+        </script></head><body><article>Substantive article body text.</article></body></html>
+        """
+
+        page = _extract_content(html, "https://ex.com/json-ld", 6000)
+
+        self.assertEqual(page.published_at, "2026-07-12")
+        self.assertEqual(page.published_at_method, "json_ld_date_published")
+
+    def test_extracts_explicit_published_time_element(self):
+        html = """
+        <html><body><article>
+          <time itemprop="datePublished" datetime="2026/07/11">July 11</time>
+          Substantive article body text.
+        </article></body></html>
+        """
+
+        page = _extract_content(html, "https://ex.com/time", 6000)
+
+        self.assertEqual(page.published_at, "2026-07-11")
+        self.assertEqual(page.published_at_method, "time_date_published")
+
+    def test_ignores_modified_and_invalid_future_dates(self):
+        html = """
+        <html><head>
+          <meta property="article:modified_time" content="2026-07-13T18:30:00Z">
+          <meta property="article:published_time" content="2099-01-01T00:00:00Z">
+        </head><body><article>Substantive article body text.</article></body></html>
+        """
+
+        page = _extract_content(html, "https://ex.com/invalid", 6000)
+
+        self.assertIsNone(page.published_at)
+        self.assertEqual(page.published_at_method, "")
+
+
+class TestExtractorChoice(unittest.TestCase):
     def test_bs4_default_unchanged(self):
         html = "<html><head><title>T</title></head><body><article><p>the real body content here for the test</p></article></body></html>"
-        page = _extract_content(html, "https://ex.com/a", 6000)
+        page = _extract_content(html, "https://ex.com/a", 6000)  # default extractor
         self.assertIn("real body content", page.text)
+
+    def test_trafilatura_length_compare_never_shrinks(self):
+        # A page where BS4 would extract more than a thin trafilatura result:
+        # the length-comparison fallback must keep the longer (bs4) text.
+        body = " ".join(
+            f"sentence number {i} with enough words to count" for i in range(40)
+        )
+        html = f"<html><head><title>T</title></head><body><article><p>{body}</p></article></body></html>"
+        traf = _extract_content(html, "https://ex.com/b", 6000, extractor="trafilatura")
+        bs4 = _extract_content(html, "https://ex.com/b", 6000, extractor="bs4")
+        self.assertGreaterEqual(len(traf.text), len(bs4.text) - 5)
+        self.assertIn("sentence number 20", traf.text)
 
 
 class TestScrapeUrlGuards(unittest.IsolatedAsyncioTestCase):
@@ -155,6 +293,15 @@ class TestScrapeUrlGuards(unittest.IsolatedAsyncioTestCase):
         page = await scrape_url("ftp://example.com/file")
         self.assertIn("Only http and https", page.error)
         self.assertEqual(page.text, "")
+
+
+class TestDdgUrl(unittest.TestCase):
+    def test_decodes_uddg_param(self):
+        raw = "//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fpage%3Fa%3D1&rut=x"
+        self.assertEqual(_extract_ddg_url(raw), "https://example.com/page?a=1")
+
+    def test_passthrough_when_no_uddg(self):
+        self.assertEqual(_extract_ddg_url("https://plain.com/x"), "https://plain.com/x")
 
 
 if __name__ == "__main__":
