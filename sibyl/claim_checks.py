@@ -13,6 +13,8 @@ import re
 from collections.abc import Iterable
 from functools import lru_cache
 
+from .queries import keyword_query
+
 _FULLWIDTH_DIGITS = str.maketrans("０１２３４５６７８９", "0123456789")
 # Only Latin letters, digits and underscores glue a number into a token (v3,
 # SQLite3); CJK text writes numbers directly against characters (2024年).
@@ -21,15 +23,6 @@ _THOUSANDS_RE = re.compile(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?")
 _WORD_RE = re.compile(r"[^\W\d_][\w'’-]*")
 _SENTENCE_BREAKS = ".!?:;"
 CONFLICT_OVERLAP = 0.6
-_TERM_RE = re.compile(
-    r"\bv?\d+(?:\.\d+)+(?:[a-z]+\d*)?(?:[-+][a-z0-9]+(?:[.-][a-z0-9]+)*)?(?!\w)"
-    r"|[^\W_]+(?:['’][^\W_]+)?",
-    re.UNICODE | re.IGNORECASE,
-)
-_STOP_WORDS = frozenset(
-    "a an and are as at be been by did do does for from had has have how in is it "
-    "of on or that the this to was were what when where which who why will with".split()
-)
 
 
 @lru_cache(maxsize=1024)
@@ -79,11 +72,10 @@ def unquoted_numbers(text: str, quotes: Iterable[str]) -> list[str]:
 
 @lru_cache(maxsize=1024)
 def _topic(text: str) -> frozenset[str]:
-    terms = (term.casefold().replace("’", "'") for term in _TERM_RE.findall(text))
     return frozenset(
-        term
-        for term in terms
-        if term not in _STOP_WORDS and not any(c.isdigit() for c in term)
+        term.casefold()
+        for term in keyword_query(text, max_terms=40).split()
+        if not any(c.isdigit() for c in term)
     )
 
 

@@ -10,25 +10,25 @@ body:
     id: version
     attributes:
       label: Sibyl version and source commit
-      placeholder: "sibyl --version and git rev-parse --short HEAD (published 0.4.0b1/0.3.0 are the retired MCP server)"
+      placeholder: "Host-only source: git rev-parse --short HEAD; or exact published package version (0.4.0b1/0.3.0 use older architectures)"
     validations:
       required: true
   - type: input
     id: environment
     attributes:
       label: Environment
-      placeholder: "OS, Python version, agent host, installed extras"
+      placeholder: "OS, Python version, MCP host, profile, installed extras"
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: Reproduction
-      description: Include the command, a minimal ledger, expected behavior, and actual behavior.
+      description: Include the command or MCP call, expected behavior, and actual behavior.
     validations:
       required: true
   - type: textarea
     id: diagnostics
     attributes:
       label: Diagnostics
-      description: Include the relevant part of the .check.json result (source errors, extraction warnings, issues). Remove private URLs and content before sharing.
+      description: Include relevant SourceBundle/research-job status, extraction warnings, or sanitized monitoring outcomes. Remove tokens, provider keys, private queries, and evidence text before sharing.

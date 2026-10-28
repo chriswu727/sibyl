@@ -1,0 +1,1645 @@
+"""Structured keyless retrieval tests. No network."""
+
+import hashlib
+import unittest
+from unittest import mock
+
+from sibyl.retrieval import gather_source_bundle, render_source_bundle
+from sibyl.scraper import WebPage
+from sibyl.search import SearchResult
+
+
+class TestGatherSourceBundle(unittest.IsolatedAsyncioTestCase):
+    async def test_preferred_full_text_survives_final_ranking_and_diversity(self):
+        general = WebPage(
+            "https://blog.example/guide",
+            "replication transaction",
+            "replication transaction consistency detailed guide. " * 30,
+        )
+        official = WebPage(
+            "https://docs.example/manual",
+            "Official reference",
+            "Transaction safety has documented conditions and bounded guarantees. "
+            * 12,
+        )
+        second = WebPage(
+            "https://docs.example/limits",
+            "Reference limits",
+            "Transaction limitations require application handling of specific failure conditions. "
+            * 12,
+        )
+        other = WebPage(
+            "https://other.example/article",
+            "replication transaction",
+            "replication transaction distributed tutorial examples and commentary. "
+            * 30,
+        )
+        pages = [general, other, official, second]
+        results = [SearchResult(p.title, p.url, p.text[:180]) for p in pages]
+        for ranker, expected in (
+            ("lexical", [official.url, general.url]),
+            ("none", [general.url, other.url]),
+        ):
+            with (
+                self.subTest(ranker=ranker),
+                mock.patch(
+                    "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+                ),
+                mock.patch(
+                    "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+                ),
+            ):
+                bundle = await gather_source_bundle(
+                    "replication transaction",
+                    max_sources=2,
+                    client=object(),
+                    ranker=ranker,
+                    preferred_domains=["docs.example"],
+                )
+            self.assertEqual([source.url for source in bundle.sources], expected)
+
+    async def test_preferred_domain_does_not_override_relevance_or_period(self):
+        current = WebPage(
+            "https://other.example/2026",
+            "2026 replication transaction",
+            "Replication transaction 2026 research results and measured limits. " * 20,
+        )
+        old = WebPage(
+            "https://docs.example/2025",
+            "2025 replication transaction",
+            "Replication transaction 2025 historical reference and methods. " * 20,
+        )
+        irrelevant = WebPage(
+            "https://docs.example/weather",
+            "Weather",
+            "Weather ocean landscape clouds rainfall mountain forest scenery. " * 20,
+        )
+        pages = [current, old, irrelevant]
+        results = [SearchResult(p.title, p.url, p.text[:180]) for p in pages]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "2026 replication transaction",
+                max_sources=1,
+                client=object(),
+                preferred_domains=["docs.example"],
+            )
+        self.assertEqual(bundle.sources[0].url, current.url)
+
+    async def test_preferred_documentation_is_not_replaced_by_community_archive(self):
+        archive = WebPage(
+            "https://docs.example/message-id/123",
+            "replication transaction",
+            "Replication transaction questions from a mailing list about distributed consistency. "
+            * 25,
+        )
+        manual = WebPage(
+            "https://docs.example/manual",
+            "Reference",
+            "Transaction safety has documented conditions and bounded guarantees. "
+            * 12,
+        )
+        other = WebPage(
+            "https://other.example/tutorial",
+            "replication transaction",
+            "Replication transaction example tutorial explaining distributed systems. "
+            * 25,
+        )
+        pages = [archive, other, manual]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(
+                    return_value=[
+                        SearchResult(p.title, p.url, p.text[:180]) for p in pages
+                    ]
+                ),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "replication transaction",
+                max_sources=1,
+                client=object(),
+                preferred_domains=["docs.example"],
+            )
+        self.assertEqual(bundle.sources[0].url, manual.url)
+
+    async def test_preferred_domains_add_bounded_searches_without_excluding_others(
+        self,
+    ):
+        general = SearchResult(
+            "retry safety", "https://other.example/retries", "retry safety"
+        )
+        preferred = SearchResult(
+            "retry safety", "https://docs.example/retries", "retry safety"
+        )
+        results = [[general], [preferred], []]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(side_effect=results)
+            ) as search,
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[])
+            ) as scrape,
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "retry safety",
+                client=object(),
+                preferred_domains=["docs.example", "second.example", "third.example"],
+            )
+        self.assertEqual(
+            [call.args[0] for call in search.await_args_list],
+            [
+                "retry safety",
+                "retry safety site:docs.example",
+                "retry safety site:second.example",
+            ],
+        )
+        self.assertEqual(scrape.call_args.args[0], [preferred.url, general.url])
+        self.assertEqual(bundle.diagnostics.refinement_searches, 2)
+
+    async def test_search_candidates_are_ranked_before_fetch_budget_is_spent(self):
+        results = [
+            SearchResult("unrelated", f"https://noise.example/{i}", "")
+            for i in range(13)
+        ]
+        target = SearchResult(
+            "quantization memory accuracy",
+            "https://paper.example/research",
+            "quantization memory accuracy",
+        )
+        results.append(target)
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[])
+            ) as scrape,
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            await gather_source_bundle("quantization memory accuracy", client=object())
+        self.assertEqual(scrape.call_args.args[0][0], target.url)
+        self.assertEqual(len(scrape.call_args.args[0]), 12)
+
+    async def test_explicit_site_constraint_takes_priority_over_domain_hints(self):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=[])
+            ) as search,
+            mock.patch("sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[])),
+        ):
+            await gather_source_bundle(
+                "retry safety site:only.example",
+                client=object(),
+                preferred_domains=["other.example"],
+            )
+        self.assertEqual(search.await_count, 1)
+        self.assertEqual(search.call_args.args[0], "retry safety site:only.example")
+
+    async def test_missing_site_gets_one_focused_followup(self):
+        first = SearchResult("First", "https://first.example/results", "", "web")
+        second = SearchResult("Second", "https://second.example/results", "", "web")
+        initial = [
+            first,
+            *[
+                SearchResult("First", f"https://first.example/{i}", "", "web")
+                for i in range(13)
+            ],
+        ]
+        pages = [
+            WebPage(r.url, r.title, (r.title + " evidence. ") * 40)
+            for r in (first, second)
+        ]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(side_effect=[initial, [second]]),
+            ) as search,
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ) as scrape,
+        ):
+            bundle = await gather_source_bundle(
+                "2026 results (site:first.example OR site:second.example)",
+                client=object(),
+            )
+        self.assertEqual(search.await_count, 2)
+        self.assertEqual(search.call_args.args[0], "2026 results site:second.example")
+        self.assertEqual(scrape.call_args.args[0][:2], [first.url, second.url])
+        self.assertEqual(len(scrape.call_args.args[0]), 12)
+        self.assertIn(
+            "2026 results site:second.example", bundle.diagnostics.search_queries
+        )
+
+    async def test_site_followups_are_bounded_and_failure_keeps_initial_results(self):
+        first = SearchResult("First", "https://first.example/results", "", "web")
+        page = WebPage(first.url, first.title, "Market research evidence. " * 40)
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(side_effect=[[first], RuntimeError("failure"), []]),
+            ) as search,
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[page])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "market (site:first.example OR site:second.example OR site:third.example OR site:fourth.example)",
+                client=object(),
+            )
+        self.assertEqual(search.await_count, 3)
+        self.assertEqual(bundle.sources[0].url, first.url)
+        self.assertEqual(bundle.diagnostics.refinement_failures, 1)
+
+    async def test_parenthesized_site_union_keeps_both_hosts_and_rejects_lookalikes(
+        self,
+    ):
+        results = [
+            SearchResult("Research", url, "", "web")
+            for url in (
+                "https://first.example/results",
+                "https://ir.second.example/results",
+                "https://second.example.evil.org/results",
+            )
+        ]
+        pages = [
+            WebPage(r.url, r.title, "Research evidence methods. " * 30)
+            for r in results[:2]
+        ]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ) as scrape,
+            mock.patch("sibyl.retrieval.search_wikipedia", mock.AsyncMock()) as wiki,
+        ):
+            await gather_source_bundle(
+                "research (site:first.example OR site:second.example)", client=object()
+            )
+        self.assertEqual(scrape.call_args.args[0], [r.url for r in results[:2]])
+        wiki.assert_not_called()
+
+    async def test_period_match_precedes_domain_diversity_and_preserves_unranked_mode(
+        self,
+    ):
+        results = [
+            SearchResult(title, url, "", "web")
+            for title, url in (
+                ("2025 market results", "https://old.example/release"),
+                ("2026 market results", "https://current.example/one"),
+                ("2026 market capacity", "https://current.example/two"),
+            )
+        ]
+        pages = [
+            WebPage(r.url, r.title, (f"{r.title} market evidence {i} " * 40))
+            for i, r in enumerate(results)
+        ]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            ranked = await gather_source_bundle(
+                "2026 market", max_sources=2, client=object()
+            )
+            unranked = await gather_source_bundle(
+                "2026 market", max_sources=2, ranker="none", client=object()
+            )
+        self.assertEqual({s.url for s in ranked.sources}, {r.url for r in results[1:]})
+        self.assertEqual(unranked.sources[0].url, results[0].url)
+
+    async def test_builds_stable_structured_evidence(self):
+        results = [
+            SearchResult("Alpha", "https://example.com/a", "", "web"),
+            SearchResult("News", "https://example.com/b", "", "news"),
+            SearchResult("Paper", "https://example.com/c", "", "academic"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"alpha {result.title} " + "x" * 600)
+            for result in results
+        ]
+        pages[0].published_at = "2026-07-13T18:30:00+00:00"
+        pages[0].published_at_method = "meta_article_published_time"
+        pages[1].title = ""
+        client = object()
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ) as wiki,
+        ):
+            first = await gather_source_bundle(" alpha ", max_sources=2, client=client)
+            second = await gather_source_bundle("alpha", max_sources=2, client=client)
+
+        self.assertEqual(first.status, "insufficient_evidence")
+        self.assertEqual(first.schema_version, "1.6")
+        self.assertEqual(first.bundle_id, second.bundle_id)
+        self.assertRegex(first.bundle_id, r"^sb_[0-9a-f]{16}$")
+        self.assertEqual([source.source_id for source in first.sources], ["S1", "S2"])
+        self.assertEqual(first.sources[1].source_type, "news")
+        self.assertEqual(first.sources[1].title, "News")
+        self.assertEqual(first.sources[0].evidence[0].passage_id, "P1")
+        self.assertEqual(
+            first.sources[0].evidence[0].citation_id,
+            f"{first.bundle_id}/S1/P1",
+        )
+        self.assertEqual(
+            first.sources[0].content_hash,
+            hashlib.sha256(pages[0].text.encode("utf-8")).hexdigest(),
+        )
+        self.assertEqual(len(first.sources[0].content_hash), 64)
+        self.assertIsNotNone(first.sources[0].relevance_score)
+        self.assertIsNotNone(first.sources[0].evidence[0].score)
+        self.assertIsNone(first.sources[0].quality_score)
+        self.assertEqual(first.sources[0].content_origin, "direct_fetch")
+        self.assertRegex(first.sources[0].content_cluster_id, r"^cc_[0-9a-f]{16}$")
+        self.assertEqual(first.sources[0].published_at, pages[0].published_at)
+        self.assertEqual(
+            first.sources[0].published_at_method,
+            "meta_article_published_time",
+        )
+        self.assertEqual(first.diagnostics.search_results, 3)
+        self.assertEqual(first.diagnostics.urls_attempted, 3)
+        self.assertEqual(first.diagnostics.sources_returned, 2)
+        self.assertEqual(first.diagnostics.effective_max_sources, 2)
+        self.assertEqual(first.diagnostics.effective_chars_per_source, 7000)
+        self.assertEqual(first.diagnostics.ranking_method, "lexical_v1")
+        self.assertEqual(first.diagnostics.requested_ranking_method, "lexical")
+        self.assertEqual(first.diagnostics.ranking_warning, "")
+        self.assertEqual(first.diagnostics.candidates_ranked, 3)
+        self.assertEqual(first.diagnostics.passages_returned, 2)
+        self.assertEqual(first.diagnostics.coverage_method, "lexical_query_terms_v1")
+        self.assertGreater(first.diagnostics.query_term_coverage, 0)
+        self.assertEqual(first.diagnostics.unique_domains, 1)
+        self.assertEqual(first.diagnostics.substantive_sources, 2)
+        self.assertEqual(first.diagnostics.candidate_content_clusters, 3)
+        self.assertEqual(first.diagnostics.duplicate_candidates, 0)
+        self.assertEqual(first.diagnostics.independent_content_clusters, 2)
+        self.assertEqual(first.diagnostics.duplicate_sources, 0)
+        self.assertEqual(
+            first.diagnostics.content_cluster_method,
+            "token_5gram_containment_v1",
+        )
+        self.assertGreater(first.diagnostics.evidence_chars, 0)
+        self.assertEqual(first.diagnostics.evidence_sufficiency, "limited")
+        self.assertEqual(first.status, "insufficient_evidence")
+        self.assertEqual(first.diagnostics.sufficiency_reasons, ["single_domain"])
+        wiki.assert_not_awaited()
+
+    async def test_marks_diverse_relevant_evidence_sufficient(self):
+        results = [
+            SearchResult("Alpha evidence", "https://a.example/report", "", "web"),
+            SearchResult("Alpha findings", "https://b.example/study", "", "academic"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "alpha evidence findings cohort methodology measured outcome " * 30,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "alpha evidence findings independent replication dataset result " * 30,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=2, client=object()
+            )
+
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "sufficient")
+        self.assertEqual(bundle.diagnostics.sufficiency_reasons, [])
+        self.assertEqual(bundle.diagnostics.query_complexity, "single_step")
+        self.assertEqual(bundle.diagnostics.recommended_action, "synthesize")
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+
+    async def test_prefers_independent_content_over_syndicated_copy(self):
+        results = [
+            SearchResult("Alpha investigation", "https://a.example/report", "", "news"),
+            SearchResult(
+                "Alpha investigation copy", "https://b.example/copy", "", "news"
+            ),
+            SearchResult(
+                "Independent alpha review", "https://c.example/review", "", "web"
+            ),
+        ]
+        shared = " ".join(
+            f"alpha investigation evidence interview {index} measured result {index * 7}"
+            for index in range(35)
+        )
+        pages = [
+            WebPage(
+                results[0].url, results[0].title, f"original header {shared} footer"
+            ),
+            WebPage(results[1].url, results[1].title, f"partner header {shared} legal"),
+            WebPage(
+                results[2].url,
+                results[2].title,
+                " ".join(
+                    f"alpha independent review dataset {index} separate finding {index * 11}"
+                    for index in range(35)
+                ),
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=results),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha investigation evidence",
+                max_sources=2,
+                client=object(),
+            )
+
+        self.assertEqual(
+            [source.url for source in bundle.sources],
+            ["https://a.example/report", "https://c.example/review"],
+        )
+        self.assertEqual(bundle.diagnostics.candidate_content_clusters, 2)
+        self.assertEqual(bundle.diagnostics.duplicate_candidates, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+
+    async def test_prefers_a_second_domain_before_same_domain_content(self):
+        results = [
+            SearchResult("Alpha primary", "https://a.example/one", "", "web"),
+            SearchResult("Alpha detail", "https://a.example/two", "", "web"),
+            SearchResult("Alpha review", "https://b.example/review", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                result.url,
+                result.title,
+                f"alpha evidence {index} " + f"distinct material {index} " * 30,
+            )
+            for index, result in enumerate(results)
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=2, client=object()
+            )
+
+        self.assertEqual(
+            [source.url for source in bundle.sources],
+            ["https://a.example/one", "https://b.example/review"],
+        )
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.status, "ok")
+
+    async def test_single_domain_triggers_one_exclusion_refinement(self):
+        initial_results = [
+            SearchResult("Alpha one", "https://a.example/one", "", "web"),
+            SearchResult("Alpha two", "https://a.example/two", "", "web"),
+        ]
+        refinement_result = SearchResult(
+            "Independent alpha", "https://b.example/review", "", "web"
+        )
+        initial_pages = [
+            WebPage(
+                result.url,
+                result.title,
+                f"alpha evidence initial {index} " + "measured result " * 30,
+            )
+            for index, result in enumerate(initial_results)
+        ]
+        refinement_page = WebPage(
+            refinement_result.url,
+            refinement_result.title,
+            "alpha evidence independent review " + "replicated finding " * 30,
+        )
+        search = mock.AsyncMock(side_effect=[initial_results, [refinement_result]])
+        scrape = mock.AsyncMock(side_effect=[initial_pages, [refinement_page]])
+
+        with (
+            mock.patch("sibyl.retrieval.search_web", new=search),
+            mock.patch("sibyl.retrieval.scrape_urls", new=scrape),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=2, client=object()
+            )
+
+        self.assertEqual(search.await_count, 2)
+        self.assertEqual(
+            search.await_args_list[1].args[0],
+            "alpha evidence -site:a.example",
+        )
+        self.assertEqual(
+            bundle.diagnostics.search_queries[-1],
+            "alpha evidence -site:a.example",
+        )
+        self.assertEqual(bundle.diagnostics.refinement_searches, 1)
+        self.assertEqual(bundle.diagnostics.refinement_failures, 0)
+        self.assertEqual(bundle.diagnostics.urls_attempted, 3)
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.status, "ok")
+
+    async def test_refinement_failure_retains_initial_evidence(self):
+        results = [
+            SearchResult("Alpha one", "https://a.example/one", "", "web"),
+            SearchResult("Alpha two", "https://a.example/two", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                result.url,
+                result.title,
+                f"alpha evidence {index} " + f"distinct finding {index} " * 30,
+            )
+            for index, result in enumerate(results)
+        ]
+        search = mock.AsyncMock(
+            side_effect=[results, RuntimeError("refinement unavailable")]
+        )
+
+        with (
+            mock.patch("sibyl.retrieval.search_web", new=search),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle("alpha evidence", client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.sources_returned, 2)
+        self.assertEqual(bundle.diagnostics.refinement_searches, 1)
+        self.assertEqual(bundle.diagnostics.refinement_failures, 1)
+        self.assertEqual(bundle.diagnostics.sufficiency_reasons, ["single_domain"])
+
+    async def test_syndicated_domains_are_not_independent_evidence(self):
+        results = [
+            SearchResult("Alpha report", "https://a.example/report", "", "news"),
+            SearchResult("Alpha copy", "https://b.example/copy", "", "news"),
+        ]
+        shared = " ".join(
+            f"alpha evidence report interview {index} measured result {index * 7}"
+            for index in range(35)
+        )
+        pages = [
+            WebPage(results[0].url, results[0].title, f"original {shared} copyright"),
+            WebPage(results[1].url, results[1].title, f"republished {shared} legal"),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=results),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence report",
+                max_sources=2,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 1)
+        self.assertEqual(bundle.diagnostics.duplicate_sources, 1)
+        self.assertEqual(
+            bundle.diagnostics.sufficiency_reasons,
+            ["fewer_than_two_independent_contents"],
+        )
+        self.assertEqual(
+            bundle.sources[0].content_cluster_id,
+            bundle.sources[1].content_cluster_id,
+        )
+
+    async def test_marks_irrelevant_full_text_as_insufficient(self):
+        results = [
+            SearchResult("Cooking", "https://a.example/recipe", "", "web"),
+            SearchResult("Travel", "https://b.example/hotels", "", "web"),
+        ]
+        pages = [
+            WebPage(results[0].url, results[0].title, "bread recipe kitchen " * 30),
+            WebPage(results[1].url, results[1].title, "hotel travel guide " * 30),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "quantum battery breakthrough", max_sources=2, client=object()
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "insufficient")
+        self.assertEqual(
+            bundle.diagnostics.sufficiency_reasons,
+            ["low_query_term_coverage"],
+        )
+        self.assertEqual(len(bundle.sources), 2)
+        self.assertIn("low query-term coverage", bundle.error)
+        self.assertIn("Evidence warning", render_source_bundle(bundle))
+        self.assertIn(
+            "Recommended action: refine_query",
+            render_source_bundle(bundle),
+        )
+
+    async def test_missing_query_entity_is_not_synthesis_ready(self):
+        results = [
+            SearchResult("France population", "https://a.example/france", "", "web"),
+            SearchResult(
+                "Eastern France cities", "https://b.example/cities", "", "web"
+            ),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "current population data for every city in France " * 30,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "eastern France city census and current population tables " * 30,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "What is the current population of the city of Zylathia in eastern France?",
+                client=object(),
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn("missing_query_anchor", bundle.diagnostics.sufficiency_reasons)
+
+    async def test_future_outcome_is_not_treated_as_an_observed_fact(self):
+        results = [
+            SearchResult("Nobel Prize", "https://a.example/nobel", "", "web"),
+            SearchResult("Literature Prize", "https://b.example/literature", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "Nobel Prize in Literature winner award history 2999 " * 30,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "Nobel Prize Literature winner announcement archive 2999 " * 30,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Who will win the 2999 Nobel Prize in Literature?",
+                client=object(),
+            )
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn(
+            "future_outcome_not_observable",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_marks_thin_only_sources_as_insufficient(self):
+        result = SearchResult("Alpha evidence", "https://a.example/short", "", "web")
+        page = WebPage(
+            result.url,
+            result.title,
+            ("alpha evidence " * 20)[:180],
+        )
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[result])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[page])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle("alpha evidence", client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.substantive_sources, 0)
+        self.assertIn(
+            "no_substantive_sources",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+        self.assertEqual(bundle.diagnostics.recommended_action, "refine_query")
+
+    async def test_multi_step_query_requires_decomposition(self):
+        query = "In what year was the company that created CUDA founded?"
+        results = [
+            SearchResult("CUDA creator", "https://a.example/cuda", "", "web"),
+            SearchResult("Company history", "https://b.example/history", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "The company created CUDA as a parallel computing platform. " * 20,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "The company was founded in 1993 and later created CUDA. " * 20,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.query_complexity, "multi_step")
+        self.assertEqual(bundle.diagnostics.recommended_action, "decompose_query")
+        self.assertIn("multi_step_query", bundle.diagnostics.sufficiency_reasons)
+
+    async def test_historical_role_requires_local_tenure_support(self):
+        query = "Who was the rector of Example University in 2006?"
+        results = [
+            SearchResult("Department history", "https://a.example/history", "", "web"),
+            SearchResult("University profile", "https://b.example/profile", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "Rector Alice founded the Example University department in 1969. "
+                + "Department chairs served from 2003-2006 and 2006-2012. "
+                + "The archive describes faculty programs and academic records. " * 15,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "Example University appointed a new rector. "
+                + "An unrelated conference took place in 2006. "
+                + "The profile describes campus programs and student services. " * 15,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.recommended_action, "refine_query")
+        self.assertIn(
+            "missing_historical_role_tenure",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_historical_role_accepts_covering_tenure_range(self):
+        query = "Who was the rector of Example University in 2006?"
+        results = [
+            SearchResult("Official history", "https://a.example/rectors", "", "web"),
+            SearchResult("Archived profile", "https://b.example/archive", "", "web"),
+        ]
+        texts = [
+            "Alice Example was rector of Example University from 2003 to 2008. "
+            + "The official archive records her term and administrative work. " * 15,
+            "Example University named Alice Example as rector for the 2004-2007 term. "
+            + "The preserved profile documents leadership and institutional history. "
+            * 15,
+        ]
+        pages = [
+            WebPage(
+                result.url,
+                result.title,
+                text,
+            )
+            for result, text in zip(results, texts)
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.status, "ok")
+        self.assertEqual(bundle.diagnostics.recommended_action, "synthesize")
+        self.assertNotIn(
+            "missing_historical_role_tenure",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_marks_search_snippet_content_origin(self):
+        result = SearchResult(
+            "Alpha evidence",
+            "https://a.example/snippet",
+            "alpha evidence from the search result " * 12,
+            "web",
+        )
+        failed_page = WebPage(
+            result.url,
+            result.title,
+            "",
+            error="HTTP 403",
+        )
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=[result]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=[failed_page]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
+        ):
+            bundle = await gather_source_bundle("alpha evidence", client=object())
+
+        self.assertEqual(bundle.sources[0].content_origin, "search_snippet")
+        self.assertEqual(bundle.diagnostics.snippet_fallbacks, 1)
+
+    async def test_relevant_snippet_competes_with_scraped_pages(self):
+        target = SearchResult(
+            "Target paper",
+            "https://doi.org/10.1/target",
+            "Target paper DOI: 10.1/target. Exact target evidence. " * 4,
+            "academic",
+            "crossref",
+        )
+        noise = [
+            SearchResult(
+                f"Publication guide {index}",
+                f"https://noise{index}.example/guide",
+                "",
+                "web",
+            )
+            for index in range(3)
+        ]
+        pages = [
+            WebPage(target.url, target.title, "", error="HTTP 202"),
+            *[
+                WebPage(result.url, result.title, "generic publication guide " * 30)
+                for result in noise
+            ],
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=[target, *noise]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Target paper DOI 10.1/target",
+                max_sources=1,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.sources[0].url, target.url)
+        self.assertEqual(bundle.sources[0].content_origin, "crossref_api")
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.diagnostics.search_providers, ["crossref"])
+        self.assertEqual(bundle.diagnostics.metadata_fallbacks, 1)
+        self.assertIn(
+            "no_substantive_sources",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_metadata_only_cannot_establish_substantive_readiness(self):
+        descriptions = [
+            "Catalog record includes authors journal identifiers volume registration and publication dates. ",
+            "Bibliographic metadata lists title edition publisher copyright deposit records and article identifiers. ",
+            "Citation index stores descriptive fields including author affiliations reference counts and document type. ",
+        ]
+        results = [
+            SearchResult(
+                "Target paper",
+                f"https://metadata{index}.example/item",
+                "Target paper publication date. " + description * 12,
+                "academic",
+                "crossref",
+            )
+            for index, description in enumerate(descriptions)
+        ]
+        for full_text in (False, True):
+            pages = [WebPage(r.url, r.title, "", error="HTTP 403") for r in results]
+            if full_text:
+                pages[0] = WebPage(results[0].url, "Target paper", results[0].snippet)
+            with (
+                self.subTest(full_text=full_text),
+                mock.patch(
+                    "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+                ),
+                mock.patch(
+                    "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+                ),
+                mock.patch(
+                    "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+                ),
+            ):
+                bundle = await gather_source_bundle(
+                    "Target paper publication date", client=object()
+                )
+            self.assertEqual(bundle.status, "insufficient_evidence")
+            self.assertEqual(bundle.diagnostics.substantive_sources, int(full_text))
+            self.assertEqual(bundle.diagnostics.substantive_domains, int(full_text))
+            self.assertEqual(
+                bundle.diagnostics.independent_content_clusters, int(full_text)
+            )
+            self.assertEqual(len(bundle.sources), 3)
+            self.assertEqual(
+                sum(s.content_origin == "crossref_api" for s in bundle.sources),
+                2 if full_text else 3,
+            )
+            self.assertEqual(bundle.diagnostics.recommended_action, "refine_query")
+            self.assertIn(
+                "fewer_than_two_substantive_sources"
+                if full_text
+                else "no_substantive_sources",
+                bundle.diagnostics.sufficiency_reasons,
+            )
+
+    async def test_metadata_domain_cannot_supply_full_text_domain_diversity(self):
+        descriptions = [
+            "Target paper publication date. Research methods describe experimental design and observed results. "
+            * 12,
+            "Target paper publication date. Limitations discuss population selection and uncertainty in measured outcomes. "
+            * 12,
+            "Target paper publication date. Catalog record includes authors journal identifiers and article registration. "
+            * 12,
+        ]
+        results = [
+            SearchResult("Target paper", url, text, "academic", "crossref")
+            for url, text in zip(
+                (
+                    "https://journal.example/paper",
+                    "https://journal.example/limitations",
+                    "https://metadata.example/item",
+                ),
+                descriptions,
+            )
+        ]
+        pages = [WebPage(r.url, r.title, r.snippet) for r in results[:2]]
+        pages.append(WebPage(results[2].url, results[2].title, "", error="HTTP 403"))
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Target paper publication date", client=object()
+            )
+        self.assertEqual(bundle.diagnostics.substantive_sources, 2)
+        self.assertEqual(bundle.diagnostics.unique_domains, 2)
+        self.assertEqual(bundle.diagnostics.substantive_domains, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 2)
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn("single_domain", bundle.diagnostics.sufficiency_reasons)
+
+    async def test_quoted_target_requires_coherent_source_support(self):
+        query = 'What is the online date of "Target paper"?'
+        target = SearchResult(
+            "Target paper",
+            "https://doi.org/10.1/target",
+            "Target paper. Published in print in January 2011. " * 4,
+            "academic",
+            "crossref",
+        )
+        noise = [
+            SearchResult(
+                f"Date guide {index}",
+                f"https://noise{index}.example/guide",
+                "",
+                "web",
+            )
+            for index in range(3)
+        ]
+        pages = [
+            WebPage(target.url, target.title, "", error="HTTP 202"),
+            *[
+                WebPage(
+                    result.url,
+                    result.title,
+                    "generic online date publication guide " * 30,
+                )
+                for result in noise
+            ],
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=[target, *noise]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                query,
+                max_sources=4,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.diagnostics.query_term_coverage, 1.0)
+        self.assertLess(bundle.diagnostics.max_source_query_term_coverage, 0.6)
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn(
+            "fragmented_query_support",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_unrelated_full_pages_do_not_count_as_corroboration(self):
+        query = 'When was "Target paper" published online?'
+        results = [
+            SearchResult(
+                "Target paper",
+                "https://target.example/paper",
+                "",
+                "academic",
+            ),
+            SearchResult("Generic guide", "https://noise.example/guide", "", "web"),
+        ]
+        pages = [
+            WebPage(
+                results[0].url,
+                results[0].title,
+                "Target paper was published online on September 5, 2011. " * 10,
+            ),
+            WebPage(
+                results[1].url,
+                results[1].title,
+                "A long generic publication guide about dates and citations. " * 20,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                new=mock.AsyncMock(return_value=results),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls",
+                new=mock.AsyncMock(return_value=pages),
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup",
+                new=mock.AsyncMock(return_value=[]),
+            ),
+        ):
+            bundle = await gather_source_bundle(query, client=object())
+
+        self.assertEqual(bundle.diagnostics.substantive_sources, 1)
+        self.assertEqual(bundle.diagnostics.independent_content_clusters, 1)
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertIn(
+            "fewer_than_two_substantive_sources",
+            bundle.diagnostics.sufficiency_reasons,
+        )
+
+    async def test_reranks_candidates_before_applying_source_limit(self):
+        results = [
+            SearchResult("Cooking", "https://example.com/cooking", "", "web"),
+            SearchResult("Travel", "https://example.com/travel", "", "web"),
+            SearchResult("Madrid Open", "https://example.com/tennis", "", "web"),
+        ]
+        pages = [
+            WebPage(results[0].url, results[0].title, "bread recipe " * 30),
+            WebPage(results[1].url, results[1].title, "hotel guide " * 30),
+            WebPage(
+                results[2].url,
+                results[2].title,
+                "Dušan Lajović was the Serbian quarterfinalist at the 2018 Madrid Open. "
+                * 8,
+            ),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Serbian quarterfinalist 2018 Madrid Open",
+                max_sources=1,
+                client=object(),
+            )
+
+        self.assertEqual(bundle.sources[0].url, "https://example.com/tennis")
+        self.assertGreater(bundle.sources[0].relevance_score, 0.5)
+        self.assertEqual(bundle.diagnostics.candidates_ranked, 3)
+
+    async def test_flashrank_backend_records_actual_method(self):
+        results = [
+            SearchResult("Noise", "https://example.com/noise", "", "web"),
+            SearchResult("Target", "https://example.com/target", "", "web"),
+            SearchResult("Other", "https://example.com/other", "", "web"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"{result.title} body " * 30)
+            for result in results
+        ]
+
+        def fake_scores(query, documents):
+            return [0.95 if title == "Target" else 0.05 for title, _ in documents]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.bundle_builder.flashrank_relevance_scores",
+                side_effect=fake_scores,
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "target", max_sources=1, client=object(), ranker="flashrank"
+            )
+
+        self.assertEqual(bundle.sources[0].url, "https://example.com/target")
+        self.assertEqual(bundle.diagnostics.requested_ranking_method, "flashrank")
+        self.assertEqual(bundle.diagnostics.ranking_method, "flashrank")
+        self.assertEqual(bundle.diagnostics.ranking_warning, "")
+
+    async def test_flashrank_failure_falls_back_with_diagnostic(self):
+        results = [
+            SearchResult("Noise", "https://example.com/noise", "", "web"),
+            SearchResult("Alpha beta", "https://example.com/match", "", "web"),
+            SearchResult("Other", "https://example.com/other", "", "web"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"{result.title} body " * 30)
+            for result in results
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.bundle_builder.flashrank_relevance_scores",
+                side_effect=ImportError("optional dependency missing"),
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha beta", max_sources=1, client=object(), ranker="flashrank"
+            )
+
+        self.assertEqual(bundle.sources[0].url, "https://example.com/match")
+        self.assertEqual(bundle.diagnostics.ranking_method, "lexical_v1")
+        self.assertIn("ImportError", bundle.diagnostics.ranking_warning)
+        self.assertIn("fell back", bundle.diagnostics.ranking_warning)
+
+    async def test_none_ranker_preserves_order_and_null_scores(self):
+        results = [
+            SearchResult("First", "https://example.com/first", "", "web"),
+            SearchResult("Target", "https://example.com/target", "", "web"),
+            SearchResult("Third", "https://example.com/third", "", "web"),
+        ]
+        pages = [
+            WebPage(result.url, result.title, f"{result.title} body " * 30)
+            for result in results
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "target", max_sources=2, client=object(), ranker="none"
+            )
+
+        self.assertEqual(
+            [source.url for source in bundle.sources],
+            ["https://example.com/first", "https://example.com/target"],
+        )
+        self.assertTrue(
+            all(source.relevance_score is None for source in bundle.sources)
+        )
+        self.assertTrue(
+            all(
+                passage.score is None
+                for source in bundle.sources
+                for passage in source.evidence
+            )
+        )
+        self.assertEqual(bundle.diagnostics.ranking_method, "none")
+        self.assertEqual(bundle.diagnostics.candidates_ranked, 0)
+        self.assertEqual(bundle.diagnostics.chunks_ranked, 0)
+
+    async def test_returns_ranked_passages_with_offsets_within_source_budget(self):
+        results = [
+            SearchResult("Alpha", "https://example.com/alpha", "", "web"),
+            SearchResult("Beta", "https://example.com/beta", "", "web"),
+            SearchResult("Gamma", "https://example.com/gamma", "", "web"),
+        ]
+        target_text = (
+            "background material " * 80
+            + "critical alpha evidence first section. " * 20
+            + "unrelated bridge " * 80
+            + "alpha evidence second section with details. " * 20
+        )
+        pages = [
+            WebPage(results[0].url, results[0].title, target_text),
+            WebPage(results[1].url, results[1].title, "beta material " * 200),
+            WebPage(results[2].url, results[2].title, "gamma material " * 200),
+        ]
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "alpha evidence", max_sources=1, chars_per_source=3000, client=object()
+            )
+
+        source = bundle.sources[0]
+        self.assertGreaterEqual(len(source.evidence), 2)
+        self.assertLessEqual(sum(len(p.text) for p in source.evidence), 3000)
+        self.assertEqual(
+            [passage.passage_id for passage in source.evidence],
+            [f"P{index}" for index in range(1, len(source.evidence) + 1)],
+        )
+        self.assertEqual(
+            [passage.score for passage in source.evidence],
+            sorted((passage.score for passage in source.evidence), reverse=True),
+        )
+        for passage in source.evidence:
+            self.assertEqual(
+                target_text[passage.start_char : passage.end_char], passage.text
+            )
+            self.assertIn(
+                f"/{source.source_id}/{passage.passage_id}", passage.citation_id
+            )
+        self.assertEqual(bundle.diagnostics.passages_returned, len(source.evidence))
+        self.assertEqual(bundle.diagnostics.chunks_ranked, len(source.evidence))
+
+    async def test_body_selection_preserves_qualifications_beyond_contents(self):
+        text = (
+            "Contents\n"
+            + "Late requests\nRequest token intent\nRetention\n" * 50
+            + "\nBackground notes. " * 250
+            + "\nLate requests require retained token state; the retention period is bounded. "
+            * 15
+            + "\nOther background notes. " * 250
+            + "\nThe same request token with different intent causes a parameter mismatch error. "
+            * 15
+        )
+        page = WebPage("https://docs.example/retries", "Retry contract", text)
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web",
+                mock.AsyncMock(return_value=[SearchResult(page.title, page.url, "")]),
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=[page])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "late requests request token intent retention",
+                max_sources=1,
+                chars_per_source=2400,
+                client=object(),
+            )
+        source = bundle.sources[0]
+        selected = "\n".join(p.text for p in source.evidence)
+        self.assertIn("retention period is bounded", selected)
+        self.assertIn("parameter mismatch error", selected)
+        self.assertLessEqual(sum(len(p.text) for p in source.evidence), 2400)
+        self.assertEqual(source.content_hash, hashlib.sha256(text.encode()).hexdigest())
+        for passage in source.evidence:
+            self.assertEqual(passage.text, text[passage.start_char : passage.end_char])
+            self.assertEqual(
+                passage.content_hash, hashlib.sha256(passage.text.encode()).hexdigest()
+            )
+
+    async def test_decimal_version_remains_distinct_through_source_selection(self):
+        pages = [
+            WebPage(
+                f"https://example.com/patch/{version}",
+                f"Patch {version}",
+                f"Crusader Strike behavior changed in patch {version}. " * 30,
+            )
+            for version in ("0.8", "0.7", "0.9")
+        ]
+        results = [SearchResult(p.title, p.url, p.text[:180]) for p in pages]
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", mock.AsyncMock(return_value=results)
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", mock.AsyncMock(return_value=pages)
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "Crusader Strike patch 0.7",
+                max_sources=1,
+                client=object(),
+            )
+        self.assertEqual(bundle.sources[0].url, pages[1].url)
+        self.assertIn("patch 0.7", bundle.sources[0].evidence[0].text)
+
+    async def test_bounds_request_parameters(self):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle(
+                "query", max_sources=50, chars_per_source=100, client=object()
+            )
+
+        self.assertEqual(bundle.diagnostics.requested_max_sources, 50)
+        self.assertEqual(bundle.diagnostics.effective_max_sources, 20)
+        self.assertEqual(bundle.diagnostics.requested_chars_per_source, 100)
+        self.assertEqual(bundle.diagnostics.effective_chars_per_source, 500)
+
+    async def test_empty_query_is_rejected_before_search(self):
+        search = mock.AsyncMock()
+        with mock.patch("sibyl.retrieval.search_web", new=search):
+            bundle = await gather_source_bundle("   ", client=object())
+
+        self.assertEqual(bundle.status, "invalid_request")
+        self.assertIn("must not be empty", bundle.error)
+        search.assert_not_awaited()
+
+    async def test_invalid_ranker_is_rejected_before_search(self):
+        search = mock.AsyncMock()
+        with mock.patch("sibyl.retrieval.search_web", new=search):
+            bundle = await gather_source_bundle(
+                "query", client=object(), ranker="remote"
+            )
+
+        self.assertEqual(bundle.status, "invalid_request")
+        self.assertIn("lexical, flashrank, none", bundle.error)
+        self.assertEqual(bundle.diagnostics.requested_ranking_method, "remote")
+        search.assert_not_awaited()
+
+    async def test_no_sources_is_explicit_insufficient_evidence(self):
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            bundle = await gather_source_bundle("missing", client=object())
+
+        self.assertEqual(bundle.status, "insufficient_evidence")
+        self.assertEqual(bundle.sources, [])
+        self.assertEqual(bundle.diagnostics.sources_returned, 0)
+        self.assertEqual(bundle.diagnostics.ranking_method, "not_run")
+        self.assertIsNone(bundle.diagnostics.query_term_coverage)
+        self.assertEqual(bundle.diagnostics.evidence_sufficiency, "insufficient")
+        self.assertEqual(bundle.diagnostics.sufficiency_reasons, ["no_sources"])
+        self.assertEqual(
+            render_source_bundle(bundle),
+            "No sources found for query: 'missing'. Try a different phrasing.",
+        )
+
+        invalid = await gather_source_bundle("", client=object())
+        self.assertNotEqual(bundle.bundle_id, invalid.bundle_id)
+
+    async def test_retrieval_failure_is_returned_as_failure(self):
+        with mock.patch(
+            "sibyl.retrieval.search_web",
+            new=mock.AsyncMock(
+                side_effect=RuntimeError("engine unavailable: token=SECRET")
+            ),
+        ):
+            bundle = await gather_source_bundle("query", client=object())
+
+        self.assertEqual(bundle.status, "failed")
+        self.assertIn("Retrieval failed", bundle.error)
+        self.assertNotIn("SECRET", bundle.error)
+        self.assertEqual(render_source_bundle(bundle), bundle.error)
+
+        with (
+            mock.patch(
+                "sibyl.retrieval.search_web", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.scrape_urls", new=mock.AsyncMock(return_value=[])
+            ),
+            mock.patch(
+                "sibyl.retrieval.wikipedia_lookup", new=mock.AsyncMock(return_value=[])
+            ),
+        ):
+            insufficient = await gather_source_bundle("query", client=object())
+        self.assertNotEqual(bundle.bundle_id, insufficient.bundle_id)
+
+
+class TestRenderSourceBundle(unittest.TestCase):
+    def test_legacy_renderer_keeps_source_blocks(self):
+        diagnostics = mock.Mock(recommended_action="synthesize")
+        passage = mock.Mock(text="Evidence text")
+        source = mock.Mock(title="Title", url="https://example.com", evidence=[passage])
+        bundle = mock.Mock(
+            status="ok", sources=[source], query="question", diagnostics=diagnostics
+        )
+
+        text = render_source_bundle(bundle)
+
+        self.assertIn("Retrieved 1 sources", text)
+        self.assertIn("Recommended action: synthesize", text)
+        self.assertIn("[Source 1: Title]", text)
+        self.assertIn("URL: https://example.com", text)
+        self.assertIn("Evidence text", text)
+
+
+if __name__ == "__main__":
+    unittest.main()
