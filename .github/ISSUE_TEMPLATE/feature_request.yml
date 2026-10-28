@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a focused product or retrieval improvement
+description: Propose a focused improvement to the checks, page reading or skill
 title: "[Feature]: "
 labels: [enhancement]
 body:
@@ -7,7 +7,7 @@ body:
     id: problem
     attributes:
       label: Problem
-      description: What research workflow or user outcome is currently difficult?
+      description: Which claim or page does Sibyl check wrongly or not at all?
     validations:
       required: true
   - type: textarea

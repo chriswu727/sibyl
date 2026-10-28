@@ -52,7 +52,7 @@ async def read_pdf(data: bytes, max_chars: int) -> dict:
             sys.executable,
             "-I",
             _WORKER,
-            str(max(200, min(max_chars, 60000))),
+            str(max(200, min(max_chars, 200000))),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
@@ -76,7 +76,7 @@ async def read_pdf(data: bytes, max_chars: int) -> dict:
             watcher.add_done_callback(checked)
         try:
             output, _ = await asyncio.wait_for(process.communicate(data), timeout=6)
-            if process.returncode != 0 or len(output) > 400000:
+            if process.returncode != 0 or len(output) > 1_300_000:
                 return {"error": "PDF worker failed or exceeded a resource limit."}
             return json.loads(output)
         except asyncio.TimeoutError:

@@ -1,202 +1,32 @@
 # Changelog
 
-## Unreleased
+## 0.5.0.dev0 — Unreleased
 
-- Answer guidance: each question lists `reading_needs` (an initial, primary,
-  independent, counterevidence or corroborating source it still lacks), every
-  update turns them into `before_answering` steps, and an assessment update
-  carries `answer_material`: the recorded claims with source URLs instead of
-  Sibyl IDs, recommendation assumptions and criteria with their origin, the
-  counterevidence status and note, and open gaps. The MCP instructions ask
-  hosts to read two independent publishers and one counterevidence source
-  before answering and to cite URLs. The first paired host evaluation found
-  Sibyl-assisted answers relying on fewer sources and thinner counterevidence.
-- Page reads now identify as `Sibyl/0.4 (+https://github.com/chriswu727/sibyl)`,
-  like search requests, instead of rotating browser User-Agent strings, and a
-  403 or 429 is no longer retried under another identity. The first
-  host-source gate run found every Wikipedia read refused from a GitHub runner
-  while Wikipedia's API answered Sibyl's identifying requests. Some publishers
-  that refuse automated clients will now refuse Sibyl too.
-- Host-source retrieval gate: the release retrieval gate now reads each of the
-  66 cases' three frozen host-search URLs instead of searching, with the same six
-  thresholds; `scripts/eval_live_retrieval.py --host-sources` and the
-  `live retrieval gate` workflow (`gate=host_sources`) run it. The protocol was
-  committed before its first run. Keyless discovery stays tracked but no longer
-  blocks release.
-- One report document: Markdown, plain-text and PDF reports now render the same
-  sections in the same order from a shared document, and the PDF table of
-  contents lists exactly the rendered sections. Markdown and text reports now
-  include retained cross-analysis, confidence and market-data sections that only
-  the PDF showed, and plain text shows a failed report's stored error as Markdown
-  did. JSON exports keep serializing the report record. `export_report` takes a
-  single format.
-- Compact responses: `continue_research` and `assess_research` return a
-  `view="update"` for the affected question instead of the full brief. A read's
-  update carries the new sources with their top passages inline (at most twelve
-  passages, 12,000 characters; cut passages are marked `truncated`), the read's
-  sufficiency verdict and notes, the question's gaps, claim support and
-  counterevidence status, readiness and suggested searches. On the offline
-  replay these responses are 43% smaller than the briefs they replace while
-  also carrying passage text. `get_research(job_id)` still returns the brief.
-- Claim checks: a quoted fact whose numbers do not appear in its quotes is a
-  completion gap (`number_not_quoted`). Facts naming something absent from
-  their cited text (`name_not_in_sources`) and supported facts about the same
-  subject with different numbers (`possible_conflict`) are flagged in
-  `claim_support` and in reports. Each question reports a `counterevidence`
-  summary: not read, read with passages linked, or read with none linked.
-- Source assessment per claim: `research_plan.questions[].claim_support` lists
-  each supported or disputed fact's cited sources, source kinds, domains and
-  `background_only` / `single_source` flags, and reports state the same under
-  each fact. A fact supported only by encyclopedia, community or metadata
-  sources is now a completion gap. Single-source facts get a `corroboration`
-  search suggestion. Government, intergovernmental and EU hosts get the
-  `institutional` source kind.
-- Search guidance: `research_plan.suggested_queries` is now built from each
-  question's recorded state instead of fixed suffixes. Suggestions have a
-  `kind` (`host_follow_up`, `initial`, `primary_source`, `independent_source`,
-  `counterevidence`, `recency`), a purpose and a reason naming the gap, at most
-  three per question. The MCP instructions and tool descriptions now tell the
-  host to run them with its own search.
-- Host-supplied sources now get the same assessment as Sibyl's own search
-  results: `continue_research` URL reads go through the shared bundle builder
-  (content clustering, relevance ranking, sufficiency), and `urls=[...]` reads
-  up to five sources in one retrieval step. The 60,000-character read and
-  16,000-character / nine-passage evidence budget per source are unchanged. A
-  read that yields sources stays `ok`; `evidence_sufficiency` reports how much
-  it supports. `SIBYL_CONFIG` `extractor`, `jina_fallback` and `js_render` now
-  apply to these reads. Bundle assembly was split out of keyless discovery.
-- Remove legacy surfaces before the first stable release: the keyless MCP
-  compatibility profile with its text responses and `gather_sources`,
-  `gather_evidence`, `quick_search` and `read_url` tools; the evidence loop and
-  EvidenceLoop 1.0 types; contract-1 prose completion (old contract-1 jobs get
-  `legacy_contract`, completed ones stay readable and exportable); the
-  `save_report` last-report fallback and `format="both"` (`job_id` is required);
-  and unused model counters in job views. `--profile keyless` exits with an
-  error. `gather_bundle` is documented as the keyless fallback search.
-- Record the revised product role: Sibyl manages the host's research loop
-  (plan, search guidance, reading, source assessment, claim checks), with
-  keyless search as a fallback, and the phased refactor that implements it. The
-  release gate for retrieval will move to host-supplied sources once a frozen
-  replacement is committed.
-- Hedge keyless general-web search: Mojeek and then Yahoo start when earlier
-  providers fail or return nothing, or after 1.5 s, instead of each waiting for
-  a fixed third of the 7 s budget. All attempts share the budget and the first
-  non-empty result wins. The live retrieval gate now records each provider's
-  request outcomes (HTTP status, exception or cancellation) per run.
-- Add a manually dispatched `live retrieval gate` workflow that runs the frozen
-  66-case keyless gate on a GitHub-hosted runner and uploads its raw metrics.
-  Raise dependency floors to certifi 2026.10.23 and click 8.5.
-- Run the test suite and the stdio research replay on Windows in CI. Output
-  directories now reject Windows rooted (`\tmp`) and drive-relative (`C:x`)
-  paths on every platform, which previously escaped the output root on Windows.
-  YAML configuration is decoded from bytes rather than the platform locale.
-  Windows has no POSIX file modes; files there inherit the directory's ACLs.
-  Concurrent start-ups on Windows no longer mistake each other's momentary
-  legacy-lock probe for an older runtime.
-- Retain a two-task Claude Code paired smoke (Sibyl plus built-in search versus
-  built-in search only, one run each, not blinded): one win, one loss, about
-  five times the cost; no superiority claim.
-- The agent profile's `complete_research` no longer exposes legacy prose
-  fields; contract-1 jobs finalize through the keyless profile and get
-  `legacy_contract` from the agent profile. The agent profile rejects
-  undeclared tool arguments with `invalid_parameters` instead of silently
-  ignoring them.
-- Share one research store safely between concurrent local sessions. Each
-  runtime holds an instance lock; running jobs record their owner and are
-  read-only elsewhere (`job_running_elsewhere`); orphans are recovered only after
-  the owner's lock is free, and lock-check failures (`owner_unknown`) never
-  count as an exited owner. Claims, recovery, creation and deletion are
-  conditional immediate transactions; the two-job worker limit now applies to
-  the whole store. SQLite uses WAL mode on a local filesystem. Busy stores,
-  full history and worker capacity have distinct error codes. A finished
-  retrieval that meets a busy store returns `result_pending`: the session keeps
-  the result, `get_research` shows it as `unsaved_result` and saves it later,
-  repeated retrieval is refused, and shutdown logs explicitly when it was lost.
-  Any call retries held results and releases claims whose final save failed;
-  job creation is a single write, so a busy `start_research` leaves no job.
-  Held views keep the stored revision so no request can match a different
-  saved state.
-- Default the output root to the per-user data directory when
-  `SIBYL_OUTPUT_ROOT` is unset. An older `./reports` store is never moved; the
-  MCP server warns how to keep using it. Older exclusive runtimes and current
-  runtimes refuse to share a directory (checked only at startup on Windows).
-- Agent-profile results, errors and export manifests now also carry their
-  structuredContent as serialized JSON text, as the MCP specification recommends
-  for hosts that pass only text to the model.
-- Escape inline Markdown in quoted source text in Markdown reports; JSON keeps
-  the matched text unescaped and stored passages are unchanged.
-- State when to use Sibyl (checked or reusable conclusions) versus a quick
-  lookup with the host's own search in server instructions and the README.
-- Require supported and disputed fact claims to quote exact text from their cited
-  passages; reject quotes not found verbatim (ignoring case, fullwidth ASCII,
-  accent encoding, spacing and typographic variants, never superscripts or other
-  numeric forms). Reports print the quotes on one line; JSON adds source offsets.
-  Batch-read errors name the unknown position.
-  The offline replay now rejects the earlier misplaced single-writer citation.
-- Read up to twelve passages per call with `get_research(passage_ids=[...])`.
-- Position Sibyl beside the host's own search: instructions and tool descriptions
-  now direct hosts to read the URLs they find, with keyless search as a fallback.
-- Shrink agent-facing context: shorter instructions and tool descriptions, no
-  duplicated per-question gaps in brief limitations, and no `gather_bundle` output
-  schema in the agent profile listing (payload unchanged). Tool definitions plus
-  instructions drop from about 27,000 to 16,000 characters.
-- Reconcile host-only design, goals, README translations, operations, evaluation
-  status and stable-release instructions. Document removed execution separately
-  from intentional legacy checkpoint/report compatibility and historical evidence.
-- Remove the unused single-window context helper; retain tail/identifier selection
-  regressions on the production passage selector. Guard against removed imports.
-- Label stored legacy report verdicts as historical in text, Markdown and PDF;
-  preserve original serialized data instead of implying fresh verification.
-- Expose bounded-source length, excerpt status and an available budgeted read-more
-  route on exact passage reads. Clarify support for each factual qualification.
-- Retain the authorized two-workflow host retest: confirmed partial md/json
-  delivery for both cases, but a material unsupported SQLite qualification keeps
-  semantic quality open. Do not treat export success as a research-quality pass.
-- Keep Crossref metadata and search snippets as inspectable leads, not substantive
-  text or independent full-text domains for retrieval readiness. Expose the
-  substantive-domain count separately without changing catalog domain counts.
-- Preserve decimal/release identifiers in focused queries and lexical ranking;
-  recognize contracted question words so quoted-title discovery is not skipped.
-- Present claim-based conclusions and reasoning once in human reports while
-  preserving compatible JSON fields, unknowns, criteria, citations and old layouts.
-- Check PDF glyph coverage, retain common punctuation with the fallback font,
-  and fail explicitly on rendering errors instead of saving missing report text.
-  Keep successful Markdown exports and actionable per-format failure messages.
-- Retain the frozen 66-case, three-repeat anonymous live gate from 2026-10-26:
-  readiness and stability still fail; no stable release is authorized by this run.
-- Select bounded, disjoint evidence passages across extracted source sections;
-  prefer prose/table matches over navigation-only matches and support Unicode
-  lexical selection without translation or an internal model.
-- Let query-targeted URL reads inspect up to 60,000 extracted characters while
-  retaining a 16,000-character evidence ceiling, exact offsets/hashes, selection
-  identities, extraction warnings and explicit unread-section limitations.
-- Return structured agent recovery for rejected claims and stale revisions, plus
-  confirmed per-format export manifests with file size/hash and explicit failures.
-- Add evidence-linked claims to new MCP research jobs: atomic facts, inferences,
-  recommendations, explicit unknowns, criteria and reasoning dependencies.
-- Validate claim/evidence IDs and dependency cycles; require dependent reviews
-  after premise changes or new retrieval. Keep old checkpoint behavior intact.
-- Render new reports from selected claims, transitive premises and all unresolved
-  or disputed claims, preserving assumptions, criteria and citation scope.
-- Retain leading entity names in focused search-query variants.
-- Preserve relevant preferred-domain full text through final source ranking and
-  diversity selection, while retaining period constraints and the unranked mode.
-- Keep mailing-list archives and common question/answer sites labeled community,
-  including when their domain is preferred for discovery.
-- Make the eight-tool agent profile the default, with compact MCP structured
-  research briefs. Keep keyless compatibility responses and explicit full views.
-- Remove internal model execution, LiteLLM, provider configuration, autonomous
-  jobs, model analysis tools, and finance/chart tools. The host owns reasoning.
-- Keep host-authored reports; Markdown is the default export and the report extra
-  is PDF rendering only. Reject removed profiles and legacy model settings.
-- Preserve old checkpoints and completed exports; reject autonomous resume
-  without converting or deleting evidence. Recommend a fresh install environment.
-- Expose on-demand source catalog pages with revision checks and richer exact
-  passage provenance. Preserve host conclusions, support/challenge links, gaps,
-  failed retrievals, remaining budgets, and partial-report status in briefs.
-- Position Sibyl as deep-research tooling for the host agent; reports remain
-  optional. Add real-stdio agent replay and clean-wheel profile verification.
-- Do not claim research-quality superiority from response-size measurements.
+Sibyl is rewritten as an agent skill and a small command line that check an
+agent's research claims against the pages they quote. The research MCP server
+is retired.
+
+- Added: the `sibyl-ledger/1` JSON ledger of claims, URLs and verbatim quotes;
+  `sibyl check`, which reads every cited page and reports quotes not found,
+  unreadable pages, numbers missing from quotes, inferences resting on failing
+  claims, single-site support, names absent near quotes, conflicting numbers
+  and short quotes; `sibyl report` for Markdown; `sibyl template`; and
+  `sibyl skill show|install` for the bundled `SKILL.md`. See
+  docs/ledger-format.md.
+- Removed: the MCP server and its eight tools, persistent research jobs and
+  their SQLite store, keyless and Tavily search, ranking and reranking,
+  research planning and search guidance, JSON and PDF report export,
+  monitoring, the Jina Reader fallback, publication-date extraction, the
+  `gather` command and Python retrieval API, Docker and MCP Registry metadata,
+  and the retrieval evaluation scripts. Evaluation records stay in `evals/`.
+- Why: two runs of the preregistered paired host evaluation found agents
+  using the server not reliably better than the same agent with built-in
+  search, at about twice the cost (evals/README.md).
+- Unreleased server work since 0.4.0b1 (answer guidance, honest User-Agent,
+  host-source retrieval gate, shared report document, compact update views)
+  remains in the history at commit 5e25370; the honest User-Agent carries over.
+- PDF reads now allow up to 200,000 characters so quotes later in a document
+  can be checked.
 
 ## 0.4.0b1 — 2026-10-21
 

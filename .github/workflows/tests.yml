@@ -25,30 +25,17 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install ruff==0.17.1 mypy==2.4.0 -e '.[report,extract,pdf,monitor]'
+          python -m pip install ruff==0.17.1 mypy==2.4.0 -e '.[pdf]'
       - name: Check Python correctness
         run: ruff check sibyl tests scripts
       - name: Check consistent formatting
         run: ruff format --check sibyl tests scripts
-      - name: Check core research state types
+      - name: Check types
         run: mypy
       - name: Check documentation links and anchors
         run: python scripts/check_docs.py
       - name: Run tests
         run: python -m unittest discover tests -v
-      - name: Smoke-test the MCP stdio surface
-        run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)"
-      - name: Smoke-test authenticated monitoring and MCP shutdown
-        run: python scripts/check_mcp_stdio.py "$(command -v sibyl-mcp)" --monitor
-      - name: Check bounded runtime resource recovery
-        if: matrix.python-version == '3.12'
-        run: python scripts/check_runtime_soak.py --rounds 100 --monitor --pdf
-      - name: Check lexical retrieval regression floor
-        run: python scripts/eval_retrieval.py --ranker lexical
-      - name: Check end-to-end retrieval pipeline regression floor
-        run: python scripts/eval_retrieval_pipeline.py --ranker lexical
-      - name: Check source-quality evaluation baseline
-        run: python scripts/eval_source_quality.py
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
       - name: Verify clean-wheel installation profiles
@@ -56,7 +43,6 @@ jobs:
         run: python scripts/check_wheel.py dist/*.whl "$(python -c 'import sibyl; print(sibyl.__version__)')"
 
   windows:
-    # Real Windows processes and msvcrt locks for the shared research store.
     runs-on: windows-latest
     timeout-minutes: 30
     strategy:
@@ -71,18 +57,16 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install -e ".[report,extract,monitor]"
+          python -m pip install -e .
       - name: Run tests
         run: python -m unittest discover tests -v
-      - name: Replay the research workflow over stdio
-        run: python scripts/check_research_workflow.py
 
   security:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        profile: [core, report-extract-pdf-monitor]
+        profile: [core, pdf]
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -100,7 +84,7 @@ jobs:
           if [ "$PROFILE" = "core" ]; then
             /tmp/sibyl-app/bin/pip install .
           else
-            /tmp/sibyl-app/bin/pip install '.[report,extract,pdf,monitor]'
+            /tmp/sibyl-app/bin/pip install '.[pdf]'
           fi
           /tmp/sibyl-app/bin/pip check
       - name: Audit installed application dependencies
