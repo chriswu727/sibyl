@@ -92,12 +92,17 @@ class Ledger(_Strict):
                 )
         basis = {claim.id: claim.based_on for claim in self.claims}
 
+        done: set[str] = set()
+
         def visit(item: str, path: tuple[str, ...]) -> None:
             if item in path:
                 cycle = " -> ".join(path[path.index(item) :] + (item,))
                 raise ValueError(f"circular based_on: {cycle}")
+            if item in done:
+                return
             for parent in basis[item]:
                 visit(parent, path + (item,))
+            done.add(item)
 
         for item in ids:
             visit(item, ())

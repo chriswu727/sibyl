@@ -2,6 +2,7 @@
 
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -105,6 +106,24 @@ class TestLedger(unittest.TestCase):
         )
         data["claims"][2]["based_on"] = ["loop"]
         self.assertIn("circular based_on", self.error(data))
+
+    def test_dense_dependency_graph_validates_quickly(self):
+        data = ledger_data()
+        previous = ["wal-version", "wal-concurrency"]
+        for index in range(150):
+            data["claims"].append(
+                {
+                    "id": f"i{index}",
+                    "kind": "inference",
+                    "text": "t",
+                    "based_on": previous[-2:],
+                    "rationale": "r",
+                }
+            )
+            previous.append(f"i{index}")
+        started = time.monotonic()
+        read_ledger(self.write(data))
+        self.assertLess(time.monotonic() - started, 2)
 
     def test_unreadable_inputs(self):
         self.assertIn("not valid JSON", self.error("{"))

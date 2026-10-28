@@ -2,6 +2,7 @@
 
 import asyncio
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -72,6 +73,32 @@ class TestChecks(unittest.TestCase):
         self.assertIn(
             "unreadable: https://example.com/forum (HTTP 403)", summary(result)
         )
+
+    def test_malformed_url_is_reported_unreadable(self):
+        data = ledger_data()
+        data["claims"][1]["evidence"][0]["url"] = "https://[invalid"
+        result = checked(data, failures={"https://[invalid": "Unsafe URL: invalid URL"})
+        self.assertIn("source_unreadable", row(result, "wal-concurrency")["blocking"])
+
+    def test_dense_inference_graph_checks_quickly(self):
+        data = ledger_data()
+        data["claims"][0]["evidence"][0]["quote"] = "Not on the page at all."
+        previous = ["wal-version", "wal-concurrency"]
+        for index in range(150):
+            data["claims"].append(
+                {
+                    "id": f"i{index}",
+                    "kind": "inference",
+                    "text": "t",
+                    "based_on": previous[-2:],
+                    "rationale": "r",
+                }
+            )
+            previous.append(f"i{index}")
+        started = time.monotonic()
+        result = checked(data)
+        self.assertLess(time.monotonic() - started, 2)
+        self.assertEqual(row(result, "i149")["blocking"], ["basis_has_issues"])
 
     def test_number_missing_from_quotes_blocks(self):
         data = ledger_data()

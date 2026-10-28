@@ -101,8 +101,12 @@ def locate(quote: str, page: str) -> Optional[int]:
 
 
 def site(url: str) -> str:
-    host = (urlsplit(url).hostname or "").lower()
-    return host.removeprefix("www.")
+    try:
+        host = urlsplit(url).hostname or ""
+    except ValueError:
+        # The reader already reports a malformed URL as unreadable.
+        return url
+    return host.lower().removeprefix("www.")
 
 
 @dataclass
@@ -239,13 +243,15 @@ def check(ledger: Ledger, ledger_sha256: str, sources: dict) -> dict:
             claims[claim.id]["issues"].add("possible_conflict")
             claims[claim.id]["details"]["conflicts_with"] = conflicts
 
-    def blocked(item: str, seen: frozenset = frozenset()) -> bool:
-        if claims[item]["issues"] & BLOCKING.keys():
-            return True
-        return any(
-            parent not in seen and blocked(parent, seen | {item})
-            for parent in by_id[item].based_on
-        )
+    # The ledger rejects cycles, so each claim's answer can be cached.
+    blocked_cache: dict[str, bool] = {}
+
+    def blocked(item: str) -> bool:
+        if item not in blocked_cache:
+            blocked_cache[item] = bool(claims[item]["issues"] & BLOCKING.keys()) or any(
+                blocked(parent) for parent in by_id[item].based_on
+            )
+        return blocked_cache[item]
 
     for claim in ledger.claims:
         if claim.kind == "inference" and any(blocked(p) for p in claim.based_on):

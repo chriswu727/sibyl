@@ -1,6 +1,6 @@
 ---
 name: sibyl
-description: Record web research as an evidence ledger and check every quote against the page it cites before answering. Use when an answer's facts must be traceable to sources, will be shared or audited, or the user asks for verified citations. Requires the `sibyl` command (pip install sibyl-research).
+description: Record web research as an evidence ledger and check every quote against the page it cites before answering. Use when an answer's facts must be traceable to sources, will be shared or audited, or the user asks for verified citations. Requires the `sibyl` command, installed from source as described at https://github.com/chriswu727/sibyl (the sibyl-research packages on PyPI are an older, different tool).
 ---
 
 # Sibyl: checked research claims
