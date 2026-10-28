@@ -9,11 +9,6 @@ on:
         description: Published release tag whose existing assets should be validated and published
         required: true
         type: string
-      registry_only:
-        description: Publish corrected Registry metadata from main for an existing PyPI version
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -21,7 +16,6 @@ permissions:
 jobs:
   build:
     name: Build and validate distributions
-    if: ${{ !inputs.registry_only }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,23 +27,20 @@ jobs:
       - name: Install release tooling
         run: |
           python -m pip install --upgrade "pip>=26.2.1" "setuptools>=83.0.0"
-          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 ruff==0.17.1 mypy==2.4.0 -e '.[report,extract,pdf,monitor]'
+          python -m pip install build==1.5.1 twine==7.0.0 pip-audit==2.10.1 ruff==0.17.1 mypy==2.4.0 -e '.[pdf]'
       - name: Audit release environment
         run: python -m pip_audit --vulnerability-service osv --skip-editable --progress-spinner off
       - name: Validate tag and package version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
         run: python scripts/check_release.py "$RELEASE_TAG" --require-release-note
-      - name: Run release tests and offline evaluations
+      - name: Run release tests
         run: |
           ruff check sibyl tests scripts
           ruff format --check sibyl tests scripts
           mypy
           python scripts/check_docs.py
           python -m unittest discover tests -v
-          python scripts/eval_retrieval.py --ranker lexical
-          python scripts/eval_retrieval_pipeline.py --ranker lexical
-          python scripts/eval_source_quality.py
       - name: Build distributions
         if: github.event_name == 'release'
         run: python -m build
@@ -124,46 +115,3 @@ jobs:
           path: dist/
       - name: Publish distributions
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
-
-  mcp-registry:
-    name: Publish to the official MCP Registry
-    needs: publish
-    if: ${{ !cancelled() && (needs.publish.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.registry_only && github.ref == 'refs/heads/main')) }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.registry_only && github.sha || github.event.release.tag_name || inputs.release_tag }}
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.12"
-      - name: Validate Registry release metadata
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
-        run: python scripts/check_release.py "$RELEASE_TAG" --require-release-note
-      - name: Wait for PyPI indexing
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
-        run: |
-          VERSION="${RELEASE_TAG#v}"
-          for attempt in {1..20}; do
-            if curl --fail --silent "https://pypi.org/pypi/sibyl-research/$VERSION/json" >/dev/null; then
-              exit 0
-            fi
-            echo "Waiting for PyPI to index $VERSION ($attempt/20)"
-            sleep 15
-          done
-          exit 1
-      - name: Install MCP publisher 1.8.0
-        run: |
-          curl --fail --location --output mcp-publisher.tar.gz \
-            https://github.com/modelcontextprotocol/registry/releases/download/v1.8.0/mcp-publisher_linux_amd64.tar.gz
-          echo "1370446bbe74d562608e8005a6ccce02d146a661fbd78674e11cc70b9618d6cf  mcp-publisher.tar.gz" | sha256sum --check
-          tar xzf mcp-publisher.tar.gz mcp-publisher
-      - name: Publish MCP metadata
-        run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
