@@ -1,0 +1,72 @@
+{
+  "case_id": "ssrf",
+  "condition": "native",
+  "elapsed_seconds": 22.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.0359133,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 2851,
+    "cache_read_input_tokens": 6579,
+    "output_tokens": 1825,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2851,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 4,
+      "outputTokens": 1825,
+      "cacheReadInputTokens": 6579,
+      "cacheCreationInputTokens": 2851,
+      "webSearchRequests": 0,
+      "costUSD": 0.030319900000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2851,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 35499,
+      "outputTokens": 4087,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0055934,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2389,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 3
+  },
+  "final_answer": "**Direct answer:** A URL string tells you only what the request says. It doesn't tell you where the request will go. The destination is decided later by DNS resolution, by the redirects the HTTP client follows, and by the way the client parses the URL. Any of these can differ from what you validated. A string check done up front can pass while the connection still reaches an internal address. A reliable defense has to enforce the policy at connection time, on the actual IP address.\n\n**Claims and sources**\n\n1. Redirects: if an allowed domain has an open redirect, an attacker can pass the filter and still reach an internal target. The server validates the first URL, then the client follows the redirect to the internal address.\n   - https://portswigger.net/web-security/ssrf\n\n2. Redirects: OWASP recommends turning off redirect following in the web client, because following redirects bypasses input validation. It also says the destination policy must cover retries and fallback connections.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n3. DNS: a hostname that looks harmless can resolve to an internal IP. An attacker can register their own domain that resolves to `127.0.0.1`, and a string filter on `localhost` or `127.0.0.1` won't catch it.\n   - https://portswigger.net/web-security/ssrf\n\n4. DNS changes (rebinding): \"Domain allowlisting alone does not prevent DNS rebinding.\" A second DNS lookup between validation and connection can bypass the checks. This is a time-of-check/time-of-use gap. The fix is to connect to the IP address you validated, while keeping the original hostname for the Host header, SNI and certificate verification.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n5. DNS changes (rebinding): the attacker's DNS server uses a very short TTL, so answers aren't cached. It returns one IP on the first lookup and a different, internal IP on the next, under the same hostname. This is described for the browser same-origin setting. The article doesn't discuss server-side SSRF checks directly. Applying it to SSRF is my inference, but it matches OWASP's TOCTOU warning above.\n   - https://en.wikipedia.org/wiki/DNS_rebinding\n\n6. Parser differences: allowlist filters can be bypassed through URL parsing inconsistencies. Examples are `@` credentials, `#` fragments, putting the expected host inside an attacker-controlled DNS name, and URL-encoding or double-encoding. OWASP advises rejecting any URL whose host isn't read identically by every parser involved.\n   - https://portswigger.net/web-security/ssrf\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n7. Better defenses: prefer allowlists to deny-lists, and check resolved IPs against permitted networks. Add network-layer controls such as firewalls and segmentation. On AWS, use IMDSv2 rather than IMDSv1. OWASP treats DNS monitoring as detection only, not a substitute for connection-time enforcement.\n   - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n**Caveats:** I used three sources, all general references: OWASP, PortSwigger and Wikipedia. I didn't check specific library behavior or real-world incidents. The question's premise holds up: string validation is necessary at most, never sufficient.\n\nSources:\n- [OWASP SSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)\n- [PortSwigger Web Security Academy: SSRF](https://portswigger.net/web-security/ssrf)\n- [Wikipedia: DNS rebinding](https://en.wikipedia.org/wiki/DNS_rebinding)",
+  "final_answer_sha256": "7348083a196c634e1f5194ccaedfcec2327f897cf69bb4d1d8c8f096c13759f1",
+  "raw_stream_sha256": "c439f069bf0d2f8e3adf12aa5629c1d856bb7e8c9c91bb4ccdf112a9915d0ae8"
+}

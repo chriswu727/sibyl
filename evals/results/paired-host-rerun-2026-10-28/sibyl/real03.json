@@ -1,0 +1,59 @@
+{
+  "case_id": "real03",
+  "condition": "sibyl",
+  "elapsed_seconds": 39.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1421136,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 16126,
+    "cache_read_input_tokens": 66196,
+    "output_tokens": 2549,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 16126,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13595,
+      "outputTokens": 3380,
+      "cacheReadInputTokens": 66196,
+      "cacheCreationInputTokens": 16126,
+      "webSearchRequests": 1,
+      "costUSD": 0.1421136,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 16126,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** Sagg Eco Village is in Ganderbal district in central Kashmir, Jammu & Kashmir. Its address is Watlar Wudder, Lar, Ganderbal (PIN 191201). It lies in the Chanthan Gulabpora/Gulabpura area, about 6 km north of Ganderbal town.\n\n**Claims and sources**\n- It is located in Ganderbal, and is described as J&K's first regenerative eco-village enterprise: https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/\n- The address is Watlar Wudder, Lar, Ganderbal, 191201. Ganderbal town is 6 km south of it, and the village of Wayil is about 4 km east: https://mapcarta.com/N5931593287\n- Trip.com gives a matching address: \"watlar wuder Lar - Chunt Waliwar Road ganderbal, Chanthan Gulabpora, J&K 191201\": https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-farm-stay-and-regenerative-living-141839954/?locale=en-SG&curr=SGD\n- It is in the Chanthan Gulabpura area, at the foothills of the Sindh River in the Wali War region (IANS, 2022): https://preciouskashmir.com/2022/09/21/sagg-eco-village-kashmirs-offbeat-recreational-destination/\n- Its OpenStreetMap-based coordinates are about 34.27225°N, 74.76043°E: https://mapcarta.com/N5931593287. The tool did not verify the longitude against a quote, so treat it as approximate.\n\n**Counterevidence and gaps**\n- No source placed the village anywhere else. The spelling variants (Gulabpora/Gulabpura) refer to the same area.\n- Sources disagree on the founding year (2012 on LinkedIn, 2013 in the IANS article). This doesn't affect the location.\n- Most location details rest on single sources. The independent sources I read (Kashmir Life, IANS, Mapcarta/OSM, Trip.com) are consistent with each other. I did not check an official or government source.",
+  "final_answer_sha256": "8521cc6310d2f36f359c99d1515f775a053b498767737185f04c40cfb432ca1f",
+  "raw_stream_sha256": "4f9ba58c5e233b57328ebafac50cc90a4ef6f879c3f7e56e7bece31d32c637a9"
+}

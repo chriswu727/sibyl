@@ -1,0 +1,59 @@
+{
+  "case_id": "adv04",
+  "condition": "sibyl",
+  "elapsed_seconds": 37.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.175745,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 16074,
+    "cache_read_input_tokens": 70070,
+    "output_tokens": 2136,
+    "output_tokens_details": {
+      "thinking_tokens": 88
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 16074,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 25341,
+      "outputTokens": 3376,
+      "cacheReadInputTokens": 70070,
+      "cacheCreationInputTokens": 16074,
+      "webSearchRequests": 2,
+      "costUSD": 0.175745,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 88,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 16074,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 2,
+    "mcp__sibyl__continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**No president signed it, because the premise appears to be false.** I found no \"Antarctic Statehood Act,\" and Antarctica is not a U.S. state. This rests on not finding any such law, plus the Antarctic Treaty's ban on new claims. It is not a positive confirmation that no bill was ever floated.\n\nClaims, each followed by its source:\n\n- The Antarctic Treaty says no new territorial sovereignty claim can be asserted while it is in force. Statehood would require the U.S. to assert sovereignty, so the treaty stands in the way.\n  https://www.ats.aq/e/antarctictreaty.html\n\n- The U.S. holds only a \"basis of claim\" in Antarctica, not an actual claim. Seven other countries have claims: Argentina, Australia, Chile, France, New Zealand, Norway and the UK.\n  https://www.ats.aq/e/antarctictreaty.html\n\n- The U.S. has admitted no new state since Alaska and Hawaii in 1959. The usual \"51st state\" candidates are D.C. and Puerto Rico, and Antarctica is not among them in the part of the page I read.\n  https://en.wikipedia.org/wiki/51st_state\n\n- A search for Antarctic statehood legislation turned up nothing. The closest match was a 2026 House bill to make Greenland the 51st state, which is a different territory.\n  https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\n\n- A search for a congressional bill to admit Antarctica as a state also found none. It returned only Antarctic Treaty material and a Congressional Research Service overview.\n  https://www.congress.gov/crs-product/R46708\n\n**Gaps:**\n- I did not search congress.gov directly for a bill.\n- The Wikipedia page was read only in excerpts, so I can't say Antarctica appears nowhere on it.\n- The Greenland and CRS items come from search-result summaries. I did not open those pages.\n\nSources:\n- https://www.ats.aq/e/antarctictreaty.html\n- https://en.wikipedia.org/wiki/51st_state\n- https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\n- https://www.congress.gov/crs-product/R46708",
+  "final_answer_sha256": "0ede7bbcbc63cb5fe3cec204ece0a349ac85f507aca65aedcd02b702e5b34524",
+  "raw_stream_sha256": "a16e73a4620840fd85c55766826f75316f6302f180a87b6c40aad142acf09e26"
+}

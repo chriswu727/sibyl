@@ -1,0 +1,74 @@
+{
+  "case_id": "ssrf",
+  "condition": "deep_research",
+  "elapsed_seconds": 36.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1540294,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 15767,
+    "cache_read_input_tokens": 34340,
+    "output_tokens": 2866,
+    "output_tokens_details": {
+      "thinking_tokens": 308
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 15767,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14323,
+      "outputTokens": 4297,
+      "cacheReadInputTokens": 34340,
+      "cacheCreationInputTokens": 15767,
+      "webSearchRequests": 1,
+      "costUSD": 0.148118,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 308,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 15767,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 35539,
+      "outputTokens": 4715,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0059114,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3052,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 3,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** A URL string tells you what a request names, not where it will go. Three things break the link between the checked string and the real destination:\n- The string can be read differently by the validator and the HTTP client.\n- A name that looks safe can resolve to an internal address, and the answer can change between your check and the connection.\n- A redirect can send the request to a new target that was never checked.\n\nThe sound defence is to enforce the policy on the resolved IP at connection time, for every hop. Disabling redirects or allowlisting hosts helps, but neither is sufficient on its own.\n\nI used 5 of the 8 allowed retrievals, and the research was done directly rather than through subagents. One caveat: the pinning details come from a web search that returned GitHub issues and a blog post. Treat them as practitioner consensus, not a standard. I opened none of the pages the search listed, and the search summary wasn't checked against them. OWASP supports the core points independently.\n\n**Claims and sources**\n\nString checks fail because parsers and encodings disagree:\n- Different parsers can read the same URL string with different hosts. OWASP's example is `http://example.com\\@evil.com`, which is `example.com` under WHATWG and `evil.com` under Python's `urlsplit`. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- Denylists are bypass-prone. Alternative IP notations such as `2130706433` for 127.0.0.1 evade string blocks, and an attacker can register a domain that resolves to 127.0.0.1. https://portswigger.net/web-security/ssrf and https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- Allowlists can be bypassed through URL-parsing inconsistencies: credentials before the host (`@`), fragments (`#`), encoding, and attacker-controlled DNS names that contain the expected host. https://portswigger.net/web-security/ssrf\n\nRedirects move the request after validation:\n- An open redirect on an allowed domain lets a URL pass validation and then be redirected to an internal target. https://portswigger.net/web-security/ssrf\n- An attacker can also use a URL they control that redirects to the target, varying redirect codes and protocols. https://portswigger.net/web-security/ssrf\n- OWASP advises disabling redirect-following in the HTTP client. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- Every redirect hop re-resolves DNS, so any pinning or validation must be applied per hop. Disabling auto-redirects alone still leaves the rebinding window. https://techearl.com/dns-rebinding-ssrf (this and the search-derived claims below come from the search summary, not a page I opened)\n\nDNS changes between check and use (rebinding and TOCTOU):\n- A domain allowlist alone does not prevent DNS rebinding. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- OWASP: \"A second, unchecked DNS lookup between validation and connection can bypass these checks.\" Retries and fallback connections can open the same gap. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- The mechanism is that an attacker-run DNS server returns very short-lived records, so a later lookup gets a different answer, such as an internal IP. https://en.wikipedia.org/wiki/DNS_rebinding\n- The Wikipedia article describes this attack in browsers. The server-side case is the same idea applied to a server-side fetcher.\n- Common HTTP clients (Python requests, Node fetch, Go net/http, libcurl, JVM) open sockets by hostname and do not reuse the application's earlier resolution. https://techearl.com/dns-rebinding-ssrf and the GitHub issues in the same search (for example https://github.com/advisories/GHSA-489g-7rxv-6c8q)\n- A real case is the DNS-rebinding bypass of an SSRF fix in MCP Atlassian (CVE-2026-27826). https://github.com/advisories/GHSA-489g-7rxv-6c8q\n\nWhat works better:\n- Resolve once, validate the IP against permitted networks, and connect only to that IP. Keep the original hostname for the Host header, SNI and certificate verification, and apply the same policy to retries and fallbacks. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- Repeat the check on each redirect hop. https://techearl.com/dns-rebinding-ssrf\n- Add network-level controls such as firewalls and segmentation, and use IMDSv2 for cloud metadata. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- DNS monitoring is only detection. OWASP says it is \"not a substitute for connection-time enforcement.\" https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n**Limits of the evidence**\n- I did not find a formal standard or peer-reviewed study here. The evidence is OWASP and PortSwigger guidance plus an advisory and community write-ups.\n- Browser-based fetchers are harder to pin because the browser does its own DNS. That point comes only from the search summary.",
+  "final_answer_sha256": "8fc3a522c3d52e8ef1b45d1a5591ba6408f228773d66b767558da753be623b8e",
+  "raw_stream_sha256": "1a33f8dd058983dc13027ae33a092fa0d098eb7381e6c6e554ce352cbd3c31bc"
+}

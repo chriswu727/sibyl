@@ -1,0 +1,56 @@
+{
+  "case_id": "adv03",
+  "condition": "native",
+  "elapsed_seconds": 13.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.09359020000000001,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 2327,
+    "cache_read_input_tokens": 6542,
+    "output_tokens": 720,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2327,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 24779,
+      "outputTokens": 1407,
+      "cacheReadInputTokens": 6542,
+      "cacheCreationInputTokens": 2327,
+      "webSearchRequests": 2,
+      "costUSD": 0.09359020000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2327,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**I couldn't find a city called Zylathia in France, so I can't give a population. The question probably rests on a false premise.** The name may be fictional or misspelled.\n\n- Two searches for \"Zylathia\" turned up no city, commune or place by that name. The first was a general search with \"city France population\". The second was \"commune eastern France\". I didn't open any pages, so this rests only on the search results.\n  - https://statisticstimes.com/demographics/city/france-cities-population.php\n  - https://en.wikipedia.org/wiki/List_of_communes_in_France_with_over_20,000_inhabitants\n- The closest name in eastern France is Zilling, a small commune in Moselle (Grand Est). The search results give its population as 279 in 2023. The spelling is only loosely similar, so it is probably not what you meant.\n  - https://en.wikipedia.org/wiki/Zilling\n- Two other similar names, Zilia and Zigliara, are communes on Corsica, not in eastern France.\n  - https://en.wikipedia.org/wiki/Zilia\n  - https://en.wikipedia.org/wiki/Zigliara\n\nIf you tell me the spelling, the region, or where you saw the name, I can search again.\n\nSources:\n- [Population of cities in France 2026 - StatisticsTimes.com](https://statisticstimes.com/demographics/city/france-cities-population.php)\n- [List of communes in France with over 20,000 inhabitants](https://en.wikipedia.org/wiki/List_of_communes_in_France_with_over_20,000_inhabitants)\n- [Zilling](https://en.wikipedia.org/wiki/Zilling)\n- [Zilia](https://en.wikipedia.org/wiki/Zilia)\n- [Zigliara](https://en.wikipedia.org/wiki/Zigliara)",
+  "final_answer_sha256": "b27218afbcfdf80ed878513c01bcdfa50296958858f37d4d1c95c84d1621fd1b",
+  "raw_stream_sha256": "57a13287ce1b3fc39ca42f58fb07c1a995c865892337e8a7d219f0d56ad19b96"
+}

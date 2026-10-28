@@ -1,0 +1,73 @@
+{
+  "case_id": "real06",
+  "condition": "native",
+  "elapsed_seconds": 20.8,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.0760043,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2557,
+    "cache_read_input_tokens": 11630,
+    "output_tokens": 1199,
+    "output_tokens_details": {
+      "thinking_tokens": 62
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2557,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13722,
+      "outputTokens": 1753,
+      "cacheReadInputTokens": 11630,
+      "cacheCreationInputTokens": 2557,
+      "webSearchRequests": 1,
+      "costUSD": 0.06636500000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 62,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2557,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 88798,
+      "outputTokens": 1519,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0096393,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1141,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Construction was completed in October 1952. The best-supported exact date is **October 9, 1952**, but the sources don't agree on it. The same Wikipedia article also says October 10, 1952, so I can't confirm the exact day.\n\n**Claims and sources**\n\n- The UN Headquarters complex in New York was completed in 1952.\n  - https://www.un.org/en/visit/about-us\n  - https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n- The Wikipedia infobox gives the completion date as October 9, 1952.\n  - https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n- The body text of the same article says the headquarters \"was declared complete on October 10, 1952.\" Both statements cite the same New York Times source, and the article doesn't explain the difference.\n  - https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n- Another history site dates the completion only to October 1952.\n  - https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/\n\n- Individual buildings were finished at different times, so \"completed\" depends on what you count. Wikipedia gives the groundbreaking as September 14, 1948. The Secretariat was finished by about 1951. The Library Building was added in 1961, and the North Lawn and South Annex in 1981 and 1982.\n  - https://en.wikipedia.org/wiki/United_Nations_Headquarters\n  - https://www.un.org/en/visit/about-us\n\n**Caveats:** I relied on Wikipedia for the exact day and didn't open the underlying New York Times article. A primary source, such as that article or UN archives, would settle October 9 versus 10.\n\nSources:\n- [Headquarters of the United Nations – Wikipedia](https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations)\n- [United Nations Headquarters – Wikipedia](https://en.wikipedia.org/wiki/United_Nations_Headquarters)\n- [UN Visitor Services](https://www.un.org/en/visit/about-us)\n- [ClassicNewYorkHistory.com](https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/)",
+  "final_answer_sha256": "d4cbd25613547155113f59c74375f0121926cebe9f13996ed3b70257e60cd1b0",
+  "raw_stream_sha256": "9f4c6718ceffc407cb7049da606bfccc3126c1584ef945c6724550b370b03a10"
+}

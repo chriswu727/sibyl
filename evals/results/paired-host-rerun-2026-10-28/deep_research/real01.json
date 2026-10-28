@@ -1,0 +1,74 @@
+{
+  "case_id": "real01",
+  "condition": "deep_research",
+  "elapsed_seconds": 21.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.12031850000000001,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 13478,
+    "cache_read_input_tokens": 52874,
+    "output_tokens": 1380,
+    "output_tokens_details": {
+      "thinking_tokens": 146
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13478,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13559,
+      "outputTokens": 2091,
+      "cacheReadInputTokens": 52874,
+      "cacheCreationInputTokens": 13478,
+      "webSearchRequests": 1,
+      "costUSD": 0.1172274,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 146,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13478,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 28241,
+      "outputTokens": 534,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0030911,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 347,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 2
+  },
+  "final_answer": "**Answer: the University of Bonn.** He began his medical studies there. Some sources say he also studied at other universities, so Bonn may not be the only one.\n\nI ran the searches and page reads myself instead of spawning subagents, because the skill's file-writing workflow conflicts with your no-local-files rule. I used 3 of the 8 allowed retrievals, and one of them failed.\n\n**Claims and sources**\n- Aschoff (1913–1998) was a German physician and physiologist, regarded as a co-founder of chronobiology.\n  https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n- After the Abitur he studied medicine at the University of Bonn.\n  https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n- The LEO-BW biography says he began his medical studies in Bonn after finishing school in Freiburg in 1931. I only saw this through a search summary, because the page itself returned HTTP 403 when I tried to open it.\n  https://www.leo-bw.de/en/detail/-/Detail/details/PERSON/kgl_biographien/104631406/Aschoff\n- In 1938 he moved to the University of Göttingen to work on thermoregulation physiology with Hermann Rein. He later held a professorship there.\n  https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n\n**Caveats**\n- The search summary says LEO-BW has him continuing at the Freiburg medical faculty after Bonn. It says The Auk obituary has him moving through Göttingen, Würzburg and Heidelberg. I did not open either page, so I can't confirm the order or whether he finished his degree at a different university. The Auk obituary is here: https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\n- The sources I read give no years for his time at Bonn and don't say where he took his doctorate.",
+  "final_answer_sha256": "c781baa574078df474a168144d97489175237816c586d5099855b7e23b02d8b7",
+  "raw_stream_sha256": "55eb73509d22f433bf377b80f79f233162932f9a2b8bd3446beb58c2d9dc4ecf"
+}

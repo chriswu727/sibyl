@@ -1,0 +1,105 @@
+{
+  "case_id": "real01",
+  "kind": "factual",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "native",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.1279312,
+  "judge_subtype": "success",
+  "pages_read": 3,
+  "pages_cited": 5,
+  "raw": "{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Aschoff (1913–1998) was a German physician and physiologist, regarded as a co-founder of chronobiology.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"After the Abitur he studied medicine at the University of Bonn.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"LEO-BW biography says he began medical studies in Bonn after finishing school in Freiburg in 1931.\", \"url\": \"https://www.leo-bw.de/en/detail/-/Detail/details/PERSON/kgl_biographien/104631406/Aschoff\", \"label\": \"unreachable\"}, {\"claim\": \"In 1938 he moved to the University of Göttingen to work on thermoregulation physiology with Hermann Rein; he later held a professorship there.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"The Auk obituary has him moving through Göttingen, Würzburg and Heidelberg.\", \"url\": \"https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\", \"label\": \"unreachable\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"States Bonn. Hedges that Bonn may not be the only university. The LEO-BW claim that he continued at the Freiburg medical faculty is attributed to a search summary and is uncited. Two cited pages could not be read.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Wikipedia says he studied medicine at the University of Bonn and names no other university for medical study.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"He moved to Göttingen in 1938 to work on thermoregulation physiology under Hermann Rein, as research rather than medical study.\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"The Auk obituary says he went from Bonn to Göttingen, Würzburg and Heidelberg.\", \"url\": \"https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\", \"label\": \"unreachable\"}, {\"claim\": \"Wikidata lists Heidelberg and Freiburg as places he was educated.\", \"url\": \"https://www.wikidata.org/wiki/Q75270\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"States Bonn, with a hedge that the answer is not fully settled. The Wikidata page lists Heidelberg and Freiburg under educated at, alongside Bonn. The Auk page could not be read.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Aschoff studied medicine at the University of Bonn (Nature obituary).\", \"url\": \"https://www.nature.com/articles/24750\", \"label\": \"supported\"}, {\"claim\": \"Aschoff studied medicine at the University of Bonn after school, 'lacking a specific interest' (Wikipedia).\", \"url\": \"https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\", \"label\": \"supported\"}, {\"claim\": \"He then moved to the University of Göttingen, where his scientific career began under physiologist Hermann Rein.\", \"url\": \"https://www.nature.com/articles/24750\", \"label\": \"supported\"}, {\"claim\": \"Wikidata lists Heidelberg University and University of Freiburg as educated at, marked as inferred from categories or a heuristic.\", \"url\": \"https://www.wikidata.org/wiki/Q75270\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"States Bonn clearly. The claim that the Nature piece says he chose medicine after school is only loosely supported, since Nature does not mention the Abitur. The remark about the Auk memorial snippet is uncited.\"}}}",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Aschoff (1913–1998) was a German physician and physiologist, regarded as a co-founder of chronobiology.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "After the Abitur he studied medicine at the University of Bonn.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "LEO-BW biography says he began medical studies in Bonn after finishing school in Freiburg in 1931.",
+          "url": "https://www.leo-bw.de/en/detail/-/Detail/details/PERSON/kgl_biographien/104631406/Aschoff",
+          "label": "unreachable"
+        },
+        {
+          "claim": "In 1938 he moved to the University of Göttingen to work on thermoregulation physiology with Hermann Rein; he later held a professorship there.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "The Auk obituary has him moving through Göttingen, Würzburg and Heidelberg.",
+          "url": "https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "States Bonn. Hedges that Bonn may not be the only university. The LEO-BW claim that he continued at the Freiburg medical faculty is attributed to a search summary and is uncited. Two cited pages could not be read."
+    },
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Wikipedia says he studied medicine at the University of Bonn and names no other university for medical study.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "He moved to Göttingen in 1938 to work on thermoregulation physiology under Hermann Rein, as research rather than medical study.",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "The Auk obituary says he went from Bonn to Göttingen, Würzburg and Heidelberg.",
+          "url": "https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Wikidata lists Heidelberg and Freiburg as places he was educated.",
+          "url": "https://www.wikidata.org/wiki/Q75270",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "States Bonn, with a hedge that the answer is not fully settled. The Wikidata page lists Heidelberg and Freiburg under educated at, alongside Bonn. The Auk page could not be read."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Aschoff studied medicine at the University of Bonn (Nature obituary).",
+          "url": "https://www.nature.com/articles/24750",
+          "label": "supported"
+        },
+        {
+          "claim": "Aschoff studied medicine at the University of Bonn after school, 'lacking a specific interest' (Wikipedia).",
+          "url": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff",
+          "label": "supported"
+        },
+        {
+          "claim": "He then moved to the University of Göttingen, where his scientific career began under physiologist Hermann Rein.",
+          "url": "https://www.nature.com/articles/24750",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikidata lists Heidelberg University and University of Freiburg as educated at, marked as inferred from categories or a heuristic.",
+          "url": "https://www.wikidata.org/wiki/Q75270",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "States Bonn clearly. The claim that the Nature piece says he chose medicine after school is only loosely supported, since Nature does not mention the Abitur. The remark about the Auk memorial snippet is uncited."
+    }
+  }
+}

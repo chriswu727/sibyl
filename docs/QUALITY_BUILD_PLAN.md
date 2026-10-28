@@ -120,6 +120,15 @@ carry what the host would otherwise fetch again) so a counterevidence read fits
 the host's budget, and have the final answer carry the counterevidence status
 Sibyl records. Then rerun gate 2 as a new dated run under the same protocol.
 
+#70 added that answer guidance. The [second run](../evals/results/paired-host-rerun-2026-10-28/manifest.json)
+closed the counterevidence gap (1.5 against 1.1) but missed the citation-support
+and factual criteria within run-to-run noise: built-in search alone moved 11
+points between runs. Pooled over both runs Sibyl leads on citation support
+(79.4% against 74.9%; 77.5% against 67.4% counting unreachable pages) and rubric
+support (0.9 against 0.55) at about twice the cost, with equal factual and trap
+results. The release decision on gate 2 belongs to the owner; more single runs
+under the same criteria would not settle it.
+
 Claim-based human reports now present the generated claim narrative once, while
 JSON retains compatible summary/findings/analysis fields and the full ledger.
 PDF rendering checks font coverage and reports failures instead of silently losing

@@ -1,0 +1,59 @@
+{
+  "case_id": "flashattention",
+  "condition": "sibyl",
+  "elapsed_seconds": 78.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.29531799999999997,
+  "usage": {
+    "input_tokens": 16,
+    "cache_creation_input_tokens": 37652,
+    "cache_read_input_tokens": 176600,
+    "output_tokens": 7693,
+    "output_tokens_details": {
+      "thinking_tokens": 233
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 37652,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14260,
+      "outputTokens": 8853,
+      "cacheReadInputTokens": 176600,
+      "cacheCreationInputTokens": 37652,
+      "webSearchRequests": 1,
+      "costUSD": 0.29531799999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 233,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 37652,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 3,
+    "WebSearch": 1,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer.** FlashAttention is exact because it computes the same attention function in a different order. The speedup comes from moving less data through slow GPU memory, not from doing less math. Its benchmark gains don't transfer automatically. They depend on the GPU generation, the kernel version, the benchmark setup, the baseline and the workload (training versus inference). I found no independent replication, and most of the numbers come from the authors' own benchmarks.\n\n**Why it is exact and still faster**\n\n- It is an \"IO-aware exact attention algorithm\" that uses tiling to cut reads and writes between GPU high-bandwidth memory (HBM) and on-chip SRAM. https://arxiv.org/abs/2205.14135\n- The paper says approximate attention methods \"often do not achieve wall-clock speedup\". That is the gap an exact but IO-efficient method fills. https://arxiv.org/abs/2205.14135\n- Softmax is computed block by block and rescaled using two extra statistics (a running max and a normalizer), so the result matches full softmax. https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf (course slides, a secondary source)\n- The backward pass stores no N×N intermediates. It recomputes them, which costs \"more compute\" but means fewer HBM accesses. https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf\n- Attention is described as memory-bound, so cutting memory traffic cuts wall-clock time. https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf\n\n**Caveat on \"exact\"**\n\n- \"Exact\" means mathematically identical, not bitwise identical. A Meta-affiliated study found roughly an order of magnitude more numeric deviation than baseline attention at BF16 in an isolated forward pass. https://arxiv.org/abs/2405.02803 I only read the abstract, so I can't say whether this deviation matters for training outcomes.\n\n**What limits generalizing the gains**\n\n- **Kernel and hardware generation**\n  - FlashAttention-2 gave about 2× over FlashAttention-1 on A100. It reached only 50–73% of theoretical maximum FLOPs/s, after the original reached 25–40%. https://arxiv.org/abs/2307.08691\n  - FlashAttention-2 reached only 35% utilization on H100. FlashAttention-3 gets 1.5–2.0× over it by using Hopper-specific features: asynchrony, warp specialization and FP8. https://arxiv.org/abs/2407.08608 and https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\n  - So \"FlashAttention's speedup\" varies a lot by version and GPU.\n- **Benchmark setup and baseline**\n  - The FlashAttention-3 numbers were measured on one H100 SXM5 in BF16, with sequence lengths from 512 to 16k and total tokens fixed at 16k. https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\n  - The \"up to 3–16×\" figure is against a standard attention implementation that materializes the intermediate matrices in HBM. Against the vendor's cuDNN library it only wins at sequence length 1k and above. https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\n- **Stated limitations**\n  - The FlashAttention-3 authors list LLM inference and the effects of low-precision attention in large-scale training as open work.\n  - They only \"expect\" the techniques to apply to other hardware, so they haven't shown it. https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\n- **Implementation and workload constraints**\n  - Course slides list GPU-specific CUDA kernels, block sizes tuned per GPU, and no multi-GPU support at the time.\n  - They also say batch-1 inference is a poor fit, which FlashDecoding addresses by parallelizing across the key/value sequence. https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf\n  - The slides' claim that it is \"only helpful during training\" looks overstated, and I treat them as secondary.\n\n**Gaps**\n\n- The 15-minute search summary mentioned that gains are small at short sequences (around 512 tokens or fewer). It also said the benefit depends on GPU type. That came from blogs I did not read, so I'm not asserting it.\n- I could not read the full original paper. It was too large for the retrieval limit.\n- I used five of the eight retrievals. None of the sources is an independent benchmark study.\n\nSources:\n- https://arxiv.org/abs/2205.14135\n- https://arxiv.org/abs/2307.08691\n- https://arxiv.org/abs/2407.08608\n- https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\n- https://arxiv.org/abs/2405.02803\n- https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf",
+  "final_answer_sha256": "6a8cb95399a9193eab9b21de2e7404e80966668a2af53815955ab24d5f857988",
+  "raw_stream_sha256": "40b439b5019e1139cfc33dff3e87cbce37f5a6ff9373aee84315a84cf888ff21"
+}

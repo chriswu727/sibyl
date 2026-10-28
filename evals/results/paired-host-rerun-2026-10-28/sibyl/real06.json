@@ -1,0 +1,60 @@
+{
+  "case_id": "real06",
+  "condition": "sibyl",
+  "elapsed_seconds": 32.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.16197840000000002,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 21358,
+    "cache_read_input_tokens": 93044,
+    "output_tokens": 2580,
+    "output_tokens_details": {
+      "thinking_tokens": 96
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 21358,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13626,
+      "outputTokens": 2999,
+      "cacheReadInputTokens": 93044,
+      "cacheCreationInputTokens": 21358,
+      "webSearchRequests": 1,
+      "costUSD": 0.16197840000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 96,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 21358,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** The evidence doesn't settle the exact day. Construction was completed in **1952**, in October. Wikipedia's infobox says **October 9, 1952**, but its own text says the headquarters was declared complete on **October 10, 1952**. October 10, 1952 is probably the better date, because that text cites a New York Times article of that date, \"Work Completed on U.N. Buildings.\" I did not open that article.\n\n**Claims and sources**\n\n- The UN itself says only that construction \"began on UN Day (24 October) 1949 and was completed in 1952.\" It gives no month or day.\n  - https://www.un.org/en/visit/about-us\n- The infobox on Wikipedia's page for the headquarters lists the completion date as October 9, 1952.\n  - https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n- The body of the same Wikipedia page says \"The Manhattan headquarters was declared complete on October 10, 1952.\"\n  - https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n- The same Wikipedia page gives the groundbreaking as September 14, 1948. The UN's visitor page gives a start of 24 October 1949, which is the date of the cornerstone ceremony. This is a separate discrepancy and doesn't affect the completion date.\n  - https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n  - https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building\n\n**Gaps**\n- The only source with an exact day is Wikipedia, which contradicts itself. I found no primary source, such as the New York Times article or a UN document, that gives the day.\n- A third site I read (classicnewyorkhistory.com) says only that the headquarters was \"constructed in 1952.\"\n- \"Complete\" also depends on what you count. The Secretariat was finished earlier, and the Library (1961) and South Annex (1981–82) came later.\n\nSources:\n- [Visitors Services, United Nations](https://www.un.org/en/visit/about-us)\n- [Headquarters of the United Nations, Wikipedia](https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations)\n- [United Nations Secretariat Building, Wikipedia](https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building)\n- [History Of The United Nations Headquarters In New York, ClassicNewYorkHistory.com](https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/)",
+  "final_answer_sha256": "a5ed3d345cec7e192b6e71d3503685af45b42c4a1cbadf6dbf962a85811f33fa",
+  "raw_stream_sha256": "01089957cb4e748fc6bff460a3e6f2ac75e60ddf126dd2c596eccfa20f68c258"
+}

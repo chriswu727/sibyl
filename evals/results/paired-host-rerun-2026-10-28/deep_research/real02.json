@@ -1,0 +1,74 @@
+{
+  "case_id": "real02",
+  "condition": "deep_research",
+  "elapsed_seconds": 22.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1227399,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 13274,
+    "cache_read_input_tokens": 52703,
+    "output_tokens": 1295,
+    "output_tokens_details": {
+      "thinking_tokens": 201
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13274,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14642,
+      "outputTokens": 1970,
+      "cacheReadInputTokens": 52703,
+      "cacheCreationInputTokens": 13274,
+      "webSearchRequests": 1,
+      "costUSD": 0.1173503,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 201,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13274,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 52651,
+      "outputTokens": 249,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0053896000000000005,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 168,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 2
+  },
+  "final_answer": "**Black Condor II (Ryan Kendall) died in *Infinite Crisis* #1, cover-dated December 2005.**\n\nI ran the searches and page reads myself rather than spawning the skill's research subagents. This is a single factual question with a small retrieval cap. I used three retrievals in total.\n\nClaims and sources:\n\n- Ryan Kendall, the second Black Condor, was killed in *Infinite Crisis* #1 (December 2005).\n  - https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth) (seen only as a search-result summary, because the page fetch failed with HTTP 402)\n  - https://en.wikipedia.org/wiki/Black_Condor\n\n- He died while with the Freedom Fighters, who were ambushed by the Secret Society of Super Villains.\n  - https://en.wikipedia.org/wiki/Black_Condor\n  - https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\n\n- Sinestro is credited with killing him, with a blast through the chest.\n  - https://en.wikipedia.org/wiki/Black_Condor\n  - https://comicvine.gamespot.com/ryan-kendall/4005-76170/ (search-result summary only)\n\n- Nothing I found ties his death to *Final Crisis*.\n  - https://en.wikipedia.org/wiki/Final_Crisis (appeared only in the search results)\n\n**Caveats:**\n- I read the Wikipedia page only up to character 100,000 of about 111,800.\n- The DC Fandom page and the Comic Vine page were not opened. For those two, I relied on the search tool's summary of them.\n- One search summary mentioned Deathstroke as a killer for a different Freedom Fighter in the same issue. I didn't check that, and it doesn't affect the answer.",
+  "final_answer_sha256": "c4e603bec5c04212a16880272eeab678a714918f0d3e5532fd5f79fe40e67755",
+  "raw_stream_sha256": "c7d81f40d03c3045534c631641ea20e1eb4c9cb54b658d78e325f283a3b2e493"
+}

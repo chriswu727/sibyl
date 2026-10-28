@@ -1,0 +1,75 @@
+{
+  "case_id": "postgres_isolation",
+  "condition": "sibyl",
+  "elapsed_seconds": 48.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1339181,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 20265,
+    "cache_read_input_tokens": 69558,
+    "output_tokens": 4334,
+    "output_tokens_details": {
+      "thinking_tokens": 125
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 20265,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 10,
+      "outputTokens": 4334,
+      "cacheReadInputTokens": 69558,
+      "cacheCreationInputTokens": 20265,
+      "webSearchRequests": 0,
+      "costUSD": 0.13137580000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 125,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 20265,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 10218,
+      "outputTokens": 3041,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0025423,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1382,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebFetch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** Both levels give each transaction a stable snapshot, and both can abort with serialization failures. The difference is that Repeatable Read is plain snapshot isolation, so it still permits serialization anomalies such as write skew. Serializable adds dependency tracking (SSI) and aborts a transaction when it would make the outcome inconsistent with every one-at-a-time order. At either level, the application must retry the whole transaction after a serialization failure (SQLSTATE 40001). It should usually also retry deadlocks (40P01). In some cases it should retry unique-key and exclusion-constraint violations (23505, 23P01).\n\n**Claims and sources**\n\n- Repeatable Read permits serialization anomalies. Serializable doesn't. PostgreSQL's Repeatable Read also doesn't allow phantom reads, which the SQL standard would permit.\n  https://www.postgresql.org/docs/current/transaction-iso.html\n\n- In PostgreSQL, Repeatable Read is plain snapshot isolation (SI) and Serializable is Serializable Snapshot Isolation (SSI), since 9.1. If three transactions form a read/write cycle, Repeatable Read misses it and Serializable rolls one back.\n  https://wiki.postgresql.org/wiki/SSI\n\n- This matches the general theory. An independent source says snapshot isolation allows write skew, where transactions read overlapping state and modify disjoint objects. That makes it weaker than serializability.\n  https://jepsen.io/consistency/models/snapshot-isolation\n\n- Applications using either level must be prepared to retry transactions that fail with serialization errors. The message text varies, but the SQLSTATE is always 40001.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n- It may also be advisable to retry deadlocks (40P01). In some cases it is also appropriate to retry unique violations (23505) and exclusion violations (23P01). For example, this applies when the application picks a new key after inspecting the existing keys. The server can't see that connection, so it doesn't flag the failure as a serialization failure. The docs warn that these codes might be persistent errors rather than transient ones, so retry them with more care.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n- Retry the complete transaction, including the logic that decides which SQL to issue and which values to use. PostgreSQL has no automatic retry. A retry isn't guaranteed to succeed, so multiple attempts may be needed. Under heavy contention it may take many attempts. A conflicting prepared transaction can block progress until it commits or rolls back.\n  https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n\n- Results from a failed Serializable transaction must be ignored. Use the results from the retry. The failing error can be a constraint violation instead of a serialization failure.\n  https://wiki.postgresql.org/wiki/SSI\n\n**Caveats and gaps**\n\n- I found no source that disagrees. The counterevidence check was the Jepsen page, which agrees.\n- Beyond what the Sibyl job recorded, my first page fetch (a summary from a small model, not read into the job) suggested three more points. I haven't verified them, so treat them as unconfirmed:\n  - Read-only Repeatable Read transactions never hit serialization conflicts.\n  - Serializable can also abort read-only transactions, except `DEFERRABLE` ones.\n  - Sequential scans take relation-level predicate locks, which can raise the failure rate.\n- The 40001 claim and the 40P01/23505/23P01 claim each lack an exact quote in the job's checks for the specific code numbers. The retrieved page text does contain those codes. I used 5 of the 8 allowed retrievals. I did not complete or export a report.\n\nSources:\n- https://www.postgresql.org/docs/current/transaction-iso.html\n- https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\n- https://wiki.postgresql.org/wiki/SSI\n- https://jepsen.io/consistency/models/snapshot-isolation",
+  "final_answer_sha256": "e1c4bd241c337af1b7f2601a0c0616fc503fd57832bd18ff91c68b80131ce316",
+  "raw_stream_sha256": "94a2ba827105d3d1150f75aff1ed7324963ddaabb7717487df9348e521cce7da"
+}

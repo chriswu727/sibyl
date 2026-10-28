@@ -1,0 +1,175 @@
+{
+  "case_id": "ssrf",
+  "kind": "research",
+  "label_map": {
+    "X": "native",
+    "Y": "sibyl",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.2886072,
+  "judge_subtype": "success",
+  "pages_read": 5,
+  "pages_cited": 6,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"An open redirect on an allowed domain lets a validated URL be redirected to an internal target when the client follows redirects.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"OWASP recommends disabling redirect following because it bypasses input validation; the policy must also cover retries and fallback connections.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"An attacker can register a domain that resolves to 127.0.0.1, so a string filter on localhost or 127.0.0.1 won't catch it.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"'Domain allowlisting alone does not prevent DNS rebinding'; a second DNS lookup between validation and connection (TOCTOU) bypasses checks; the fix is to connect to the validated IP and keep the hostname for Host, SNI and certificate checks.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"unsupported\"}, {\"claim\": \"In rebinding, the attacker's DNS uses a very short TTL and returns a different, internal IP on a later lookup; the article describes the browser setting.\", \"url\": \"https://en.wikipedia.org/wiki/DNS_rebinding\", \"label\": \"supported\"}, {\"claim\": \"Allowlist filters can be bypassed through URL parsing inconsistencies: @ credentials, # fragments, the expected host inside an attacker DNS name, and URL or double encoding.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"OWASP advises rejecting URLs whose host is not read identically by every parser involved.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Better defenses: allowlists over deny-lists, checking resolved IPs, firewalls and segmentation, IMDSv2, and DNS monitoring as detection only.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Covers redirects, DNS and rebinding, and parser differences. The OWASP excerpt only says that DNS resolution can bind a legitimate domain to an internal IP, that parsers can be abused, and that redirects should be disabled. It does not contain the quoted rebinding/TOCTOU sentence, the Host/SNI pinning advice, IMDSv2, or DNS monitoring, so the key DNS-change claim is unsupported by the inspected text. The answer discloses its own inference from the browser context to SSRF. It offers no substantive counterevidence.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"If an allowed site has an open redirect, a strictly validated URL can still reach an internal target when the client follows redirects.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Attackers can submit a URL they control that redirects to the target; switching http to https during the redirect has bypassed some filters.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"OWASP says to disable redirect following and to connect only to a validated IP address.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"If redirects are followed, validate every hop.\", \"url\": \"https://techearl.com/dns-rebinding-ssrf\", \"label\": \"unsupported\"}, {\"claim\": \"Domain allowlisting alone does not prevent DNS rebinding; a second unchecked lookup between validation and connection bypasses checks.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"unsupported\"}, {\"claim\": \"A hostname can resolve to an allowed IP at validation and an internal IP at fetch; the hostname stays allowlisted while the IP changes.\", \"url\": \"https://techearl.com/dns-rebinding-ssrf\", \"label\": \"supported\"}, {\"claim\": \"Common HTTP clients re-resolve the name at connection time.\", \"url\": \"https://techearl.com/dns-rebinding-ssrf\", \"label\": \"supported\"}, {\"claim\": \"The MCP Atlassian SSRF fix resolved and checked the IP, then discarded it; the request re-resolved and could reach 169.254.169.254; the PoC is structural, not a live exploit.\", \"url\": \"https://github.com/advisories/GHSA-489g-7rxv-6c8q\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Strong DNS/TOCTOU section, grounded in techearl and the GHSA advisory with an accurate PoC scope caveat. However, the OWASP rebinding claim and the techearl per-hop redirect claim are not in the excerpts. The OWASP `\\\\@` parser example is also absent from the excerpt (not among the 8 listed pairs). The answer raises a resolver minimum-TTL limitation, but its source says the limitation does not prevent the attack. It admits there was no counterevidence search on redirects.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"OWASP example: `http://example.com\\\\@evil.com` parses as example.com under WHATWG and as evil.com under Python urlsplit.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"unsupported\"}, {\"claim\": \"Alternative IP notations such as 2130706433 evade string blocks, and an attacker can register a domain resolving to 127.0.0.1.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Allowlists can be bypassed via URL-parsing inconsistencies: @ credentials, # fragments, encoding, and attacker DNS names that contain the expected host.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"An open redirect on an allowed domain lets a URL pass validation and then be redirected to an internal target.\", \"url\": \"https://portswigger.net/web-security/ssrf\", \"label\": \"supported\"}, {\"claim\": \"Every redirect hop re-resolves DNS, so pinning and validation must be applied per hop; disabling auto-redirects still leaves the rebinding window.\", \"url\": \"https://techearl.com/dns-rebinding-ssrf\", \"label\": \"unsupported\"}, {\"claim\": \"OWASP: 'A second, unchecked DNS lookup between validation and connection can bypass these checks'; retries and fallbacks open the same gap.\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\", \"label\": \"unsupported\"}, {\"claim\": \"Python requests, Node fetch, Go net/http, libcurl and JVM clients open sockets by hostname and do not reuse the application's earlier resolution.\", \"url\": \"https://techearl.com/dns-rebinding-ssrf\", \"label\": \"supported\"}, {\"claim\": \"A real case is the DNS-rebinding bypass of an SSRF fix in MCP Atlassian (CVE-2026-27826).\", \"url\": \"https://github.com/advisories/GHSA-489g-7rxv-6c8q\", \"label\": \"partial\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Most comprehensive structure, covering parsing, redirects and DNS. The OWASP quotations and the `\\\\@` example are not in the inspected excerpt, and the per-hop re-resolution claim is not in the techearl excerpt. CVE-2026-27826 is the parent issue; the cited advisory is an incomplete-fix sibling, hence partial. The answer admits it never opened the techearl or GHSA pages yet cites them, which weakens its source discipline. The browser-pinning point is uncited (taken from a search summary). Limits are disclosed, but there is no substantive counterevidence.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "An open redirect on an allowed domain lets a validated URL be redirected to an internal target when the client follows redirects.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP recommends disabling redirect following because it bypasses input validation; the policy must also cover retries and fallback connections.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "An attacker can register a domain that resolves to 127.0.0.1, so a string filter on localhost or 127.0.0.1 won't catch it.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "'Domain allowlisting alone does not prevent DNS rebinding'; a second DNS lookup between validation and connection (TOCTOU) bypasses checks; the fix is to connect to the validated IP and keep the hostname for Host, SNI and certificate checks.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "In rebinding, the attacker's DNS uses a very short TTL and returns a different, internal IP on a later lookup; the article describes the browser setting.",
+          "url": "https://en.wikipedia.org/wiki/DNS_rebinding",
+          "label": "supported"
+        },
+        {
+          "claim": "Allowlist filters can be bypassed through URL parsing inconsistencies: @ credentials, # fragments, the expected host inside an attacker DNS name, and URL or double encoding.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP advises rejecting URLs whose host is not read identically by every parser involved.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Better defenses: allowlists over deny-lists, checking resolved IPs, firewalls and segmentation, IMDSv2, and DNS monitoring as detection only.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Covers redirects, DNS and rebinding, and parser differences. The OWASP excerpt only says that DNS resolution can bind a legitimate domain to an internal IP, that parsers can be abused, and that redirects should be disabled. It does not contain the quoted rebinding/TOCTOU sentence, the Host/SNI pinning advice, IMDSv2, or DNS monitoring, so the key DNS-change claim is unsupported by the inspected text. The answer discloses its own inference from the browser context to SSRF. It offers no substantive counterevidence."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "If an allowed site has an open redirect, a strictly validated URL can still reach an internal target when the client follows redirects.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Attackers can submit a URL they control that redirects to the target; switching http to https during the redirect has bypassed some filters.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP says to disable redirect following and to connect only to a validated IP address.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "If redirects are followed, validate every hop.",
+          "url": "https://techearl.com/dns-rebinding-ssrf",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Domain allowlisting alone does not prevent DNS rebinding; a second unchecked lookup between validation and connection bypasses checks.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "A hostname can resolve to an allowed IP at validation and an internal IP at fetch; the hostname stays allowlisted while the IP changes.",
+          "url": "https://techearl.com/dns-rebinding-ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Common HTTP clients re-resolve the name at connection time.",
+          "url": "https://techearl.com/dns-rebinding-ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "The MCP Atlassian SSRF fix resolved and checked the IP, then discarded it; the request re-resolved and could reach 169.254.169.254; the PoC is structural, not a live exploit.",
+          "url": "https://github.com/advisories/GHSA-489g-7rxv-6c8q",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Strong DNS/TOCTOU section, grounded in techearl and the GHSA advisory with an accurate PoC scope caveat. However, the OWASP rebinding claim and the techearl per-hop redirect claim are not in the excerpts. The OWASP `\\@` parser example is also absent from the excerpt (not among the 8 listed pairs). The answer raises a resolver minimum-TTL limitation, but its source says the limitation does not prevent the attack. It admits there was no counterevidence search on redirects."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "OWASP example: `http://example.com\\@evil.com` parses as example.com under WHATWG and as evil.com under Python urlsplit.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Alternative IP notations such as 2130706433 evade string blocks, and an attacker can register a domain resolving to 127.0.0.1.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Allowlists can be bypassed via URL-parsing inconsistencies: @ credentials, # fragments, encoding, and attacker DNS names that contain the expected host.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "An open redirect on an allowed domain lets a URL pass validation and then be redirected to an internal target.",
+          "url": "https://portswigger.net/web-security/ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "Every redirect hop re-resolves DNS, so pinning and validation must be applied per hop; disabling auto-redirects still leaves the rebinding window.",
+          "url": "https://techearl.com/dns-rebinding-ssrf",
+          "label": "unsupported"
+        },
+        {
+          "claim": "OWASP: 'A second, unchecked DNS lookup between validation and connection can bypass these checks'; retries and fallbacks open the same gap.",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Python requests, Node fetch, Go net/http, libcurl and JVM clients open sockets by hostname and do not reuse the application's earlier resolution.",
+          "url": "https://techearl.com/dns-rebinding-ssrf",
+          "label": "supported"
+        },
+        {
+          "claim": "A real case is the DNS-rebinding bypass of an SSRF fix in MCP Atlassian (CVE-2026-27826).",
+          "url": "https://github.com/advisories/GHSA-489g-7rxv-6c8q",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Most comprehensive structure, covering parsing, redirects and DNS. The OWASP quotations and the `\\@` example are not in the inspected excerpt, and the per-hop re-resolution claim is not in the techearl excerpt. CVE-2026-27826 is the parent issue; the cited advisory is an incomplete-fix sibling, hence partial. The answer admits it never opened the techearl or GHSA pages yet cites them, which weakens its source discipline. The browser-pinning point is uncited (taken from a search summary). Limits are disclosed, but there is no substantive counterevidence."
+    }
+  }
+}

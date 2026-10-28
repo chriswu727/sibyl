@@ -1,0 +1,73 @@
+{
+  "case_id": "adv01",
+  "condition": "native",
+  "elapsed_seconds": 30.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.08419960000000001,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 3275,
+    "cache_read_input_tokens": 17568,
+    "output_tokens": 1566,
+    "output_tokens_details": {
+      "thinking_tokens": 337
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3275,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13902,
+      "outputTokens": 2354,
+      "cacheReadInputTokens": 17568,
+      "cacheCreationInputTokens": 3275,
+      "webSearchRequests": 1,
+      "costUSD": 0.07620080000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 337,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3275,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 76013,
+      "outputTokens": 795,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0079988,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 457,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 3,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** Einstein never won a Nobel Prize for general relativity, so the question rests on a false premise. He won the 1921 Nobel Prize in Physics, awarded in 1922, for his services to theoretical physics and especially the photoelectric effect.\n\n**Claims and sources**\n\n- Einstein's Nobel citation reads \"for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect.\" It doesn't mention relativity.\n  - https://nobel-prize.net/en/topics/einstein-and-the-prize/\n  - https://www.kroneckerwallis.com/the-photoelectric-effect-why-einstein-won-the-nobel-prize/ (this was a search result I didn't open, so it's only a snippet-level source)\n\n- The prize is the 1921 Nobel Prize in Physics. The committee held it back in 1921 and awarded it retroactively in November 1922.\n  - https://nobel-prize.net/en/topics/einstein-and-the-prize/\n\n- Relativity was passed over because parts of the committee doubted it or wanted experimental confirmation. Planck nominated Einstein for relativity, and Oseen proposed the photoelectric effect as the safer basis.\n  - https://arxiv.org/pdf/2112.13519 (this was a search-result summary only. The PDF didn't render when I tried to open it, so I couldn't check the wording directly.)\n\n**Caveats:** I couldn't open nobelprize.org, which returned a 403. The citation wording and the 1921/1922 timing come from nobel-prize.net, a secondary site, and the committee-motive details come from search summaries I couldn't check directly.\n\nSources:\n- [Einstein and the Prize (nobel-prize.net)](https://nobel-prize.net/en/topics/einstein-and-the-prize/)\n- [The Photoelectric Effect: Why Einstein Won the Nobel Prize (Kronecker Wallis)](https://www.kroneckerwallis.com/the-photoelectric-effect-why-einstein-won-the-nobel-prize/)\n- [The incredibly strange story of Einstein's Nobel prize (arXiv)](https://arxiv.org/pdf/2112.13519)",
+  "final_answer_sha256": "ee43701f3f06ff9fc862c363d626a988b6f02a9e5b228f82cb74d99128f98041",
+  "raw_stream_sha256": "ca38760f58f5c0efe549ae778e2843fb85145f94c40d1171c1f2fed9588ccedd"
+}

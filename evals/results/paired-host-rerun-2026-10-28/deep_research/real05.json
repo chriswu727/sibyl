@@ -1,0 +1,74 @@
+{
+  "case_id": "real05",
+  "condition": "deep_research",
+  "elapsed_seconds": 26.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1125471,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 13104,
+    "cache_read_input_tokens": 52606,
+    "output_tokens": 1211,
+    "output_tokens_details": {
+      "thinking_tokens": 206
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13104,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13768,
+      "outputTokens": 1669,
+      "cacheReadInputTokens": 52606,
+      "cacheCreationInputTokens": 13104,
+      "webSearchRequests": 1,
+      "costUSD": 0.11190259999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 206,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13104,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 4195,
+      "outputTokens": 450,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0006445,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 260,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**The DOI is 10.1515/cllt-2021-0018** (https://doi.org/10.1515/cllt-2021-0018).\n\nI did the lookup directly with two retrievals (a web search and the arXiv page) and didn't run the skill's subagent workflow. That workflow writes note files, and you said not to run shell commands or read local files. For a single-fact question it would also have been overkill.\n\n- The journal-version DOI is 10.1515/cllt-2021-0018. The De Gruyter Brill page for the paper carries this DOI in its URL, and the arXiv record lists it as the journal DOI.\n  - https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\n  - https://arxiv.org/abs/2012.04946\n- The authors are Martijn van der Klis and Jos Tellings.\n  - https://arxiv.org/abs/2012.04946\n- The paper was published in *Corpus Linguistics and Linguistic Theory* 18(3), 2022, pp. 627–665. I got the volume, issue and page numbers from the search-result summary, not from the publisher page itself, so check them before citing. The arXiv page says only \"accepted for publication, November 2021\", in its comments field.\n  - https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\n  - https://arxiv.org/abs/2012.04946\n- A separate DOI, 10.48550/arXiv.2012.04946, belongs to the arXiv preprint. Use 10.1515/cllt-2021-0018 if you want the published article.\n  - https://arxiv.org/abs/2012.04946\n\nSources:\n- [De Gruyter Brill article page](https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en)\n- [arXiv abstract page](https://arxiv.org/abs/2012.04946)",
+  "final_answer_sha256": "1b3538c0ce8d54edf7b25dfe9bb41dc53ed631c511f104d4008c8bf369bbc222",
+  "raw_stream_sha256": "2d472ba00c240e917f8e51d65e5648cb4a0ff14f9bb33125eaa93a8b3abb0c66"
+}

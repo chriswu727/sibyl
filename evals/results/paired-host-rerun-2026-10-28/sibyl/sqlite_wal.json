@@ -1,0 +1,60 @@
+{
+  "case_id": "sqlite_wal",
+  "condition": "sibyl",
+  "elapsed_seconds": 41.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.2021948,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 26576,
+    "cache_read_input_tokens": 76468,
+    "output_tokens": 3811,
+    "output_tokens_details": {
+      "thinking_tokens": 188
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 26576,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14762,
+      "outputTokens": 4872,
+      "cacheReadInputTokens": 76468,
+      "cacheCreationInputTokens": 26576,
+      "webSearchRequests": 1,
+      "costUSD": 0.2021948,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 188,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 26576,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 2,
+    "WebSearch": 1,
+    "mcp__sibyl__get_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** No. WAL does not eliminate write contention. SQLite still allows only one writer at a time, even in WAL mode. What WAL adds is that readers and a writer no longer block each other. That guarantee is \"mostly\" true, not absolute. The sources are the SQLite docs plus two practitioner blogs. I did not find an independent benchmark that measures the benefit.\n\n**Claims and sources**\n\n- SQLite says WAL gives more concurrency because readers don't block writers and a writer doesn't block readers, so reading and writing can proceed at the same time.\n  https://sqlite.org/wal.html\n\n- Writers are still serialized in WAL mode. Concurrent write transactions are not possible, and a second writer blocks or fails with SQLITE_BUSY. The write lock covers the whole database, across all tables and connections.\n  https://www.bugsink.com/blog/database-transactions/\n  https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency\n\n- SQLite's own docs say it allows an unlimited number of simultaneous readers but only one writer at any instant. The docs, as quoted by SkyPilot, say writers queue up and this is fine when locks are held for milliseconds.\n  https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency\n\n- The \"no blocking\" guarantee is only \"mostly true\". SQLite warns that some obscure cases can return SQLITE_BUSY to a query in WAL mode, so applications should be prepared for it.\n  https://sqlite.org/wal.html\n\n- Without WAL, a write blocks all readers until it completes. This is the contrast that makes WAL's reader/writer concurrency valuable.\n  https://www.bugsink.com/blog/database-transactions/\n\n- WAL has costs. A checkpoint can't finish while a reader is active, so with always-overlapping readers the WAL file grows without bound. Read performance also falls as the WAL grows.\n  https://sqlite.org/wal.html\n\n- Under heavy multi-process write load, WAL did not prevent lock failures. SkyPilot calls WAL \"not a silver bullet\": it reported \"database is locked\" errors at around 1000 processes. It also says lock waiters get no FIFO fairness, so a long-waiting process can be overtaken. This is one team's report, not a general benchmark.\n  https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency\n\n**Caveats**\n- Most claims rest on a single source. The reader/writer concurrency claim, the SQLITE_BUSY caveat and the checkpoint costs all come only from sqlite.org. I didn't find an independent source repeating them.\n- A search summary mentioned a non-mainline `BEGIN CONCURRENT` branch and a blog claim of checkpoint-race corruption. I didn't read those sources, so I make no claim about them.\n- The sqlite.org page also describes a \"WAL-reset bug\". It was fixed in 3.51.3 and is rare. It affects databases where two connections write or checkpoint at the same instant. I didn't record it as a claim.\n\nSources:\n- https://sqlite.org/wal.html\n- https://www.bugsink.com/blog/database-transactions/\n- https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency",
+  "final_answer_sha256": "0cba75fe5e6302bcb459167728df2615010d95190becb69e1f6dd71466728ac0",
+  "raw_stream_sha256": "1dffde2eede5fbbccc2a54938f609cd74ece76e7bbbc7d4a48a41c9a77f1febf"
+}

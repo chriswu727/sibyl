@@ -1,0 +1,60 @@
+{
+  "case_id": "idempotency",
+  "condition": "sibyl",
+  "elapsed_seconds": 62.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 10,
+  "cli_reported_cost_usd": 0.2409444,
+  "usage": {
+    "input_tokens": 16,
+    "cache_creation_input_tokens": 29367,
+    "cache_read_input_tokens": 160264,
+    "output_tokens": 6435,
+    "output_tokens_details": {
+      "thinking_tokens": 385
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 29367,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13605,
+      "outputTokens": 7024,
+      "cacheReadInputTokens": 160264,
+      "cacheCreationInputTokens": 29367,
+      "webSearchRequests": 1,
+      "costUSD": 0.2409444,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 385,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 29367,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__get_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__assess_research": 4
+  },
+  "final_answer": "**Direct answer: No.** Both Stripe and AWS document time-bounded idempotency. A key protects a retry only while the provider still remembers it. After that, a retry can be treated as a new request, which could duplicate the operation.\n\n**Stripe (API v1)**\n- Stripe may remove keys automatically once they are at least 24 hours old. If a key is reused after it has been pruned, Stripe generates a new request. https://docs.stripe.com/api/idempotent_requests\n- Keys can be up to 255 characters. Stripe compares incoming parameters with the original request's and errors if they differ. https://docs.stripe.com/api/idempotent_requests\n- Stripe saves a result only after endpoint execution begins. Requests that fail validation, or that conflict with a concurrent request, are not saved and can be retried. https://docs.stripe.com/api/idempotent_requests\n\n**AWS**\n- The Builders Library describes returning a semantically equivalent response for the same request identifier only \"for some interval\". That is a bounded window, not a guarantee forever. https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- The Builders Library says that reusing a request ID with different parameters returns a parameter-mismatch validation error. https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- AWS Proton client tokens expire eight hours after the request. Retrying with an expired token creates a new resource, and so does retrying after the original resource was deleted. https://docs.aws.amazon.com/proton/latest/APIReference/Welcome.html\n\n**Comparison:** Stripe documents a fixed 24-hour minimum for v1. AWS has no single limit: the window differs by service, and I verified only Proton's 8 hours from a primary page.\n\n**Gaps and caveats**\n- A search snippet said EC2 client tokens last at least 24 hours and ECS RunTask tokens have a 24-hour TTL. I did not confirm either on a primary page. The EC2 page I fetched only showed a retry-guidance table, so don't rely on those figures.\n- The Stripe claims come from one publisher, and I found no independent corroboration.\n- Stripe API v2 works differently: retries don't repeat successful operations, and Stripe retries failed or partial work to completion. I didn't find a stated v2 retention window in the text I read.\n- I found no source claiming that idempotency keys make retries safe indefinitely.\n- I did not export a report.\n\nSources:\n- https://docs.stripe.com/api/idempotent_requests\n- https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- https://docs.aws.amazon.com/proton/latest/APIReference/Welcome.html",
+  "final_answer_sha256": "6c75ff1fdf62820375fa9e4e61f3b9ebee375ac2c34f2c08475a563dce9044e7",
+  "raw_stream_sha256": "db05a960026a3af30f6652b6c779be98c0ac957157d56babf76be3c0ecd4fd4f"
+}

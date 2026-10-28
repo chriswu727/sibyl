@@ -1,0 +1,73 @@
+{
+  "case_id": "semiconductor_2024",
+  "condition": "native",
+  "elapsed_seconds": 28.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.137584,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4470,
+    "cache_read_input_tokens": 13087,
+    "output_tokens": 1752,
+    "output_tokens_details": {
+      "thinking_tokens": 52
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4470,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 29227,
+      "outputTokens": 3180,
+      "cacheReadInputTokens": 13087,
+      "cacheCreationInputTokens": 4470,
+      "webSearchRequests": 2,
+      "costUSD": 0.1294427,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 52,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 4470,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 76383,
+      "outputTokens": 1006,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0081413,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 604,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Global semiconductor sales hit a record in 2024. SIA first reported $627.6 billion, up 19.1% from $526.8 billion in 2023. The same SIA page was later updated to say WSTS had revised the 2024 year-end total to $630.5 billion. It was the first year above $600 billion. The revision note doesn't give a restated growth rate, so 19.1% belongs to the original $627.6 billion figure. I'd use $630.5 billion as the current total and say which release each figure comes from.\n\n**How to tell the kinds of number apart**\n- A finalized annual figure is a realized total for a completed year. It comes from SIA/WSTS sales data and can still be revised.\n- A forecast is a WSTS projection for a future year, such as the 2025 projections below. Each WSTS release replaces the one before it.\n- A regional growth rate is a year-over-year change for one region. It is not the global total, and it can move the opposite way from the global figure.\n\n**Claims and sources**\n\n1. SIA reported 2024 global sales of $627.6 billion, up 19.1% from 2023, the highest ever.\n   - https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\n2. 2023 sales were $526.8 billion (the base for the 19.1%).\n   - https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\n3. The SIA page notes an update on March 3, 2025: WSTS revised 2024 year-end sales to $630.5 billion.\n   - https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\n4. Regional 2024 growth: Americas +44.8%, China +18.3%, Asia Pacific/All Other +12.5%, Japan −0.4%, Europe −8.1%. These are regional rates, not the global figure.\n   - https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\n5. The \"double-digit growth in 2025\" language in the original release is a projection, not a result.\n   - https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\n\n6. WSTS forecasts for 2025 changed from release to release. Fall 2024 was about +11.2% (about $697 billion). Spring 2025 was +11.2% to $700.9 billion. Fall 2025 was +22.5% to $772.2 billion.\n   - https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024\n   - https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\n   - https://www.eusemiconductors.eu/sites/default/files/ESIA_WSTS_PR_AuFc2025.pdf\n\n**Caveats**\n- I read the SIA page directly (claims 1–5). The search tool's summaries supplied the WSTS forecast figures in claim 6 and the 2025 SIA Factbook's use of $630.5 billion. I didn't open the WSTS pages myself. The Factbook PDF wouldn't parse, so I couldn't confirm what it says.\n- A search summary also said SIA reported $791.7 billion for 2025. I didn't verify that, so treat it as unconfirmed.\n- WSTS monthly figures are three-month moving averages, per the search summary. I didn't check this in a primary source.",
+  "final_answer_sha256": "bfa119a94633c074f8f3df79e70a42e5b0549ae13ce9c33f1b104ade93d9c24e",
+  "raw_stream_sha256": "fabc868705c496e954751f27e0690db849d348b7ebfed569ba484ae5249e2f83"
+}

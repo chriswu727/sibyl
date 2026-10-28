@@ -1,0 +1,120 @@
+{
+  "case_id": "real04",
+  "kind": "factual",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.1649952,
+  "judge_subtype": "success",
+  "pages_read": 4,
+  "pages_cited": 4,
+  "raw": "{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Peso Pluma's birth name is Hassan Emilio Kabande Laija\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"supported\"}, {\"claim\": \"He was born on 15 June 1999 in Zapopan, Jalisco, Mexico\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"supported\"}, {\"claim\": \"Some sites give Guadalajara as his birthplace instead of Zapopan\", \"url\": \"https://www.famousbirthdays.com/people/peso-pluma.html\", \"label\": \"supported\"}, {\"claim\": \"Some sites give Guadalajara as his birthplace instead of Zapopan\", \"url\": \"https://www.legit.ng/ask-legit/biographies/1560619-peso-plumas-height-age-real-parents-nationality/\", \"label\": \"supported\"}, {\"claim\": \"He is a Mexican singer-songwriter known for regional Mexican music and corridos tumbados\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Matches the gold answer. Every cited claim is supported by its page. The remark that Zapopan is in the Guadalajara metro area is the answer's own unverified inference, and the answer says so.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Peso Pluma was born Hassan Emilio Kabande Laija\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"supported\"}, {\"claim\": \"Peso Pluma was born Hassan Emilio Kabande Laija\", \"url\": \"https://www.hola.com/us/celebrities/20230526346200/ten-fascinating-facts-about-peso-pluma/\", \"label\": \"supported\"}, {\"claim\": \"He was born on 15 June 1999 in Zapopan, Jalisco, Mexico\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"supported\"}, {\"claim\": \"Famous Birthdays gives Guadalajara as his birthplace\", \"url\": \"https://www.famousbirthdays.com/people/peso-pluma.html\", \"label\": \"supported\"}, {\"claim\": \"His parents are Hassan Kabande and Rubí Laija\", \"url\": \"https://www.hola.com/us/celebrities/20230526346200/ten-fascinating-facts-about-peso-pluma/\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Matches the gold answer. The parents' names are not on the Hola page, which mentions only the mother's Badiraguato roots and the father's Lebanese heritage. Wikipedia does name the parents, but the answer did not cite it for that claim.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Wikipedia gives his birth name as Hassan Emilio Kabande Laija, born 15 June 1999; Kabande is his surname and Laija his maternal family name\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"supported\"}, {\"claim\": \"Famous Birthdays says 'His birth name is Hassan Emilio Kabande Laija.'\", \"url\": \"https://www.famousbirthdays.com/people/peso-pluma.html\", \"label\": \"supported\"}, {\"claim\": \"Legit.ng lists his real name as Hassan Emilio Kabande Laija\", \"url\": \"https://www.legit.ng/ask-legit/biographies/1560619-peso-plumas-height-age-real-parents-nationality/\", \"label\": \"supported\"}, {\"claim\": \"Birthplace varies: Wikipedia says Zapopan, while Legit.ng and Famous Birthdays say Guadalajara\", \"url\": \"https://en.wikipedia.org/wiki/Peso_Pluma\", \"label\": \"partial\"}, {\"claim\": \"Birthplace varies: Wikipedia says Zapopan, while Legit.ng and Famous Birthdays say Guadalajara\", \"url\": \"https://www.famousbirthdays.com/people/peso-pluma.html\", \"label\": \"partial\"}, {\"claim\": \"Birthplace varies: Wikipedia says Zapopan, while Legit.ng and Famous Birthdays say Guadalajara\", \"url\": \"https://www.legit.ng/ask-legit/biographies/1560619-peso-plumas-height-age-real-parents-nationality/\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Matches the gold answer. The quote attributed to Famous Birthdays is verbatim. The birthplace-discrepancy claim cites all three URLs, and each page supports only its own part of it. The caveats about the counterevidence search and the tool are process statements, not factual claims.\"}}}",
+  "by_condition": {
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Peso Pluma's birth name is Hassan Emilio Kabande Laija",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "supported"
+        },
+        {
+          "claim": "He was born on 15 June 1999 in Zapopan, Jalisco, Mexico",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "supported"
+        },
+        {
+          "claim": "Some sites give Guadalajara as his birthplace instead of Zapopan",
+          "url": "https://www.famousbirthdays.com/people/peso-pluma.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Some sites give Guadalajara as his birthplace instead of Zapopan",
+          "url": "https://www.legit.ng/ask-legit/biographies/1560619-peso-plumas-height-age-real-parents-nationality/",
+          "label": "supported"
+        },
+        {
+          "claim": "He is a Mexican singer-songwriter known for regional Mexican music and corridos tumbados",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Matches the gold answer. Every cited claim is supported by its page. The remark that Zapopan is in the Guadalajara metro area is the answer's own unverified inference, and the answer says so."
+    },
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Peso Pluma was born Hassan Emilio Kabande Laija",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "supported"
+        },
+        {
+          "claim": "Peso Pluma was born Hassan Emilio Kabande Laija",
+          "url": "https://www.hola.com/us/celebrities/20230526346200/ten-fascinating-facts-about-peso-pluma/",
+          "label": "supported"
+        },
+        {
+          "claim": "He was born on 15 June 1999 in Zapopan, Jalisco, Mexico",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "supported"
+        },
+        {
+          "claim": "Famous Birthdays gives Guadalajara as his birthplace",
+          "url": "https://www.famousbirthdays.com/people/peso-pluma.html",
+          "label": "supported"
+        },
+        {
+          "claim": "His parents are Hassan Kabande and Rubí Laija",
+          "url": "https://www.hola.com/us/celebrities/20230526346200/ten-fascinating-facts-about-peso-pluma/",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Matches the gold answer. The parents' names are not on the Hola page, which mentions only the mother's Badiraguato roots and the father's Lebanese heritage. Wikipedia does name the parents, but the answer did not cite it for that claim."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Wikipedia gives his birth name as Hassan Emilio Kabande Laija, born 15 June 1999; Kabande is his surname and Laija his maternal family name",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "supported"
+        },
+        {
+          "claim": "Famous Birthdays says 'His birth name is Hassan Emilio Kabande Laija.'",
+          "url": "https://www.famousbirthdays.com/people/peso-pluma.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Legit.ng lists his real name as Hassan Emilio Kabande Laija",
+          "url": "https://www.legit.ng/ask-legit/biographies/1560619-peso-plumas-height-age-real-parents-nationality/",
+          "label": "supported"
+        },
+        {
+          "claim": "Birthplace varies: Wikipedia says Zapopan, while Legit.ng and Famous Birthdays say Guadalajara",
+          "url": "https://en.wikipedia.org/wiki/Peso_Pluma",
+          "label": "partial"
+        },
+        {
+          "claim": "Birthplace varies: Wikipedia says Zapopan, while Legit.ng and Famous Birthdays say Guadalajara",
+          "url": "https://www.famousbirthdays.com/people/peso-pluma.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Birthplace varies: Wikipedia says Zapopan, while Legit.ng and Famous Birthdays say Guadalajara",
+          "url": "https://www.legit.ng/ask-legit/biographies/1560619-peso-plumas-height-age-real-parents-nationality/",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Matches the gold answer. The quote attributed to Famous Birthdays is verbatim. The birthplace-discrepancy claim cites all three URLs, and each page supports only its own part of it. The caveats about the counterevidence search and the tool are process statements, not factual claims."
+    }
+  }
+}

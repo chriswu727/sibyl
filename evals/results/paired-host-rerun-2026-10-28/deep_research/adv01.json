@@ -1,0 +1,74 @@
+{
+  "case_id": "adv01",
+  "condition": "deep_research",
+  "elapsed_seconds": 36.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1358606,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 14014,
+    "cache_read_input_tokens": 72096,
+    "output_tokens": 1503,
+    "output_tokens_details": {
+      "thinking_tokens": 153
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14014,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13224,
+      "outputTokens": 2298,
+      "cacheReadInputTokens": 72096,
+      "cacheCreationInputTokens": 14014,
+      "webSearchRequests": 1,
+      "costUSD": 0.1226936,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 153,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14014,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 125330,
+      "outputTokens": 1268,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.013167000000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 972,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 3,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** Einstein never won a Nobel Prize for general relativity, so the question's premise is false. He received the Nobel Prize in Physics for 1921, which was announced in 1922. It was awarded for the photoelectric effect, not for relativity.\n\nI did the research directly with web sources, not through the skill's subagent workflow. The skill's file and shell steps conflict with your \"no shell or local files\" rule. I used 4 of the 8 allowed retrievals. The Nobel Prize website returned 403, and the arXiv PDF could not be read as text, so I did not read either one. The claims below rest on the search summary and Wikipedia.\n\n- Einstein received the 1921 Nobel Prize in Physics, and it was awarded in 1922. The 1921 prize was held over and given to him afterward.\n  https://en.wikipedia.org/wiki/Albert_Einstein\n  https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305 (search-result summary only; I did not open it)\n\n- The citation reads \"for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect.\"\n  https://en.wikipedia.org/wiki/Albert_Einstein\n\n- Relativity was not the stated basis. The search summary also said the Nobel Foundation's telegram excluded relativity from consideration. I could not verify that telegram claim in a primary source.\n  https://en.wikipedia.org/wiki/Albert_Einstein\n  https://arxiv.org/pdf/2112.13519 (search-result summary only; the PDF was unreadable)\n\n- The committee reportedly passed over relativity for two reasons. Some members were skeptical of it, and the phenomena that would conclusively establish general relativity were still far off. This comes from a secondary summary and is less firmly established than the claims above.\n  https://arxiv.org/pdf/2112.13519 (summary only)\n  https://onlinelibrary.wiley.com/doi/10.1002/andp.202200305 (summary only)",
+  "final_answer_sha256": "b7939acd67fdd804dd8f7097f0f6e19b55bab69c514fa5af1da7c8a923243aaf",
+  "raw_stream_sha256": "a9fa16a6bd69b7d4f52b82e20c21e8b647a25d40600d843583b1e1ef80ed5dc7"
+}

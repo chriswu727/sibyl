@@ -1,0 +1,145 @@
+{
+  "case_id": "real06",
+  "kind": "factual",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "sibyl",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.2924832,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 9,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"incorrect\", \"claims\": [{\"claim\": \"Wikipedia says the headquarters was declared complete on October 10, 1952, citing a NYT article 'Work Completed on U.N. Buildings'\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Headquarters\", \"label\": \"unsupported\"}, {\"claim\": \"Wikipedia infobox gives completion date October 9, 1952\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Headquarters\", \"label\": \"supported\"}, {\"claim\": \"The General Assembly Building was the last structure built and was formally dedicated on October 10, 1952\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building\", \"label\": \"partial\"}, {\"claim\": \"Untapped New York gives October 9, 1952 as the completion date\", \"url\": \"https://www.untappedcities.com/united-nations-lake-success/\", \"label\": \"supported\"}, {\"claim\": \"WorldAtlas gives October 9, 1952 as the completion date\", \"url\": \"https://www.worldatlas.com/articles/where-is-the-headquarters-of-the-the-united-nations-located.html\", \"label\": \"supported\"}, {\"claim\": \"UN visitor page says construction was completed in 1952 with no day; ClassicNewYorkHistory says October 1952\", \"url\": \"https://www.un.org/en/visit/about-us\", \"label\": \"supported\"}, {\"claim\": \"Groundbreaking was September 14, 1948; Secretariat cornerstone ceremony was October 24, 1949\", \"url\": \"https://www.un.org/ungifts/united-nations-ny-site\", \"label\": \"unsupported\"}, {\"claim\": \"Dag Hammarskjöld Library dedicated November 1961; North Lawn and South Annex date to 1981 and 1982\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Hedges between Oct 9 and Oct 10 and recommends October 10, 1952, so it does not state the gold answer as its answer. The 'declared complete Oct 10' body text is not in the provided excerpt. The ungifts page excerpt is only navigation text. The groundbreaking date is supported on the Wikipedia HQ page, but the cornerstone date is not.\"}, \"Y\": {\"verdict\": \"incorrect\", \"claims\": [{\"claim\": \"UN says construction began on UN Day (24 October) 1949 and was completed in 1952, with no month or day\", \"url\": \"https://www.un.org/en/visit/about-us\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia infobox lists completion date as October 9, 1952\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia body says 'The Manhattan headquarters was declared complete on October 10, 1952'\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"unsupported\"}, {\"claim\": \"Wikipedia gives groundbreaking as September 14, 1948\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"supported\"}, {\"claim\": \"24 October 1949 is the date of the cornerstone ceremony\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building\", \"label\": \"partial\"}, {\"claim\": \"classicnewyorkhistory.com says only that the headquarters was 'constructed in 1952'\", \"url\": \"https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Concludes October 10, 1952 is probably the better date, which is not the gold answer. The Oct 10 body quote is absent from the excerpt. The cornerstone excerpt is truncated before the date. Its classicnewyorkhistory claim omits that the page also says 'officially completed in October 1952'. The building-scope gap (Secretariat earlier, Library 1961, South Annex 1981–82) has no URL.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"The UN Headquarters complex was completed in 1952\", \"url\": \"https://www.un.org/en/visit/about-us\", \"label\": \"supported\"}, {\"claim\": \"The UN Headquarters complex was completed in 1952\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia infobox gives completion date as October 9, 1952\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"supported\"}, {\"claim\": \"Wikipedia body says the headquarters 'was declared complete on October 10, 1952', and both statements cite the same NYT source\", \"url\": \"https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\", \"label\": \"unsupported\"}, {\"claim\": \"Another history site dates completion only to October 1952\", \"url\": \"https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/\", \"label\": \"supported\"}, {\"claim\": \"Groundbreaking September 14, 1948; Secretariat finished about 1951; Library 1961; North Lawn and South Annex 1981 and 1982\", \"url\": \"https://en.wikipedia.org/wiki/United_Nations_Headquarters\", \"label\": \"partial\"}, {\"claim\": \"Groundbreaking September 14, 1948; Secretariat finished about 1951; Library 1961; North Lawn and South Annex 1981 and 1982\", \"url\": \"https://www.un.org/en/visit/about-us\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Gives October 9, 1952 as the best-supported date, with a hedge, so it states the gold answer. The Oct 10 body text and the shared-citation detail are not in the excerpt. The Wikipedia excerpt supports only the groundbreaking date among the building-timeline claims.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "incorrect",
+      "claims": [
+        {
+          "claim": "Wikipedia says the headquarters was declared complete on October 10, 1952, citing a NYT article 'Work Completed on U.N. Buildings'",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Headquarters",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Wikipedia infobox gives completion date October 9, 1952",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Headquarters",
+          "label": "supported"
+        },
+        {
+          "claim": "The General Assembly Building was the last structure built and was formally dedicated on October 10, 1952",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building",
+          "label": "partial"
+        },
+        {
+          "claim": "Untapped New York gives October 9, 1952 as the completion date",
+          "url": "https://www.untappedcities.com/united-nations-lake-success/",
+          "label": "supported"
+        },
+        {
+          "claim": "WorldAtlas gives October 9, 1952 as the completion date",
+          "url": "https://www.worldatlas.com/articles/where-is-the-headquarters-of-the-the-united-nations-located.html",
+          "label": "supported"
+        },
+        {
+          "claim": "UN visitor page says construction was completed in 1952 with no day; ClassicNewYorkHistory says October 1952",
+          "url": "https://www.un.org/en/visit/about-us",
+          "label": "supported"
+        },
+        {
+          "claim": "Groundbreaking was September 14, 1948; Secretariat cornerstone ceremony was October 24, 1949",
+          "url": "https://www.un.org/ungifts/united-nations-ny-site",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Dag Hammarskjöld Library dedicated November 1961; North Lawn and South Annex date to 1981 and 1982",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Hedges between Oct 9 and Oct 10 and recommends October 10, 1952, so it does not state the gold answer as its answer. The 'declared complete Oct 10' body text is not in the provided excerpt. The ungifts page excerpt is only navigation text. The groundbreaking date is supported on the Wikipedia HQ page, but the cornerstone date is not."
+    },
+    "sibyl": {
+      "verdict": "incorrect",
+      "claims": [
+        {
+          "claim": "UN says construction began on UN Day (24 October) 1949 and was completed in 1952, with no month or day",
+          "url": "https://www.un.org/en/visit/about-us",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia infobox lists completion date as October 9, 1952",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia body says 'The Manhattan headquarters was declared complete on October 10, 1952'",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Wikipedia gives groundbreaking as September 14, 1948",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "supported"
+        },
+        {
+          "claim": "24 October 1949 is the date of the cornerstone ceremony",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Secretariat_Building",
+          "label": "partial"
+        },
+        {
+          "claim": "classicnewyorkhistory.com says only that the headquarters was 'constructed in 1952'",
+          "url": "https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Concludes October 10, 1952 is probably the better date, which is not the gold answer. The Oct 10 body quote is absent from the excerpt. The cornerstone excerpt is truncated before the date. Its classicnewyorkhistory claim omits that the page also says 'officially completed in October 1952'. The building-scope gap (Secretariat earlier, Library 1961, South Annex 1981–82) has no URL."
+    },
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "The UN Headquarters complex was completed in 1952",
+          "url": "https://www.un.org/en/visit/about-us",
+          "label": "supported"
+        },
+        {
+          "claim": "The UN Headquarters complex was completed in 1952",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia infobox gives completion date as October 9, 1952",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "supported"
+        },
+        {
+          "claim": "Wikipedia body says the headquarters 'was declared complete on October 10, 1952', and both statements cite the same NYT source",
+          "url": "https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Another history site dates completion only to October 1952",
+          "url": "https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/",
+          "label": "supported"
+        },
+        {
+          "claim": "Groundbreaking September 14, 1948; Secretariat finished about 1951; Library 1961; North Lawn and South Annex 1981 and 1982",
+          "url": "https://en.wikipedia.org/wiki/United_Nations_Headquarters",
+          "label": "partial"
+        },
+        {
+          "claim": "Groundbreaking September 14, 1948; Secretariat finished about 1951; Library 1961; North Lawn and South Annex 1981 and 1982",
+          "url": "https://www.un.org/en/visit/about-us",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Gives October 9, 1952 as the best-supported date, with a hedge, so it states the gold answer. The Oct 10 body text and the shared-citation detail are not in the excerpt. The Wikipedia excerpt supports only the groundbreaking date among the building-timeline claims."
+    }
+  }
+}

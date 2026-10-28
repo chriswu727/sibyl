@@ -1,0 +1,59 @@
+{
+  "case_id": "real05",
+  "condition": "sibyl",
+  "elapsed_seconds": 28.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1400832,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 17438,
+    "cache_read_input_tokens": 67912,
+    "output_tokens": 2134,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17438,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13730,
+      "outputTokens": 2608,
+      "cacheReadInputTokens": 67912,
+      "cacheCreationInputTokens": 17438,
+      "webSearchRequests": 1,
+      "costUSD": 0.1400832,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 17438,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**The DOI is 10.1515/cllt-2021-0018** (https://doi.org/10.1515/cllt-2021-0018).\n\nClaims and sources:\n\n- The journal article is by Martijn van der Klis and Jos Tellings. It appeared in *Corpus Linguistics and Linguistic Theory* 18(3): 627–665 (2022), with the DOI above.\n  - https://pmc.ncbi.nlm.nih.gov/articles/PMC9536326/\n  - https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489\n- The arXiv preprint (arXiv:2012.04946) has a separate DOI, 10.48550/arXiv.2012.04946. arXiv lists the journal DOI above as its \"Related DOI\".\n  - https://arxiv.org/abs/2012.04946\n\nCaveats:\n- I found no conflicting DOI. The only other one is the preprint's, which is a different record from the journal version.\n- The De Gruyter publisher page returned HTTP 202 and I couldn't read it. The journal DOI rests on the PMC and Utrecht University repository records, plus arXiv's related-DOI link.\n- Only arXiv states the preprint DOI, so I haven't independently corroborated that one.",
+  "final_answer_sha256": "d1d679738f9200e30e0a3dbba5bf580bb1fe23a69260506bc40feca6a72dca41",
+  "raw_stream_sha256": "a8921f525582b89d6332ebe3e158b6739b8ed7ce9670a67b1ef02f14be73592c"
+}

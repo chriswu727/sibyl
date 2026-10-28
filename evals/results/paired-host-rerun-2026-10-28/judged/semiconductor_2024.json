@@ -1,0 +1,165 @@
+{
+  "case_id": "semiconductor_2024",
+  "kind": "research",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.2977592,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 10,
+  "raw": "```json\n{\"answers\": {\n\"X\": {\n\"verdict\": \"n/a\",\n\"claims\": [\n{\"claim\": \"SIA reported 2024 global sales of $627.6B, up 19.1% from 2023, the highest ever\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"2023 sales were $526.8B, the base for the 19.1%\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"SIA page update of March 3, 2025 says WSTS revised 2024 year-end sales to $630.5B\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"Regional 2024 growth: Americas +44.8%, China +18.3%, APAC/All Other +12.5%, Japan -0.4%, Europe -8.1%\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"The 'double-digit growth in 2025' language is a projection\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"WSTS Fall 2024 forecast for 2025 was +11.2% (~$697B)\", \"url\": \"https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024\", \"label\": \"supported\"},\n{\"claim\": \"WSTS Spring 2025 forecast for 2025 was +11.2% to $700.9B\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"supported\"},\n{\"claim\": \"WSTS Fall 2025 forecast for 2025 was +22.5% to $772.2B\", \"url\": \"https://www.eusemiconductors.eu/sites/default/files/ESIA_WSTS_PR_AuFc2025.pdf\", \"label\": \"supported\"}\n],\n\"uncited_claims\": 3,\n\"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1},\n\"notes\": \"Every cited claim is supported by the page text. However, the answer admits the WSTS figures came from search summaries rather than inspected pages, so support is bounded. Three claims carry no URL and are flagged as unverified: the Factbook using $630.5B, the 2025 total of $791.7B, and the three-month moving average. The answer leaves the revised growth rate open, although the WSTS Spring 2025 table it cites shows 19.7%. It distinguishes forecasts and regional rates clearly. Its counterevidence is limited to noting revisions.\"\n},\n\"Y\": {\n\"verdict\": \"n/a\",\n\"claims\": [\n{\"claim\": \"SIA announced 2024 sales of $627.6B, up 19.1% from $526.8B in 2023 (Feb 2025)\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"March 3, 2025 update says WSTS revised 2024 to $630.5B; no revised growth rate on page\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"2025 SIA Factbook uses $630.5B for 2024\", \"url\": \"https://www.semiconductors.org/wp-content/uploads/2025/05/2025-SIA-Factbook-FINAL-1.pdf\", \"label\": \"supported\"},\n{\"claim\": \"WSTS Autumn 2025 table shows 2024 at $630,549M and 19.7% growth\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7310/WSTS_FC-Release-2025_11.pdf\", \"label\": \"supported\"},\n{\"claim\": \"SIA uses $630.5B as the 2024 baseline; 2025 sales were $791.7B, up 25.6%\", \"url\": \"https://atreg.com/global-2025-semiconductor-sales-rise-by-25-6-percent-to-791-7-billion/\", \"label\": \"supported\"},\n{\"claim\": \"SIA regional 2024 rates: Americas +44.8%, China +18.3%, APAC/All Others +12.5%, Japan -0.4%, Europe -8.1%\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"WSTS Spring 2025 forecast projected 2025 growth of 11.2% to $700.9B\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"supported\"},\n{\"claim\": \"Forecast revised to $728B (15.4%) at mid-year, then $772.2B (22.5%) in autumn; 2025 actual +25.6%\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7310/WSTS_FC-Release-2025_11.pdf\", \"label\": \"partial\"}\n],\n\"uncited_claims\": 0,\n\"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1},\n\"notes\": \"Most cited claims are supported. The mid-year forecast of $728B / 15.4% is not stated on the cited page, and the answer hedges it as coming from a search summary. One further claim was left out of the eight-claim limit: 'some outlets still cite $627.6B'. For that claim, VentureBeat is unreachable and TrendForce supports it. The ~19.7% is correctly labeled as the answer's own calculation, and it matches the WSTS table. Sources are good: SIA, the SIA Factbook and WSTS, plus secondary outlets. The answer discloses its limits but offers only light counterevidence.\"\n},\n\"Z\": {\n\"verdict\": \"n/a\",\n\"claims\": [\n{\"claim\": \"SIA announced on Feb 7, 2025 that 2024 sales were $627.6B, up 19.1% from $526.8B\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"SIA update: 'WSTS updated 2024 year-end sales to a total of $630.5 billion'\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"WSTS June 2025 table: 2024 world $630,549M, +19.7%; Americas +45.2%, Europe -8.1%, Japan 0.0%, APAC +16.4%\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf\", \"label\": \"supported\"},\n{\"claim\": \"WSTS Dec 2024 release estimated 2024 at $627B (+19.0%), with Americas +38.9% and APAC +17.5% projected\", \"url\": \"https://www.wsts.org/esraCMS/extension/media/f/WST/6765/WSTS_FC-Release-2024_11.pdf\", \"label\": \"supported\"},\n{\"claim\": \"SIA Feb 2025 regional rates split China out: Americas +44.8%, China +18.3%, APAC/All Others +12.5%, Japan -0.4%, Europe -8.1%\", \"url\": \"https://www.trendforce.com/news/2025/02/08/news-global-semiconductor-sales-hit-record-high-at-600b-in-2024-set-for-double-digit-growth-in-2025/\", \"label\": \"supported\"},\n{\"claim\": \"December 2024 monthly $57.0B (-1.2% vs Nov) is a three-month moving average\", \"url\": \"https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/\", \"label\": \"supported\"}\n],\n\"uncited_claims\": 0,\n\"rubric\": {\"coverage\": 2, \"support\": 2, \"source_quality\": 2, \"counterevidence\": 2},\n\"notes\": \"All cited claims are supported by the page text. The answer uses primary SIA and WSTS documents from multiple vintages. It correctly notes that TrendForce merely mirrors SIA and is not independent. It sets the forecast vintage ($627B / 19.0%) against the revised actual ($630.5B / 19.7%). It also shows that regional rates differ by grouping and vintage (SIA 44.8% vs WSTS 45.2%). Both points substantively narrow how the figures should be read. It discloses that it did not search for later restatements.\"\n}\n}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "SIA reported 2024 global sales of $627.6B, up 19.1% from 2023, the highest ever",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "2023 sales were $526.8B, the base for the 19.1%",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA page update of March 3, 2025 says WSTS revised 2024 year-end sales to $630.5B",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "Regional 2024 growth: Americas +44.8%, China +18.3%, APAC/All Other +12.5%, Japan -0.4%, Europe -8.1%",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "The 'double-digit growth in 2025' language is a projection",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Fall 2024 forecast for 2025 was +11.2% (~$697B)",
+          "url": "https://www.wsts.org/76/103/WSTS-Semiconductor-Market-Forecast-Fall-2024",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Spring 2025 forecast for 2025 was +11.2% to $700.9B",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Fall 2025 forecast for 2025 was +22.5% to $772.2B",
+          "url": "https://www.eusemiconductors.eu/sites/default/files/ESIA_WSTS_PR_AuFc2025.pdf",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 3,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Every cited claim is supported by the page text. However, the answer admits the WSTS figures came from search summaries rather than inspected pages, so support is bounded. Three claims carry no URL and are flagged as unverified: the Factbook using $630.5B, the 2025 total of $791.7B, and the three-month moving average. The answer leaves the revised growth rate open, although the WSTS Spring 2025 table it cites shows 19.7%. It distinguishes forecasts and regional rates clearly. Its counterevidence is limited to noting revisions."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "SIA announced 2024 sales of $627.6B, up 19.1% from $526.8B in 2023 (Feb 2025)",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "March 3, 2025 update says WSTS revised 2024 to $630.5B; no revised growth rate on page",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "2025 SIA Factbook uses $630.5B for 2024",
+          "url": "https://www.semiconductors.org/wp-content/uploads/2025/05/2025-SIA-Factbook-FINAL-1.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Autumn 2025 table shows 2024 at $630,549M and 19.7% growth",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7310/WSTS_FC-Release-2025_11.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA uses $630.5B as the 2024 baseline; 2025 sales were $791.7B, up 25.6%",
+          "url": "https://atreg.com/global-2025-semiconductor-sales-rise-by-25-6-percent-to-791-7-billion/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA regional 2024 rates: Americas +44.8%, China +18.3%, APAC/All Others +12.5%, Japan -0.4%, Europe -8.1%",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Spring 2025 forecast projected 2025 growth of 11.2% to $700.9B",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "Forecast revised to $728B (15.4%) at mid-year, then $772.2B (22.5%) in autumn; 2025 actual +25.6%",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7310/WSTS_FC-Release-2025_11.pdf",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Most cited claims are supported. The mid-year forecast of $728B / 15.4% is not stated on the cited page, and the answer hedges it as coming from a search summary. One further claim was left out of the eight-claim limit: 'some outlets still cite $627.6B'. For that claim, VentureBeat is unreachable and TrendForce supports it. The ~19.7% is correctly labeled as the answer's own calculation, and it matches the WSTS table. Sources are good: SIA, the SIA Factbook and WSTS, plus secondary outlets. The answer discloses its limits but offers only light counterevidence."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "SIA announced on Feb 7, 2025 that 2024 sales were $627.6B, up 19.1% from $526.8B",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA update: 'WSTS updated 2024 year-end sales to a total of $630.5 billion'",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS June 2025 table: 2024 world $630,549M, +19.7%; Americas +45.2%, Europe -8.1%, Japan 0.0%, APAC +16.4%",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/7057/WSTS_FC-Release-2025_05.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "WSTS Dec 2024 release estimated 2024 at $627B (+19.0%), with Americas +38.9% and APAC +17.5% projected",
+          "url": "https://www.wsts.org/esraCMS/extension/media/f/WST/6765/WSTS_FC-Release-2024_11.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "SIA Feb 2025 regional rates split China out: Americas +44.8%, China +18.3%, APAC/All Others +12.5%, Japan -0.4%, Europe -8.1%",
+          "url": "https://www.trendforce.com/news/2025/02/08/news-global-semiconductor-sales-hit-record-high-at-600b-in-2024-set-for-double-digit-growth-in-2025/",
+          "label": "supported"
+        },
+        {
+          "claim": "December 2024 monthly $57.0B (-1.2% vs Nov) is a three-month moving average",
+          "url": "https://www.semiconductors.org/global-semiconductor-sales-increase-19-1-in-2024-double-digit-growth-projected-in-2025/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "All cited claims are supported by the page text. The answer uses primary SIA and WSTS documents from multiple vintages. It correctly notes that TrendForce merely mirrors SIA and is not independent. It sets the forecast vintage ($627B / 19.0%) against the revised actual ($630.5B / 19.7%). It also shows that regional rates differ by grouping and vintage (SIA 44.8% vs WSTS 45.2%). Both points substantively narrow how the figures should be read. It discloses that it did not search for later restatements."
+    }
+  }
+}

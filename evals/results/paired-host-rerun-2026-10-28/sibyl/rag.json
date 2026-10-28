@@ -1,0 +1,59 @@
+{
+  "case_id": "rag",
+  "condition": "sibyl",
+  "elapsed_seconds": 56.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.28842470000000003,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 29199,
+    "cache_read_input_tokens": 115807,
+    "output_tokens": 6248,
+    "output_tokens_details": {
+      "thinking_tokens": 216
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 29199,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 29559,
+      "outputTokens": 8093,
+      "cacheReadInputTokens": 115807,
+      "cacheCreationInputTokens": 29199,
+      "webSearchRequests": 2,
+      "costUSD": 0.28842470000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 216,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 29199,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 2,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer:** RAG combines two knowledge sources. The language model's weights are the parametric memory. An external index of documents, searched by a retriever, is the non-parametric memory. The retrieved passages are fed to the generator as extra context, and the generator draws on them along with what it learned in training. Retrieval doesn't guarantee factual answers because retrieval only supplies evidence. The generator still decides how much to rely on that evidence versus its own priors, and it can ignore, misuse, or contradict it.\n\n**How RAG combines the two**\n\n- The original RAG work defines these as \"models which combine pre-trained parametric and non-parametric memory for language generation.\" It reported more specific, diverse and factual text than a parametric-only seq2seq baseline.\n  https://arxiv.org/abs/2005.11401\n- That paper compares two formulations. One conditions on the same retrieved passages across the whole output. The other can use different passages per token.\n  https://arxiv.org/abs/2005.11401\n- Retrieval helps most where parametric memory is weak. Models struggle with less popular facts, and scaling doesn't fix that long tail. Retrieval-augmented models largely outperform much larger unassisted models. However, unassisted models \"remain competitive\" on high-popularity entities.\n  https://arxiv.org/abs/2212.10511\n\n**Why retrieval doesn't guarantee factual answers**\n\n- Even with accurate, relevant retrieved context, RAG models \"may still produce statements that are either unsupported or contradict the retrieved information.\"\n  https://arxiv.org/pdf/2410.11414\n- Conflicts between the context and parametric knowledge can lead to hallucinations, but \"do not always cause them.\"\n  https://arxiv.org/pdf/2410.11414\n- One mechanistic account comes from ReDeEP (tested on Llama2-7B-chat with the RAGTruth dataset). It says hallucinations occur when feed-forward layers that store knowledge overemphasize parametric knowledge, while attention heads that copy from the context fail to retain or integrate the retrieved content. This is one study on one small model, so don't treat it as general.\n  https://arxiv.org/pdf/2410.11414\n- Knowledge conflicts between context and memory, between different contexts, and within the model's own memory can significantly hurt trustworthiness, \"especially in real-world applications where noise and misinformation are common.\" So the retrieved text itself may be wrong or contradictory.\n  https://arxiv.org/abs/2403.08319\n- Models don't robustly use long contexts. Performance degrades when the relevant information sits in the middle of the input. Which passages are retrieved, and where they land in the prompt, therefore affects the answer.\n  https://arxiv.org/abs/2307.03172\n\n**Caveats and gaps**\n\n- On average, retrieval does improve factuality (Lewis et al.; Mallen et al.). The accurate claim is that it reduces errors, not that it guarantees correct answers.\n- Every source I read is on arXiv, and most claims rest on a single paper. I found no independent publisher for them.\n- Retrieval-side failures also exist, such as the retriever missing or ranking the wrong documents. I did not directly cover those. The ones I did cover are generator-side failures and noisy context.\n- A search snippet mentioned a 2026 study reporting a weak link between retrieval quality and faithfulness. I didn't read it, so I haven't relied on it.\n\nSources:\n- https://arxiv.org/abs/2005.11401\n- https://arxiv.org/abs/2212.10511\n- https://arxiv.org/pdf/2410.11414\n- https://arxiv.org/abs/2403.08319\n- https://arxiv.org/abs/2307.03172",
+  "final_answer_sha256": "6544cc71867b2f753a3bfe3ca1c91be529fd63990c346100543167cbb62774a0",
+  "raw_stream_sha256": "c79cb35ca1ba9dd0f194da8a3640906f8b9068dc21707e5f1335e596d81744df"
+}

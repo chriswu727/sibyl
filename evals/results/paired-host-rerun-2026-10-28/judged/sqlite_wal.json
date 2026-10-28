@@ -1,0 +1,175 @@
+{
+  "case_id": "sqlite_wal",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "deep_research",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.34167519999999996,
+  "judge_subtype": "success",
+  "pages_read": 8,
+  "pages_cited": 9,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"WAL gives more concurrency: readers don't block writers and a writer doesn't block readers, so reading and writing proceed concurrently\", \"url\": \"https://sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"Writers are still serialized in WAL mode; concurrent write transactions are not possible; a second writer blocks or fails with SQLITE_BUSY; the write lock is global across tables and connections\", \"url\": \"https://www.bugsink.com/blog/database-transactions/\", \"label\": \"supported\"}, {\"claim\": \"Writers are still serialized in WAL mode; concurrent write transactions are not possible; a second writer blocks or fails with SQLITE_BUSY; the write lock is global across tables and connections\", \"url\": \"https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency\", \"label\": \"partial\"}, {\"claim\": \"SQLite docs (quoted by SkyPilot) say unlimited simultaneous readers but only one writer at any instant; writers queue up, which is fine when locks are held for milliseconds\", \"url\": \"https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency\", \"label\": \"supported\"}, {\"claim\": \"The no-blocking guarantee is only 'mostly true'; obscure cases can return SQLITE_BUSY to queries in WAL mode\", \"url\": \"https://sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"Without WAL, a write blocks all readers until it completes\", \"url\": \"https://www.bugsink.com/blog/database-transactions/\", \"label\": \"supported\"}, {\"claim\": \"A checkpoint can't finish while a reader is active, so always-overlapping readers make the WAL grow without bound; read performance falls as the WAL grows\", \"url\": \"https://sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"WAL is not a silver bullet: 'database is locked' errors at around 1000 processes; lock waiters get no FIFO fairness\", \"url\": \"https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Core claims are well supported. Some claims go beyond the excerpt. The excerpt shows only the section heading for the 'mostly true' SQLITE_BUSY caveat. On WAL growth, it says only that a long reader stalls the checkpointer, not that the WAL grows without bound. The second URL on the writer-serialization claim is partial: SkyPilot states single-writer blocking but not a global lock across tables. The WAL-reset bug detail (fixed in 3.51.3) is uncited and not in the excerpt. SkyPilot's 1000-process report is a substantive practitioner counterpoint, and the answer discloses its limits.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"With only one WAL file, there can be only one writer at a time\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"SQLite supports multiple simultaneous read transactions but only one write transaction\", \"url\": \"https://www.sqlite.org/lang_transaction.html\", \"label\": \"supported\"}, {\"claim\": \"A writer that can't get the write lock (RESERVED in rollback mode) gets SQLITE_BUSY; the one-writer rule holds in WAL too\", \"url\": \"https://www.sqlite.org/lockingv3.html\", \"label\": \"partial\"}, {\"claim\": \"BEGIN CONCURRENT allows multiple simultaneous writers, requires WAL/WAL2, still serializes COMMITs, and conflicts fail with SQLITE_BUSY_SNAPSHOT\", \"url\": \"https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md\", \"label\": \"supported\"}, {\"claim\": \"In WAL mode readers don't block writers and a writer doesn't block readers\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"The docs qualify the no-blocking guarantee as 'mostly true', with SQLITE_BUSY exceptions\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"In rollback mode a writer needs PENDING then EXCLUSIVE to commit; while it waits no new readers can start, and under EXCLUSIVE no reader can read\", \"url\": \"https://www.sqlite.org/lockingv3.html\", \"label\": \"supported\"}, {\"claim\": \"A reader keeps seeing a consistent historical snapshot while a writer modifies the database\", \"url\": \"https://www.sqlite.org/lang_transaction.html\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Most of the eight extracted claims are supported. Among later claims not extracted, the three specific reader SQLITE_BUSY cases are unsupported by the excerpt, which ends before section 9. The unbounded WAL growth claim is partial. The performance, network-filesystem, ATTACH, 3.11.0, BEGIN IMMEDIATE and EXCLUSIVE=IMMEDIATE claims are supported. The answer flags its own unverified points (busy timeout, BEGIN CONCURRENT release status). All sources are sqlite.org, and the answer correctly discloses that it relies on a single publisher. BEGIN CONCURRENT and the BUSY caveats narrow the conclusion substantively.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"WAL allows only one writer at a time because there is one WAL file; readers can proceed during a write\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"Readers don't block writers and vice versa; each reader sees a snapshot from the start of its transaction; writers only append to the WAL\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"In rollback mode only one connection can hold RESERVED; a second writer gets SQLITE_BUSY; readers continue under RESERVED, but writing needs EXCLUSIVE\", \"url\": \"https://www.sqlite.org/lockingv3.html\", \"label\": \"partial\"}, {\"claim\": \"WAL is significantly faster: content is written once instead of twice, I/O is more sequential, and there are fewer fsync() calls\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"WAL costs: ~1-2% slower for read-mostly workloads, same-host only, best with small transactions, checkpointing overhead\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"supported\"}, {\"claim\": \"Checkpoint starvation: with always-overlapping readers the WAL grows without bound; larger WALs slow reads\", \"url\": \"https://www.sqlite.org/wal.html\", \"label\": \"partial\"}, {\"claim\": \"Even with a busy handler, SQLite may return SQLITE_BUSY immediately to avoid deadlock on a read-to-write promotion\", \"url\": \"https://www.sqlite.org/c3ref/busy_handler.html\", \"label\": \"unreachable\"}, {\"claim\": \"PRAGMA busy_timeout sets how many milliseconds a connection waits on a lock\", \"url\": \"https://www.sqlite.org/pragma.html#pragma_busy_timeout\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Core WAL claims are supported. The answer correctly flags its lockingv3 inference as rollback-only, but that page's excerpt does not state that a second writer gets SQLITE_BUSY. The busy_handler page is unreachable. The pragma excerpt lists busy_timeout only by name, without its description. All sources are sqlite.org primary docs. Counterevidence is limited to the documentation's own caveats, the strongest of which rests on an unreachable page; the answer discloses that it has no throughput measurements.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "WAL gives more concurrency: readers don't block writers and a writer doesn't block readers, so reading and writing proceed concurrently",
+          "url": "https://sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Writers are still serialized in WAL mode; concurrent write transactions are not possible; a second writer blocks or fails with SQLITE_BUSY; the write lock is global across tables and connections",
+          "url": "https://www.bugsink.com/blog/database-transactions/",
+          "label": "supported"
+        },
+        {
+          "claim": "Writers are still serialized in WAL mode; concurrent write transactions are not possible; a second writer blocks or fails with SQLITE_BUSY; the write lock is global across tables and connections",
+          "url": "https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency",
+          "label": "partial"
+        },
+        {
+          "claim": "SQLite docs (quoted by SkyPilot) say unlimited simultaneous readers but only one writer at any instant; writers queue up, which is fine when locks are held for milliseconds",
+          "url": "https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency",
+          "label": "supported"
+        },
+        {
+          "claim": "The no-blocking guarantee is only 'mostly true'; obscure cases can return SQLITE_BUSY to queries in WAL mode",
+          "url": "https://sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Without WAL, a write blocks all readers until it completes",
+          "url": "https://www.bugsink.com/blog/database-transactions/",
+          "label": "supported"
+        },
+        {
+          "claim": "A checkpoint can't finish while a reader is active, so always-overlapping readers make the WAL grow without bound; read performance falls as the WAL grows",
+          "url": "https://sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "WAL is not a silver bullet: 'database is locked' errors at around 1000 processes; lock waiters get no FIFO fairness",
+          "url": "https://skypilot.ai/blog/abusing-sqlite-to-handle-concurrency",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Core claims are well supported. Some claims go beyond the excerpt. The excerpt shows only the section heading for the 'mostly true' SQLITE_BUSY caveat. On WAL growth, it says only that a long reader stalls the checkpointer, not that the WAL grows without bound. The second URL on the writer-serialization claim is partial: SkyPilot states single-writer blocking but not a global lock across tables. The WAL-reset bug detail (fixed in 3.51.3) is uncited and not in the excerpt. SkyPilot's 1000-process report is a substantive practitioner counterpoint, and the answer discloses its limits."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "With only one WAL file, there can be only one writer at a time",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "SQLite supports multiple simultaneous read transactions but only one write transaction",
+          "url": "https://www.sqlite.org/lang_transaction.html",
+          "label": "supported"
+        },
+        {
+          "claim": "A writer that can't get the write lock (RESERVED in rollback mode) gets SQLITE_BUSY; the one-writer rule holds in WAL too",
+          "url": "https://www.sqlite.org/lockingv3.html",
+          "label": "partial"
+        },
+        {
+          "claim": "BEGIN CONCURRENT allows multiple simultaneous writers, requires WAL/WAL2, still serializes COMMITs, and conflicts fail with SQLITE_BUSY_SNAPSHOT",
+          "url": "https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md",
+          "label": "supported"
+        },
+        {
+          "claim": "In WAL mode readers don't block writers and a writer doesn't block readers",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "The docs qualify the no-blocking guarantee as 'mostly true', with SQLITE_BUSY exceptions",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "In rollback mode a writer needs PENDING then EXCLUSIVE to commit; while it waits no new readers can start, and under EXCLUSIVE no reader can read",
+          "url": "https://www.sqlite.org/lockingv3.html",
+          "label": "supported"
+        },
+        {
+          "claim": "A reader keeps seeing a consistent historical snapshot while a writer modifies the database",
+          "url": "https://www.sqlite.org/lang_transaction.html",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Most of the eight extracted claims are supported. Among later claims not extracted, the three specific reader SQLITE_BUSY cases are unsupported by the excerpt, which ends before section 9. The unbounded WAL growth claim is partial. The performance, network-filesystem, ATTACH, 3.11.0, BEGIN IMMEDIATE and EXCLUSIVE=IMMEDIATE claims are supported. The answer flags its own unverified points (busy timeout, BEGIN CONCURRENT release status). All sources are sqlite.org, and the answer correctly discloses that it relies on a single publisher. BEGIN CONCURRENT and the BUSY caveats narrow the conclusion substantively."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "WAL allows only one writer at a time because there is one WAL file; readers can proceed during a write",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Readers don't block writers and vice versa; each reader sees a snapshot from the start of its transaction; writers only append to the WAL",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "In rollback mode only one connection can hold RESERVED; a second writer gets SQLITE_BUSY; readers continue under RESERVED, but writing needs EXCLUSIVE",
+          "url": "https://www.sqlite.org/lockingv3.html",
+          "label": "partial"
+        },
+        {
+          "claim": "WAL is significantly faster: content is written once instead of twice, I/O is more sequential, and there are fewer fsync() calls",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "WAL costs: ~1-2% slower for read-mostly workloads, same-host only, best with small transactions, checkpointing overhead",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Checkpoint starvation: with always-overlapping readers the WAL grows without bound; larger WALs slow reads",
+          "url": "https://www.sqlite.org/wal.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Even with a busy handler, SQLite may return SQLITE_BUSY immediately to avoid deadlock on a read-to-write promotion",
+          "url": "https://www.sqlite.org/c3ref/busy_handler.html",
+          "label": "unreachable"
+        },
+        {
+          "claim": "PRAGMA busy_timeout sets how many milliseconds a connection waits on a lock",
+          "url": "https://www.sqlite.org/pragma.html#pragma_busy_timeout",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Core WAL claims are supported. The answer correctly flags its lockingv3 inference as rollback-only, but that page's excerpt does not state that a second writer gets SQLITE_BUSY. The busy_handler page is unreachable. The pragma excerpt lists busy_timeout only by name, without its description. All sources are sqlite.org primary docs. Counterevidence is limited to the documentation's own caveats, the strongest of which rests on an unreachable page; the answer discloses that it has no throughput measurements."
+    }
+  }
+}

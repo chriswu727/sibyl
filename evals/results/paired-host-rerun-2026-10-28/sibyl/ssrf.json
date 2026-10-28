@@ -1,0 +1,76 @@
+{
+  "case_id": "ssrf",
+  "condition": "sibyl",
+  "elapsed_seconds": 76.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 10,
+  "cli_reported_cost_usd": 0.2619319,
+  "usage": {
+    "input_tokens": 16,
+    "cache_creation_input_tokens": 29810,
+    "cache_read_input_tokens": 163541,
+    "output_tokens": 7224,
+    "output_tokens_details": {
+      "thinking_tokens": 108
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 29810,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14835,
+      "outputTokens": 8406,
+      "cacheReadInputTokens": 163541,
+      "cacheCreationInputTokens": 29810,
+      "webSearchRequests": 1,
+      "costUSD": 0.2593241,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 108,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 29810,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 18378,
+      "outputTokens": 1540,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0026078,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1021,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebFetch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "WebSearch": 1,
+    "mcp__sibyl__assess_research": 4
+  },
+  "final_answer": "**Short answer:** A URL string check only tests the text you were handed at one moment. SSRF happens when the server later makes a network request. Two things can change between the check and the request:\n- A redirect can send the request somewhere the check never saw.\n- DNS can map the same hostname to a different IP address.\n\nReliable defenses check the resolved IP address at connection time and don't follow redirects blindly.\n\n**Redirects**\n- If an allowed site has an open redirect, a strictly validated URL can still end up at an internal target, provided the HTTP client follows redirects. https://portswigger.net/web-security/ssrf\n- Attackers can also submit a URL they control that redirects to the target. Switching protocol (http to https) during the redirect has bypassed some filters. https://portswigger.net/web-security/ssrf\n- OWASP says to disable redirect following in the web client and to connect only to a validated IP address. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- If you do follow redirects, an engineering write-up recommends validating every hop. This is a secondary, non-authoritative source. https://techearl.com/dns-rebinding-ssrf\n\n**DNS changes (rebinding / TOCTOU)**\n- Domain allowlisting alone does not prevent DNS rebinding. A second, unchecked DNS lookup between validation and connection can bypass the checks. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- A hostname can resolve to an allowed IP when you validate it and to an internal IP when you fetch it. The hostname stays allowlisted while the IP underneath changes. https://techearl.com/dns-rebinding-ssrf\n- Common HTTP clients re-resolve the name when they connect. https://techearl.com/dns-rebinding-ssrf\n- Real example: the MCP Atlassian SSRF fix resolved the host and checked the IP, then discarded it. The request re-resolved the name, so it could reach the cloud metadata address 169.254.169.254. The advisory's proof of concept shows this structurally, not as a live exploit. https://github.com/advisories/GHSA-489g-7rxv-6c8q\n- The defense is to resolve once, validate the IP, then connect to that IP. Keep the original hostname for the Host header, TLS SNI and certificate verification. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html and https://techearl.com/dns-rebinding-ssrf\n\n**Parsing differences (related)**\n- Ad-hoc URL parsing can be fooled by `@` credentials, `#` fragments, look-alike subdomains and URL-encoding. Encoding tricks work when the filter and the requesting code decode differently. https://portswigger.net/web-security/ssrf\n- OWASP gives the example `http://example.com\\@evil.com`, which parsers read as different hosts. https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n\n**Caveats**\n- No source disputes the premise. I did not run a separate search for counterevidence on redirects.\n- Resolver minimum TTLs and some resolvers' rebinding protection slow the naive attack. One source says attackers can retry or work around them, and it treats pinning as the only fix that closes the window. https://techearl.com/dns-rebinding-ssrf\n- Several claims rest on a single source. The DNS rebinding material comes from OWASP plus a single blog and an advisory, not independent academic work.\n\nSources:\n- https://portswigger.net/web-security/ssrf\n- https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html\n- https://techearl.com/dns-rebinding-ssrf\n- https://github.com/advisories/GHSA-489g-7rxv-6c8q",
+  "final_answer_sha256": "73c70beda7dc5684a2a6f2a8b6883548c3c2ba46916312b31f93433f4a867668",
+  "raw_stream_sha256": "269136bd8ed6d8492d1eb03574f9292778bf7bf48d023da4ba98b5168bc444f8"
+}

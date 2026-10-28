@@ -208,9 +208,11 @@ host-search URLs per question, [failed only readiness](evals/results/host-source
 30.2% of answerable runs were ready, mostly because answer-bearing reads from a
 single domain are rated `limited`. The owner then made that rate a reported
 diagnostic, so this run meets the amended gate; the paired host evaluation is
-the remaining research-quality gate. Its [first run](evals/results/paired-host-2026-10-27/manifest.json)
-gave Sibyl the highest citation support of three conditions (78.6% against 69.1%
-for built-in search) but failed on counterevidence coverage, so it is not yet a pass. The
+the remaining research-quality gate. Neither of its [two](evals/results/paired-host-2026-10-27/manifest.json)
+[runs](evals/results/paired-host-rerun-2026-10-28/manifest.json) passed. Pooled,
+Sibyl had the best citation support (79.4% against 74.9% for built-in search)
+and rubric support, equal factual and trap results, at about twice the cost;
+the per-run differences are within run-to-run noise. The
 [first run](evals/results/host-source-retrieval-2026-10-27.json) had every Wikipedia
 read refused until page reads identified as Sibyl. The latest [keyless discovery run](evals/results/live-retrieval-hedged-2026-10-27.json)
 tested 66 questions three times on a GitHub-hosted runner. It handled every trap

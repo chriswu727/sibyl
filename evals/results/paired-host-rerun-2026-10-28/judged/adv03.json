@@ -1,0 +1,135 @@
+{
+  "case_id": "adv03",
+  "kind": "trap",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "native",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.5398912,
+  "judge_subtype": "success",
+  "pages_read": 15,
+  "pages_cited": 15,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Search for Zylathia with city/eastern France/population returned no place by that name; results were about other places\", \"url\": \"https://learnfrenchwithalexa.com/blog/the-biggest-cities-in-france-by-population\", \"label\": \"partial\"}, {\"claim\": \"Search for Zylathia with city/eastern France/population returned no place by that name; results were about other places\", \"url\": \"https://en.wikipedia.org/wiki/Grand_Est\", \"label\": \"partial\"}, {\"claim\": \"Search for Zylathia with city/eastern France/population returned no place by that name; results were about other places\", \"url\": \"https://www.citypopulation.de/en/france/cities/\", \"label\": \"partial\"}, {\"claim\": \"Search for Zylathia commune France found no commune by that name; results were generic pages on French communes\", \"url\": \"https://en.wikipedia.org/wiki/List_of_French_communes_by_surface_area\", \"label\": \"partial\"}, {\"claim\": \"Search for Zylathia commune France found no commune by that name; results were generic pages on French communes\", \"url\": \"https://en.wikipedia.org/wiki/Associated_communes_of_France\", \"label\": \"partial\"}, {\"claim\": \"Zilling, Moselle: 279 people in 2023\", \"url\": \"https://en.wikipedia.org/wiki/Zilling\", \"label\": \"supported\"}, {\"claim\": \"Zimming, Moselle: 710 people in 2023\", \"url\": \"https://en.wikipedia.org/wiki/Zimming\", \"label\": \"supported\"}, {\"claim\": \"Zillisheim, Haut-Rhin: 2,561 people in 2023\", \"url\": \"https://en.wikipedia.org/wiki/Zillisheim\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies false premise without inventing a population. The search-outcome claims are labeled partial because the pages are consistent with them (no Zylathia, other places/communes) but cannot attest to what a search returned. Zommange (43, Moselle, 2023) is also supported by its page; it was omitted only because of the 8-claim cap.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Searches for Zylathia turned up no city, commune or place by that name\", \"url\": \"https://statisticstimes.com/demographics/city/france-cities-population.php\", \"label\": \"partial\"}, {\"claim\": \"Searches for Zylathia turned up no city, commune or place by that name\", \"url\": \"https://en.wikipedia.org/wiki/List_of_communes_in_France_with_over_20,000_inhabitants\", \"label\": \"partial\"}, {\"claim\": \"Zilling is a small commune in Moselle (Grand Est) with population 279 in 2023\", \"url\": \"https://en.wikipedia.org/wiki/Zilling\", \"label\": \"supported\"}, {\"claim\": \"Zilia is a commune on Corsica, not eastern France\", \"url\": \"https://en.wikipedia.org/wiki/Zilia\", \"label\": \"supported\"}, {\"claim\": \"Zigliara is a commune on Corsica, not eastern France\", \"url\": \"https://en.wikipedia.org/wiki/Zigliara\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies false premise without inventing a population. The search-outcome claims are partial: the list pages do not include Zylathia but cannot attest to the search results.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Search returned no city named Zylathia; closest hits were small Grand Est communes with similar names (Zilling etc.)\", \"url\": \"https://en.wikipedia.org/wiki/Zilling\", \"label\": \"partial\"}, {\"claim\": \"Search returned no city named Zylathia; closest hits were small Grand Est communes with similar names (Zillisheim etc.)\", \"url\": \"https://en.wikipedia.org/wiki/Zillisheim\", \"label\": \"partial\"}, {\"claim\": \"Exact search returned no place, only unrelated results such as Zylaria, a sleep-supplement ingredient\", \"url\": \"https://nulivscience.com/ingredients/zylaria\", \"label\": \"partial\"}, {\"claim\": \"Exact search returned unrelated results such as butterfly genera\", \"url\": \"https://en.wikipedia.org/wiki/Zerynthia\", \"label\": \"partial\"}, {\"claim\": \"List of French cities over 100,000 (2023 INSEE estimates) does not include Zylathia; Strasbourg is largest in Grand Est at 293,771\", \"url\": \"https://www.citypopulation.de/en/france/cities/\", \"label\": \"supported\"}, {\"claim\": \"Grand Est covers much of eastern France, with Strasbourg as prefecture and largest city; no mention of Zylathia\", \"url\": \"https://en.wikipedia.org/wiki/Grand_Est\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies false premise without inventing a population. The pages support the descriptions of the communes, Zylaria and the butterfly genus, but not the search-outcome framing, so those claims are partial. It also states the limits of its evidence accurately.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Search for Zylathia with city/eastern France/population returned no place by that name; results were about other places",
+          "url": "https://learnfrenchwithalexa.com/blog/the-biggest-cities-in-france-by-population",
+          "label": "partial"
+        },
+        {
+          "claim": "Search for Zylathia with city/eastern France/population returned no place by that name; results were about other places",
+          "url": "https://en.wikipedia.org/wiki/Grand_Est",
+          "label": "partial"
+        },
+        {
+          "claim": "Search for Zylathia with city/eastern France/population returned no place by that name; results were about other places",
+          "url": "https://www.citypopulation.de/en/france/cities/",
+          "label": "partial"
+        },
+        {
+          "claim": "Search for Zylathia commune France found no commune by that name; results were generic pages on French communes",
+          "url": "https://en.wikipedia.org/wiki/List_of_French_communes_by_surface_area",
+          "label": "partial"
+        },
+        {
+          "claim": "Search for Zylathia commune France found no commune by that name; results were generic pages on French communes",
+          "url": "https://en.wikipedia.org/wiki/Associated_communes_of_France",
+          "label": "partial"
+        },
+        {
+          "claim": "Zilling, Moselle: 279 people in 2023",
+          "url": "https://en.wikipedia.org/wiki/Zilling",
+          "label": "supported"
+        },
+        {
+          "claim": "Zimming, Moselle: 710 people in 2023",
+          "url": "https://en.wikipedia.org/wiki/Zimming",
+          "label": "supported"
+        },
+        {
+          "claim": "Zillisheim, Haut-Rhin: 2,561 people in 2023",
+          "url": "https://en.wikipedia.org/wiki/Zillisheim",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies false premise without inventing a population. The search-outcome claims are labeled partial because the pages are consistent with them (no Zylathia, other places/communes) but cannot attest to what a search returned. Zommange (43, Moselle, 2023) is also supported by its page; it was omitted only because of the 8-claim cap."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Searches for Zylathia turned up no city, commune or place by that name",
+          "url": "https://statisticstimes.com/demographics/city/france-cities-population.php",
+          "label": "partial"
+        },
+        {
+          "claim": "Searches for Zylathia turned up no city, commune or place by that name",
+          "url": "https://en.wikipedia.org/wiki/List_of_communes_in_France_with_over_20,000_inhabitants",
+          "label": "partial"
+        },
+        {
+          "claim": "Zilling is a small commune in Moselle (Grand Est) with population 279 in 2023",
+          "url": "https://en.wikipedia.org/wiki/Zilling",
+          "label": "supported"
+        },
+        {
+          "claim": "Zilia is a commune on Corsica, not eastern France",
+          "url": "https://en.wikipedia.org/wiki/Zilia",
+          "label": "supported"
+        },
+        {
+          "claim": "Zigliara is a commune on Corsica, not eastern France",
+          "url": "https://en.wikipedia.org/wiki/Zigliara",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies false premise without inventing a population. The search-outcome claims are partial: the list pages do not include Zylathia but cannot attest to the search results."
+    },
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Search returned no city named Zylathia; closest hits were small Grand Est communes with similar names (Zilling etc.)",
+          "url": "https://en.wikipedia.org/wiki/Zilling",
+          "label": "partial"
+        },
+        {
+          "claim": "Search returned no city named Zylathia; closest hits were small Grand Est communes with similar names (Zillisheim etc.)",
+          "url": "https://en.wikipedia.org/wiki/Zillisheim",
+          "label": "partial"
+        },
+        {
+          "claim": "Exact search returned no place, only unrelated results such as Zylaria, a sleep-supplement ingredient",
+          "url": "https://nulivscience.com/ingredients/zylaria",
+          "label": "partial"
+        },
+        {
+          "claim": "Exact search returned unrelated results such as butterfly genera",
+          "url": "https://en.wikipedia.org/wiki/Zerynthia",
+          "label": "partial"
+        },
+        {
+          "claim": "List of French cities over 100,000 (2023 INSEE estimates) does not include Zylathia; Strasbourg is largest in Grand Est at 293,771",
+          "url": "https://www.citypopulation.de/en/france/cities/",
+          "label": "supported"
+        },
+        {
+          "claim": "Grand Est covers much of eastern France, with Strasbourg as prefecture and largest city; no mention of Zylathia",
+          "url": "https://en.wikipedia.org/wiki/Grand_Est",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies false premise without inventing a population. The pages support the descriptions of the communes, Zylaria and the butterfly genus, but not the search-outcome framing, so those claims are partial. It also states the limits of its evidence accurately."
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "case_id": "adv04",
+  "condition": "deep_research",
+  "elapsed_seconds": 19.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.15555750000000002,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14179,
+    "cache_read_input_tokens": 34555,
+    "output_tokens": 1224,
+    "output_tokens_details": {
+      "thinking_tokens": 180
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14179,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 24683,
+      "outputTokens": 2602,
+      "cacheReadInputTokens": 34555,
+      "cacheCreationInputTokens": 14179,
+      "webSearchRequests": 2,
+      "costUSD": 0.15555750000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 180,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14179,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2
+  },
+  "final_answer": "**No U.S. president signed an \"Antarctic Statehood Act.\" The question rests on a false premise: Antarctica is not a U.S. state, and the U.S. has 50 states.** I found no record of such a law or bill. This rests on two searches, and I did not open the Treaty text itself. I skipped the skill's subagent workflow because it writes notes to files, which your no-local-files rule excludes.\n\n- Searching for \"Antarctic Statehood Act\" and \"Antarctica 51st state\" returned no bill or law with that name.\n  - https://en.wikipedia.org/wiki/51st_state\n  - https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent (only speculation)\n- The nearest real \"51st state\" item is a House bill, introduced by Rep. Randy Fine, to make Greenland a state. It is a proposal and I found no sign it has passed.\n  - https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\n  - https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\n- The main U.S. statute on Antarctica is the Antarctic Conservation Act, an environmental law that says nothing about statehood.\n  - https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\n- Article IV of the 1959 Antarctic Treaty bars any new territorial claim, or enlargement of an existing one, while the Treaty is in force.\n  - https://www.ats.aq/e/antarctictreaty.html\n  - https://2009-2017.state.gov/t/avc/trty/193967.htm\n  - https://www.congress.gov/crs_external_products/R/HTML/R46708.html\n- The U.S. holds no territorial claim in Antarctica. It reserves a \"basis of claim\" and does not recognize other countries' claims. A state would require sovereignty the U.S. does not assert there.\n  - https://www.congress.gov/crs_external_products/R/HTML/R46708.html\n  - https://2009-2017.state.gov/t/avc/trty/193967.htm",
+  "final_answer_sha256": "932ee1442adb082959c35b3fd7c9c5da8c230e10ae628e7109cfa69b2efda485",
+  "raw_stream_sha256": "08cfdd876d973f4fe1d75c5a22d60e5619378aa3309d14ec9f78a97d5ab31ce7"
+}

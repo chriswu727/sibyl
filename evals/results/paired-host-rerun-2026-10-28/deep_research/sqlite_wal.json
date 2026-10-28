@@ -1,0 +1,73 @@
+{
+  "case_id": "sqlite_wal",
+  "condition": "deep_research",
+  "elapsed_seconds": 36.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1040074,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 16941,
+    "cache_read_input_tokens": 34308,
+    "output_tokens": 2615,
+    "output_tokens_details": {
+      "thinking_tokens": 300
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 16941,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 2615,
+      "cacheReadInputTokens": 34308,
+      "cacheCreationInputTokens": 16941,
+      "webSearchRequests": 0,
+      "costUSD": 0.0973568,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 300,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 16941,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 25691,
+      "outputTokens": 8163,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0066506000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3374,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 4
+  },
+  "final_answer": "**Direct answer:** No. WAL doesn't eliminate write contention. SQLite still allows only one writer at a time per database, in WAL mode as in rollback-journal mode. What WAL changes is that readers and the writer no longer block each other, and it also makes commits cheaper.\n\n## Claims and sources\n\n**Write contention remains**\n- In WAL mode there is only one WAL file, so there can only be one writer at a time. https://www.sqlite.org/wal.html\n- SQLite supports many simultaneous read transactions but only one write transaction. https://www.sqlite.org/lang_transaction.html\n- A writer that can't get the write lock gets SQLITE_BUSY. This is documented for rollback-journal mode (the RESERVED lock), and the one-writer rule holds in WAL as well. https://www.sqlite.org/lockingv3.html and https://www.sqlite.org/lang_transaction.html\n- Even `BEGIN CONCURRENT`, which allows multiple simultaneous writers, requires WAL or WAL2 mode and still serializes COMMITs. Conflicting commits fail with SQLITE_BUSY_SNAPSHOT. https://www.sqlite.org/src/doc/begin-concurrent/doc/begin_concurrent.md\n- That page doesn't say whether `BEGIN CONCURRENT` is in the standard release. The \"separate branch\" description came from the fetch tool's background knowledge, not the page. I didn't verify it, so check your SQLite version.\n\n**The real concurrency benefit**\n- In WAL mode, readers don't block writers and a writer doesn't block readers, so reading and writing can proceed concurrently. https://www.sqlite.org/wal.html\n- The docs qualify this as \"mostly true\", and the exceptions are the SQLITE_BUSY cases below. https://www.sqlite.org/wal.html\n- In rollback-journal mode, a writer needs PENDING and then EXCLUSIVE locks to commit. While it waits, no new readers can start, and while it holds EXCLUSIVE, no readers can read. https://www.sqlite.org/lockingv3.html\n- A reader keeps seeing a consistent historical snapshot while a writer modifies the database. https://www.sqlite.org/lang_transaction.html\n\n**Other effects on throughput**\n- WAL is \"significantly faster in most scenarios\". Commits write content once instead of twice, and the writes are sequential. https://www.sqlite.org/wal.html\n- WAL can be about 1–2% slower for read-mostly workloads that seldom write. https://www.sqlite.org/wal.html\n\n**Caveats and costs**\n- Readers can still get SQLITE_BUSY in three cases: another connection holds the database in exclusive locking mode, the last connection is closing and cleaning up, or crash recovery is running. https://www.sqlite.org/wal.html\n- A checkpoint can't finish while any reader is active. If overlapping readers never leave a gap, the WAL file grows without bound. https://www.sqlite.org/wal.html\n- Read performance degrades as the WAL file grows, so regular checkpoints are needed. https://www.sqlite.org/wal.html\n- WAL doesn't work over network filesystems, because all processes must be on the same host. https://www.sqlite.org/wal.html\n- WAL doesn't give atomic commits across multiple ATTACHed databases. https://www.sqlite.org/wal.html\n- Very large transactions were a problem before version 3.11.0 (2016). Since then WAL handles them as efficiently as rollback mode. https://www.sqlite.org/wal.html\n\n**Practical handling of write contention**\n- A deferred transaction that reads and then writes can fail with SQLITE_BUSY at the write if another connection has modified the database. `BEGIN IMMEDIATE` takes the write lock up front, so a failure happens before any work is done. https://www.sqlite.org/lang_transaction.html\n- In WAL mode, EXCLUSIVE and IMMEDIATE transactions behave the same. https://www.sqlite.org/lang_transaction.html\n- The busy-timeout claim is unsupported. The fetch tool said a busy timeout makes SQLite retry before returning SQLITE_BUSY. It also said the timeout doesn't apply to a blocked deferred read-to-write upgrade. Neither point was on the page, so I haven't established either.\n\n## Limits of this research\nI used four of the eight allowed retrievals, all on sqlite.org, so this is the official documentation's view. I didn't look at independent benchmarks of write throughput or at real-world contention behavior. Also, I researched this directly instead of spawning subagents and writing report files. The skill's folder setup needs shell commands, and you ruled those out.",
+  "final_answer_sha256": "9a8f670d0486cbe46c22987ba66a82b4e13813dac48f82cc723b2508f9ab2d5f",
+  "raw_stream_sha256": "4ad300c4e6b611ede8c918c7ed1ff47167d38da101ee6f9fa790affc3658b61d"
+}

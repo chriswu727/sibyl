@@ -1,0 +1,175 @@
+{
+  "case_id": "rag",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.4348392,
+  "judge_subtype": "success",
+  "pages_read": 14,
+  "pages_cited": 14,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"RAG models combine pre-trained parametric and non-parametric memory for language generation, and generate more specific, diverse and factual text than a parametric-only seq2seq baseline\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"The RAG paper compares two formulations: same retrieved passages across the whole output vs. different passages per token\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"LMs struggle with less popular facts, scaling doesn't fix the long tail, retrieval-augmented LMs largely outperform much larger unassisted LMs, and unassisted LMs remain competitive on high-popularity entities\", \"url\": \"https://arxiv.org/abs/2212.10511\", \"label\": \"supported\"}, {\"claim\": \"Even with accurate, relevant retrieved context, RAG models may still produce statements that are unsupported or contradict the retrieved information\", \"url\": \"https://arxiv.org/pdf/2410.11414\", \"label\": \"supported\"}, {\"claim\": \"Context-parametric conflicts can lead to hallucinations but do not always cause them\", \"url\": \"https://arxiv.org/pdf/2410.11414\", \"label\": \"supported\"}, {\"claim\": \"ReDeEP (tested on Llama2-7B-chat with RAGTruth) finds hallucinations occur when Knowledge FFNs overemphasize parametric knowledge while Copying Heads fail to retain or integrate retrieved content\", \"url\": \"https://arxiv.org/pdf/2410.11414\", \"label\": \"partial\"}, {\"claim\": \"Context-memory, inter-context and intra-memory conflicts can significantly hurt trustworthiness, especially where noise and misinformation are common\", \"url\": \"https://arxiv.org/abs/2403.08319\", \"label\": \"supported\"}, {\"claim\": \"Models don't robustly use long contexts; performance degrades when relevant information is in the middle\", \"url\": \"https://arxiv.org/abs/2307.03172\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Nearly every claim matches the cited pages. The ReDeEP mechanism is supported. The excerpt names RAGTruth, Dolly and LLaMA models, but it does not state Llama2-7B-chat; its figure shows LLaMA2-70B. So the 'one small model' framing is not backed. The claim that retrieval improves factuality on average names papers but has no inline URL. The answer narrows its own conclusion in substance: unassisted models stay competitive on popular entities, and conflicts don't always cause hallucination. It discloses the retriever-side gap and that all sources are arXiv.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"RAG's parametric memory is a pre-trained seq2seq model\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Non-parametric memory is a dense vector index of Wikipedia searched by a pre-trained neural retriever\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Two variants: same passages for whole sequence vs. different passages per token\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Motivation was limited precise access to and updating of stored knowledge; RAG beat parametric-only baselines on open-domain QA and generated more factual text\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Models can ignore or override retrieved content with parametric knowledge; high-quality retrieval often co-occurs with unfaithful generation\", \"url\": \"https://arxiv.org/pdf/2604.09174\", \"label\": \"supported\"}, {\"claim\": \"Correct retrieved context fixes about 94% of model mistakes; with a weak prior and wrong context the model repeats wrong context; adherence is inversely correlated with prior confidence\", \"url\": \"https://www.promptingguide.ai/research/rag-faithfulness\", \"label\": \"partial\"}, {\"claim\": \"The more modified information deviates from the model's prior, the less likely the model is to prefer it\", \"url\": \"https://www.promptingguide.ai/research/rag-faithfulness\", \"label\": \"supported\"}, {\"claim\": \"With insufficient context, strong models (Gemini 1.5 Pro, GPT-4o, Claude 3.5) often give wrong answers instead of abstaining\", \"url\": \"https://arxiv.org/abs/2411.06037\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"The page says correct context gives '94% accuracy'. The answer restates this as fixing about 94% of mistakes, which is a slight distortion, and it comes from a secondary blog. The 2604.09174 claim is actually supported by the page text, although the answer says it relied only on a search summary. Not in the top 8: the later claim citing arxiv.org/pdf/2411.06037 for Barnett et al. 2024 is not supported by that excerpt. Barnett appears in 2604.25313, not there. The excerpt supports only distraction by unrelated information and noisy retrieval. The smaller-model, selective-generation 2–10% and lost-in-the-middle claims are supported. The answer includes counterevidence: correct context fixes most errors, strong priors resist, and partial context helps. Limitations are well disclosed.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Original RAG pairs a pre-trained seq2seq model (parametric) with a dense Wikipedia vector index accessed via a pre-trained neural retriever (non-parametric)\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Two formulations: same passages for whole output vs. different passages per token\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"RAG beat parametric-only seq2seq on open-domain QA and produced more specific, diverse and factual text\", \"url\": \"https://arxiv.org/abs/2005.11401\", \"label\": \"supported\"}, {\"claim\": \"Survey: RAG combines external database knowledge with built-in knowledge, improving accuracy and credibility, allowing continual updates and domain knowledge without retraining\", \"url\": \"https://arxiv.org/abs/2312.10997\", \"label\": \"partial\"}, {\"claim\": \"Survey lists hallucination, outdated knowledge and untraceable reasoning as problems RAG targets\", \"url\": \"https://arxiv.org/abs/2312.10997\", \"label\": \"supported\"}, {\"claim\": \"Performance highest when relevant info is at beginning or end; degrades significantly in the middle, even for long-context models\", \"url\": \"https://arxiv.org/abs/2307.03172\", \"label\": \"supported\"}, {\"claim\": \"Models can be highly receptive to conflicting external evidence if it is coherent and persuasive\", \"url\": \"https://arxiv.org/abs/2305.13300\", \"label\": \"supported\"}, {\"claim\": \"Models show confirmation bias, favoring evidence parts consistent with parametric memory\", \"url\": \"https://arxiv.org/abs/2305.13300\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 1, \"support\": 2, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The claims are tightly bounded to the abstracts. 'Without retraining' is not on the survey page. The Barnett claims (7 failure points; validation only feasible during operation; robustness evolves) are supported but fell outside the top 8. The 'why not guaranteed' side covers only context under-use and knowledge conflict. The answer states that retriever-side failures and wrong or contradictory index content are not established, which is an explicit gap. It discloses limitations and notes that the Xie receptivity finding cuts both ways, but brings little evidence that narrows the conclusion.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "RAG models combine pre-trained parametric and non-parametric memory for language generation, and generate more specific, diverse and factual text than a parametric-only seq2seq baseline",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "The RAG paper compares two formulations: same retrieved passages across the whole output vs. different passages per token",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "LMs struggle with less popular facts, scaling doesn't fix the long tail, retrieval-augmented LMs largely outperform much larger unassisted LMs, and unassisted LMs remain competitive on high-popularity entities",
+          "url": "https://arxiv.org/abs/2212.10511",
+          "label": "supported"
+        },
+        {
+          "claim": "Even with accurate, relevant retrieved context, RAG models may still produce statements that are unsupported or contradict the retrieved information",
+          "url": "https://arxiv.org/pdf/2410.11414",
+          "label": "supported"
+        },
+        {
+          "claim": "Context-parametric conflicts can lead to hallucinations but do not always cause them",
+          "url": "https://arxiv.org/pdf/2410.11414",
+          "label": "supported"
+        },
+        {
+          "claim": "ReDeEP (tested on Llama2-7B-chat with RAGTruth) finds hallucinations occur when Knowledge FFNs overemphasize parametric knowledge while Copying Heads fail to retain or integrate retrieved content",
+          "url": "https://arxiv.org/pdf/2410.11414",
+          "label": "partial"
+        },
+        {
+          "claim": "Context-memory, inter-context and intra-memory conflicts can significantly hurt trustworthiness, especially where noise and misinformation are common",
+          "url": "https://arxiv.org/abs/2403.08319",
+          "label": "supported"
+        },
+        {
+          "claim": "Models don't robustly use long contexts; performance degrades when relevant information is in the middle",
+          "url": "https://arxiv.org/abs/2307.03172",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Nearly every claim matches the cited pages. The ReDeEP mechanism is supported. The excerpt names RAGTruth, Dolly and LLaMA models, but it does not state Llama2-7B-chat; its figure shows LLaMA2-70B. So the 'one small model' framing is not backed. The claim that retrieval improves factuality on average names papers but has no inline URL. The answer narrows its own conclusion in substance: unassisted models stay competitive on popular entities, and conflicts don't always cause hallucination. It discloses the retriever-side gap and that all sources are arXiv."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "RAG's parametric memory is a pre-trained seq2seq model",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Non-parametric memory is a dense vector index of Wikipedia searched by a pre-trained neural retriever",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Two variants: same passages for whole sequence vs. different passages per token",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Motivation was limited precise access to and updating of stored knowledge; RAG beat parametric-only baselines on open-domain QA and generated more factual text",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Models can ignore or override retrieved content with parametric knowledge; high-quality retrieval often co-occurs with unfaithful generation",
+          "url": "https://arxiv.org/pdf/2604.09174",
+          "label": "supported"
+        },
+        {
+          "claim": "Correct retrieved context fixes about 94% of model mistakes; with a weak prior and wrong context the model repeats wrong context; adherence is inversely correlated with prior confidence",
+          "url": "https://www.promptingguide.ai/research/rag-faithfulness",
+          "label": "partial"
+        },
+        {
+          "claim": "The more modified information deviates from the model's prior, the less likely the model is to prefer it",
+          "url": "https://www.promptingguide.ai/research/rag-faithfulness",
+          "label": "supported"
+        },
+        {
+          "claim": "With insufficient context, strong models (Gemini 1.5 Pro, GPT-4o, Claude 3.5) often give wrong answers instead of abstaining",
+          "url": "https://arxiv.org/abs/2411.06037",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "The page says correct context gives '94% accuracy'. The answer restates this as fixing about 94% of mistakes, which is a slight distortion, and it comes from a secondary blog. The 2604.09174 claim is actually supported by the page text, although the answer says it relied only on a search summary. Not in the top 8: the later claim citing arxiv.org/pdf/2411.06037 for Barnett et al. 2024 is not supported by that excerpt. Barnett appears in 2604.25313, not there. The excerpt supports only distraction by unrelated information and noisy retrieval. The smaller-model, selective-generation 2–10% and lost-in-the-middle claims are supported. The answer includes counterevidence: correct context fixes most errors, strong priors resist, and partial context helps. Limitations are well disclosed."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Original RAG pairs a pre-trained seq2seq model (parametric) with a dense Wikipedia vector index accessed via a pre-trained neural retriever (non-parametric)",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Two formulations: same passages for whole output vs. different passages per token",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "RAG beat parametric-only seq2seq on open-domain QA and produced more specific, diverse and factual text",
+          "url": "https://arxiv.org/abs/2005.11401",
+          "label": "supported"
+        },
+        {
+          "claim": "Survey: RAG combines external database knowledge with built-in knowledge, improving accuracy and credibility, allowing continual updates and domain knowledge without retraining",
+          "url": "https://arxiv.org/abs/2312.10997",
+          "label": "partial"
+        },
+        {
+          "claim": "Survey lists hallucination, outdated knowledge and untraceable reasoning as problems RAG targets",
+          "url": "https://arxiv.org/abs/2312.10997",
+          "label": "supported"
+        },
+        {
+          "claim": "Performance highest when relevant info is at beginning or end; degrades significantly in the middle, even for long-context models",
+          "url": "https://arxiv.org/abs/2307.03172",
+          "label": "supported"
+        },
+        {
+          "claim": "Models can be highly receptive to conflicting external evidence if it is coherent and persuasive",
+          "url": "https://arxiv.org/abs/2305.13300",
+          "label": "supported"
+        },
+        {
+          "claim": "Models show confirmation bias, favoring evidence parts consistent with parametric memory",
+          "url": "https://arxiv.org/abs/2305.13300",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 1,
+        "support": 2,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The claims are tightly bounded to the abstracts. 'Without retraining' is not on the survey page. The Barnett claims (7 failure points; validation only feasible during operation; robustness evolves) are supported but fell outside the top 8. The 'why not guaranteed' side covers only context under-use and knowledge conflict. The answer states that retriever-side failures and wrong or contradictory index content are not established, which is an explicit gap. It discloses limitations and notes that the Xie receptivity finding cuts both ways, but brings little evidence that narrows the conclusion."
+    }
+  }
+}

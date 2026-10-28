@@ -1,0 +1,72 @@
+{
+  "case_id": "sqlite_wal",
+  "condition": "native",
+  "elapsed_seconds": 25.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.0453769,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 4467,
+    "cache_read_input_tokens": 13410,
+    "output_tokens": 1772,
+    "output_tokens_details": {
+      "thinking_tokens": 76
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4467,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 1772,
+      "cacheReadInputTokens": 13410,
+      "cacheCreationInputTokens": 4467,
+      "webSearchRequests": 0,
+      "costUSD": 0.036941,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 76,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 4467,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 59319,
+      "outputTokens": 5008,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.008435900000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1992,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 4
+  },
+  "final_answer": "**Direct answer:** No. WAL doesn't eliminate write contention. Only one writer can be active at a time, and a second writer still has to wait or fail with `SQLITE_BUSY`. WAL's concurrency benefit is that readers and the single writer no longer block each other. It also makes commits cheaper.\n\n**Claims and sources**\n\n- WAL allows only one writer at a time, because there is one WAL file. Readers can proceed during a write.\n  https://www.sqlite.org/wal.html\n\n- Readers don't block writers, and writers don't block readers. Each reader sees a consistent snapshot taken at the start of its transaction. Writers only append to the WAL.\n  https://www.sqlite.org/wal.html\n\n- In the older rollback-journal mode, only one connection can hold the RESERVED lock (the write intent) at a time. A second writer that can't get it gets `SQLITE_BUSY`. Readers can keep reading while RESERVED is held, but a writer needs an EXCLUSIVE lock to write to the database file. So WAL's gain is mostly in reader/writer overlap, not in writer/writer concurrency. The lockingv3 page describes rollback-journal mode only, so I'm inferring from that page that WAL's own single-writer rule is the equivalent limit. The WAL page states that rule directly.\n  https://www.sqlite.org/lockingv3.html\n\n- WAL is \"significantly faster in most scenarios.\" Writes are faster because content is written once instead of twice, I/O is more sequential, and there are far fewer `fsync()` calls. This shortens how long the write lock is held, but it doesn't remove the lock.\n  https://www.sqlite.org/wal.html\n\n- WAL has costs:\n  - It may be about 1–2% slower for read-mostly workloads.\n  - All processes must be on the same host, so it doesn't work over a network filesystem.\n  - It works best with small transactions.\n  - Checkpoints are an extra operation to manage.\n  \n  https://www.sqlite.org/wal.html\n\n- Checkpoint starvation can happen. If there are always overlapping readers, the checkpoint never completes and the WAL grows without bound. Larger WALs also slow reads.\n  https://www.sqlite.org/wal.html\n\n- Even with a busy handler or `busy_timeout` set, SQLite may return `SQLITE_BUSY` immediately when waiting could deadlock. The documented example is a connection holding a read lock that is trying to promote to a write lock, while another connection holds the write lock. Applications must still handle `SQLITE_BUSY`.\n  https://www.sqlite.org/c3ref/busy_handler.html\n\n- `PRAGMA busy_timeout` sets how many milliseconds a connection waits on a lock.\n  https://www.sqlite.org/pragma.html#pragma_busy_timeout\n\n**Not established by these sources:** The suggestion that `BEGIN IMMEDIATE` avoids the read-to-write upgrade failure is common advice, but I didn't verify it in any page I retrieved. The pragma page I fetched was truncated, so I didn't read the last 251 characters. I also didn't find a measured throughput comparison under write-heavy load, so I can't give numbers for how much WAL helps there.\n\nSources:\n- https://www.sqlite.org/wal.html\n- https://www.sqlite.org/lockingv3.html\n- https://www.sqlite.org/pragma.html#pragma_busy_timeout\n- https://www.sqlite.org/c3ref/busy_handler.html",
+  "final_answer_sha256": "5eaa46d0a696bf8feff8fdddcd450e3e5b50c2f88bf7fddfa6f6de852d06cdde",
+  "raw_stream_sha256": "cda3cace55519d2025b231410ee3b25bf2527a19516864a2680d6ae85658221d"
+}

@@ -1,0 +1,74 @@
+{
+  "case_id": "idempotency",
+  "condition": "deep_research",
+  "elapsed_seconds": 49.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.1838816,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 21521,
+    "cache_read_input_tokens": 84542,
+    "output_tokens": 3691,
+    "output_tokens_details": {
+      "thinking_tokens": 403
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 21521,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14800,
+      "outputTokens": 4654,
+      "cacheReadInputTokens": 84542,
+      "cacheCreationInputTokens": 21521,
+      "webSearchRequests": 1,
+      "costUSD": 0.1806782,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 403,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 21521,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 20159,
+      "outputTokens": 2375,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0032034000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1445,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 5,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer: No.** Idempotency keys make retries safe only within bounds, and neither Stripe's nor AWS's documentation promises indefinite safety. The \"indefinitely\" premise is false.\n\n- **Stripe:** For API v1, keys can be pruned once they are at least 24 hours old. A reused key after that is treated as a new request.\n- **AWS:** The Builders' Library says it is \"impractical to retain that knowledge indefinitely.\" It gives no fixed retention period, and the EC2 page I read states none either.\n\n**Claims and support**\n\n**Stripe**\n- Stripe says idempotency keys let you safely retry a request after a connection error without creating a second object or applying an update twice.\n  https://docs.stripe.com/api/idempotent_requests\n- For API v1, Stripe saves the status code and body of the first request and returns them on retries with the same key. This includes `500` errors.\n  https://docs.stripe.com/api/idempotent_requests\n- Keys can be up to 255 characters. Stripe suggests V4 UUIDs.\n  https://docs.stripe.com/api/idempotent_requests\n- For API v1, keys can be removed automatically once they are at least 24 hours old. After that, \"we generate a new request if a key is reused.\" A retry after that window can therefore repeat the operation.\n  https://docs.stripe.com/api/idempotent_requests\n- Stripe compares incoming parameters to the original request and returns an error if they differ.\n  https://docs.stripe.com/api/idempotent_requests\n- For API v1, results are saved only once endpoint execution begins. Requests that fail validation or conflict with a concurrent request are not saved, and you can retry them.\n  https://docs.stripe.com/api/idempotent_requests\n- All v1 `POST` requests accept keys. Keys on `GET` and `DELETE` have no effect, because those are idempotent by definition.\n  https://docs.stripe.com/api/idempotent_requests\n- API v2 behaves differently. Retries don't repeat successful operations, and Stripe retries failed or partial work to completion where possible. I did not retrieve the v2 page, so its retention limits are unverified.\n  https://docs.stripe.com/api/idempotent_requests\n\n**AWS**\n- AWS says APIs with side effects are not safe to retry unless they are idempotent. It cites EC2 RunInstances token-based idempotency as an example.\n  https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter\n- The Builders' Library calls indefinite retention \"impractical.\" For EC2 it suggests keeping the record for \"the lifetime of the resource, plus an interval,\" and that interval is not specified. Retention requirements vary across services and resources.\n  https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- The guarantee is a semantically equivalent response for the same identifier \"for some interval.\" It is not unbounded.\n  https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- Reusing a token with different parameters returns a parameter-mismatch validation error. AWS stores the original parameters to check this.\n  https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- Recording the token and performing the mutation must be atomic, meeting ACID properties. Otherwise the guarantee can break.\n  https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- EC2 client tokens are up to 64 ASCII characters and case-sensitive. They are scoped per Region, or per Availability Zone for RunInstances when you specify the zone. The same token in another Region or AZ launches again.\n  https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- A retry with the same token and parameters succeeds without further action. If parameters differ, it fails with `IdempotentParameterMismatch`.\n  https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- EC2's retry guidance is: don't retry 200 or 400-series responses, and retry 500-series responses with backoff.\n  https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- Retries should also be bounded. AWS typically caps retries and retries at a single layer. A five-layer stack with three retries per layer could multiply load on the database by 243x. AWS also recommends capped exponential backoff with jitter. So even with idempotency, \"retry forever\" is not recommended.\n  https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter\n\n**Comparison**\n- **Retention:** Stripe v1 documents a concrete floor of 24 hours. AWS documents no number in the sources I read. Per-service API docs may state one.\n- **Scope:** Stripe keys cover v1 `POST` requests. EC2 tokens are scoped by Region or AZ and apply only to listed actions.\n- **Parameter changes:** Both reject them.\n- **Safe-retry window:** Both are bounded in time, so a client must stop retrying, or switch to checking state, before the window closes.\n\n**Gaps**\n- I did not find AWS retention numbers for specific services, such as RunInstances or ECS RunTask.\n- I did not retrieve Stripe's v2 idempotency page or its error-handling page.\n- One search result described the \"within a defined interval\" framing, but I relied on the primary AWS article for the claims above.\n\n**Method note:** I researched directly with five retrievals, three of them fetched in parallel, rather than delegating to subagents. Your no-shell constraint ruled out the skill's folder setup.\n\nSources:\n- [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)\n- [AWS Builders' Library: Making retries safe with idempotent APIs](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/)\n- [AWS Builders' Library: Timeouts, retries, and backoff with jitter](https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter)\n- [AWS EC2: Ensuring idempotency in API requests](https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html)",
+  "final_answer_sha256": "a9a9c4badcca58e06a82e1fb8dce535440d0e7f84415baba068c52e452c76054",
+  "raw_stream_sha256": "dc956eeb2668925d70855518701a0883b9a6542a90fedfccb3e921658926b39e"
+}

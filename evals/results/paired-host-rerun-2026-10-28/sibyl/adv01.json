@@ -1,0 +1,60 @@
+{
+  "case_id": "adv01",
+  "condition": "sibyl",
+  "elapsed_seconds": 33.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.15836840000000002,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 18814,
+    "cache_read_input_tokens": 90404,
+    "output_tokens": 2830,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 18814,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14436,
+      "outputTokens": 3520,
+      "cacheReadInputTokens": 90404,
+      "cacheCreationInputTokens": 18814,
+      "webSearchRequests": 1,
+      "costUSD": 0.15836840000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 18814,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 3,
+    "continue_research": 1,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** The question rests on a false premise. Einstein never won a Nobel Prize for general relativity. He won the 1921 Nobel Prize in Physics for the photoelectric effect, and he received it in 1922.\n\n**Claims and sources**\n\n- The official Nobel citation reads \"for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect.\" https://www.nobelprize.org/prizes/physics/1921/einstein/facts/\n- The prize is the 1921 Physics Prize, but Einstein received it a year later, in 1922. https://www.nobelprize.org/prizes/physics/1921/einstein/facts/\n- The citation says nothing about relativity. https://arxiv.org/pdf/2112.13519\n- Max Planck nominated Einstein for general relativity for the 1921 prize, and Carl Oseen proposed him for the photoelectric effect. The committee recommended him for the 1921 prize after Oseen's report on the photoelectric effect. https://arxiv.org/pdf/2112.13519\n- The committee's reports on relativity were not favorable. This is the arXiv author's reading of the nomination history. https://arxiv.org/pdf/2112.13519\n- Another source says he was honored \"not for relativity but for the photoelectric effect,\" and that \"Relativity appears nowhere in the sentence.\" It also says the 1921 prize was reserved and awarded to Einstein in November 1922. https://nobel-prize.net/en/topics/einstein-and-the-prize/\n- Einstein's later Nobel lecture in Gothenburg was on relativity. It was not about the work cited in the award. https://arxiv.org/pdf/2112.13519\n\n**Counterevidence and gaps**\n- I found no source saying Einstein won for general relativity. The only link between the two is that general relativity was among the things he was nominated for.\n- The official Nobel press-release URL I tried returned a 404. The citation and the 1922 date come from the Nobel facts page.\n- The 1921 and 1922 dates are not exact quotes in my recorded claims, so Sibyl flagged them as unquoted. The Nobel facts page does state both dates.\n- Several points rest on a single source: the committee's attitude toward relativity, Planck's nomination, and the reserved-prize detail. The last two sources are a secondary preprint and a non-official site.",
+  "final_answer_sha256": "7469db4d4199188a4bedf225364bb439f22ad4d6cdb3fab99bc090be128903f6",
+  "raw_stream_sha256": "e4a13f91c1514826b1302fd71b84c4106084579befb152fcab80f15584460939"
+}

@@ -1,0 +1,73 @@
+{
+  "case_id": "rag",
+  "condition": "deep_research",
+  "elapsed_seconds": 29.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 13,
+  "cli_reported_cost_usd": 0.0984733,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 14510,
+    "cache_read_input_tokens": 52261,
+    "output_tokens": 3130,
+    "output_tokens_details": {
+      "thinking_tokens": 253
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14510,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 8,
+      "outputTokens": 3130,
+      "cacheReadInputTokens": 52261,
+      "cacheCreationInputTokens": 14510,
+      "webSearchRequests": 0,
+      "costUSD": 0.09458209999999999,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 253,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14510,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 22187,
+      "outputTokens": 3345,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0038912,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 2174,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 10
+  },
+  "final_answer": "**Short answer:** RAG pairs a language model whose knowledge sits in its weights (parametric memory) with an external index that a retriever searches at query time (non-parametric memory). The retrieved passages are put into the model's input, and the model generates its answer from both sources. Retrieval does not guarantee factual answers because the generator is still a language model. It can miss or under-use the retrieved text, it can favor what it already \"knows\" over conflicting evidence, and the retriever can return the wrong passages. The sources I read establish the first two points directly. The third rests on a survey and a failure-point paper whose abstracts say only that RAG has challenges and failure points.\n\nI used five of my eight retrievals. All five were arXiv abstract pages, so I haven't read the full papers.\n\n**How RAG combines the two knowledge sources**\n\n- The original RAG model pairs a pre-trained seq2seq language model, which is the parametric memory, with a dense vector index of Wikipedia reached through a pre-trained neural retriever, which is the non-parametric memory.\n  - https://arxiv.org/abs/2005.11401\n- The paper compares two formulations. One conditions on the same retrieved passages for the whole output. The other can use different passages for each token.\n  - https://arxiv.org/abs/2005.11401\n- The motivation is that parametric models have limited ability to access and precisely manipulate knowledge. Provenance and updating world knowledge were open problems.\n  - https://arxiv.org/abs/2005.11401\n- The authors report that RAG beat parametric-only seq2seq models on open-domain QA. They also report it produced more specific, diverse and factual text than a parametric-only baseline.\n  - https://arxiv.org/abs/2005.11401\n- A later survey describes RAG as pulling in knowledge from external databases and combining it with the model's built-in knowledge. It says this can improve accuracy and credibility, allow continual updates, and add domain knowledge without retraining.\n  - https://arxiv.org/abs/2312.10997\n- The same survey lists hallucination, outdated knowledge and untraceable reasoning as the problems RAG targets.\n  - https://arxiv.org/abs/2312.10997\n\n**Why retrieval does not guarantee factual answers**\n\n- Models use long inputs unevenly. Performance is often highest when the relevant information is at the beginning or end of the context. It degrades significantly when the information is in the middle, even for models built for long contexts. A correct passage can therefore be retrieved and still be under-used.\n  - https://arxiv.org/abs/2307.03172\n- Models can be highly receptive to external evidence that conflicts with their parametric memory, provided the evidence is coherent and persuasive.\n  - https://arxiv.org/abs/2305.13300\n- Models also show confirmation bias. When retrieved evidence mixes conflicting details with details that match what the model already believes, the model favors the consistent parts. The parametric knowledge can therefore win out over the retrieved text.\n  - https://arxiv.org/abs/2305.13300\n- A case-study paper on RAG in research, education and biomedicine identifies 7 failure points in designing RAG systems. Its abstract says validation is only feasible during operation, and that robustness evolves over time rather than being designed in at the start. I could not retrieve the list of seven, so I can't say what they are.\n  - https://arxiv.org/abs/2401.05856\n- The survey says RAG still faces open challenges but, in the abstract, doesn't list them.\n  - https://arxiv.org/abs/2312.10997\n\n**Not established by what I read**\n\n- The original RAG abstract does not discuss hallucination or RAG's own limitations. Its factuality result is relative to a baseline and is not a guarantee.\n- I have no quantitative data on how often RAG answers are wrong.\n- I did not verify the retriever-side failures (missing or irrelevant documents), which the failure-points paper likely covers but which I could not read. I also did not verify unreliable or contradictory sources in the index.\n- The question's premise is mostly sound. RAG reduces some failure modes but guarantees nothing, and the sources above are consistent with that.\n\nSources:\n- [Lewis et al., Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401)\n- [Gao et al., Retrieval-Augmented Generation for LLMs: A Survey](https://arxiv.org/abs/2312.10997)\n- [Liu et al., Lost in the Middle](https://arxiv.org/abs/2307.03172)\n- [Xie et al., Adaptive Chameleon or Stubborn Sloth](https://arxiv.org/abs/2305.13300)\n- [Barnett et al., Seven Failure Points When Engineering a RAG System](https://arxiv.org/abs/2401.05856)",
+  "final_answer_sha256": "21a124167c2677bf00db9d8d3d28520cd11ae49e4d0751a28e46358ac6215c3b",
+  "raw_stream_sha256": "36bb4278bdd777f3d60c482cafcc919541a283a704f5e7226a78c3b91d1412c6"
+}

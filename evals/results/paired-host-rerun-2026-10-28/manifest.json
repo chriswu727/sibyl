@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "date": "2026-10-28",
+  "protocol": "docs/LAUNCH_READINESS.md#paired-host-evaluation-protocol",
+  "protocol_commit": "bc278474a28766e5757f5ede83608f32a889549e",
+  "run_harness_commit": "515424d513bb61ef64c538623e7c134a6d303de0",
+  "sibyl_change_since_first_run": "#70 answer guidance (reading_needs, before_answering, answer_material, MCP instructions)",
+  "host": {
+    "client": "Claude Code CLI 2.1.312",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium",
+    "caps": {
+      "max_budget_usd": 2,
+      "timeout_seconds": 600
+    }
+  },
+  "judge": {
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "tools": "none; cited pages pre-fetched with Sibyl's page reader (10,000 characters each)",
+    "label_seed": "paired-2026-10-27"
+  },
+  "run_cost_usd": 8.64,
+  "judge_cost_usd": 6.22,
+  "cost_basis": "CLI-reported list-price cost; under a subscription a quota indicator, not an invoice",
+  "raw_streams": "Not retained in the repository (third-party page text); each run record keeps raw_stream_sha256.",
+  "criteria": {
+    "citation_support_rate_delta_pp": -0.3,
+    "citation_support_met": false,
+    "factual_met": false,
+    "trap_met": true,
+    "rubric_delta": {
+      "coverage": 0.1,
+      "support": 0.4,
+      "source_quality": -0.1,
+      "counterevidence": 0.4
+    },
+    "rubric_met": true,
+    "passed": false
+  },
+  "strict_support_rate_unreachable_as_unsupported": {
+    "deep_research": 0.656,
+    "native": 0.736,
+    "sibyl": 0.783
+  },
+  "pooled_with_first_run": {
+    "deep_research": {
+      "citation_support_rate": 0.723,
+      "strict_support_rate": 0.65,
+      "factual_correct": "11/12",
+      "trap_pass": "8/8",
+      "rubric": {
+        "coverage": 1.95,
+        "support": 0.6,
+        "source_quality": 1.9,
+        "counterevidence": 1.5
+      },
+      "cost_usd": 5.79,
+      "seconds": 1350.1
+    },
+    "native": {
+      "citation_support_rate": 0.749,
+      "strict_support_rate": 0.674,
+      "factual_correct": "11/12",
+      "trap_pass": "8/8",
+      "rubric": {
+        "coverage": 1.95,
+        "support": 0.55,
+        "source_quality": 1.9,
+        "counterevidence": 1.25
+      },
+      "cost_usd": 3.61,
+      "seconds": 999.2
+    },
+    "sibyl": {
+      "citation_support_rate": 0.794,
+      "strict_support_rate": 0.775,
+      "factual_correct": "11/12",
+      "trap_pass": "8/8",
+      "rubric": {
+        "coverage": 1.9,
+        "support": 0.9,
+        "source_quality": 1.85,
+        "counterevidence": 1.3
+      },
+      "cost_usd": 7.2,
+      "seconds": 1659.5
+    }
+  }
+}

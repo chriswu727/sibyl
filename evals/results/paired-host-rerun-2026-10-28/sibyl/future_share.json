@@ -1,0 +1,59 @@
+{
+  "case_id": "future_share",
+  "condition": "sibyl",
+  "elapsed_seconds": 43.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.19258559999999997,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 24423,
+    "cache_read_input_tokens": 78616,
+    "output_tokens": 3809,
+    "output_tokens_details": {
+      "thinking_tokens": 60
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 24423,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14896,
+      "outputTokens": 4724,
+      "cacheReadInputTokens": 78616,
+      "cacheCreationInputTokens": 24423,
+      "webSearchRequests": 1,
+      "costUSD": 0.19258559999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 60,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 24423,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** No. Public evidence can't establish NVIDIA's exact realized AI-chip share in 2030. The question assumes an outcome that doesn't exist yet. Today is 2026-10-28, 2030 hasn't happened, and I found no source reporting a 2030 result. Only projections exist, and even the current share is estimated inconsistently.\n\n**Observed (2024–2026), all estimates rather than audited figures**\n\n- Estimates of NVIDIA's current share range from about 70% to about 85%, depending on source and definition.\n  - Tom's Hardware says about 70%: https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\n  - Silicon Analysts says about 80% by revenue, citing $193.7B in FY2026 data-center sales: https://siliconanalysts.com/analysis/amd-vs-nvidia-ai-gpu-market-share-2026\n  - Denkstrom says about 85% in early 2026: https://denkstrom.org/en/goodnews/ai-chips-asic-gpu-market-shift/\n- Silicon Analysts' year-by-year table puts NVIDIA at about 87% in 2024 (its peak) and about 75% for 2026. It labels 2025 and 2026 as estimates and says it synthesizes Bloomberg Intelligence, IDC and its own figures: https://siliconanalysts.com/analysis/amd-vs-nvidia-ai-gpu-market-share-2026\n- Revenue share and shipment share give different answers. TrendForce, as cited by Denkstrom, expects GPUs' share of AI servers to fall from 83% to 70% in 2026 as ASICs rise from about 15% to nearly 28%. Tom's Hardware reports similar ASIC shipment figures: https://denkstrom.org/en/goodnews/ai-chips-asic-gpu-market-shift/ and https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\n\n**Projections (not outcomes)**\n\n- Analysts expect AMD to reach 10–20% by 2030, which would imply a lower NVIDIA share: https://denkstrom.org/en/goodnews/ai-chips-asic-gpu-market-shift/\n- Tom's Hardware says NVIDIA's roughly 70% share is \"projected to erode\" as hyperscalers build custom chips. It gives no specific 2030 figure: https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\n- A search summary attributed Bloomberg Intelligence with 70–75% for NVIDIA through 2030, and TrendForce with ASIC servers near 40% of shipments by 2030. I could not verify either. Bloomberg's page returned HTTP 403, and I didn't read the TrendForce source. Treat both as unconfirmed.\n\n**What the evidence shows about the premise**\n\n- Even if 2030 data existed, \"AI-chip market share\" has no standard definition. Sources differ on revenue versus units, merchant versus captive chips, and chip versus system. The 70–85% spread for today comes from those differences. Source: the three links in the first observed bullet.\n\n**Gaps**\n\n- I used five of eight retrievals. The Bloomberg and TrendForce primary figures are unread.\n- The 2030 AMD and ASIC projections come from one secondary blog, so they are weakly corroborated.\n- I did not find a dated 2030 forecast from a primary analyst source.\n\nSources:\n- https://www.tomshardware.com/tech-industry/semiconductors/custom-ai-asics-examined-from-broadcom-to-mtia\n- https://siliconanalysts.com/analysis/amd-vs-nvidia-ai-gpu-market-share-2026\n- https://denkstrom.org/en/goodnews/ai-chips-asic-gpu-market-shift/",
+  "final_answer_sha256": "067b664dc20e6fc9ebdddc067197dda3d4a525bfb042449b6ab8704f50481c9d",
+  "raw_stream_sha256": "e07c4d3d3790c79d192c6d68d5166c5c147456f347ea94393376b68a5660bc2d"
+}
