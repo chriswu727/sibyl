@@ -1,0 +1,135 @@
+{
+  "case_id": "real03",
+  "kind": "factual",
+  "label_map": {
+    "X": "native",
+    "Y": "sibyl",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.24062719999999999,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 12,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Sagg Eco Village is located in Ganderbal, Jammu & Kashmir, India\", \"url\": \"https://ecovillage.org/map/community/sagg-eco-village/\", \"label\": \"supported\"}, {\"claim\": \"It describes itself as J&K's first eco village, started in 2013, and runs as a natural farm and cultural retreat center\", \"url\": \"https://ecovillage.org/map/community/sagg-eco-village/\", \"label\": \"supported\"}, {\"claim\": \"Its website is saggecovillage.earth\", \"url\": \"https://ecovillage.org/map/community/sagg-eco-village/\", \"label\": \"supported\"}, {\"claim\": \"The address is Watlar Wuder, Lar, Ganderbal, PIN 191201, and Trip.com gives it as Lar - Chunt Waliwar Road, Ganderbal\", \"url\": \"https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-the-best-offbeat-recreational-destination-in-kashmir-141839954\", \"label\": \"supported\"}, {\"claim\": \"The coordinates are about 34.272°N, 74.760°E\", \"url\": \"https://mapcarta.com/N5931593287\", \"label\": \"supported\"}, {\"claim\": \"Justdial lists the locality as Warpora, Ganderbal\", \"url\": \"https://www.justdial.com/Ganderbal/Sagg-Eco-Village-Ganderbal-ho/9999PX194-X194-220509221200-H3C3_BZDET\", \"label\": \"unreachable\"}], \"uncited_claims\": 2, \"rubric\": {}, \"notes\": \"States Ganderbal district, which matches the gold answer. The 'Harmukh foothills' and 'about 6 km from Ganderbal town' claims carry no citation; the answer itself flags them as unverified. The answer says the Mapcarta page returned a 403, but the page text provided here supports the coordinates.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"It is located in Ganderbal and is described as J&K's first regenerative eco-village enterprise\", \"url\": \"https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/\", \"label\": \"supported\"}, {\"claim\": \"The address is Watlar Wudder, Lar, Ganderbal, 191201; Ganderbal town is 6 km south and Wayil is about 4 km east\", \"url\": \"https://mapcarta.com/N5931593287\", \"label\": \"supported\"}, {\"claim\": \"Trip.com gives the address as watlar wuder Lar - Chunt Waliwar Road ganderbal, Chanthan Gulabpora, J&K 191201\", \"url\": \"https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-farm-stay-and-regenerative-living-141839954/?locale=en-SG&curr=SGD\", \"label\": \"supported\"}, {\"claim\": \"It is in the Chanthan Gulabpura area, at the foothills of the Sindh River in the Wali War region (IANS, 2022)\", \"url\": \"https://preciouskashmir.com/2022/09/21/sagg-eco-village-kashmirs-offbeat-recreational-destination/\", \"label\": \"supported\"}, {\"claim\": \"Its OpenStreetMap-based coordinates are about 34.27225°N, 74.76043°E\", \"url\": \"https://mapcarta.com/N5931593287\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"States Ganderbal district, which matches the gold answer. Every cited claim is supported by its page. The claim that LinkedIn gives a 2012 founding year has no URL attached.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"It is in Ganderbal, Jammu & Kashmir\", \"url\": \"https://ecovillage.org/map/community/sagg-eco-village/\", \"label\": \"supported\"}, {\"claim\": \"It is in Ganderbal, Jammu & Kashmir\", \"url\": \"https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/\", \"label\": \"supported\"}, {\"claim\": \"The address is Watlar Wuder, Lar, Ganderbal, 191201, and Ganderbal town is about 6 km away\", \"url\": \"https://in.linkedin.com/company/saggecovillage\", \"label\": \"partial\"}, {\"claim\": \"Tripadvisor places it near Bagh Mahanand\", \"url\": \"https://www.tripadvisor.com/Hotel_Review-g32869462-d17693204-Reviews-SAGG_Eco_Village_Kashmir-Bagh_Mahanand_Ganderbal_District_Kashmir_Jammu_and_Kashmir.html\", \"label\": \"unreachable\"}, {\"claim\": \"The coordinates are roughly 34.27°N, 74.76°E\", \"url\": \"https://prakati.com/d/sagg-eco-village/\", \"label\": \"unsupported\"}, {\"claim\": \"It sits in the Harmukh foothills, overlooking the Sindh and Nigeen valleys\", \"url\": \"https://casaclan.com/projects/sagg-eco-village-kashmir/\", \"label\": \"unsupported\"}, {\"claim\": \"Fayaz Ahmad Dar founded it, and it is billed as J&K's first regenerative eco-village enterprise\", \"url\": \"https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/\", \"label\": \"supported\"}, {\"claim\": \"The GEN page gives 2012 as the founding year in its structured fields and 2013 in its description\", \"url\": \"https://ecovillage.org/map/community/sagg-eco-village/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"States Ganderbal district, which matches the gold answer. The LinkedIn page supports the address but not the 6 km distance. The Prakati page gives no coordinates. The Casaclan page does not mention Harmukh, Sindh or Nigeen. Additional pairs not listed because of the 8-pair cap: the address claim cited to Tripadvisor (unreachable) and the Chanthan Gulabpora claim cited to the eldercare directory (unreachable).\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Sagg Eco Village is located in Ganderbal, Jammu & Kashmir, India",
+          "url": "https://ecovillage.org/map/community/sagg-eco-village/",
+          "label": "supported"
+        },
+        {
+          "claim": "It describes itself as J&K's first eco village, started in 2013, and runs as a natural farm and cultural retreat center",
+          "url": "https://ecovillage.org/map/community/sagg-eco-village/",
+          "label": "supported"
+        },
+        {
+          "claim": "Its website is saggecovillage.earth",
+          "url": "https://ecovillage.org/map/community/sagg-eco-village/",
+          "label": "supported"
+        },
+        {
+          "claim": "The address is Watlar Wuder, Lar, Ganderbal, PIN 191201, and Trip.com gives it as Lar - Chunt Waliwar Road, Ganderbal",
+          "url": "https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-the-best-offbeat-recreational-destination-in-kashmir-141839954",
+          "label": "supported"
+        },
+        {
+          "claim": "The coordinates are about 34.272°N, 74.760°E",
+          "url": "https://mapcarta.com/N5931593287",
+          "label": "supported"
+        },
+        {
+          "claim": "Justdial lists the locality as Warpora, Ganderbal",
+          "url": "https://www.justdial.com/Ganderbal/Sagg-Eco-Village-Ganderbal-ho/9999PX194-X194-220509221200-H3C3_BZDET",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 2,
+      "rubric": {},
+      "notes": "States Ganderbal district, which matches the gold answer. The 'Harmukh foothills' and 'about 6 km from Ganderbal town' claims carry no citation; the answer itself flags them as unverified. The answer says the Mapcarta page returned a 403, but the page text provided here supports the coordinates."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "It is located in Ganderbal and is described as J&K's first regenerative eco-village enterprise",
+          "url": "https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/",
+          "label": "supported"
+        },
+        {
+          "claim": "The address is Watlar Wudder, Lar, Ganderbal, 191201; Ganderbal town is 6 km south and Wayil is about 4 km east",
+          "url": "https://mapcarta.com/N5931593287",
+          "label": "supported"
+        },
+        {
+          "claim": "Trip.com gives the address as watlar wuder Lar - Chunt Waliwar Road ganderbal, Chanthan Gulabpora, J&K 191201",
+          "url": "https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-farm-stay-and-regenerative-living-141839954/?locale=en-SG&curr=SGD",
+          "label": "supported"
+        },
+        {
+          "claim": "It is in the Chanthan Gulabpura area, at the foothills of the Sindh River in the Wali War region (IANS, 2022)",
+          "url": "https://preciouskashmir.com/2022/09/21/sagg-eco-village-kashmirs-offbeat-recreational-destination/",
+          "label": "supported"
+        },
+        {
+          "claim": "Its OpenStreetMap-based coordinates are about 34.27225°N, 74.76043°E",
+          "url": "https://mapcarta.com/N5931593287",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "States Ganderbal district, which matches the gold answer. Every cited claim is supported by its page. The claim that LinkedIn gives a 2012 founding year has no URL attached."
+    },
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "It is in Ganderbal, Jammu & Kashmir",
+          "url": "https://ecovillage.org/map/community/sagg-eco-village/",
+          "label": "supported"
+        },
+        {
+          "claim": "It is in Ganderbal, Jammu & Kashmir",
+          "url": "https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/",
+          "label": "supported"
+        },
+        {
+          "claim": "The address is Watlar Wuder, Lar, Ganderbal, 191201, and Ganderbal town is about 6 km away",
+          "url": "https://in.linkedin.com/company/saggecovillage",
+          "label": "partial"
+        },
+        {
+          "claim": "Tripadvisor places it near Bagh Mahanand",
+          "url": "https://www.tripadvisor.com/Hotel_Review-g32869462-d17693204-Reviews-SAGG_Eco_Village_Kashmir-Bagh_Mahanand_Ganderbal_District_Kashmir_Jammu_and_Kashmir.html",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The coordinates are roughly 34.27°N, 74.76°E",
+          "url": "https://prakati.com/d/sagg-eco-village/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "It sits in the Harmukh foothills, overlooking the Sindh and Nigeen valleys",
+          "url": "https://casaclan.com/projects/sagg-eco-village-kashmir/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Fayaz Ahmad Dar founded it, and it is billed as J&K's first regenerative eco-village enterprise",
+          "url": "https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/",
+          "label": "supported"
+        },
+        {
+          "claim": "The GEN page gives 2012 as the founding year in its structured fields and 2013 in its description",
+          "url": "https://ecovillage.org/map/community/sagg-eco-village/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "States Ganderbal district, which matches the gold answer. The LinkedIn page supports the address but not the 6 km distance. The Prakati page gives no coordinates. The Casaclan page does not mention Harmukh, Sindh or Nigeen. Additional pairs not listed because of the 8-pair cap: the address claim cited to Tripadvisor (unreachable) and the Chanthan Gulabpora claim cited to the eldercare directory (unreachable)."
+    }
+  }
+}

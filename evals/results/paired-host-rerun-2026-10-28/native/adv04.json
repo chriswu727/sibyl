@@ -1,0 +1,56 @@
+{
+  "case_id": "adv04",
+  "condition": "native",
+  "elapsed_seconds": 18.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.1093156,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3089,
+    "cache_read_input_tokens": 6576,
+    "output_tokens": 1404,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3089,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 24641,
+      "outputTokens": 2702,
+      "cacheReadInputTokens": 6576,
+      "cacheCreationInputTokens": 3089,
+      "webSearchRequests": 2,
+      "costUSD": 0.1093156,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3089,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**No U.S. president signed an \"Antarctic Statehood Act.\" The question rests on a false premise. Antarctica is not a U.S. state, and I found no such law or bill.**\n\nI used two searches and did not open any of the pages. The claims below rest on search-result summaries.\n\n- I found no record of an \"Antarctic Statehood Act\" or of any proposal to make Antarctica the 51st state.\n  - https://en.wikipedia.org/wiki/51st_state\n  - https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\n  - The Quora link is a hypothetical discussion, not a source for any law.\n- The closest real item is a Greenland bill, not an Antarctic one. Rep. Randy Fine introduced it to enable annexing Greenland and admitting it as a state.\n  - https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\n  - https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\n- The one Antarctic law the search surfaced for the U.S. is the Antarctic Conservation Act, which deals with environmental protection, not statehood.\n  - https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\n- The Antarctic Treaty was signed in 1959 and entered into force in 1961. It covers the area south of 60°S.\n  - https://2009-2017.state.gov/t/avc/trty/193967.htm\n- Article IV of the treaty freezes territorial claims. No new claim or enlargement of an existing claim can be asserted while the treaty is in force.\n  - https://2009-2017.state.gov/t/avc/trty/193967.htm\n  - https://www.diplomacyandlaw.com/post/who-owns-antarctica\n- Seven nations hold claims: Argentina, Australia, Chile, France, New Zealand, Norway and the UK. The U.S. recognizes none of them and has no claim of its own.\n  - https://www.diplomacyandlaw.com/post/who-owns-antarctica\n  - https://thelegalguide.org/who-legally-owns-antarctica-sovereignty-antarctic-treaty/\n\nMy searches can't prove that no such bill exists anywhere. They turned up no trace of one, and the treaty framework makes U.S. statehood for Antarctica legally implausible.\n\nSources:\n- [51st state – Wikipedia](https://en.wikipedia.org/wiki/51st_state)\n- [Quora thread on Antarctica as the 51st state](https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent)\n- [The Hill on the Greenland bill](https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/)\n- [Newsweek on the Greenland bill](https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217)\n- [Antarctic Conservation Act – Wikipedia](https://en.wikipedia.org/wiki/Antarctic_Conservation_Act)\n- [Antarctic Treaty – State.gov](https://2009-2017.state.gov/t/avc/trty/193967.htm)\n- [Who Owns Antarctica? – Diplomacy and Law](https://www.diplomacyandlaw.com/post/who-owns-antarctica)\n- [Who Legally Owns Antarctica – The Legal Guide](https://thelegalguide.org/who-legally-owns-antarctica-sovereignty-antarctic-treaty/)",
+  "final_answer_sha256": "cb1356d334052458ca35c1db04cce0fb238e7ea0ec444a6e13b54c0ebe917de1",
+  "raw_stream_sha256": "8ab0c27aa34728f39f2ff5fb38db6a83717ba13c73d0b81df87a3e8dab442793"
+}

@@ -1,0 +1,72 @@
+{
+  "case_id": "quantization",
+  "condition": "native",
+  "elapsed_seconds": 49.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 9,
+  "cli_reported_cost_usd": 0.07565740000000001,
+  "usage": {
+    "input_tokens": 10,
+    "cache_creation_input_tokens": 5265,
+    "cache_read_input_tokens": 22935,
+    "output_tokens": 3353,
+    "output_tokens_details": {
+      "thinking_tokens": 70
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 5265,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 10,
+      "outputTokens": 3353,
+      "cacheReadInputTokens": 22935,
+      "cacheCreationInputTokens": 5265,
+      "webSearchRequests": 0,
+      "costUSD": 0.05690350000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 70,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 5265,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 154544,
+      "outputTokens": 6599,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.018753900000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3850,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 8
+  },
+  "final_answer": "**Direct answer:** GPTQ and AWQ are both post-training, weight-only quantizers for low-bit LLM inference. They differ in how they protect accuracy. GPTQ uses second-order information to update the remaining weights as it quantizes each one, so it reconstructs layer outputs. AWQ finds the important channels from activation statistics and rescales them, with no backpropagation or reconstruction. Both sets of results come from the authors' own papers, and the two papers use different models, kernels and hardware. Neither paper establishes a general ranking, and neither shows accuracy or speed for settings it didn't test.\n\n**Claims about mechanism and scope**\n\n- GPTQ is a one-shot post-training weight quantizer based on approximate second-order information. It targets 3–4 bit weights for GPT/OPT-style models, and it reports \"reasonable\" accuracy at 2-bit or ternary.\n  - https://arxiv.org/abs/2210.17323\n- GPTQ calibrates on 128 random 2048-token C4 segments. It was run on the OPT and BLOOM families, up to 175B.\n  - https://arxiv.org/html/2210.17323\n- GPTQ does not quantize activations. Its speedup comes from reduced memory movement: weights are dequantized on the fly inside a custom kernel. The authors say it brings no computational reduction.\n  - https://arxiv.org/html/2210.17323\n- GPTQ's headline speedups of about 3.25× on an A100 and 4.5× on an A6000 are for batch-size-1 generation, which is memory-bound.\n  - https://arxiv.org/html/2210.17323\n  - https://arxiv.org/abs/2210.17323\n- AWQ is also weight-only. It says \"Protecting only 1% salient weights can greatly reduce quantization error.\" It picks salient channels from activation distributions, not weight values.\n  - https://arxiv.org/abs/2306.00978\n- AWQ scales up the salient channels through an equivalent transformation instead of keeping them in mixed precision. The scales come from offline activation statistics, with no backpropagation or reconstruction.\n  - https://arxiv.org/abs/2306.00978\n- AWQ is paired with the TinyChat system. TinyChat reports more than 3× speedup over the Hugging Face FP16 implementation on desktop and mobile GPUs. AWQ is evaluated on instruction-tuned and multimodal models and on coding and math benchmarks.\n  - https://arxiv.org/abs/2306.00978\n\n**Claims about reported comparisons (AWQ authors' own numbers)**\n\n- At INT3-g128, AWQ's WikiText-2 perplexity is lower than GPTQ's on every LLaMA and Llama-2 size tested.\n  - Examples are LLaMA-7B at 6.35 vs 8.81, and Llama-2-70B at 3.74 vs 3.88.\n  - The gap is much smaller at larger sizes and at INT4. For Llama-2-7B at INT4-g128 it is 5.60 vs 5.69.\n  - https://arxiv.org/html/2306.00978\n- The AWQ authors report that AWQ needs about 10× fewer calibration sequences than GPTQ (16 vs 192 on OPT-6.7B). They also report it is less sensitive to a calibration/evaluation distribution mismatch: perplexity rises 0.5–0.6 for AWQ vs 2.3–4.9 for GPTQ.\n  - https://arxiv.org/html/2306.00978\n- At INT2, the AWQ paper reports gains from AWQ applied on top of GPTQ (OPT-13B perplexity 16.74 → 13.25). It calls the two methods orthogonal, so they are not exclusive alternatives.\n  - https://arxiv.org/html/2306.00978\n\n**What should not be inferred**\n\n- **AWQ is not shown to be better than GPTQ in general.** The comparison comes from AWQ's own paper, which mainly uses WikiText-2 perplexity plus a GPT-4-judged Vicuna comparison on 80 questions. The overfitting and generalization explanation is the authors' claim, and I found no independent verification. I did not look for third-party benchmarks, so I can't say whether the ranking holds elsewhere.\n  - https://arxiv.org/html/2306.00978\n- **Perplexity is not downstream task quality.** GPTQ's paper focuses on generative tasks and does not study bias or other side effects of compression. Both papers' \"negligible degradation\" claims are limited to their tested models and metrics.\n  - https://arxiv.org/html/2210.17323\n- **The speedups cannot be compared with each other.** GPTQ's are for batch-size-1 generation on A100/A6000 with its own kernel. AWQ's are measured against Hugging Face FP16 on desktop and mobile GPUs with TinyChat's fused kernels. Neither shows speed at large batch sizes, where decoding is less memory-bound. The GPTQ paper says its method gives no computational reduction, and the AWQ abstract gives no such analysis. Speed also depends on kernel implementation, not only on the algorithm.\n  - https://arxiv.org/html/2210.17323\n  - https://arxiv.org/abs/2306.00978\n- **Neither method shows that activation, KV-cache or full W4A4 quantization works.** Both are weight-only.\n  - https://arxiv.org/html/2210.17323\n  - https://arxiv.org/abs/2306.00978\n- **GPTQ's 2-bit and ternary result is not a strong guarantee.** The abstract says only \"reasonable accuracy\" and gives no numbers. AWQ's own INT2 results need GPTQ added on top.\n  - https://arxiv.org/abs/2210.17323\n  - https://arxiv.org/html/2306.00978\n\n**Gaps in my research**\n\n- The arXiv full-text PDF for AWQ was too large to fetch, so I used the HTML versions, which a small model summarized for me. I did not check the exact table values against the original papers.\n- I did not retrieve independent benchmarks or later work such as GPTQ/AWQ results on newer model families.\n\nSources:\n- https://arxiv.org/abs/2210.17323\n- https://arxiv.org/html/2210.17323\n- https://arxiv.org/abs/2306.00978\n- https://arxiv.org/html/2306.00978",
+  "final_answer_sha256": "573e4aae62e8adc8ac1a0776d79c2789a708d8a55669d0d0e3614ecb0e259e22",
+  "raw_stream_sha256": "f348a058c8dbbfc2c92412d126e2b63a4f7d2765149edd524275333e9493865f"
+}

@@ -1,0 +1,170 @@
+{
+  "case_id": "postgres_isolation",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "deep_research",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.19657919999999998,
+  "judge_subtype": "success",
+  "pages_read": 4,
+  "pages_cited": 4,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Repeatable Read permits serialization anomalies and Serializable does not. PostgreSQL's Repeatable Read does not allow phantom reads, which the SQL standard would permit.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"supported\"}, {\"claim\": \"Repeatable Read is plain SI and Serializable is SSI from 9.1. In a three-transaction read/write cycle, RR misses the anomaly and Serializable rolls one transaction back.\", \"url\": \"https://wiki.postgresql.org/wiki/SSI\", \"label\": \"partial\"}, {\"claim\": \"Snapshot isolation allows write skew (reading overlapping state, modifying disjoint objects), so it is weaker than serializability.\", \"url\": \"https://jepsen.io/consistency/models/snapshot-isolation\", \"label\": \"supported\"}, {\"claim\": \"Applications at either level must be prepared to retry serialization failures. The message text varies, but the SQLSTATE is always 40001.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Retrying 40P01 may be advisable. 23505/23P01 are sometimes appropriate to retry, as in the example of a new key chosen after inspecting existing keys, but they may be persistent errors.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Retry the complete transaction including decision logic. There is no automatic retry, multiple attempts may be needed, and a prepared transaction can block progress.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Results from a failed Serializable transaction must be ignored, and the error may be a constraint violation rather than a serialization failure.\", \"url\": \"https://wiki.postgresql.org/wiki/SSI\", \"label\": \"supported\"}], \"uncited_claims\": 3, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Almost every cited claim matches the excerpts. The three-transaction cycle detail is cut off in the wiki excerpt, so that claim is only partial. Three further points (RR read-only transactions never conflict, Serializable can abort read-only non-DEFERRABLE transactions, seq scans take relation-level predicate locks) have no URL and are explicitly marked unverified. The Jepsen page is an independent source, but it agrees with the docs rather than challenging them, and the answer says so.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"RR's snapshot is taken at the first non-transaction-control statement, not at the start of each statement.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"unsupported\"}, {\"claim\": \"RR prevents dirty, nonrepeatable and phantom reads (phantom listed as 'allowed, but not in PG'), and serialization anomalies remain possible.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"supported\"}, {\"claim\": \"RR fails with 'could not serialize access due to concurrent update' when a concurrent transaction commits an update or delete to a target row, and waits while that transaction is uncommitted.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"unsupported\"}, {\"claim\": \"At RR, read-only transactions never have serialization conflicts.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"unsupported\"}, {\"claim\": \"Serializable uses non-blocking SIReadLock predicate locks, which cannot cause deadlocks.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"unsupported\"}, {\"claim\": \"Applications using RR or Serializable must be prepared to retry transactions that fail with 40001.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Retry the complete transaction including the logic that picks SQL and values; retrying only the failed statement is not enough.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Retrying 23505/23P01 is appropriate in some cases, but they may be persistent errors that need more care.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The answer covers the question well. However, the transaction-iso.html excerpt holds only the anomaly table, so many material claims attributed to it cannot be verified from the given text: the snapshot timing, the concurrent-update error, read-only RR exemption, SIReadLock, and the DEFERRABLE behavior. The failure-handling claims are fully supported. Both sources are official PostgreSQL docs, and the answer correctly presents them as one publisher. It discloses gaps (read-only Serializable, external side effects) but does not look for contrary evidence.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"RR and Serializable both use a snapshot taken at the start of the first non-transaction-control statement.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"unsupported\"}, {\"claim\": \"RR fails with 'could not serialize access due to concurrent update' when it tries to modify or lock a row that a concurrent transaction changed and committed.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"unsupported\"}, {\"claim\": \"RR can produce non-serializable results, illustrated by the batch control/detail record example.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"partial\"}, {\"claim\": \"Serializable prevents those anomalies and can abort with 'read/write dependencies among transactions', illustrated by the class-sum example.\", \"url\": \"https://www.postgresql.org/docs/current/transaction-iso.html\", \"label\": \"partial\"}, {\"claim\": \"Serialization failures always carry SQLSTATE 40001, and the message text varies.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Applications at either level must be prepared to retry serialization failures from the beginning.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"The retry must re-run the whole transaction including decision logic, and PostgreSQL does not retry automatically.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}, {\"claim\": \"Retry 23505/23P01 only in some cases, such as two sessions picking the same new key, because they can be persistent errors.\", \"url\": \"https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The failure-handling claims are well supported. Claims about RR and Serializable mechanics cite transaction-iso.html, whose excerpt is only the anomaly table: the anomaly/prevention parts are supported by the table, while the error messages, examples and snapshot timing are not. The 'retry limit and backoff' advice is not on the cited page. The answer discloses that the pages came through a summarizer, and it correctly declines to extend the read-only exemption to Serializable, but it offers no independent counterevidence.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Repeatable Read permits serialization anomalies and Serializable does not. PostgreSQL's Repeatable Read does not allow phantom reads, which the SQL standard would permit.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Repeatable Read is plain SI and Serializable is SSI from 9.1. In a three-transaction read/write cycle, RR misses the anomaly and Serializable rolls one transaction back.",
+          "url": "https://wiki.postgresql.org/wiki/SSI",
+          "label": "partial"
+        },
+        {
+          "claim": "Snapshot isolation allows write skew (reading overlapping state, modifying disjoint objects), so it is weaker than serializability.",
+          "url": "https://jepsen.io/consistency/models/snapshot-isolation",
+          "label": "supported"
+        },
+        {
+          "claim": "Applications at either level must be prepared to retry serialization failures. The message text varies, but the SQLSTATE is always 40001.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Retrying 40P01 may be advisable. 23505/23P01 are sometimes appropriate to retry, as in the example of a new key chosen after inspecting existing keys, but they may be persistent errors.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Retry the complete transaction including decision logic. There is no automatic retry, multiple attempts may be needed, and a prepared transaction can block progress.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Results from a failed Serializable transaction must be ignored, and the error may be a constraint violation rather than a serialization failure.",
+          "url": "https://wiki.postgresql.org/wiki/SSI",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 3,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Almost every cited claim matches the excerpts. The three-transaction cycle detail is cut off in the wiki excerpt, so that claim is only partial. Three further points (RR read-only transactions never conflict, Serializable can abort read-only non-DEFERRABLE transactions, seq scans take relation-level predicate locks) have no URL and are explicitly marked unverified. The Jepsen page is an independent source, but it agrees with the docs rather than challenging them, and the answer says so."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "RR's snapshot is taken at the first non-transaction-control statement, not at the start of each statement.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "RR prevents dirty, nonrepeatable and phantom reads (phantom listed as 'allowed, but not in PG'), and serialization anomalies remain possible.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "supported"
+        },
+        {
+          "claim": "RR fails with 'could not serialize access due to concurrent update' when a concurrent transaction commits an update or delete to a target row, and waits while that transaction is uncommitted.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "At RR, read-only transactions never have serialization conflicts.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Serializable uses non-blocking SIReadLock predicate locks, which cannot cause deadlocks.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Applications using RR or Serializable must be prepared to retry transactions that fail with 40001.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Retry the complete transaction including the logic that picks SQL and values; retrying only the failed statement is not enough.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Retrying 23505/23P01 is appropriate in some cases, but they may be persistent errors that need more care.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The answer covers the question well. However, the transaction-iso.html excerpt holds only the anomaly table, so many material claims attributed to it cannot be verified from the given text: the snapshot timing, the concurrent-update error, read-only RR exemption, SIReadLock, and the DEFERRABLE behavior. The failure-handling claims are fully supported. Both sources are official PostgreSQL docs, and the answer correctly presents them as one publisher. It discloses gaps (read-only Serializable, external side effects) but does not look for contrary evidence."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "RR and Serializable both use a snapshot taken at the start of the first non-transaction-control statement.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "RR fails with 'could not serialize access due to concurrent update' when it tries to modify or lock a row that a concurrent transaction changed and committed.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "unsupported"
+        },
+        {
+          "claim": "RR can produce non-serializable results, illustrated by the batch control/detail record example.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Serializable prevents those anomalies and can abort with 'read/write dependencies among transactions', illustrated by the class-sum example.",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Serialization failures always carry SQLSTATE 40001, and the message text varies.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Applications at either level must be prepared to retry serialization failures from the beginning.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "The retry must re-run the whole transaction including decision logic, and PostgreSQL does not retry automatically.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Retry 23505/23P01 only in some cases, such as two sessions picking the same new key, because they can be persistent errors.",
+          "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The failure-handling claims are well supported. Claims about RR and Serializable mechanics cite transaction-iso.html, whose excerpt is only the anomaly table: the anomaly/prevention parts are supported by the table, while the error messages, examples and snapshot timing are not. The 'retry limit and backoff' advice is not on the cited page. The answer discloses that the pages came through a summarizer, and it correctly declines to extend the read-only exemption to Serializable, but it offers no independent counterevidence."
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "case_id": "real01",
+  "condition": "native",
+  "elapsed_seconds": 18.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.064942,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2107,
+    "cache_read_input_tokens": 11288,
+    "output_tokens": 1052,
+    "output_tokens_details": {
+      "thinking_tokens": 42
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2107,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13437,
+      "outputTokens": 1553,
+      "cacheReadInputTokens": 11288,
+      "cacheCreationInputTokens": 2107,
+      "webSearchRequests": 1,
+      "costUSD": 0.0619608,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 42,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2107,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 28237,
+      "outputTokens": 315,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0029812000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 213,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**Direct answer:** Jürgen Aschoff studied medicine at the University of Bonn. One source suggests he may also have studied at other universities, so the answer is not fully settled.\n\n- Wikipedia says he studied medicine at the University of Bonn, and it names no other university where he studied medicine: https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n- He moved to the University of Göttingen in 1938 to work on thermoregulation physiology under Hermann Rein. Wikipedia describes this as a research position, not medical study: https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n- The search summary of the Auk obituary says he went on from Bonn to Göttingen, Würzburg and Heidelberg. I did not read the obituary itself, so I haven't confirmed that: https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full\n- The search summary says Wikidata lists Heidelberg and Freiburg as places he was educated. I did not open the Wikidata page: https://www.wikidata.org/wiki/Q75270\n\n**Caveat:** Bonn is the university named for his medical studies. The other universities may be places where he continued his studies or his career. I did not open the Auk obituary or the Wikidata page, so I can't say which.\n\nSources:\n- [Jürgen Aschoff – Wikipedia](https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff)\n- [In Memoriam: Jürgen Aschoff, 1913–1998 – The Auk](https://bioone.org/journals/the-auk/volume-117/issue-3/0004-8038_2000_117_0779_IMJRA_2.0.CO_2/IN-MEMORIAM-J%C3%9CRGEN-ASCHOFF-19131998/10.1642/0004-8038(2000)117%5B0779:IMJRA%5D2.0.CO;2.full)\n- [Jürgen Aschoff – Wikidata](https://www.wikidata.org/wiki/Q75270)",
+  "final_answer_sha256": "a12d747425ebf57e3bc0925f1d36b6f59f7bc1a6b9c81872e69148a17a4910d6",
+  "raw_stream_sha256": "0fa9f075413b7beb38c0b7a5d95c962a4c6f34e9e573a9fff9d54d09975d5c00"
+}

@@ -1,0 +1,71 @@
+{
+  "deep_research": {
+    "factual_correct": 5,
+    "factual_total": 6,
+    "trap_pass": 4,
+    "trap_total": 4,
+    "claim_url_pairs": 147,
+    "judged_pairs": 132,
+    "support_points": 96.5,
+    "unsupported_pairs": 22,
+    "unreachable_pairs": 15,
+    "uncited_claims": 7,
+    "rubric": {
+      "coverage": 1.9,
+      "support": 0.6,
+      "source_quality": 1.9,
+      "counterevidence": 1.3
+    },
+    "cost_usd": 2.79,
+    "seconds": 687.7,
+    "turns": 138,
+    "errors": 0,
+    "citation_support_rate": 0.731
+  },
+  "native": {
+    "factual_correct": 6,
+    "factual_total": 6,
+    "trap_pass": 4,
+    "trap_total": 4,
+    "claim_url_pairs": 140,
+    "judged_pairs": 128,
+    "support_points": 103.0,
+    "unsupported_pairs": 14,
+    "unreachable_pairs": 12,
+    "uncited_claims": 7,
+    "rubric": {
+      "coverage": 1.9,
+      "support": 0.5,
+      "source_quality": 2.0,
+      "counterevidence": 1.1
+    },
+    "cost_usd": 1.78,
+    "seconds": 515.7,
+    "turns": 91,
+    "errors": 0,
+    "citation_support_rate": 0.805
+  },
+  "sibyl": {
+    "factual_correct": 5,
+    "factual_total": 6,
+    "trap_pass": 4,
+    "trap_total": 4,
+    "claim_url_pairs": 129,
+    "judged_pairs": 126,
+    "support_points": 101.0,
+    "unsupported_pairs": 12,
+    "unreachable_pairs": 3,
+    "uncited_claims": 14,
+    "rubric": {
+      "coverage": 2.0,
+      "support": 0.9,
+      "source_quality": 1.9,
+      "counterevidence": 1.5
+    },
+    "cost_usd": 4.07,
+    "seconds": 933.9,
+    "turns": 152,
+    "errors": 0,
+    "citation_support_rate": 0.802
+  }
+}

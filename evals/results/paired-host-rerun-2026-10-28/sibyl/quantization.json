@@ -1,0 +1,59 @@
+{
+  "case_id": "quantization",
+  "condition": "sibyl",
+  "elapsed_seconds": 68.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 11,
+  "cli_reported_cost_usd": 0.2895538,
+  "usage": {
+    "input_tokens": 14,
+    "cache_creation_input_tokens": 38617,
+    "cache_read_input_tokens": 157918,
+    "output_tokens": 6947,
+    "output_tokens_details": {
+      "thinking_tokens": 260
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 38617,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13057,
+      "outputTokens": 8318,
+      "cacheReadInputTokens": 157918,
+      "cacheCreationInputTokens": 38617,
+      "webSearchRequests": 1,
+      "costUSD": 0.2895538,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 260,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 38617,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "mcp__sibyl__continue_research": 5,
+    "WebSearch": 1,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer:** GPTQ and AWQ are both post-training, weight-only quantizers for low-bit inference, but they work differently. GPTQ adjusts the weights themselves. AWQ rescales the weight channels before rounding. Their papers support only narrow conclusions. Don't read them as showing that one method is better everywhere, that either keeps full-precision quality, or that the quoted speedups carry over to other hardware.\n\nI used six retrievals out of eight. In Sibyl, I recorded only the GPTQ claims, and the number checks on two of them flagged unquoted figures. The AWQ and independent-evaluation claims were rejected for a stale revision and never recorded. The statements below come from the pages I read. Almost all the evidence is on arxiv.org. The independent evaluation is the only source from outside the two papers, and the other studies in my search results were snippets I did not read.\n\n**Mechanism**\n\n- GPTQ is a one-shot weight quantizer based on approximate second-order (Hessian) information. https://arxiv.org/abs/2210.17323\n- GPTQ works layer by layer, solving a reconstruction problem for each layer. It was calibrated on 128 random C4 segments of 2048 tokens. https://arxiv.org/pdf/2210.17323\n- AWQ picks out the important (\"salient\") weight channels from the activation distribution, not from the weights. https://arxiv.org/abs/2306.00978\n- AWQ scales those channels up through an equivalent transformation, which avoids mixed-precision storage. The scales come from activation statistics collected offline on a small calibration set. https://arxiv.org/html/2306.00978\n- AWQ says it uses no backpropagation or reconstruction. It finds the scale by a simple search over a power of the activation scale. https://arxiv.org/html/2306.00978\n- The two methods are not exclusive. AWQ says it is \"orthogonal to GPTQ\" and can be combined with it. At INT2, round-to-nearest (RTN) fails and AWQ improves on top of GPTQ. https://arxiv.org/html/2306.00978\n\n**Reported results and scope**\n\n- GPTQ reports 3–4 bit quantization of OPT and BLOOM models up to 175B parameters with small perplexity loss. https://arxiv.org/pdf/2210.17323\n- GPTQ's headline speedups are 3.25× on A100 and 4.5× on A6000. They are for 3-bit OPT-175B, compared against FP16 running on 5 and 8 GPUs. https://arxiv.org/pdf/2210.17323\n- GPTQ states its own limits. Its speedups come from reduced memory movement, not less computation. It focuses on generative tasks and does not consider activation quantization. Its kernels target memory-bound generation. https://arxiv.org/pdf/2210.17323\n- AWQ's main evaluation is WikiText-2 perplexity. https://arxiv.org/html/2306.00978\n- AWQ's instruction-tuned comparison is GPT-4 judging on 80 questions, run in both orders for 160 trials. Its coding and math results are small tables. https://arxiv.org/html/2306.00978\n- AWQ's 3× speedup is for its own TinyChat framework against a Hugging Face FP16 baseline, on the desktop and mobile GPUs it tested. https://arxiv.org/abs/2306.00978\n\n**What not to infer**\n\n- **AWQ's \"better generalization\" is not independently shown.** The claim that GPTQ over-fits the calibration set comes from the AWQ authors, not a neutral test. https://arxiv.org/html/2306.00978\n- **Even AWQ's own tables don't show a clean sweep.** On MBPP at 7B, AWQ's pass@10 (49.25) is slightly below FP16 (49.77). On Llama-2 70B GSM8K, GPTQ (56.03) and AWQ (56.40) are close to FP16 (56.41). https://arxiv.org/html/2306.00978\n- **Perplexity doesn't establish task quality.** An independent study notes that prior work was mostly limited to perplexity or basic knowledge tasks. It found that quantized models often struggle with instruction-following and hallucination detection. https://arxiv.org/abs/2409.11055\n- **Results from one model size don't transfer to others.** The same study found AWQ tends to outperform GPTQ in weight-only quantization. It also found that smaller models can suffer severe accuracy drops at 4-bit, while 70B-scale models stay stable. https://arxiv.org/abs/2409.11055\n- **The papers cover different models and bit-widths.** GPTQ's original results are on OPT and BLOOM. AWQ's include LLaMA/Llama-2, Vicuna, CodeLlama, and vision-language models. Their numbers are not directly comparable unless the models, group size, and calibration data match. https://arxiv.org/pdf/2210.17323 and https://arxiv.org/html/2306.00978\n- **Weight-only quantization says nothing about activation quantization.** GPTQ says outright that it doesn't consider activation quantization, and AWQ is also weight-only. Speedups also depend on being memory-bound, since GPTQ notes that large-batch or non-generative workloads may be compute-bound. https://arxiv.org/pdf/2210.17323\n- **\"Negligible accuracy loss\" is the authors' wording, tied to their models and metrics.** It doesn't cover small models, long context, or reasoning-heavy tasks.\n\n**Gaps**\n\n- The independent-evaluation snippets on math reasoning and long context were not read. I'm not relying on them.\n- I did not read AWQ's data-efficiency or calibration-robustness figures in full. The 16-vs-192 calibration-sequence comparison is one OPT-6.7B INT3 experiment.\n- I did not check whether later GPTQ variants close the gaps AWQ reports.\n\nSources:\n- https://arxiv.org/abs/2210.17323\n- https://arxiv.org/pdf/2210.17323\n- https://arxiv.org/abs/2306.00978\n- https://arxiv.org/html/2306.00978\n- https://arxiv.org/abs/2409.11055",
+  "final_answer_sha256": "422e1a1e2dc5a668c2b72a8f1a68f93d006bef028a1991472ad0ab6620d355c9",
+  "raw_stream_sha256": "3e3f7d56b69c6de27e4c37881a30ad3f37b01f9d97412049715151a562bc3963"
+}

@@ -1,0 +1,175 @@
+{
+  "case_id": "flashattention",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.3470872,
+  "judge_subtype": "success",
+  "pages_read": 8,
+  "pages_cited": 8,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"FlashAttention is an IO-aware exact attention algorithm that uses tiling to reduce HBM/SRAM reads and writes\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"Softmax is computed blockwise and rescaled using extra running max and normalizer statistics, so the result matches full softmax\", \"url\": \"https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf\", \"label\": \"supported\"}, {\"claim\": \"The backward pass recomputes the N×N intermediates instead of storing them, using more compute but fewer HBM accesses; attention is memory-bound\", \"url\": \"https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf\", \"label\": \"supported\"}, {\"claim\": \"Flash Attention shows roughly an order of magnitude more numeric deviation than baseline attention at BF16 in an isolated forward pass\", \"url\": \"https://arxiv.org/abs/2405.02803\", \"label\": \"supported\"}, {\"claim\": \"FlashAttention-2 is about 2x faster than FlashAttention, reaching 50-73% of peak FLOPs/s on A100 versus 25-40%\", \"url\": \"https://arxiv.org/abs/2307.08691\", \"label\": \"supported\"}, {\"claim\": \"FlashAttention-2 reaches only 35% utilization on H100; FlashAttention-3 gets 1.5-2.0x using asynchrony, warp specialization and FP8\", \"url\": \"https://arxiv.org/abs/2407.08608\", \"label\": \"supported\"}, {\"claim\": \"FA3 was benchmarked on one H100 SXM5 in BF16 with seqlen 512-16k at 16k total tokens; the 3-16x gain is against standard attention, and it beats cuDNN only at seqlen 1k and above\", \"url\": \"https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\", \"label\": \"partial\"}, {\"claim\": \"FA3 authors list LLM inference and low-precision large-scale training as open work and only 'expect' transfer to other hardware\", \"url\": \"https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf\", \"label\": \"unsupported\"}], \"uncited_claims\": 2, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Covers both why it is exact and why it is fast, plus limits on generalizing the gains. Strong counterevidence: the Golden et al. numeric-deviation result, the cuDNN baseline narrowing the headline gain, and the slides' limitations, which it rightly treats as secondary. The excerpt does not contain the FA3 setup details (seqlen 512-16k, the 3-16x figure, the stated future-work items). The excerpt also says the algorithm is 'operative for any GPU architecture', not 'expect'. Gaps are disclosed honestly.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"FlashAttention is an IO-aware exact attention algorithm, not an approximation\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"It uses tiling to cut HBM/SRAM reads and writes, needs fewer HBM accesses, and is optimal for a range of SRAM sizes\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"Reported speedups: 15% end-to-end on BERT-large (512), 3x on GPT-2 (1K), 2.4x on LRA (1K-4K)\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"The block-sparse extension is approximate and separate from the exact algorithm\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"FlashAttention-2 is about 2x faster via reduced non-matmul FLOPs, thread-block parallelism and better warp partitioning\", \"url\": \"https://arxiv.org/abs/2307.08691\", \"label\": \"supported\"}, {\"claim\": \"FlashAttention-2 reaches 50-73% of peak on A100 versus 25-40%, and up to 225 TFLOPs/s per A100 end-to-end\", \"url\": \"https://arxiv.org/abs/2307.08691\", \"label\": \"supported\"}, {\"claim\": \"FlashAttention-3 targets H100 with async Tensor Cores, TMA and FP8; reports 1.5-2.0x, 740 TFLOPs/s FP16 and about 1.2 PFLOPs/s FP8\", \"url\": \"https://arxiv.org/abs/2407.08608\", \"label\": \"supported\"}, {\"claim\": \"The FP8 2.6x lower error is relative to baseline FP8 attention\", \"url\": \"https://arxiv.org/abs/2407.08608\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 1, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Abstract-only reading, and it says so: the exactness mechanism (online softmax, recomputation) is explicitly left as a gap. Inferences are flagged. It says the original paper compared against standard attention, but the BERT figure is against the MLPerf 1.1 record. It also contrasts end-to-end gains with 'kernel gains' that the abstract does not give. Limitations are attempted and disclosed, but no evidence narrows the conclusion.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"FlashAttention is an IO-aware exact attention algorithm that uses tiling to cut HBM-SRAM traffic\", \"url\": \"https://arxiv.org/abs/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"Blockwise softmax with running max m and normalizer l, rescaled per block, equals exact attention (Theorem 1)\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"partial\"}, {\"claim\": \"The backward pass stores the output and (m,l) and recomputes blocks on-chip; O(N) extra memory; dropout uses saved RNG state\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"partial\"}, {\"claim\": \"Standard attention needs Θ(Nd+N²) HBM accesses versus Θ(N²d²/M), with a lower bound no exact algorithm beats across all SRAM sizes\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"GPT-2 medium on A100: standard attention moves 40.3 GB in 41.7 ms; FlashAttention moves 4.4 GB in 7.3 ms despite 75.2 vs 66.6 GFLOPs\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"unsupported\"}, {\"claim\": \"Up to 3x over standard attention at seqlen 128-2K; approximate methods overtake it around 512-1024 tokens\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"supported\"}, {\"claim\": \"The FP8 2.6x lower error comes from a synthetic test with 0.1% outlier entries, not real models\", \"url\": \"https://tridao.me/blog/2024/flash3/\", \"label\": \"supported\"}, {\"claim\": \"The original paper lists per-variant hand-written CUDA kernels, possible non-transfer across architectures, and single-GPU-only IO optimality as limitations\", \"url\": \"https://ar5iv.labs.arxiv.org/html/2205.14135\", \"label\": \"partial\"}], \"uncited_claims\": 3, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Thorough mechanism and limits, and it correctly marks block-sparse as approximate and the FP8 error result as synthetic. Several specifics are not in the bounded ar5iv excerpt: Theorem 1, the m/l naming, the RNG state, the GB/ms profile, and the limitations section, though the excerpt does mention multi-GPU extensions in Section 5. The FA2-on-H100 claim (no WGMMA/TMA) is supported by the blog. It discloses the lack of independent benchmarks and unquantified rounding differences, but brings no evidence that challenges the conclusion.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "FlashAttention is an IO-aware exact attention algorithm that uses tiling to reduce HBM/SRAM reads and writes",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "Softmax is computed blockwise and rescaled using extra running max and normalizer statistics, so the result matches full softmax",
+          "url": "https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "The backward pass recomputes the N×N intermediates instead of storing them, using more compute but fewer HBM accesses; attention is memory-bound",
+          "url": "https://www.cs.toronto.edu/~cmaddis/courses/csc2541_w25/presentations/sharma_hocevar_flashattention.pdf",
+          "label": "supported"
+        },
+        {
+          "claim": "Flash Attention shows roughly an order of magnitude more numeric deviation than baseline attention at BF16 in an isolated forward pass",
+          "url": "https://arxiv.org/abs/2405.02803",
+          "label": "supported"
+        },
+        {
+          "claim": "FlashAttention-2 is about 2x faster than FlashAttention, reaching 50-73% of peak FLOPs/s on A100 versus 25-40%",
+          "url": "https://arxiv.org/abs/2307.08691",
+          "label": "supported"
+        },
+        {
+          "claim": "FlashAttention-2 reaches only 35% utilization on H100; FlashAttention-3 gets 1.5-2.0x using asynchrony, warp specialization and FP8",
+          "url": "https://arxiv.org/abs/2407.08608",
+          "label": "supported"
+        },
+        {
+          "claim": "FA3 was benchmarked on one H100 SXM5 in BF16 with seqlen 512-16k at 16k total tokens; the 3-16x gain is against standard attention, and it beats cuDNN only at seqlen 1k and above",
+          "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+          "label": "partial"
+        },
+        {
+          "claim": "FA3 authors list LLM inference and low-precision large-scale training as open work and only 'expect' transfer to other hardware",
+          "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 2,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Covers both why it is exact and why it is fast, plus limits on generalizing the gains. Strong counterevidence: the Golden et al. numeric-deviation result, the cuDNN baseline narrowing the headline gain, and the slides' limitations, which it rightly treats as secondary. The excerpt does not contain the FA3 setup details (seqlen 512-16k, the 3-16x figure, the stated future-work items). The excerpt also says the algorithm is 'operative for any GPU architecture', not 'expect'. Gaps are disclosed honestly."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "FlashAttention is an IO-aware exact attention algorithm, not an approximation",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "It uses tiling to cut HBM/SRAM reads and writes, needs fewer HBM accesses, and is optimal for a range of SRAM sizes",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "Reported speedups: 15% end-to-end on BERT-large (512), 3x on GPT-2 (1K), 2.4x on LRA (1K-4K)",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "The block-sparse extension is approximate and separate from the exact algorithm",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "FlashAttention-2 is about 2x faster via reduced non-matmul FLOPs, thread-block parallelism and better warp partitioning",
+          "url": "https://arxiv.org/abs/2307.08691",
+          "label": "supported"
+        },
+        {
+          "claim": "FlashAttention-2 reaches 50-73% of peak on A100 versus 25-40%, and up to 225 TFLOPs/s per A100 end-to-end",
+          "url": "https://arxiv.org/abs/2307.08691",
+          "label": "supported"
+        },
+        {
+          "claim": "FlashAttention-3 targets H100 with async Tensor Cores, TMA and FP8; reports 1.5-2.0x, 740 TFLOPs/s FP16 and about 1.2 PFLOPs/s FP8",
+          "url": "https://arxiv.org/abs/2407.08608",
+          "label": "supported"
+        },
+        {
+          "claim": "The FP8 2.6x lower error is relative to baseline FP8 attention",
+          "url": "https://arxiv.org/abs/2407.08608",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 1,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Abstract-only reading, and it says so: the exactness mechanism (online softmax, recomputation) is explicitly left as a gap. Inferences are flagged. It says the original paper compared against standard attention, but the BERT figure is against the MLPerf 1.1 record. It also contrasts end-to-end gains with 'kernel gains' that the abstract does not give. Limitations are attempted and disclosed, but no evidence narrows the conclusion."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "FlashAttention is an IO-aware exact attention algorithm that uses tiling to cut HBM-SRAM traffic",
+          "url": "https://arxiv.org/abs/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "Blockwise softmax with running max m and normalizer l, rescaled per block, equals exact attention (Theorem 1)",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "partial"
+        },
+        {
+          "claim": "The backward pass stores the output and (m,l) and recomputes blocks on-chip; O(N) extra memory; dropout uses saved RNG state",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "partial"
+        },
+        {
+          "claim": "Standard attention needs Θ(Nd+N²) HBM accesses versus Θ(N²d²/M), with a lower bound no exact algorithm beats across all SRAM sizes",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "GPT-2 medium on A100: standard attention moves 40.3 GB in 41.7 ms; FlashAttention moves 4.4 GB in 7.3 ms despite 75.2 vs 66.6 GFLOPs",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Up to 3x over standard attention at seqlen 128-2K; approximate methods overtake it around 512-1024 tokens",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "supported"
+        },
+        {
+          "claim": "The FP8 2.6x lower error comes from a synthetic test with 0.1% outlier entries, not real models",
+          "url": "https://tridao.me/blog/2024/flash3/",
+          "label": "supported"
+        },
+        {
+          "claim": "The original paper lists per-variant hand-written CUDA kernels, possible non-transfer across architectures, and single-GPU-only IO optimality as limitations",
+          "url": "https://ar5iv.labs.arxiv.org/html/2205.14135",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 3,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Thorough mechanism and limits, and it correctly marks block-sparse as approximate and the FP8 error result as synthetic. Several specifics are not in the bounded ar5iv excerpt: Theorem 1, the m/l naming, the RNG state, the GB/ms profile, and the limitations section, though the excerpt does mention multi-GPU extensions in Section 5. The FA2-on-H100 claim (no WGMMA/TMA) is supported by the blog. It discloses the lack of independent benchmarks and unquantified rounding differences, but brings no evidence that challenges the conclusion."
+    }
+  }
+}

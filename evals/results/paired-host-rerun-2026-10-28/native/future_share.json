@@ -1,0 +1,56 @@
+{
+  "case_id": "future_share",
+  "condition": "native",
+  "elapsed_seconds": 25.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.1367015,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 4073,
+    "cache_read_input_tokens": 6595,
+    "output_tokens": 2242,
+    "output_tokens_details": {
+      "thinking_tokens": 63
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 4073,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 27860,
+      "outputTokens": 4403,
+      "cacheReadInputTokens": 6595,
+      "cacheCreationInputTokens": 4073,
+      "webSearchRequests": 2,
+      "costUSD": 0.1367015,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 63,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 4073,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**Direct answer:** No. Public evidence can't establish NVIDIA's exact realized AI-chip market share in 2030. Today is 2026-10-28, so 2030 hasn't happened, and any 2030 figure is a projection. Even for past years, no audited, agreed share figure exists. Estimates depend on the definition used: revenue or units, and whether in-house custom chips like Google's TPU are counted.\n\nI used two searches and read the result snippets only. I didn't open the underlying pages. Most of the sources are secondary aggregators, so treat the numbers as rough.\n\n**Observed (through 2026)**\n\n- NVIDIA reported record Q1 FY27 revenue of $81.6B, with data center revenue of $75.2B.\n  - https://cryptobriefing.com/nvidia-data-center-revenue-75-billion/\n  - https://intellectia.ai/blog/nvda-stock-earnings-analysis-may-2026\n- NVIDIA's own release reports Q2 FY27 revenue of $89.0B. Secondary sources conflict on this quarter, with one giving $96.2B and another labeling $89.0B as data center revenue. I'd rely on NVIDIA's release.\n  - https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027\n- NVIDIA's Q3 FY27 guidance is $108.0B and assumes no China data center compute revenue.\n  - https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027\n- Third-party estimates of NVIDIA's share of AI accelerator revenue in 2026 range from about 70% to 86%. Silicon Analysts has 87% for 2024, 81% for 2025 and 75% projected for 2026. These are analyst estimates, not reported figures.\n  - https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026\n  - https://alatirok.com/ai-chip-market-share-2026/\n  - https://sesamedisk.com/nvidia-data-center-growth-2026-2/\n- Alatirok says no audited, universally agreed share table exists. Its own split is NVIDIA about 73%, AMD about 7%, and custom silicon about 15–20%.\n  - https://alatirok.com/ai-chip-market-share-2026/\n- Revenue share flatters NVIDIA because of its premium pricing. Custom chips are largely internal cost items, so the choice between revenue and unit share matters. One secondhand JPMorgan figure puts NVIDIA and AMD GPUs together at about 58% of 2026 unit shipments.\n  - https://alatirok.com/ai-chip-market-share-2026/\n  - https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\n\n**Projections for 2030 (not outcomes)**\n\n- Bloomberg Intelligence expects NVIDIA to hold about 70–75% through 2030, with AMD at a minimum of about 10% by the end of the decade. This comes from the search summary of its press release, not from the page itself.\n  - https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/\n- Kearney projects NVIDIA falling from about 90% in 2025 to about 70% by 2030. Celadon expects 65–70% by 2028. I only saw these in a search summary and did not verify them against the original sources.\n  - https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026\n  - https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/\n- Market-size projections, such as a $500B market by 2030, come from a secondary aggregator citing IDC and Gartner. They are unverified.\n  - https://sparkco.ai/blog/nvidia\n\n**What the evidence supports:** most forecasts have NVIDIA's share drifting down from the high 70s or 80s in 2026 to roughly 65–75% by 2030. Those are forecasts only. The forecasters differ on definitions and baselines, and nothing observed can confirm them yet. A realized 2030 figure won't exist until after 2030, and then only as estimates that vary with the definition.\n\nSources:\n- [Bloomberg Intelligence press release](https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/)\n- [Silicon Analysts](https://siliconanalysts.com/analysis/nvidia-ai-accelerator-market-share-2024-2026)\n- [Alatirok](https://alatirok.com/ai-chip-market-share-2026/)\n- [Sesame Disk](https://sesamedisk.com/nvidia-data-center-growth-2026-2/)\n- [Command Linux](https://commandlinux.com/statistics/ai-gpu-market-share-nvidia-vs-amd-vs-intel/)\n- [Celadon Research](https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026)\n- [Sparkco](https://sparkco.ai/blog/nvidia)\n- [NVIDIA Q2 FY27 release](https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027)\n- [Crypto Briefing](https://cryptobriefing.com/nvidia-data-center-revenue-75-billion/)\n- [Intellectia](https://intellectia.ai/blog/nvda-stock-earnings-analysis-may-2026)",
+  "final_answer_sha256": "3c8e85c28847b792843a5cf4bb965e9716b58d9dcf8d8c938ed203ecf9a32bc6",
+  "raw_stream_sha256": "37694b55afcd7e3ff2af945af3e10c67c8af88dca59689821f5173b80fabf7c9"
+}

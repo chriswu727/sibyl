@@ -1,0 +1,135 @@
+{
+  "case_id": "real05",
+  "kind": "factual",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.1566032,
+  "judge_subtype": "success",
+  "pages_read": 4,
+  "pages_cited": 6,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"The DOI is 10.1515/cllt-2021-0018\", \"url\": \"https://doi.org/10.1515/cllt-2021-0018\", \"label\": \"unreachable\"}, {\"claim\": \"Article by Martijn van der Klis and Jos Tellings in Corpus Linguistics and Linguistic Theory 18(3): 627–665 (2022), DOI 10.1515/cllt-2021-0018\", \"url\": \"https://pmc.ncbi.nlm.nih.gov/articles/PMC9536326/\", \"label\": \"partial\"}, {\"claim\": \"Article by Martijn van der Klis and Jos Tellings in Corpus Linguistics and Linguistic Theory 18(3): 627–665 (2022), DOI 10.1515/cllt-2021-0018\", \"url\": \"https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489\", \"label\": \"supported\"}, {\"claim\": \"arXiv preprint 2012.04946 has DOI 10.48550/arXiv.2012.04946 and lists 10.1515/cllt-2021-0018 as Related DOI\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"The answer states the gold DOI. The PMC excerpt gives the authors, 18(3):627–665, the 2022 date and the DOI, but the journal name is cut off, so that claim is partial. The Utrecht repository page supports the full citation.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"The DOI is 10.1515/cllt-2021-0018 (resolvable at doi.org)\", \"url\": \"https://doi.org/10.1515/cllt-2021-0018\", \"label\": \"unreachable\"}, {\"claim\": \"Journal version DOI is 10.1515/cllt-2021-0018\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"arXiv lists 10.1515/cllt-2021-0018 as related DOI for the journal version\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Authors are Martijn van der Klis and Jos Tellings\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Accepted by Corpus Linguistics and Linguistic Theory in November 2021 per arXiv comments\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Vol. 18, no. 3, 2022, pp. 627–665, published online 10 January 2022\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"arXiv preprint has separate DOI 10.48550/arXiv.2012.04946\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Open-access full text on PubMed Central (PMC9536326)\", \"url\": \"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"The answer states the gold DOI. The De Gruyter page could not be read, so the volume, issue and page details are cited only to an unreachable page.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"The DOI is 10.1515/cllt-2021-0018\", \"url\": \"https://doi.org/10.1515/cllt-2021-0018\", \"label\": \"unreachable\"}, {\"claim\": \"Journal-version DOI 10.1515/cllt-2021-0018 appears in the De Gruyter page URL\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"arXiv record lists 10.1515/cllt-2021-0018 as the journal DOI\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Authors are Martijn van der Klis and Jos Tellings\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}, {\"claim\": \"Published in Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665\", \"url\": \"https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en\", \"label\": \"unreachable\"}, {\"claim\": \"Published in Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665; arXiv says accepted Nov 2021\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"partial\"}, {\"claim\": \"arXiv preprint has separate DOI 10.48550/arXiv.2012.04946\", \"url\": \"https://arxiv.org/abs/2012.04946\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"The answer states the gold DOI. arXiv supports only acceptance in CLLT, not the volume, issue and page details. The answer also includes process narration that has no bearing on the grade.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "The DOI is 10.1515/cllt-2021-0018",
+          "url": "https://doi.org/10.1515/cllt-2021-0018",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Article by Martijn van der Klis and Jos Tellings in Corpus Linguistics and Linguistic Theory 18(3): 627–665 (2022), DOI 10.1515/cllt-2021-0018",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9536326/",
+          "label": "partial"
+        },
+        {
+          "claim": "Article by Martijn van der Klis and Jos Tellings in Corpus Linguistics and Linguistic Theory 18(3): 627–665 (2022), DOI 10.1515/cllt-2021-0018",
+          "url": "https://dspace.library.uu.nl/items/6c784048-71b4-4f3d-9e7e-d52337337489",
+          "label": "supported"
+        },
+        {
+          "claim": "arXiv preprint 2012.04946 has DOI 10.48550/arXiv.2012.04946 and lists 10.1515/cllt-2021-0018 as Related DOI",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "The answer states the gold DOI. The PMC excerpt gives the authors, 18(3):627–665, the 2022 date and the DOI, but the journal name is cut off, so that claim is partial. The Utrecht repository page supports the full citation."
+    },
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "The DOI is 10.1515/cllt-2021-0018 (resolvable at doi.org)",
+          "url": "https://doi.org/10.1515/cllt-2021-0018",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Journal version DOI is 10.1515/cllt-2021-0018",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "arXiv lists 10.1515/cllt-2021-0018 as related DOI for the journal version",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Authors are Martijn van der Klis and Jos Tellings",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Accepted by Corpus Linguistics and Linguistic Theory in November 2021 per arXiv comments",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Vol. 18, no. 3, 2022, pp. 627–665, published online 10 January 2022",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "arXiv preprint has separate DOI 10.48550/arXiv.2012.04946",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Open-access full text on PubMed Central (PMC9536326)",
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9536326/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "The answer states the gold DOI. The De Gruyter page could not be read, so the volume, issue and page details are cited only to an unreachable page."
+    },
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "The DOI is 10.1515/cllt-2021-0018",
+          "url": "https://doi.org/10.1515/cllt-2021-0018",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Journal-version DOI 10.1515/cllt-2021-0018 appears in the De Gruyter page URL",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "arXiv record lists 10.1515/cllt-2021-0018 as the journal DOI",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Authors are Martijn van der Klis and Jos Tellings",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        },
+        {
+          "claim": "Published in Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665",
+          "url": "https://www.degruyterbrill.com/document/doi/10.1515/cllt-2021-0018/html?lang=en",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Published in Corpus Linguistics and Linguistic Theory 18(3), 2022, pp. 627–665; arXiv says accepted Nov 2021",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "partial"
+        },
+        {
+          "claim": "arXiv preprint has separate DOI 10.48550/arXiv.2012.04946",
+          "url": "https://arxiv.org/abs/2012.04946",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "The answer states the gold DOI. arXiv supports only acceptance in CLLT, not the volume, issue and page details. The answer also includes process narration that has no bearing on the grade."
+    }
+  }
+}

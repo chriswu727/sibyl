@@ -1,0 +1,73 @@
+{
+  "case_id": "real02",
+  "condition": "native",
+  "elapsed_seconds": 21.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.0692277,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2432,
+    "cache_read_input_tokens": 11048,
+    "output_tokens": 1178,
+    "output_tokens_details": {
+      "thinking_tokens": 155
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2432,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13097,
+      "outputTokens": 1653,
+      "cacheReadInputTokens": 11048,
+      "cacheCreationInputTokens": 2432,
+      "webSearchRequests": 1,
+      "costUSD": 0.06355680000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 155,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2432,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 52659,
+      "outputTokens": 810,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0056709,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 609,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Black Condor II (Ryan Kendall) died in *Infinite Crisis* #1 (December 2005).\n\n**Claims and sources**\n\n- Ryan Kendall, the second Black Condor, was killed in *Infinite Crisis* #1.\n  https://en.wikipedia.org/wiki/Black_Condor\n\n- He was with the Freedom Fighters when the Secret Society of Super Villains ambushed them, and Sinestro killed him.\n  https://en.wikipedia.org/wiki/Black_Condor\n\n- The issue is dated December 2005. A search summary of the DC Fandom and DCU Guide pages gave this date. I didn't open those pages, because the DC Fandom page returned an error.\n  https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\n  https://dcuguide.com/Black_Condor_(Ryan_Kendall)\n\n- He later appeared as a Black Lantern during *Blackest Night*. The same search summary said a Prime Earth version was resurrected in *Dark Nights: Death Metal* #5. The Wikipedia page I read doesn't explain this. It only lists the Black Lantern Corps in his infobox. Treat this claim as less certain.\n  https://dc.fandom.com/wiki/Ryan_Kendall_(Prime_Earth)\n\nWikipedia and the search summaries agree on the death issue and the killer.\n\nSources:\n- [Black Condor – Wikipedia](https://en.wikipedia.org/wiki/Black_Condor)\n- [Ryan Kendall (New Earth) – DC Fandom](https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth))\n- [Ryan Kendall (Prime Earth) – DC Fandom](https://dc.fandom.com/wiki/Ryan_Kendall_(Prime_Earth))\n- [Black Condor (Ryan Kendall) – DCU Guide](https://dcuguide.com/Black_Condor_(Ryan_Kendall))",
+  "final_answer_sha256": "f24898c5a1252c14c72227131e867db173a62ddaa67dfcdb41ed131bcf25b348",
+  "raw_stream_sha256": "aec5fc8edaa03efaac1a95e60690f443e559aab3cb2ab4dab145efb1271e99db"
+}

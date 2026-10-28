@@ -1,0 +1,74 @@
+{
+  "case_id": "quantization",
+  "condition": "deep_research",
+  "elapsed_seconds": 70.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 11,
+  "cli_reported_cost_usd": 0.18809759999999998,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 17722,
+    "cache_read_input_tokens": 92349,
+    "output_tokens": 3890,
+    "output_tokens_details": {
+      "thinking_tokens": 276
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 17722,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 16450,
+      "outputTokens": 5450,
+      "cacheReadInputTokens": 92349,
+      "cacheCreationInputTokens": 17722,
+      "webSearchRequests": 1,
+      "costUSD": 0.17752289999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 276,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 17722,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 76167,
+      "outputTokens": 5916,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0105747,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3582,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 7,
+    "WebSearch": 1
+  },
+  "final_answer": "**Direct answer:** Both are post-training, weight-only quantizers. They aim for roughly 3–4 bits and differ mainly in how they limit error. GPTQ compensates for it, and AWQ prevents some of it. Neither paper's headline results show one method is better overall. Later independent comparisons disagree. I used 8 retrievals, 2 of which failed on a URL-format error, and I haven't read either full paper.\n\n**Mechanisms**\n\n- GPTQ is a one-shot, post-training weight quantizer based on approximate second-order information. It needs no retraining.\n  - https://arxiv.org/abs/2210.17323\n- AWQ finds salient weight channels from activation statistics, not from the weights themselves. It scales those channels up before quantization to reduce error, and it avoids mixed precision. The abstract says protecting only 1% of salient weights can greatly reduce quantization error.\n  - https://arxiv.org/abs/2306.00978\n- AWQ uses no backpropagation or weight reconstruction. The authors argue this avoids overfitting the calibration set. The abstract states this but doesn't show supporting experiments.\n  - https://arxiv.org/abs/2306.00978\n\n**Scope as reported by the authors**\n\n- GPTQ's headline result is a 175B GPT-family model at 3–4 bits.\n  - It quantizes in about four GPU hours and runs on a single GPU.\n  - The paper reports about 3.25x speedup on an A100 and 4.5x on an A6000, both over FP16.\n  - It also explores 2-bit and ternary quantization, where the abstract calls the accuracy loss only \"reasonable\".\n  - https://arxiv.org/abs/2210.17323\n- AWQ's scope is broader in model type: instruction-tuned LMs and multimodal LMs.\n  - It evaluates language modeling plus coding and math benchmarks.\n  - It ships TinyChat, an on-device 4-bit inference framework, and reports more than 3x speedup over the Hugging Face FP16 implementation.\n  - It says a 70B Llama-2 can run on mobile GPUs.\n  - https://arxiv.org/abs/2306.00978\n\n**What the later evidence shows**\n\n- A 13-benchmark study found GPTQ at 4-bit can degrade sharply on tasks that perplexity doesn't show. On Llama-3.2-1B the drops were 25.32% on GSM8k and 16.01% on IFEval. It found AWQ generally ahead of GPTQ. I only saw this through a search summary.\n  - https://arxiv.org/pdf/2409.11055\n- A long-context study reported a significant negative effect for GPTQ-int4 but none for AWQ-int4. This also comes only from a search summary.\n  - https://aclanthology.org/2025.emnlp-main.479.pdf\n- A study on Llama-3.1 8B and 70B Instruct found the two roughly tied on academic benchmarks. Both were W4A16 with group size 128.\n  - AWQ led the average by 0.23 points at 8B and 0.35 at 70B.\n  - GPTQ led on real-world tasks by 2.9 points at 8B and 0.8 at 70B, mostly in coding. HumanEval at 8B was 67.1 for GPTQ and 63.0 for AWQ.\n  - The authors used GPTQ with MSE-optimal clipping, different calibration data (OpenPlatypus), and real-world benchmarks. The paper doesn't separate these effects.\n  - https://arxiv.org/html/2411.02355v1\n- In a vLLM test on Qwen2.5-32B with an H200, throughput was set mainly by the kernel.\n  - The default AWQ kernel gave 67.73 tok/s and the default GPTQ kernel gave 276.60 tok/s.\n  - Marlin-GPTQ gave 712.45 tok/s and Marlin-AWQ gave 741.04 tok/s, both on the same quantized weights.\n  - The vLLM version and group size weren't stated.\n  - In the same test, HumanEval Pass@1 was 56.1% for FP16, 51.8% for AWQ and 46.3% for GPTQ. Perplexity was 6.56 for FP16, 6.84 for AWQ and 6.90 for GPTQ, so the perplexity gap is small next to the HumanEval gap.\n  - https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks\n\n**What should not be inferred**\n\n- **Method ranking:** The results don't establish that AWQ beats GPTQ or the reverse. Results flip with benchmark type, model, clipping choice and calibration data. The only study I read in full that showed GPTQ ahead changed several settings at once and didn't isolate their effects.\n  - https://arxiv.org/html/2411.02355v1\n- **Perplexity as a proxy for task quality:** Perplexity looked nearly the same in the vLLM test while coding scores differed by several points.\n  - https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks\n- **Speed as a property of the algorithm:** The reported speedups are against FP16, on specific GPUs and with the authors' own kernels. The vLLM numbers show that swapping the kernel changes throughput far more than swapping the method. I can't say from these sources how either method performs on your hardware or in your serving stack.\n  - https://arxiv.org/abs/2210.17323, https://arxiv.org/abs/2306.00978, https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks\n- **Generalization claims:** AWQ's robustness to calibration data is argued in the abstract but not demonstrated there. GPTQ's 175B results don't carry over to small or modern instruction-tuned models, where the later studies report larger degradation.\n  - https://arxiv.org/abs/2306.00978, https://arxiv.org/pdf/2409.11055\n- **Low-bit extrapolation:** GPTQ's 2-bit and ternary results are described as only \"reasonable\". AWQ's abstract gives no bit-width range beyond 4-bit on-device inference. Neither source shows that either method works well below 3 bits.\n  - https://arxiv.org/abs/2210.17323, https://arxiv.org/abs/2306.00978\n\n**Evidence limits:** I read only the two abstracts, not the full papers. The full AWQ PDF exceeded the fetch size limit. I never saw the original papers' head-to-head tables or the GPTQ algorithm details. The two accuracy-degradation claims above (2409.11055 and the EMNLP study) rest on search summaries, not on pages I read.",
+  "final_answer_sha256": "1c21edfdd11037ea241dbac958d9489f83ee9756c7a0a0f48a42bc55732df224",
+  "raw_stream_sha256": "f38c91ecad48435407a93673f8ce604604eea8b295d37be6fa923059eb4b80c3"
+}

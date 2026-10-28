@@ -1,0 +1,59 @@
+{
+  "case_id": "real01",
+  "condition": "sibyl",
+  "elapsed_seconds": 31.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1485471,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 19022,
+    "cache_read_input_tokens": 92631,
+    "output_tokens": 2179,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 19022,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13443,
+      "outputTokens": 2631,
+      "cacheReadInputTokens": 92631,
+      "cacheCreationInputTokens": 19022,
+      "webSearchRequests": 1,
+      "costUSD": 0.1485471,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 19022,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 3,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Answer: the University of Bonn.**\n\n- Aschoff studied medicine at the University of Bonn. The Nature obituary (Daan & Gwinner, 1998) says so, and English Wikipedia agrees. Both say he chose medicine after school, and Wikipedia quotes him as \"lacking a specific interest.\"\n  - https://www.nature.com/articles/24750\n  - https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff\n- He then moved to the University of Göttingen, where his scientific career began under the physiologist Hermann Rein. This is a later step, not where he studied medicine.\n  - https://www.nature.com/articles/24750\n- Wikidata also lists Heidelberg University and the University of Freiburg as \"educated at.\" Those two entries are marked as inferred from categories or a heuristic. Nothing I read says he studied medicine at either.\n  - https://www.wikidata.org/wiki/Q75270\n\n**Caveats:**\n- I couldn't load the Auk memorial, which a search snippet said mentions several universities, so I didn't check it.\n- The Wikipedia and Nature pieces are the only sources I read that state the Bonn claim directly. The Nature obituary is an independent, authoritative source.\n\nSources:\n- [Jürgen Aschoff (1913-98), Nature](https://www.nature.com/articles/24750)\n- [Jürgen Aschoff, Wikipedia](https://en.wikipedia.org/wiki/J%C3%BCrgen_Aschoff)\n- [Jürgen Aschoff, Wikidata](https://www.wikidata.org/wiki/Q75270)",
+  "final_answer_sha256": "7aff256ae62894f2e2103f551f81f3940c0de2b5a11863ad38199ba7959df9d5",
+  "raw_stream_sha256": "de780e46f051de0e3f60cbe1ba531210a04f93601789003e6263e63a6d86a56e"
+}

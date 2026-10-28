@@ -1,0 +1,73 @@
+{
+  "case_id": "rag",
+  "condition": "native",
+  "elapsed_seconds": 54.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.2042683,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 7005,
+    "cache_read_input_tokens": 21700,
+    "output_tokens": 2326,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 7005,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 42947,
+      "outputTokens": 4866,
+      "cacheReadInputTokens": 21700,
+      "cacheCreationInputTokens": 7005,
+      "webSearchRequests": 3,
+      "costUSD": 0.19474400000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 7005,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 82258,
+      "outputTokens": 2597,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.009524300000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1775,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 4,
+    "WebSearch": 3
+  },
+  "final_answer": "**Direct answer:** RAG pairs the knowledge stored in a language model's weights (parametric memory) with passages fetched from an external index (non-parametric memory). The retrieved passages are fed to the generator, which conditions its output on them. Retrieval doesn't guarantee factual answers for three reasons. The retrieved text can be wrong, irrelevant, or insufficient. The model can ignore it or be pulled toward its own prior. The model can also use even good context poorly.\n\nI used five retrievals: three searches and two page reads. One fetch of the original RAG paper failed on a malformed URL, so I re-ran it. One PDF fetch was unreadable, so I read the paper's abstract page instead.\n\n**Claims and sources**\n\nHow RAG combines the two kinds of knowledge:\n- RAG's parametric memory is a pre-trained seq2seq model that stores knowledge in its weights. https://arxiv.org/abs/2005.11401\n- Its non-parametric memory is a dense vector index of Wikipedia, searched by a pre-trained neural retriever. https://arxiv.org/abs/2005.11401\n- Retrieved passages feed into the generator. One variant conditions on the same passages for the whole sequence, and another can use different passages per token. https://arxiv.org/abs/2005.11401\n- The motivation was that pre-trained models struggle to precisely access and update stored facts. RAG reported better results on open-domain QA and more factual generation than parametric-only baselines. https://arxiv.org/abs/2005.11401\n\nWhy retrieval doesn't guarantee factual answers:\n- Models can ignore retrieved content or override it with parametric knowledge. One search summary reports that high-quality retrieval often co-occurs with unfaithful generation. This comes from a search-result summary, and I didn't read the underlying papers. https://arxiv.org/pdf/2604.09174 (also surfaced: https://arxiv.org/pdf/2604.25313)\n- Correct retrieved context fixes most model mistakes (about 94%, per a secondary summary). When the model's prior is weak and the context is wrong, it tends to repeat the wrong context. Adherence to retrieved text is inversely correlated with the model's confidence in its prior. https://www.promptingguide.ai/research/rag-faithfulness (paper: arXiv 2404.10198)\n- The more a modified document deviates from the model's prior, the less likely the model is to prefer it. https://www.promptingguide.ai/research/rag-faithfulness\n- Retrieved context can be insufficient. When it is, strong models (Gemini 1.5 Pro, GPT-4o, Claude 3.5) often give wrong answers instead of abstaining. https://arxiv.org/abs/2411.06037\n- Smaller models (Mistral 3, Gemma 2) frequently hallucinate or abstain even when the context is sufficient. https://arxiv.org/abs/2411.06037\n- Partial context can still help accuracy. A selective-generation method that abstains based on sufficient-context signals raised the share of correct answers among responses given by 2–10% for Gemini, GPT and Gemma. https://arxiv.org/abs/2411.06037\n- Models use long contexts unevenly. Performance is often highest when the relevant information is at the start or end of the input and drops when it's in the middle, even for explicitly long-context models. https://arxiv.org/abs/2307.03172 (published version: https://aclanthology.org/2024.tacl-1.9/)\n- Irrelevant retrieved documents can reduce performance, and stale or conflicting context and synthesis errors add to the problem. These points come from a search-result summary that cites Barnett et al. 2024 and a knowledge-conflict survey by Xu et al. 2024. I didn't open those papers. https://arxiv.org/pdf/2411.06037\n\n**Limits of the evidence**\n- I didn't read the full text of any paper. Most findings come from abstracts or secondary summaries, and the 94% figure and the noise and conflict claims are second-hand.\n- Results depend on the models and datasets tested, and several are from 2023–2024 models. I haven't shown that they hold for current models.\n- I didn't find a single survey that covers all of these failure modes.\n\nSources:\n- [RAG (Lewis et al.)](https://arxiv.org/abs/2005.11401)\n- [Sufficient Context](https://arxiv.org/abs/2411.06037)\n- [How Faithful are RAG Models? (summary)](https://www.promptingguide.ai/research/rag-faithfulness)\n- [Lost in the Middle](https://arxiv.org/abs/2307.03172)\n- [Facet-level tracing in RAG](https://arxiv.org/pdf/2604.09174)\n- [Faithfulness-QA](https://arxiv.org/pdf/2604.25313)",
+  "final_answer_sha256": "a2146be6ed1c00794ed238b4f372d6a7d16a0a15cb69efb1b88a393123b8f8b1",
+  "raw_stream_sha256": "dd594a7767dd79d074214bcb792344151284bf78367bda6b864f56b2556b1a96"
+}

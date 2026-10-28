@@ -1,0 +1,57 @@
+{
+  "case_id": "future_share",
+  "condition": "deep_research",
+  "elapsed_seconds": 29.5,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1783682,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14976,
+    "cache_read_input_tokens": 34502,
+    "output_tokens": 2127,
+    "output_tokens_details": {
+      "thinking_tokens": 241
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14976,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 26687,
+      "outputTokens": 4164,
+      "cacheReadInputTokens": 34502,
+      "cacheCreationInputTokens": 14976,
+      "webSearchRequests": 2,
+      "costUSD": 0.1783682,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 241,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14976,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2
+  },
+  "final_answer": "**No. Public evidence cannot establish NVIDIA's realized AI-chip market share in 2030, because 2030 hasn't happened yet.** Today is 2026-10-28, so only projections exist for 2030. Even for past years, no single audited number exists. Estimates for 2026 depend on whether a source counts revenue or units, and on whether it includes hyperscaler custom chips. The \"exact realized\" part of the question can't be answered even after 2030, unless a source states its definition and method.\n\nI used two searches (of my eight allowed). Both returned search summaries, and I didn't open the underlying pages. Many of the sources are low-quality aggregator blogs, so treat the figures below as indicative.\n\n**Observed in 2026 (estimates, not a census)**\n- Estimates of NVIDIA's 2026 share of AI accelerator revenue run from about 70% to 86%. Estimates cluster at roughly 73–75% and 80–85%. Sources: [Alatirok](https://alatirok.com/ai-chip-market-share-2026/), [Blockonomi](https://blockonomi.com/ai-chip-market-statistics-2026-nvidia-amd-broadcom-and-more/), [safeguard.sh](https://safeguard.sh/resources/blog/ai-chip-market-share-2026-nvidia-custom-silicon-training-vs-inference)\n- By units, NVIDIA's lead looks smaller. TrendForce is reported to estimate custom ASIC servers at 27.8% of accelerator server shipments in 2026. Sources: [Alatirok](https://alatirok.com/ai-chip-market-share-2026/), [Blockonomi](https://blockonomi.com/ai-chip-market-statistics-2026-nvidia-amd-broadcom-and-more/)\n- AMD is estimated at about 5–8% and custom ASICs at about 12–20% combined. Source: [Alatirok](https://alatirok.com/ai-chip-market-share-2026/)\n- NVIDIA's share is reported to be falling while its revenue keeps rising. One source cites record quarterly data-center revenue of $75.2 billion. Source: [Blockonomi](https://blockonomi.com/ai-chip-market-statistics-2026-nvidia-amd-broadcom-and-more/)\n\n**Projections for 2030 (not observed outcomes)**\n- Bloomberg Intelligence expects NVIDIA to hold 70–75% through 2030, with AMD at a minimum of about 10%. This is the most authoritative source I found. Source: [Bloomberg Intelligence](https://www.bloomberg.com/company/press/ai-accelerator-market-looks-set-to-exceed-600-billion-by-2033-driven-by-hyperscale-spending-and-asic-adoption-according-to-bloomberg-intelligence/)\n- Celadon Research projects a decline toward about 70% by 2030, and cites Kearney's 90%-to-70% projection. Source: [Celadon Research](https://celadonresearch.com/research/nvidia-ai-accelerators-q1-2026)\n- Northwise Project projects 62% for NVIDIA, 26% for AMD and 12% for ASICs. The source is a blog of lower quality. Source: [Northwise Project](https://northwiseproject.com/research/ai-accelerator-market-forecast-2030)\n- Sparkco's base case is 85%, with a range of 75–90%. Its market-size figures are internally inconsistent. Source: [Sparkco](https://sparkco.ai/blog/nvidia)\n- Pocket Option projects 55–65%. This is the lowest estimate and the source is weak. Source: [Pocket Option](https://pocketoption.com/blog/en/knowledge-base/markets/nvda-stock-prediction-2030/)\n\n**What the projections support**\n- Most projections put NVIDIA at roughly 55–75% in 2030, with a few outliers. They broadly agree on gradual erosion from custom silicon and AMD, with NVIDIA still dominant. The spread, from 55% to 85%, shows the number is not known.\n- Market-size estimates for 2030 also vary widely, from about $500 billion to $1 trillion, depending on scope. Source: the [search summary of Sparkco and others](https://sparkco.ai/blog/nvidia).\n\n**Caveats**\n- I did not follow the skill's subagent and notes-file workflow, because it needs shell access that you ruled out.\n- A real 2030 answer would need NVIDIA's fiscal 2030 and 2031 filings, plus Broadcom, AMD, Google and AWS disclosures. It would also need a stated definition of the denominator, which could be revenue or units, and merchant chips only or including captive silicon.",
+  "final_answer_sha256": "2bef57312ab5bf6721240a917f2bc55eefc885dd416824c635ba43dd3ee44395",
+  "raw_stream_sha256": "66fb7576401e670d7a4e788f905c50799d7d252645958215cfb54dfc4979d704"
+}

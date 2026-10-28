@@ -1,0 +1,74 @@
+{
+  "case_id": "real06",
+  "condition": "deep_research",
+  "elapsed_seconds": 27.9,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 6,
+  "cli_reported_cost_usd": 0.1642752,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 14057,
+    "cache_read_input_tokens": 52652,
+    "output_tokens": 1432,
+    "output_tokens_details": {
+      "thinking_tokens": 107
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14057,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 25860,
+      "outputTokens": 2602,
+      "cacheReadInputTokens": 52652,
+      "cacheCreationInputTokens": 14057,
+      "webSearchRequests": 2,
+      "costUSD": 0.15923320000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 107,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14057,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 44410,
+      "outputTokens": 1202,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.005042,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 795,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2,
+    "WebFetch": 1
+  },
+  "final_answer": "**Direct answer:** The main UN headquarters complex in New York was completed in **October 1952**. The exact day is **not firmly established**, because sources split between **October 9, 1952** and **October 10, 1952**. October 10 is better supported as the date it was declared complete and formally dedicated. October 9 is the date in Wikipedia's infobox and some secondary sources. The sources I retrieved are all secondary, and I did not read the cited New York Times article.\n\n**Claims and supporting sources**\n\n- Wikipedia's article says the headquarters was declared complete on October 10, 1952, and cites a New York Times piece of that date, \"Work Completed on U.N. Buildings.\"\n  https://en.wikipedia.org/wiki/United_Nations_Headquarters\n- The same article's infobox gives October 9, 1952.\n  https://en.wikipedia.org/wiki/United_Nations_Headquarters\n- The General Assembly Building was the last structure built, and Wikipedia says it was formally dedicated on October 10, 1952.\n  https://en.wikipedia.org/wiki/United_Nations_General_Assembly_Building\n- Untapped New York and WorldAtlas give October 9, 1952 as the completion date.\n  https://www.untappedcities.com/united-nations-lake-success/\n  https://www.worldatlas.com/articles/where-is-the-headquarters-of-the-the-united-nations-located.html\n- The UN's own visitor page and ClassicNewYorkHistory.com say only that construction was completed in 1952 (the latter says October 1952), with no day given.\n  https://www.un.org/en/visit/about-us\n  https://classicnewyorkhistory.com/history-of-the-united-nations-headquarters-in-new-york/\n- Groundbreaking was September 14, 1948, and the Secretariat cornerstone ceremony was October 24, 1949.\n  https://en.wikipedia.org/wiki/United_Nations_Headquarters\n  https://www.un.org/ungifts/united-nations-ny-site\n- The Dag Hammarskjöld Library was dedicated in November 1961, and the North Lawn and South Annex buildings date to 1981 and 1982. So \"completed in 1952\" refers to the original main complex, not every later addition.\n  https://en.wikipedia.org/wiki/United_Nations_Headquarters\n  https://en.wikipedia.org/wiki/Headquarters_of_the_United_Nations\n\n**Caveat:** If you need a single date, I'd use October 10, 1952, and note that some sources say October 9. I used three of the eight allowed retrievals. I did not use the deep-research skill's subagent workflow, because it needs shell commands and local files you ruled out, and this is a single-fact question.",
+  "final_answer_sha256": "bdff0049ef0b8569ddb71642750f17ee764ffbcdb5aa261f4c79801ed6e3533b",
+  "raw_stream_sha256": "2f609ccc8153d746df02e68fcc82f823c56355ef0229741031401868a9bdd6ad"
+}

@@ -1,0 +1,130 @@
+{
+  "case_id": "adv02",
+  "kind": "trap",
+  "label_map": {
+    "X": "deep_research",
+    "Y": "sibyl",
+    "Z": "native"
+  },
+  "judge_cost_usd": 0.3644872,
+  "judge_subtype": "success",
+  "pages_read": 12,
+  "pages_cited": 15,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"No human has landed on or walked on Mars; NASA lists Mars population as 'zero' and calls it a planet inhabited entirely by robots\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"partial\"}, {\"claim\": \"Crewed Mars missions are still in development; NASA is working on power, life support, spacesuits, communications and habitats\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"supported\"}, {\"claim\": \"NASA aims to send astronauts to Mars 'as early as the 2030s', gives a 2039 roundtrip example, and notes the page is being updated for Artemis changes\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"supported\"}, {\"claim\": \"First CHAPEA crew completed a 378-day simulated Mars surface mission at Johnson Space Center that began June 25, 2023, exiting July 6\", \"url\": \"https://www.nasa.gov/missions/analog-field-testing/chapea/first-mars-crew-completes-yearlong-simulated-red-planet-nasa-mission/\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {}, \"notes\": \"Correctly identifies the false premise. The NASA page supports 'Population Zero' and 'inhabited entirely by robots', but it does not explicitly say that no human has landed. The answer itself discloses that this part is an inference. The statement that only uncrewed robotic craft have operated on the surface appears in the opening without a direct citation.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"NASA lists Mars population as 'Zero' and describes sending astronauts 'as early as the 2030s' as a future goal\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"supported\"}, {\"claim\": \"NASA calls Mars 'the only planet we know of inhabited entirely by robots'\", \"url\": \"https://www.nasa.gov/humans-in-space/humans-to-mars/\", \"label\": \"supported\"}, {\"claim\": \"Only uncrewed spacecraft have landed on Mars, including Viking, Pathfinder/Sojourner, Spirit, Opportunity, Curiosity, InSight and Zhurong\", \"url\": \"https://en.wikipedia.org/wiki/Human_mission_to_Mars\", \"label\": \"supported\"}, {\"claim\": \"Crewed Mars missions exist only as proposals; Wikipedia says there is 'no well-funded approach' to human landings by the mid-2030s\", \"url\": \"https://en.wikipedia.org/wiki/Human_mission_to_Mars\", \"label\": \"partial\"}, {\"claim\": \"Crewed Mars missions exist only as proposals and concept studies\", \"url\": \"https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans\", \"label\": \"partial\"}, {\"claim\": \"SpaceX has shifted priority to the Moon first, Mars later\", \"url\": \"https://starship-spacex.fandom.com/wiki/Mars_Missions\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies the false premise. The excerpts support the proposals and concept-study framing, but the quoted phrase 'no well-funded approach' does not appear in either Wikipedia excerpt. The fan-wiki page was unreadable, and the answer appropriately disclaims that claim.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"No human has landed on Mars; humans have only walked on the Moon\", \"url\": \"https://littleastronomy.com/have-humans-landed-on-mars/\", \"label\": \"supported\"}, {\"claim\": \"No human has landed on Mars; humans have only walked on the Moon\", \"url\": \"https://www.quora.com/Has-any-human-ever-landed-on-Mars-or-have-they-only-reached-its-orbit\", \"label\": \"unreachable\"}, {\"claim\": \"Only robotic explorers, from Sojourner to Perseverance, have travelled across the Martian surface\", \"url\": \"https://science.nasa.gov/planetary-science/programs/mars-exploration/mission-timeline/\", \"label\": \"partial\"}, {\"claim\": \"Only robotic explorers, from Sojourner to Perseverance, have travelled across the Martian surface\", \"url\": \"https://nssdc.gsfc.nasa.gov/planetary/chronology_mars.html\", \"label\": \"partial\"}, {\"claim\": \"NASA's crewed Mars plans are future targets in the 2030s\", \"url\": \"https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814\", \"label\": \"supported\"}, {\"claim\": \"NASA aims for crewed Mars missions by the late 2030s or early 2040s\", \"url\": \"https://www.space.com/nasa-plans-astronauts-mars-mission-30-days\", \"label\": \"supported\"}, {\"claim\": \"Kim Stanley Robinson's Mars novels name a fictional 'first person on Mars'\", \"url\": \"https://www.kimstanleyrobinson.info/content/mars\", \"label\": \"partial\"}, {\"claim\": \"Wolf Vishniac is called 'the first human to walk on Mars' figuratively; he worked on Viking experiments and never went to Mars\", \"url\": \"https://www.americaspace.com/2014/07/07/wolf-v-vishniac-the-first-human-to-walk-on-mars/\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly identifies the false premise and handles the fictional and figurative 'first person on Mars' results well. The NASA timeline and NSSDC pages list robotic missions but do not state 'only robotic', and the timeline page does not mention Sojourner. The KSR page names John Boone but does not explicitly label it as fiction. The Universe Today and For All Mankind pairs were left out because of the 8-claim cap; the For All Mankind page was unreachable.\"}}}\n```",
+  "by_condition": {
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "No human has landed on or walked on Mars; NASA lists Mars population as 'zero' and calls it a planet inhabited entirely by robots",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "partial"
+        },
+        {
+          "claim": "Crewed Mars missions are still in development; NASA is working on power, life support, spacesuits, communications and habitats",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "NASA aims to send astronauts to Mars 'as early as the 2030s', gives a 2039 roundtrip example, and notes the page is being updated for Artemis changes",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "First CHAPEA crew completed a 378-day simulated Mars surface mission at Johnson Space Center that began June 25, 2023, exiting July 6",
+          "url": "https://www.nasa.gov/missions/analog-field-testing/chapea/first-mars-crew-completes-yearlong-simulated-red-planet-nasa-mission/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {},
+      "notes": "Correctly identifies the false premise. The NASA page supports 'Population Zero' and 'inhabited entirely by robots', but it does not explicitly say that no human has landed. The answer itself discloses that this part is an inference. The statement that only uncrewed robotic craft have operated on the surface appears in the opening without a direct citation."
+    },
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "NASA lists Mars population as 'Zero' and describes sending astronauts 'as early as the 2030s' as a future goal",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "NASA calls Mars 'the only planet we know of inhabited entirely by robots'",
+          "url": "https://www.nasa.gov/humans-in-space/humans-to-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "Only uncrewed spacecraft have landed on Mars, including Viking, Pathfinder/Sojourner, Spirit, Opportunity, Curiosity, InSight and Zhurong",
+          "url": "https://en.wikipedia.org/wiki/Human_mission_to_Mars",
+          "label": "supported"
+        },
+        {
+          "claim": "Crewed Mars missions exist only as proposals; Wikipedia says there is 'no well-funded approach' to human landings by the mid-2030s",
+          "url": "https://en.wikipedia.org/wiki/Human_mission_to_Mars",
+          "label": "partial"
+        },
+        {
+          "claim": "Crewed Mars missions exist only as proposals and concept studies",
+          "url": "https://en.wikipedia.org/wiki/List_of_crewed_Mars_mission_plans",
+          "label": "partial"
+        },
+        {
+          "claim": "SpaceX has shifted priority to the Moon first, Mars later",
+          "url": "https://starship-spacex.fandom.com/wiki/Mars_Missions",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies the false premise. The excerpts support the proposals and concept-study framing, but the quoted phrase 'no well-funded approach' does not appear in either Wikipedia excerpt. The fan-wiki page was unreadable, and the answer appropriately disclaims that claim."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "No human has landed on Mars; humans have only walked on the Moon",
+          "url": "https://littleastronomy.com/have-humans-landed-on-mars/",
+          "label": "supported"
+        },
+        {
+          "claim": "No human has landed on Mars; humans have only walked on the Moon",
+          "url": "https://www.quora.com/Has-any-human-ever-landed-on-Mars-or-have-they-only-reached-its-orbit",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Only robotic explorers, from Sojourner to Perseverance, have travelled across the Martian surface",
+          "url": "https://science.nasa.gov/planetary-science/programs/mars-exploration/mission-timeline/",
+          "label": "partial"
+        },
+        {
+          "claim": "Only robotic explorers, from Sojourner to Perseverance, have travelled across the Martian surface",
+          "url": "https://nssdc.gsfc.nasa.gov/planetary/chronology_mars.html",
+          "label": "partial"
+        },
+        {
+          "claim": "NASA's crewed Mars plans are future targets in the 2030s",
+          "url": "https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814",
+          "label": "supported"
+        },
+        {
+          "claim": "NASA aims for crewed Mars missions by the late 2030s or early 2040s",
+          "url": "https://www.space.com/nasa-plans-astronauts-mars-mission-30-days",
+          "label": "supported"
+        },
+        {
+          "claim": "Kim Stanley Robinson's Mars novels name a fictional 'first person on Mars'",
+          "url": "https://www.kimstanleyrobinson.info/content/mars",
+          "label": "partial"
+        },
+        {
+          "claim": "Wolf Vishniac is called 'the first human to walk on Mars' figuratively; he worked on Viking experiments and never went to Mars",
+          "url": "https://www.americaspace.com/2014/07/07/wolf-v-vishniac-the-first-human-to-walk-on-mars/",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly identifies the false premise and handles the fictional and figurative 'first person on Mars' results well. The NASA timeline and NSSDC pages list robotic missions but do not state 'only robotic', and the timeline page does not mention Sojourner. The KSR page names John Boone but does not explicitly label it as fiction. The Universe Today and For All Mankind pairs were left out because of the 8-claim cap; the For All Mankind page was unreachable."
+    }
+  }
+}

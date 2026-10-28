@@ -1,0 +1,125 @@
+{
+  "case_id": "real02",
+  "kind": "factual",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.2449592,
+  "judge_subtype": "success",
+  "pages_read": 6,
+  "pages_cited": 8,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"He was with the Freedom Fighters when the Secret Society of Super Villains ambushed them, and Sinestro killed him.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"The issue is dated December 2005.\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\", \"label\": \"unreachable\"}, {\"claim\": \"The issue is dated December 2005.\", \"url\": \"https://dcuguide.com/Black_Condor_(Ryan_Kendall)\", \"label\": \"unsupported\"}, {\"claim\": \"He later appeared as a Black Lantern in Blackest Night; a Prime Earth version was resurrected in Dark Nights: Death Metal #5.\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(Prime_Earth)\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correct answer, and Wikipedia supports the core claims. The DCU Guide excerpt cites Infinite Crisis #1 but gives no December 2005 date. Both Fandom pages could not be read.\"}, \"Y\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1 (December 2005).\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\", \"label\": \"unreachable\"}, {\"claim\": \"Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1 (December 2005).\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"partial\"}, {\"claim\": \"He died while with the Freedom Fighters, who were ambushed by the Secret Society of Super Villains.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"He died while with the Freedom Fighters, who were ambushed by the Secret Society of Super Villains.\", \"url\": \"https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)\", \"label\": \"unreachable\"}, {\"claim\": \"Sinestro is credited with killing him, with a blast through the chest.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"partial\"}, {\"claim\": \"Sinestro is credited with killing him, with a blast through the chest.\", \"url\": \"https://comicvine.gamespot.com/ryan-kendall/4005-76170/\", \"label\": \"supported\"}, {\"claim\": \"Nothing found ties his death to Final Crisis.\", \"url\": \"https://en.wikipedia.org/wiki/Final_Crisis\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correct answer. Wikipedia names the issue but not the December 2005 date, and it does not mention the chest wound. Comic Vine states Sinestro's blast pierced him through the chest. The Final Crisis page does not mention Black Condor, so it cannot support the negative claim.\"}, \"Z\": {\"verdict\": \"correct\", \"claims\": [{\"claim\": \"The Infinite Crisis #1 annotations list 'Black Condor – killed by Sinestro' under deaths in this issue.\", \"url\": \"https://crisisonearthprime.com/infinite-crisis/ic01/\", \"label\": \"unsupported\"}, {\"claim\": \"Sinestro killed him with a yellow power ring during the Freedom Fighters' encounter with the Society at a Stagg Industries refinery outside Metropolis.\", \"url\": \"https://crisisonearthprime.com/infinite-crisis/ic01/\", \"label\": \"unsupported\"}, {\"claim\": \"A review of Infinite Crisis #1 says 'Sinestro kills Black Condor too!' while describing the Freedom Fighters walking into the villains' ambush.\", \"url\": \"https://www.chrisisoninfiniteearths.com/2017/07/infinite-crisis-1-2005.html\", \"label\": \"supported\"}, {\"claim\": \"Ryan Kendall is the second Black Condor and was killed at the beginning of the Infinite Crisis storyline.\", \"url\": \"https://en.wikipedia.org/wiki/Black_Condor\", \"label\": \"supported\"}, {\"claim\": \"DCU Guide says Black Condor II was killed by Sinestro as the Freedom Fighters were attacked by the Society, and gives no issue number.\", \"url\": \"https://dcuguide.com/Black_Condor_(Ryan_Kendall)\", \"label\": \"partial\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correct answer. The crisisonearthprime excerpt ends before the Freedom Fighters and deaths section, so it does not support either claim cited to it. DCU Guide does state the Sinestro and Society attack, but its reference footnote cites Infinite Crisis #1, which contradicts 'gives no issue number'. The review site supports the Sinestro kill in issue #1.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "He was with the Freedom Fighters when the Secret Society of Super Villains ambushed them, and Sinestro killed him.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "The issue is dated December 2005.",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The issue is dated December 2005.",
+          "url": "https://dcuguide.com/Black_Condor_(Ryan_Kendall)",
+          "label": "unsupported"
+        },
+        {
+          "claim": "He later appeared as a Black Lantern in Blackest Night; a Prime Earth version was resurrected in Dark Nights: Death Metal #5.",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(Prime_Earth)",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correct answer, and Wikipedia supports the core claims. The DCU Guide excerpt cites Infinite Crisis #1 but gives no December 2005 date. Both Fandom pages could not be read."
+    },
+    "deep_research": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1 (December 2005).",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Ryan Kendall, the second Black Condor, was killed in Infinite Crisis #1 (December 2005).",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "partial"
+        },
+        {
+          "claim": "He died while with the Freedom Fighters, who were ambushed by the Secret Society of Super Villains.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "He died while with the Freedom Fighters, who were ambushed by the Secret Society of Super Villains.",
+          "url": "https://dc.fandom.com/wiki/Ryan_Kendall_(New_Earth)",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Sinestro is credited with killing him, with a blast through the chest.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "partial"
+        },
+        {
+          "claim": "Sinestro is credited with killing him, with a blast through the chest.",
+          "url": "https://comicvine.gamespot.com/ryan-kendall/4005-76170/",
+          "label": "supported"
+        },
+        {
+          "claim": "Nothing found ties his death to Final Crisis.",
+          "url": "https://en.wikipedia.org/wiki/Final_Crisis",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correct answer. Wikipedia names the issue but not the December 2005 date, and it does not mention the chest wound. Comic Vine states Sinestro's blast pierced him through the chest. The Final Crisis page does not mention Black Condor, so it cannot support the negative claim."
+    },
+    "sibyl": {
+      "verdict": "correct",
+      "claims": [
+        {
+          "claim": "The Infinite Crisis #1 annotations list 'Black Condor – killed by Sinestro' under deaths in this issue.",
+          "url": "https://crisisonearthprime.com/infinite-crisis/ic01/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Sinestro killed him with a yellow power ring during the Freedom Fighters' encounter with the Society at a Stagg Industries refinery outside Metropolis.",
+          "url": "https://crisisonearthprime.com/infinite-crisis/ic01/",
+          "label": "unsupported"
+        },
+        {
+          "claim": "A review of Infinite Crisis #1 says 'Sinestro kills Black Condor too!' while describing the Freedom Fighters walking into the villains' ambush.",
+          "url": "https://www.chrisisoninfiniteearths.com/2017/07/infinite-crisis-1-2005.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Ryan Kendall is the second Black Condor and was killed at the beginning of the Infinite Crisis storyline.",
+          "url": "https://en.wikipedia.org/wiki/Black_Condor",
+          "label": "supported"
+        },
+        {
+          "claim": "DCU Guide says Black Condor II was killed by Sinestro as the Freedom Fighters were attacked by the Society, and gives no issue number.",
+          "url": "https://dcuguide.com/Black_Condor_(Ryan_Kendall)",
+          "label": "partial"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correct answer. The crisisonearthprime excerpt ends before the Freedom Fighters and deaths section, so it does not support either claim cited to it. DCU Guide does state the Sinestro and Society attack, but its reference footnote cites Infinite Crisis #1, which contradicts 'gives no issue number'. The review site supports the Sinestro kill in issue #1."
+    }
+  }
+}

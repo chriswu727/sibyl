@@ -455,6 +455,41 @@ relaxing validation. This is an interface-contract improvement, not a new host
 measurement: the failed Luna runs above have not been rerun, and their approval
 does not authorize more model usage. Stable quality gates remain open.
 
+### Paired host evaluation, second run, 2026-10-28
+
+The [retained second run](../evals/results/paired-host-rerun-2026-10-28/manifest.json)
+repeated the unchanged protocol after #70 added `reading_needs`,
+`before_answering` and `answer_material`: 60 runs without errors (8.64 USD) and
+20 blind judgments (6.22 USD; 164 of 187 cited pages readable). It does **not**
+meet gate 2 either, but now on different criteria.
+
+| Metric | Built-in search | Sibyl | Deep-research workflow |
+|---|---:|---:|---:|
+| Citation support rate (unreachable excluded) | 80.5% | 80.2% | 73.1% |
+| Same, unreachable counted unsupported | 73.6% | **78.3%** | 65.6% |
+| Factual answers correct | 6 of 6 | 5 of 6 | 5 of 6 |
+| Trap questions passed | 4 of 4 | 4 of 4 | 4 of 4 |
+| Rubric: coverage / support / source quality / counterevidence | 1.9 / 0.5 / 2.0 / 1.1 | 2.0 / **0.9** / 1.9 / **1.5** | 1.9 / 0.6 / 1.9 / 1.3 |
+| CLI-reported cost / time | $1.78 / 516 s | $4.07 / 934 s | $2.79 / 688 s |
+
+The counterevidence gap closed (1.5 against 1.1) and every rubric criterion is
+met, but citation support is 0.3 points below built-in search (the criterion
+asks for 5 above) and Sibyl answered one factual task fewer. That task (`real06`)
+asks for a date on which Wikipedia's infobox and body disagree; Sibyl named the
+conflict and chose the body's date, which is not the gold answer. In the first
+run the same task was built-in search's only miss.
+
+Between the two runs built-in search's citation support moved from 69.1% to
+80.5% with no change to it, so single runs of twenty tasks do not resolve
+differences of a few points. Pooled over both runs: citation support 79.4%
+(Sibyl), 74.9% (built-in) and 72.3% (deep-research); 77.5%, 67.4% and 65.0% when
+unreachable pages count against; 11 of 12 factual answers and 8 of 8 traps for
+every condition; rubric support 0.9 against 0.55 and 0.6; counterevidence 1.3
+against 1.25 and 1.5. Sibyl cost about twice built-in search. These pooled
+figures describe the two runs; they are not a substitute for the declared
+per-run criteria, and repeating runs until one passes would not establish a
+pass.
+
 ### Paired host evaluation, 2026-10-27
 
 The [retained run](../evals/results/paired-host-2026-10-27/manifest.json)

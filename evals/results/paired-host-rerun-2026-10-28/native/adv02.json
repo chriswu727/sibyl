@@ -1,0 +1,56 @@
+{
+  "case_id": "adv02",
+  "condition": "native",
+  "elapsed_seconds": 15.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 3,
+  "cli_reported_cost_usd": 0.1101347,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3165,
+    "cache_read_input_tokens": 6547,
+    "output_tokens": 1168,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3165,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 26455,
+      "outputTokens": 2391,
+      "cacheReadInputTokens": 6547,
+      "cacheCreationInputTokens": 3165,
+      "webSearchRequests": 2,
+      "costUSD": 0.1101347,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3165,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 2
+  },
+  "final_answer": "**No one has done this yet.** As far as I can tell, no human has walked on Mars, so there is no \"first.\" The question assumes something that hasn't happened. Only robotic probes and rovers have operated on the Martian surface.\n\nMy evidence is weaker than I'd like. The search results were mostly older articles and Quora answers, and none were dated late 2026. I did not open any page in full, so this rests on search-result summaries. The conclusion is still safe, because a crewed Mars landing would be major news and none of the results mention one.\n\n**Claims and sources**\n\n- No human has landed on Mars. Humans have only walked on the Moon.\n  - [Have Humans Landed on Mars? – Little Astronomy](https://littleastronomy.com/have-humans-landed-on-mars/)\n  - [Has any human ever landed on Mars, or only reached its orbit? – Quora](https://www.quora.com/Has-any-human-ever-landed-on-Mars-or-have-they-only-reached-its-orbit)\n\n- Only robotic explorers, from Sojourner to Perseverance, have travelled across the Martian surface.\n  - [Mars Mission Timeline – NASA Science](https://science.nasa.gov/planetary-science/programs/mars-exploration/mission-timeline/)\n  - [Mars Exploration Timeline – NASA NSSDC](https://nssdc.gsfc.nasa.gov/planetary/chronology_mars.html)\n\n- NASA's crewed Mars plans are still future targets. The sources give a range, from the 2030s to the late 2030s or early 2040s.\n  - [NASA wants to send humans to Mars in the 2030s – The Conversation](https://theconversation.com/nasa-wants-to-send-humans-to-mars-in-the-2030s-a-crewed-mission-could-unlock-some-of-the-red-planets-geologic-mysteries-239814)\n  - [NASA has early plans to send astronauts to Mars for 30 days – Space.com](https://www.space.com/nasa-plans-astronauts-mars-mission-30-days)\n  - [2033 is the Perfect Year to Send Humans to Mars – Universe Today](https://www.universetoday.com/articles/2033-is-the-perfect-year-to-send-humans-to-mars-with-a-bonus-venus-flyby)\n\n- Some results name a \"first person on Mars,\" but these are fiction or figurative:\n  - [For All Mankind fan wiki, \"Race to Mars\"](https://for-all-mankind.fandom.com/wiki/Race_to_Mars) is a TV show.\n  - [Kim Stanley Robinson's Mars novels](https://www.kimstanleyrobinson.info/content/mars) are fiction.\n  - [Wolf Vishniac, \"The First Human to Walk on Mars\" – AmericaSpace](https://www.americaspace.com/2014/07/07/wolf-v-vishniac-the-first-human-to-walk-on-mars/) uses the phrase figuratively. Vishniac worked on the Viking lander's experiments and never went to Mars.",
+  "final_answer_sha256": "ade9562f7f023a054c4c7b1386b302a5ef455945a6b37dff92bed33332b7c574",
+  "raw_stream_sha256": "373bb9836d5aa0fd859d08d4ab09cff7b8f01fab0af480c00effb5666ece0070"
+}

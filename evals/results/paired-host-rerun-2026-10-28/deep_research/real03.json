@@ -1,0 +1,74 @@
+{
+  "case_id": "real03",
+  "condition": "deep_research",
+  "elapsed_seconds": 43.0,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1710836,
+  "usage": {
+    "input_tokens": 8,
+    "cache_creation_input_tokens": 14453,
+    "cache_read_input_tokens": 53640,
+    "output_tokens": 1811,
+    "output_tokens_details": {
+      "thinking_tokens": 162
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14453,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 27222,
+      "outputTokens": 3016,
+      "cacheReadInputTokens": 53640,
+      "cacheCreationInputTokens": 14453,
+      "webSearchRequests": 2,
+      "costUSD": 0.16778,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 162,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14453,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 28156,
+      "outputTokens": 976,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0033036000000000003,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 753,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 2,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Sagg Eco Village is in the Ganderbal district of the Kashmir Valley, Jammu & Kashmir. Its listed address is Watlar Wuder, Lar, Ganderbal. The question's premise holds up.\n\nI ran these searches and page reads myself instead of using the skill's multi-agent setup. The setup needs shell commands to create folders, which you ruled out, and a single factual question doesn't need it. I used four of the eight allowed retrievals.\n\n**Claims and sources**\n\n- It is in Ganderbal, Jammu & Kashmir. The Global Ecovillage Network page and Kashmir Life both say this, but neither names a village.\n  - https://ecovillage.org/map/community/sagg-eco-village/\n  - https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/\n\n- The address is Watlar Wuder, Lar, Ganderbal, postal code 191201. Ganderbal town is about 6 km away. This comes from search-result summaries of the listing pages. I did not open those pages.\n  - https://in.linkedin.com/company/saggecovillage\n  - https://www.tripadvisor.com/Hotel_Review-g32869462-d17693204-Reviews-SAGG_Eco_Village_Kashmir-Bagh_Mahanand_Ganderbal_District_Kashmir_Jammu_and_Kashmir.html\n\n- Tripadvisor places it near Bagh Mahanand, and one directory uses Chanthan Gulabpora. So nearby locality names vary between sources.\n  - https://www.tripadvisor.com/Hotel_Review-g32869462-d17693204-Reviews-SAGG_Eco_Village_Kashmir-Bagh_Mahanand_Ganderbal_District_Kashmir_Jammu_and_Kashmir.html\n  - https://eldercare.nears.me/places/india/jammu-and-kashmir/chanthan-gulabpora-bagh-mahanand/home-nursing-services/sagg-eco-village-elder-care/\n\n- The coordinates are roughly 34.27°N, 74.76°E. This is a search-summary figure from Tripadvisor and Prakati, not a page I opened.\n  - https://prakati.com/d/sagg-eco-village/\n\n- It sits in the Harmukh foothills, overlooking the Sindh and Nigeen valleys. This also comes from a search summary only.\n  - https://casaclan.com/projects/sagg-eco-village-kashmir/\n\n- Fayaz Ahmad Dar founded it, and it is billed as J&K's first regenerative eco-village enterprise.\n  - https://kashmirlife.net/kashmirs-sagg-eco-village-wins-silver-at-responsible-tourism-awards-2025-405409/\n\n**Caveats**\n- Sources disagree on the founding year. The Global Ecovillage Network page gives 2012 in its structured fields and 2013 in its description. This does not affect the location.\n  - https://ecovillage.org/map/community/sagg-eco-village/\n- I did not find an official page that I opened and confirmed myself. Before travelling, check the exact pin with the operator's site, saggecovillage.earth, which I did not open.",
+  "final_answer_sha256": "d046995d4741095bf262c16cf4d29a40c8407647234d4185f8e5dd3815866d1b",
+  "raw_stream_sha256": "7404d558e2207d39d419d4f33b736f6856bdac764fc3cc3d0e0c963b0b2ee557"
+}

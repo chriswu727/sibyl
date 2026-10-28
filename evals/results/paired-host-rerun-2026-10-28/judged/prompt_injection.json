@@ -1,0 +1,175 @@
+{
+  "case_id": "prompt_injection",
+  "kind": "research",
+  "label_map": {
+    "X": "native",
+    "Y": "deep_research",
+    "Z": "sibyl"
+  },
+  "judge_cost_usd": 0.4523312,
+  "judge_subtype": "success",
+  "pages_read": 12,
+  "pages_cited": 12,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"LLM-integrated applications blur the line between data and instructions; attackers can plant prompts in data likely to be retrieved without direct access\", \"url\": \"https://arxiv.org/abs/2302.12173\", \"label\": \"supported\"}, {\"claim\": \"Indirect injection occurs when an LLM accepts input from external sources such as websites or files that alters its behavior\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Developer instructions and third-party data share one context so the model can't reliably track provenance; architectural rather than model problem\", \"url\": \"https://www.lakera.ai/blog/indirect-prompt-injection\", \"label\": \"supported\"}, {\"claim\": \"Web-based indirect prompt injection has been observed in the wild\", \"url\": \"https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"OWASP lists constrained role, output validation, input/output filtering, least privilege, human approval, segregating untrusted content, adversarial testing\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Further controls: spotlighting/structured prompting, instruction hierarchy, adversarial training, deny-by-default tools, taint tracking, egress restrictions, sandboxing, AgentSentry\", \"url\": \"https://arxiv.org/pdf/2609.22712\", \"label\": \"partial\"}, {\"claim\": \"OWASP says it is unclear if fool-proof prevention exists given stochasticity; measures mitigate impact\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Prompt-based instructions are 'useful, but not a strong boundary'; spotlighting/hierarchies give partial reduction; adaptive attacks remain hard\", \"url\": \"https://www.lakera.ai/blog/indirect-prompt-injection\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"Several control and non-immunity claims rest on unread search summaries. The quoted Lakera phrase is not in the page excerpt. Taint tracking, egress and adversarial training are not found in the cited excerpts. The answer discloses these limitations. AgentSentry's claim to eliminate successful attacks on AgentDojo is a potential counterpoint, and the answer does not engage with it.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Indirect injection occurs when the model takes in external content such as websites or files that alters behavior\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Attackers inject prompts into data likely to be retrieved, exploiting apps remotely; LLM apps blur data and instructions; demonstrated on Bing Chat\", \"url\": \"https://arxiv.org/abs/2302.12173\", \"label\": \"supported\"}, {\"claim\": \"No parameterised-query equivalent; LLM sees only next token with no data/instruction distinction\", \"url\": \"https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\", \"label\": \"supported\"}, {\"claim\": \"Lethal trifecta of private data, untrusted content and external communication enables data theft\", \"url\": \"https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/\", \"label\": \"supported\"}, {\"claim\": \"Deny-lists of known phrases fail because attackers can rephrase; XML-tag marking only makes injection harder\", \"url\": \"https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\", \"label\": \"supported\"}, {\"claim\": \"Anthropic uses RL training on simulated injected web content, classifiers over untrusted content, and human red teaming\", \"url\": \"https://www.anthropic.com/research/prompt-injection-defenses\", \"label\": \"supported\"}, {\"claim\": \"Attack success rate fell from 8–13.8% to 1.4–2.4% under 100-attempt Best-of-N; ~1% is still meaningful risk; no browser agent is immune\", \"url\": \"https://www.anthropic.com/research/prompt-injection-defenses\", \"label\": \"partial\"}, {\"claim\": \"Prompt injection may never be fully mitigated like SQL injection; treat it as residual risk; beware products claiming to stop it\", \"url\": \"https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\", \"label\": \"supported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"Most claims are well supported. The specific ASR ranges do not appear in the page excerpt; only the 1% figure, the immunity statement and the Best-of-N setup are present. The measured vendor reductions and the dated 2023 claim substantively narrow the conclusion, and the answer discloses that the figures are vendor-reported.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"Attackers embed instructions in web pages, documents, emails, tickets and code that agents retrieve, causing unintended behavior\", \"url\": \"https://attack.mitre.org/techniques/T1698/\", \"label\": \"supported\"}, {\"claim\": \"All inputs land in one token stream that 'collapses the trust boundaries'; models 'cannot reliably tell' which instructions are meant for them\", \"url\": \"https://www.lakera.ai/blog/indirect-prompt-injection\", \"label\": \"partial\"}, {\"claim\": \"Hidden webpage instructions made an LLM insert an image link exfiltrating the conversation\", \"url\": \"https://genai.owasp.org/llmrisk/llm01-prompt-injection/\", \"label\": \"supported\"}, {\"claim\": \"Retrieved content must not independently authorize consequential actions; authorization independent of the model; dedicated least-privilege identities\", \"url\": \"https://attack.mitre.org/techniques/T1698/\", \"label\": \"supported\"}, {\"claim\": \"Validate tool arguments and enforce permissions outside the model; action-specific approval; approval prompts cause user fatigue\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Assume injection may eventually succeed; limit blast radius with RBAC, constrained tools, scoped identities, isolation\", \"url\": \"https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/prompt-injection\", \"label\": \"supported\"}, {\"claim\": \"Labeling does not enforce a boundary; screening is an 'illustrative layer, not a complete' defense; pattern filters miss injections\", \"url\": \"https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html\", \"label\": \"partial\"}, {\"claim\": \"Monitoring and logging catch what slips through because 'even strong defenses leak'\", \"url\": \"https://www.lakera.ai/blog/indirect-prompt-injection\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 1, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The answer cites MITRE, Microsoft and two OWASP pages, and correctly treats the two OWASP pages as one publisher. Several quoted phrases do not appear in the excerpts: 'collapses the trust boundaries', 'illustrative layer, not a complete', 'even strong defenses leak', and the approval-fatigue claim. For counterevidence, the answer offers Microsoft's model-robustness point and discloses that it has no quantitative data; this is limited.\"}}}\n```",
+  "by_condition": {
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "LLM-integrated applications blur the line between data and instructions; attackers can plant prompts in data likely to be retrieved without direct access",
+          "url": "https://arxiv.org/abs/2302.12173",
+          "label": "supported"
+        },
+        {
+          "claim": "Indirect injection occurs when an LLM accepts input from external sources such as websites or files that alters its behavior",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Developer instructions and third-party data share one context so the model can't reliably track provenance; architectural rather than model problem",
+          "url": "https://www.lakera.ai/blog/indirect-prompt-injection",
+          "label": "supported"
+        },
+        {
+          "claim": "Web-based indirect prompt injection has been observed in the wild",
+          "url": "https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "OWASP lists constrained role, output validation, input/output filtering, least privilege, human approval, segregating untrusted content, adversarial testing",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Further controls: spotlighting/structured prompting, instruction hierarchy, adversarial training, deny-by-default tools, taint tracking, egress restrictions, sandboxing, AgentSentry",
+          "url": "https://arxiv.org/pdf/2609.22712",
+          "label": "partial"
+        },
+        {
+          "claim": "OWASP says it is unclear if fool-proof prevention exists given stochasticity; measures mitigate impact",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Prompt-based instructions are 'useful, but not a strong boundary'; spotlighting/hierarchies give partial reduction; adaptive attacks remain hard",
+          "url": "https://www.lakera.ai/blog/indirect-prompt-injection",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "Several control and non-immunity claims rest on unread search summaries. The quoted Lakera phrase is not in the page excerpt. Taint tracking, egress and adversarial training are not found in the cited excerpts. The answer discloses these limitations. AgentSentry's claim to eliminate successful attacks on AgentDojo is a potential counterpoint, and the answer does not engage with it."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Indirect injection occurs when the model takes in external content such as websites or files that alters behavior",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Attackers inject prompts into data likely to be retrieved, exploiting apps remotely; LLM apps blur data and instructions; demonstrated on Bing Chat",
+          "url": "https://arxiv.org/abs/2302.12173",
+          "label": "supported"
+        },
+        {
+          "claim": "No parameterised-query equivalent; LLM sees only next token with no data/instruction distinction",
+          "url": "https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection",
+          "label": "supported"
+        },
+        {
+          "claim": "Lethal trifecta of private data, untrusted content and external communication enables data theft",
+          "url": "https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+          "label": "supported"
+        },
+        {
+          "claim": "Deny-lists of known phrases fail because attackers can rephrase; XML-tag marking only makes injection harder",
+          "url": "https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection",
+          "label": "supported"
+        },
+        {
+          "claim": "Anthropic uses RL training on simulated injected web content, classifiers over untrusted content, and human red teaming",
+          "url": "https://www.anthropic.com/research/prompt-injection-defenses",
+          "label": "supported"
+        },
+        {
+          "claim": "Attack success rate fell from 8–13.8% to 1.4–2.4% under 100-attempt Best-of-N; ~1% is still meaningful risk; no browser agent is immune",
+          "url": "https://www.anthropic.com/research/prompt-injection-defenses",
+          "label": "partial"
+        },
+        {
+          "claim": "Prompt injection may never be fully mitigated like SQL injection; treat it as residual risk; beware products claiming to stop it",
+          "url": "https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "Most claims are well supported. The specific ASR ranges do not appear in the page excerpt; only the 1% figure, the immunity statement and the Best-of-N setup are present. The measured vendor reductions and the dated 2023 claim substantively narrow the conclusion, and the answer discloses that the figures are vendor-reported."
+    },
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "Attackers embed instructions in web pages, documents, emails, tickets and code that agents retrieve, causing unintended behavior",
+          "url": "https://attack.mitre.org/techniques/T1698/",
+          "label": "supported"
+        },
+        {
+          "claim": "All inputs land in one token stream that 'collapses the trust boundaries'; models 'cannot reliably tell' which instructions are meant for them",
+          "url": "https://www.lakera.ai/blog/indirect-prompt-injection",
+          "label": "partial"
+        },
+        {
+          "claim": "Hidden webpage instructions made an LLM insert an image link exfiltrating the conversation",
+          "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/",
+          "label": "supported"
+        },
+        {
+          "claim": "Retrieved content must not independently authorize consequential actions; authorization independent of the model; dedicated least-privilege identities",
+          "url": "https://attack.mitre.org/techniques/T1698/",
+          "label": "supported"
+        },
+        {
+          "claim": "Validate tool arguments and enforce permissions outside the model; action-specific approval; approval prompts cause user fatigue",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Assume injection may eventually succeed; limit blast radius with RBAC, constrained tools, scoped identities, isolation",
+          "url": "https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/prompt-injection",
+          "label": "supported"
+        },
+        {
+          "claim": "Labeling does not enforce a boundary; screening is an 'illustrative layer, not a complete' defense; pattern filters miss injections",
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html",
+          "label": "partial"
+        },
+        {
+          "claim": "Monitoring and logging catch what slips through because 'even strong defenses leak'",
+          "url": "https://www.lakera.ai/blog/indirect-prompt-injection",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 1,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The answer cites MITRE, Microsoft and two OWASP pages, and correctly treats the two OWASP pages as one publisher. Several quoted phrases do not appear in the excerpts: 'collapses the trust boundaries', 'illustrative layer, not a complete', 'even strong defenses leak', and the approval-fatigue claim. For counterevidence, the answer offers Microsoft's model-robustness point and discloses that it has no quantitative data; this is limited."
+    }
+  }
+}

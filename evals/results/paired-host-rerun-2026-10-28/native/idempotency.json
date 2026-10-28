@@ -1,0 +1,73 @@
+{
+  "case_id": "idempotency",
+  "condition": "native",
+  "elapsed_seconds": 33.3,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.1751031,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14148,
+    "cache_read_input_tokens": 14115,
+    "output_tokens": 2862,
+    "output_tokens_details": {
+      "thinking_tokens": 47
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14148,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 26270,
+      "outputTokens": 4241,
+      "cacheReadInputTokens": 14115,
+      "cacheCreationInputTokens": 14148,
+      "webSearchRequests": 2,
+      "costUSD": 0.17295349999999998,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 47,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14148,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 14316,
+      "outputTokens": 1436,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0021496,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1086,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 4,
+    "WebSearch": 2
+  },
+  "final_answer": "**Direct answer: No.** Neither Stripe's nor AWS's documentation says idempotency keys make retries safe indefinitely. Both describe a bounded window. After it closes, a retry with the same key can be treated as a new request. Safety also depends on the retry using identical parameters and on the error type.\n\nStripe's documented limit is \"at least 24 hours\" for API v1, and I did not find a hard Stripe-specific limit for v2. AWS publishes no single limit. Retention varies by service, and the EC2 documentation I read gives no retention duration.\n\n**Stripe**\n\n- Stripe v1 may remove keys once they are at least 24 hours old. If a key is reused after it has been pruned, Stripe generates a new request. A retry after that point can therefore repeat the operation.\n  - https://docs.stripe.com/api/idempotent_requests\n- Stripe v1 saves the status code and body of the first request once endpoint execution begins. Retries with the same key return that saved response, including `500` errors.\n  - https://docs.stripe.com/api/idempotent_requests\n- Stripe v1 doesn't save a result if the request fails parameter validation or conflicts with a request still executing. Those requests can be retried.\n  - https://docs.stripe.com/api/idempotent_requests\n- If the parameters differ from the original request, Stripe returns an error.\n  - https://docs.stripe.com/api/idempotent_requests\n- Keys can be up to 255 characters. Stripe suggests V4 UUIDs or another high-entropy random string.\n  - https://docs.stripe.com/api/idempotent_requests\n- In API v2, retries don't repeat successful operations, and Stripe retries failed or partial work to completion when possible. The page I fetched didn't state a retention limit for v2. It links to a separate v2 page that I did not read.\n  - https://docs.stripe.com/api/idempotent_requests\n\n**AWS**\n\n- AWS says a service must keep knowledge of the original request to honor retries, but keeping it indefinitely is impractical. It adds that indefinite retention could also hurt the customer experience. The Builders' Library article also mentions possible collisions with later identifiers, but I saw that point only in a search summary.\n  - https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- AWS says retention requirements vary across services and resources. For EC2 instances, it describes the window as the resource's lifetime plus an interval. The article doesn't state how long that interval is.\n  - https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/\n- The EC2 API guide says a client token is a case-sensitive string of up to 64 ASCII characters. A retry with the same token and parameters succeeds without further action. The EC2 page I fetched states no retention duration.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- EC2 returns `IdempotentParameterMismatch` if the parameters differ. The Region or Availability Zone is excluded from that comparison.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- EC2 idempotency is scoped to a Region, or for some calls to an Availability Zone. The same token can legitimately create resources in another Region or zone.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- EC2 advises not retrying 400-series errors and retrying 500-series errors with backoff. The exception is a resource that is changing state, where a retry might succeed.\n  - https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html\n- ECS `RunTask` tokens have a documented TTL of 24 hours, or the resource's lifetime plus one hour, whichever is lower.\n  - https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html\n- ECS scopes tokens to a cluster. A parameter mismatch returns a `ConflictException`.\n  - https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html\n- ECS retry responses degrade with age. Tasks stopped for under an hour return only limited fields, and failures older than an hour return only a count.\n  - https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html\n- The AWS SDK and CLI auto-generate a client token for `RunTask` if you don't supply one.\n  - https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html\n\n**Comparison**\n\n- **Retention:** Stripe v1 gives one number: keys may be removed after at least 24 hours. AWS gives per-service rules, such as ECS `RunTask` at 24 hours or less, and EC2 tied to resource lifetime with no stated duration.\n- **Parameter mismatch:** Both systems treat the same key with different parameters as an error.\n- **Scope:** AWS tokens are scoped to a Region, zone or cluster, so a token isn't global. I found no equivalent scoping statement in Stripe's page.\n- **Token length:** Stripe allows 255 characters. EC2 allows 64, and ECS allows 36 or 64 depending on the call.\n\n**Not established**\n\n- I did not find an EC2 retention duration or a Stripe v2 retention limit.\n- Other AWS services may differ, because I read only the EC2 and ECS pages.\n\nSources:\n- [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests)\n- [AWS Builders' Library: Making retries safe with idempotent APIs](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/)\n- [Amazon EC2: Ensuring idempotency](https://docs.aws.amazon.com/ec2/latest/devguide/ec2-api-idempotency.html)\n- [Amazon ECS: Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html)",
+  "final_answer_sha256": "ceb4bb920960b2cc6045e47655ee7307e0f3d05190519590e62e29d188d8643a",
+  "raw_stream_sha256": "d54db6a4037175183332006b2659e5d8a14bc0e31ec974572073d9fba3a441c7"
+}

@@ -1,0 +1,59 @@
+{
+  "case_id": "prompt_injection",
+  "condition": "sibyl",
+  "elapsed_seconds": 62.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.24689299999999997,
+  "usage": {
+    "input_tokens": 12,
+    "cache_creation_input_tokens": 28324,
+    "cache_read_input_tokens": 107170,
+    "output_tokens": 7578,
+    "output_tokens_details": {
+      "thinking_tokens": 25
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 28324,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13430,
+      "outputTokens": 8602,
+      "cacheReadInputTokens": 107170,
+      "cacheCreationInputTokens": 28324,
+      "webSearchRequests": 1,
+      "costUSD": 0.24689299999999997,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 25,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 28324,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 1,
+    "mcp__sibyl__continue_research": 2,
+    "mcp__sibyl__assess_research": 3
+  },
+  "final_answer": "**Direct answer:** Retrieved web content is a trust boundary because anyone can write it, yet the model reads it in the same context as trusted instructions. The model can't reliably separate the two. Some controls reduce the risk: least privilege, authorization checks outside the model, isolation, screening, monitoring and human approval. None of the sources I read says any of them, alone or combined, makes a system immune. They describe layers that limit damage.\n\n**Why it is a trust boundary**\n\n- Attackers can embed instructions in web pages, documents, emails, tickets and code that an agent may retrieve. The embedded instructions can cause unintended behavior. (MITRE ATT&CK T1698: https://attack.mitre.org/techniques/T1698/)\n- System prompts, user input, retrieved documents and tool metadata all land in one context window as a single token stream. That \"collapses the trust boundaries that traditional software depends on.\" Models follow instructions wherever they appear and \"cannot reliably tell\" which were meant for them. (Lakera: https://www.lakera.ai/blog/indirect-prompt-injection)\n- Injected text need not be visible to humans. In OWASP's example, a webpage with hidden instructions made an LLM add an image link that exfiltrated the private conversation. (OWASP LLM01: https://genai.owasp.org/llmrisk/llm01-prompt-injection/)\n- Microsoft's guidance says any AI system that reads untrusted content should treat it as potentially adversarial rather than authoritative. (https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/prompt-injection)\n\n**Controls that reduce risk, and why they stop short of immunity**\n\n- There is no single fix. Lakera says the vulnerability lives in the system architecture, not in a model checkpoint or prompt. The goal is to make attacks unreliable, easier to detect and less likely to trigger harm. (https://www.lakera.ai/blog/indirect-prompt-injection)\n- Instructions in retrieved content should not independently authorize consequential actions. Tool requests derived from external content should pass authorization independent of the model. Agents should have dedicated, least-privilege identities. (https://attack.mitre.org/techniques/T1698/)\n- Validate tool arguments and enforce permissions in execution code outside the model. Require action-specific approval for high-risk operations. OWASP warns that approval prompts cause user fatigue. (OWASP cheat sheet: https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html)\n- Microsoft says to assume injection may eventually succeed. It recommends limiting blast radius with RBAC, constrained tools, scoped identities and isolation, within layered defenses. (https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/prompt-injection)\n- Labeling or segregating untrusted content does not enforce a boundary. Input screening is an \"illustrative layer, not a complete\" defense, and pattern filters don't reliably catch indirect injection. (https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html)\n- RAG and fine-tuning do not fully mitigate prompt injection. (https://genai.owasp.org/llmrisk/llm01-prompt-injection/)\n- Monitoring and logging of tool calls catch what slips through, because \"even strong defenses leak.\" (https://www.lakera.ai/blog/indirect-prompt-injection)\n\n**Caveats and gaps**\n\n- Microsoft treats the latest robust model as a primary control, since newer models improve over time. It still frames that as one layer and tells you to assume a breach can occur. That is the nearest thing to counterevidence I found, and it doesn't contradict the conclusion.\n- Several claims rest on a single source each, and Lakera is a vendor with a commercial interest. The two OWASP pages, MITRE and Microsoft are more neutral, and their advice agrees.\n- I did not find or evaluate quantitative effectiveness data, such as benchmark results for specific defenses. The \"reduce, not eliminate\" framing comes from guidance documents, not measured residual risk.\n- I used 3 of the 8 allowed retrievals (1 search and 2 page-read batches). I did not read the papers (Greshake et al., ROPE, AgentDojo) that the search results mentioned.\n\nSources:\n- https://attack.mitre.org/techniques/T1698/\n- https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html\n- https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- https://www.lakera.ai/blog/indirect-prompt-injection\n- https://learn.microsoft.com/en-us/security/zero-trust/catalog-ai-attack-techniques/prompt-injection",
+  "final_answer_sha256": "7e853aa93e6df5f3879a443b0226ed7e5c25ad8eca16c7eef3cd6825b3ff21bd",
+  "raw_stream_sha256": "1014777a34e5253c9532af0368670290564982d8ff26903c551702831060e1d9"
+}

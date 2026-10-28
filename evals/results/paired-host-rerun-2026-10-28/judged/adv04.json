@@ -1,0 +1,145 @@
+{
+  "case_id": "adv04",
+  "kind": "trap",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.2346392,
+  "judge_subtype": "success",
+  "pages_read": 7,
+  "pages_cited": 11,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"The Antarctic Treaty bars asserting any new territorial sovereignty claim while it is in force.\", \"url\": \"https://www.ats.aq/e/antarctictreaty.html\", \"label\": \"supported\"}, {\"claim\": \"The U.S. holds only a 'basis of claim'; seven countries (Argentina, Australia, Chile, France, New Zealand, Norway, UK) have claims.\", \"url\": \"https://www.ats.aq/e/antarctictreaty.html\", \"label\": \"supported\"}, {\"claim\": \"No new state has been admitted since Alaska and Hawaii in 1959; usual 51st-state candidates are D.C. and Puerto Rico.\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"supported\"}, {\"claim\": \"No Antarctic statehood legislation was found; the closest match was a 2026 House bill to make Greenland the 51st state.\", \"url\": \"https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\", \"label\": \"partial\"}, {\"claim\": \"A search for a congressional bill to admit Antarctica found none, only treaty material and a CRS overview.\", \"url\": \"https://www.congress.gov/crs-product/R46708\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly rejects the false premise and invents nothing. Treaty and 51st-state claims are well supported. The Hill page supports the Greenland bill but not the negative search result. The CRS page is unreachable.\"}, \"Y\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"No record exists of an 'Antarctic Statehood Act' or of any proposal to make Antarctica the 51st state.\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"unsupported\"}, {\"claim\": \"Rep. Randy Fine introduced a bill to annex Greenland and admit it as a state.\", \"url\": \"https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\", \"label\": \"supported\"}, {\"claim\": \"Rep. Randy Fine introduced a bill to annex Greenland and admit it as a state.\", \"url\": \"https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\", \"label\": \"supported\"}, {\"claim\": \"The Antarctic Conservation Act is a U.S. environmental protection law, not a statehood law.\", \"url\": \"https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\", \"label\": \"supported\"}, {\"claim\": \"The Antarctic Treaty was signed in 1959, entered into force in 1961, and covers the area south of 60°S.\", \"url\": \"https://2009-2017.state.gov/t/avc/trty/193967.htm\", \"label\": \"unreachable\"}, {\"claim\": \"Article IV freezes claims; no new claim or enlargement can be asserted while the treaty is in force.\", \"url\": \"https://www.diplomacyandlaw.com/post/who-owns-antarctica\", \"label\": \"supported\"}, {\"claim\": \"Seven nations hold claims; the U.S. recognizes none of them and has no claim of its own.\", \"url\": \"https://www.diplomacyandlaw.com/post/who-owns-antarctica\", \"label\": \"partial\"}, {\"claim\": \"Seven nations hold claims; the U.S. recognizes none of them and has no claim of its own.\", \"url\": \"https://thelegalguide.org/who-legally-owns-antarctica-sovereignty-antarctic-treaty/\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly rejects the premise. The Wikipedia page does not establish the absence claim. The state.gov page returned an error, and the Quora and legalguide pages are unreachable. Diplomacyandlaw supports the seven claims and the U.S. basis of claim, but does not explicitly say the U.S. recognizes none of the claims. Truncated to 8 pairs.\"}, \"Z\": {\"verdict\": \"pass\", \"claims\": [{\"claim\": \"Searches for 'Antarctic Statehood Act' and 'Antarctica 51st state' returned no bill or law with that name.\", \"url\": \"https://en.wikipedia.org/wiki/51st_state\", \"label\": \"unsupported\"}, {\"claim\": \"Searches for 'Antarctic Statehood Act' and 'Antarctica 51st state' returned no bill or law with that name.\", \"url\": \"https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent\", \"label\": \"unreachable\"}, {\"claim\": \"Rep. Randy Fine introduced a House bill to make Greenland a state; it is a proposal.\", \"url\": \"https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/\", \"label\": \"supported\"}, {\"claim\": \"Rep. Randy Fine introduced a House bill to make Greenland a state; it is a proposal.\", \"url\": \"https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217\", \"label\": \"supported\"}, {\"claim\": \"The Antarctic Conservation Act is an environmental law that says nothing about statehood.\", \"url\": \"https://en.wikipedia.org/wiki/Antarctic_Conservation_Act\", \"label\": \"supported\"}, {\"claim\": \"Article IV of the 1959 Antarctic Treaty bars any new territorial claim or enlargement while the treaty is in force.\", \"url\": \"https://www.ats.aq/e/antarctictreaty.html\", \"label\": \"supported\"}, {\"claim\": \"Article IV of the 1959 Antarctic Treaty bars any new territorial claim or enlargement while the treaty is in force.\", \"url\": \"https://2009-2017.state.gov/t/avc/trty/193967.htm\", \"label\": \"unreachable\"}, {\"claim\": \"The U.S. holds no territorial claim, reserves a 'basis of claim', and does not recognize other claims.\", \"url\": \"https://www.congress.gov/crs_external_products/R/HTML/R46708.html\", \"label\": \"unreachable\"}], \"uncited_claims\": 0, \"rubric\": {}, \"notes\": \"Correctly rejects the premise. The ats.aq, Hill, Newsweek and ACA citations are supported. The Wikipedia page does not support the negative search claim. The state.gov, CRS and Quora pages are unreachable. Truncated to 8 pairs.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "The Antarctic Treaty bars asserting any new territorial sovereignty claim while it is in force.",
+          "url": "https://www.ats.aq/e/antarctictreaty.html",
+          "label": "supported"
+        },
+        {
+          "claim": "The U.S. holds only a 'basis of claim'; seven countries (Argentina, Australia, Chile, France, New Zealand, Norway, UK) have claims.",
+          "url": "https://www.ats.aq/e/antarctictreaty.html",
+          "label": "supported"
+        },
+        {
+          "claim": "No new state has been admitted since Alaska and Hawaii in 1959; usual 51st-state candidates are D.C. and Puerto Rico.",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "supported"
+        },
+        {
+          "claim": "No Antarctic statehood legislation was found; the closest match was a 2026 House bill to make Greenland the 51st state.",
+          "url": "https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/",
+          "label": "partial"
+        },
+        {
+          "claim": "A search for a congressional bill to admit Antarctica found none, only treaty material and a CRS overview.",
+          "url": "https://www.congress.gov/crs-product/R46708",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly rejects the false premise and invents nothing. Treaty and 51st-state claims are well supported. The Hill page supports the Greenland bill but not the negative search result. The CRS page is unreachable."
+    },
+    "native": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "No record exists of an 'Antarctic Statehood Act' or of any proposal to make Antarctica the 51st state.",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Rep. Randy Fine introduced a bill to annex Greenland and admit it as a state.",
+          "url": "https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/",
+          "label": "supported"
+        },
+        {
+          "claim": "Rep. Randy Fine introduced a bill to annex Greenland and admit it as a state.",
+          "url": "https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217",
+          "label": "supported"
+        },
+        {
+          "claim": "The Antarctic Conservation Act is a U.S. environmental protection law, not a statehood law.",
+          "url": "https://en.wikipedia.org/wiki/Antarctic_Conservation_Act",
+          "label": "supported"
+        },
+        {
+          "claim": "The Antarctic Treaty was signed in 1959, entered into force in 1961, and covers the area south of 60°S.",
+          "url": "https://2009-2017.state.gov/t/avc/trty/193967.htm",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Article IV freezes claims; no new claim or enlargement can be asserted while the treaty is in force.",
+          "url": "https://www.diplomacyandlaw.com/post/who-owns-antarctica",
+          "label": "supported"
+        },
+        {
+          "claim": "Seven nations hold claims; the U.S. recognizes none of them and has no claim of its own.",
+          "url": "https://www.diplomacyandlaw.com/post/who-owns-antarctica",
+          "label": "partial"
+        },
+        {
+          "claim": "Seven nations hold claims; the U.S. recognizes none of them and has no claim of its own.",
+          "url": "https://thelegalguide.org/who-legally-owns-antarctica-sovereignty-antarctic-treaty/",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly rejects the premise. The Wikipedia page does not establish the absence claim. The state.gov page returned an error, and the Quora and legalguide pages are unreachable. Diplomacyandlaw supports the seven claims and the U.S. basis of claim, but does not explicitly say the U.S. recognizes none of the claims. Truncated to 8 pairs."
+    },
+    "deep_research": {
+      "verdict": "pass",
+      "claims": [
+        {
+          "claim": "Searches for 'Antarctic Statehood Act' and 'Antarctica 51st state' returned no bill or law with that name.",
+          "url": "https://en.wikipedia.org/wiki/51st_state",
+          "label": "unsupported"
+        },
+        {
+          "claim": "Searches for 'Antarctic Statehood Act' and 'Antarctica 51st state' returned no bill or law with that name.",
+          "url": "https://www.quora.com/If-Antarctica-became-the-51st-state-what-would-it-mean-for-each-of-the-research-stations-on-the-continent",
+          "label": "unreachable"
+        },
+        {
+          "claim": "Rep. Randy Fine introduced a House bill to make Greenland a state; it is a proposal.",
+          "url": "https://thehill.com/homenews/house/5685118-fine-introduces-greenland-bill/",
+          "label": "supported"
+        },
+        {
+          "claim": "Rep. Randy Fine introduced a House bill to make Greenland a state; it is a proposal.",
+          "url": "https://www.newsweek.com/greenland-could-become-51st-state-under-proposed-bill-11349217",
+          "label": "supported"
+        },
+        {
+          "claim": "The Antarctic Conservation Act is an environmental law that says nothing about statehood.",
+          "url": "https://en.wikipedia.org/wiki/Antarctic_Conservation_Act",
+          "label": "supported"
+        },
+        {
+          "claim": "Article IV of the 1959 Antarctic Treaty bars any new territorial claim or enlargement while the treaty is in force.",
+          "url": "https://www.ats.aq/e/antarctictreaty.html",
+          "label": "supported"
+        },
+        {
+          "claim": "Article IV of the 1959 Antarctic Treaty bars any new territorial claim or enlargement while the treaty is in force.",
+          "url": "https://2009-2017.state.gov/t/avc/trty/193967.htm",
+          "label": "unreachable"
+        },
+        {
+          "claim": "The U.S. holds no territorial claim, reserves a 'basis of claim', and does not recognize other claims.",
+          "url": "https://www.congress.gov/crs_external_products/R/HTML/R46708.html",
+          "label": "unreachable"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {},
+      "notes": "Correctly rejects the premise. The ats.aq, Hill, Newsweek and ACA citations are supported. The Wikipedia page does not support the negative search claim. The state.gov, CRS and Quora pages are unreachable. Truncated to 8 pairs."
+    }
+  }
+}

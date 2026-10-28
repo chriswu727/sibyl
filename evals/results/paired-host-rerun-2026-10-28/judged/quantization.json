@@ -1,0 +1,175 @@
+{
+  "case_id": "quantization",
+  "kind": "research",
+  "label_map": {
+    "X": "sibyl",
+    "Y": "native",
+    "Z": "deep_research"
+  },
+  "judge_cost_usd": 0.4176312,
+  "judge_subtype": "success",
+  "pages_read": 9,
+  "pages_cited": 10,
+  "raw": "```json\n{\"answers\": {\"X\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"GPTQ is a one-shot weight quantizer based on approximate second-order (Hessian) information.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"}, {\"claim\": \"GPTQ works layer by layer on a per-layer reconstruction problem and was calibrated on 128 random C4 segments of 2048 tokens.\", \"url\": \"https://arxiv.org/pdf/2210.17323\", \"label\": \"unsupported\"}, {\"claim\": \"AWQ identifies salient weight channels from the activation distribution, not from the weights.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"}, {\"claim\": \"AWQ says it is orthogonal to GPTQ and can be combined with it; at INT2, RTN fails and AWQ improves on top of GPTQ.\", \"url\": \"https://arxiv.org/html/2306.00978\", \"label\": \"unsupported\"}, {\"claim\": \"GPTQ reports 3–4 bit quantization of OPT and BLOOM models up to 175B parameters with small perplexity loss.\", \"url\": \"https://arxiv.org/pdf/2210.17323\", \"label\": \"supported\"}, {\"claim\": \"GPTQ's 3.25x (A100) and 4.5x (A6000) speedups are for 3-bit OPT-175B against FP16 on 5 and 8 GPUs.\", \"url\": \"https://arxiv.org/pdf/2210.17323\", \"label\": \"partial\"}, {\"claim\": \"GPTQ's speedups come from reduced memory movement, not less computation; it does not consider activation quantization; its kernels target memory-bound generation.\", \"url\": \"https://arxiv.org/pdf/2210.17323\", \"label\": \"partial\"}, {\"claim\": \"An independent study says prior work was mostly limited to perplexity or basic knowledge tasks, finds that quantized models struggle with instruction-following and hallucination detection, that AWQ tends to beat GPTQ, and that small models drop sharply at 4-bit.\", \"url\": \"https://arxiv.org/abs/2409.11055\", \"label\": \"supported\"}], \"uncited_claims\": 1, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"The mechanism and scope claims grounded in the abstracts and intros check out. Several material specifics do not appear in the cited excerpts: the C4 calibration details, the 'orthogonal to GPTQ' INT2 result, the MBPP and GSM8K figures, and the 5/8-GPU baseline. The answer is transparent that the AWQ claims were not recorded. The 2409.11055 abstract genuinely narrows the conclusions about perplexity and model size. The claim that 'negligible accuracy loss' is the authors' wording has no URL.\"}, \"Y\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"GPTQ is a one-shot post-training weight quantizer using approximate second-order information, targets 3–4 bits, and reports 'reasonable' accuracy at 2-bit/ternary.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"}, {\"claim\": \"GPTQ calibrates on 128 random 2048-token C4 segments and was run on OPT and BLOOM up to 175B.\", \"url\": \"https://arxiv.org/html/2210.17323\", \"label\": \"partial\"}, {\"claim\": \"GPTQ does not quantize activations; its speedup comes from reduced memory movement via on-the-fly dequantization in a custom kernel, with no computational reduction.\", \"url\": \"https://arxiv.org/html/2210.17323\", \"label\": \"partial\"}, {\"claim\": \"GPTQ's 3.25x A100 / 4.5x A6000 speedups are for batch-size-1, memory-bound generation.\", \"url\": \"https://arxiv.org/html/2210.17323\", \"label\": \"partial\"}, {\"claim\": \"AWQ is weight-only, says protecting 1% of salient weights greatly reduces error, and picks channels from activation distributions.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"}, {\"claim\": \"AWQ scales salient channels via an equivalent transformation instead of mixed precision, with scales from offline activation statistics and no backprop or reconstruction.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"}, {\"claim\": \"TinyChat gives >3x speedup over HF FP16 on desktop and mobile GPUs; AWQ is evaluated on instruction-tuned and multimodal models and on coding and math.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"}, {\"claim\": \"At INT3-g128, AWQ beats GPTQ on WikiText-2 perplexity for every LLaMA/Llama-2 size (e.g. 6.35 vs 8.81; 3.74 vs 3.88); INT4 Llama-2-7B 5.60 vs 5.69; 10x fewer calibration sequences; INT2 OPT-13B 16.74→13.25.\", \"url\": \"https://arxiv.org/html/2306.00978\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 1}, \"notes\": \"The abstract-level mechanism claims are well supported. The specific perplexity, calibration-count and INT2 numbers do not appear in the AWQ HTML excerpt, and the answer admits a small model summarized those pages. It uses only the two original papers and discloses that no independent benchmarks were retrieved. Its 'what not to infer' section is reasoned from within the papers, not from external evidence.\"}, \"Z\": {\"verdict\": \"n/a\", \"claims\": [{\"claim\": \"GPTQ is a one-shot post-training weight quantizer based on approximate second-order information and needs no retraining.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"}, {\"claim\": \"AWQ finds salient channels from activation statistics, scales them up, avoids mixed precision, and says protecting 1% of salient weights greatly reduces error.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"}, {\"claim\": \"GPTQ quantizes a 175B model to 3–4 bits in about 4 GPU hours on a single GPU, with ~3.25x A100 and 4.5x A6000 speedups over FP16 and 'reasonable' accuracy at 2-bit/ternary.\", \"url\": \"https://arxiv.org/abs/2210.17323\", \"label\": \"supported\"}, {\"claim\": \"AWQ covers instruction-tuned and multimodal LMs plus coding and math; TinyChat gives >3x over HF FP16; 70B Llama-2 runs on mobile GPUs.\", \"url\": \"https://arxiv.org/abs/2306.00978\", \"label\": \"supported\"}, {\"claim\": \"A 13-benchmark study found GPTQ 4-bit degrades sharply (Llama-3.2-1B: -25.32% GSM8k, -16.01% IFEval) and AWQ generally ahead of GPTQ.\", \"url\": \"https://arxiv.org/pdf/2409.11055\", \"label\": \"partial\"}, {\"claim\": \"A long-context study reported a significant negative effect for GPTQ-int4 but none for AWQ-int4.\", \"url\": \"https://aclanthology.org/2025.emnlp-main.479.pdf\", \"label\": \"unreachable\"}, {\"claim\": \"On Llama-3.1 8B/70B (W4A16, g128), GPTQ and AWQ are roughly tied academically, while GPTQ leads on real-world tasks (e.g. HumanEval 67.1 vs 63.0 at 8B).\", \"url\": \"https://arxiv.org/html/2411.02355v1\", \"label\": \"partial\"}, {\"claim\": \"In a vLLM test on Qwen2.5-32B on an H200, throughput is set by the kernel (AWQ 67.73, GPTQ 276.60, Marlin-GPTQ 712.45, Marlin-AWQ 741.04 tok/s); HumanEval 56.1/51.8/46.3 and perplexity 6.56/6.84/6.90.\", \"url\": \"https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks\", \"label\": \"unsupported\"}], \"uncited_claims\": 0, \"rubric\": {\"coverage\": 2, \"support\": 0, \"source_quality\": 2, \"counterevidence\": 2}, \"notes\": \"The abstract claims are well supported. 2409.11055 supports AWQ>GPTQ and small-model drops but not the specific percentages, which the answer says came from search summaries. 2411.02355 supports 'simple GPTQ more accurate than AWQ on real-world tasks' but not the cited numbers. The jarvislabs excerpt ends before any benchmark numbers, so those material figures are unsupported. The answer discloses that it read only abstracts and that the EMNLP page was unread. The independent sources genuinely challenge a fixed method ranking.\"}}}\n```",
+  "by_condition": {
+    "sibyl": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "GPTQ is a one-shot weight quantizer based on approximate second-order (Hessian) information.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "GPTQ works layer by layer on a per-layer reconstruction problem and was calibrated on 128 random C4 segments of 2048 tokens.",
+          "url": "https://arxiv.org/pdf/2210.17323",
+          "label": "unsupported"
+        },
+        {
+          "claim": "AWQ identifies salient weight channels from the activation distribution, not from the weights.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ says it is orthogonal to GPTQ and can be combined with it; at INT2, RTN fails and AWQ improves on top of GPTQ.",
+          "url": "https://arxiv.org/html/2306.00978",
+          "label": "unsupported"
+        },
+        {
+          "claim": "GPTQ reports 3–4 bit quantization of OPT and BLOOM models up to 175B parameters with small perplexity loss.",
+          "url": "https://arxiv.org/pdf/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "GPTQ's 3.25x (A100) and 4.5x (A6000) speedups are for 3-bit OPT-175B against FP16 on 5 and 8 GPUs.",
+          "url": "https://arxiv.org/pdf/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "GPTQ's speedups come from reduced memory movement, not less computation; it does not consider activation quantization; its kernels target memory-bound generation.",
+          "url": "https://arxiv.org/pdf/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "An independent study says prior work was mostly limited to perplexity or basic knowledge tasks, finds that quantized models struggle with instruction-following and hallucination detection, that AWQ tends to beat GPTQ, and that small models drop sharply at 4-bit.",
+          "url": "https://arxiv.org/abs/2409.11055",
+          "label": "supported"
+        }
+      ],
+      "uncited_claims": 1,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "The mechanism and scope claims grounded in the abstracts and intros check out. Several material specifics do not appear in the cited excerpts: the C4 calibration details, the 'orthogonal to GPTQ' INT2 result, the MBPP and GSM8K figures, and the 5/8-GPU baseline. The answer is transparent that the AWQ claims were not recorded. The 2409.11055 abstract genuinely narrows the conclusions about perplexity and model size. The claim that 'negligible accuracy loss' is the authors' wording has no URL."
+    },
+    "native": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "GPTQ is a one-shot post-training weight quantizer using approximate second-order information, targets 3–4 bits, and reports 'reasonable' accuracy at 2-bit/ternary.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "GPTQ calibrates on 128 random 2048-token C4 segments and was run on OPT and BLOOM up to 175B.",
+          "url": "https://arxiv.org/html/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "GPTQ does not quantize activations; its speedup comes from reduced memory movement via on-the-fly dequantization in a custom kernel, with no computational reduction.",
+          "url": "https://arxiv.org/html/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "GPTQ's 3.25x A100 / 4.5x A6000 speedups are for batch-size-1, memory-bound generation.",
+          "url": "https://arxiv.org/html/2210.17323",
+          "label": "partial"
+        },
+        {
+          "claim": "AWQ is weight-only, says protecting 1% of salient weights greatly reduces error, and picks channels from activation distributions.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ scales salient channels via an equivalent transformation instead of mixed precision, with scales from offline activation statistics and no backprop or reconstruction.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "TinyChat gives >3x speedup over HF FP16 on desktop and mobile GPUs; AWQ is evaluated on instruction-tuned and multimodal models and on coding and math.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "At INT3-g128, AWQ beats GPTQ on WikiText-2 perplexity for every LLaMA/Llama-2 size (e.g. 6.35 vs 8.81; 3.74 vs 3.88); INT4 Llama-2-7B 5.60 vs 5.69; 10x fewer calibration sequences; INT2 OPT-13B 16.74→13.25.",
+          "url": "https://arxiv.org/html/2306.00978",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 1
+      },
+      "notes": "The abstract-level mechanism claims are well supported. The specific perplexity, calibration-count and INT2 numbers do not appear in the AWQ HTML excerpt, and the answer admits a small model summarized those pages. It uses only the two original papers and discloses that no independent benchmarks were retrieved. Its 'what not to infer' section is reasoned from within the papers, not from external evidence."
+    },
+    "deep_research": {
+      "verdict": "n/a",
+      "claims": [
+        {
+          "claim": "GPTQ is a one-shot post-training weight quantizer based on approximate second-order information and needs no retraining.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ finds salient channels from activation statistics, scales them up, avoids mixed precision, and says protecting 1% of salient weights greatly reduces error.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "GPTQ quantizes a 175B model to 3–4 bits in about 4 GPU hours on a single GPU, with ~3.25x A100 and 4.5x A6000 speedups over FP16 and 'reasonable' accuracy at 2-bit/ternary.",
+          "url": "https://arxiv.org/abs/2210.17323",
+          "label": "supported"
+        },
+        {
+          "claim": "AWQ covers instruction-tuned and multimodal LMs plus coding and math; TinyChat gives >3x over HF FP16; 70B Llama-2 runs on mobile GPUs.",
+          "url": "https://arxiv.org/abs/2306.00978",
+          "label": "supported"
+        },
+        {
+          "claim": "A 13-benchmark study found GPTQ 4-bit degrades sharply (Llama-3.2-1B: -25.32% GSM8k, -16.01% IFEval) and AWQ generally ahead of GPTQ.",
+          "url": "https://arxiv.org/pdf/2409.11055",
+          "label": "partial"
+        },
+        {
+          "claim": "A long-context study reported a significant negative effect for GPTQ-int4 but none for AWQ-int4.",
+          "url": "https://aclanthology.org/2025.emnlp-main.479.pdf",
+          "label": "unreachable"
+        },
+        {
+          "claim": "On Llama-3.1 8B/70B (W4A16, g128), GPTQ and AWQ are roughly tied academically, while GPTQ leads on real-world tasks (e.g. HumanEval 67.1 vs 63.0 at 8B).",
+          "url": "https://arxiv.org/html/2411.02355v1",
+          "label": "partial"
+        },
+        {
+          "claim": "In a vLLM test on Qwen2.5-32B on an H200, throughput is set by the kernel (AWQ 67.73, GPTQ 276.60, Marlin-GPTQ 712.45, Marlin-AWQ 741.04 tok/s); HumanEval 56.1/51.8/46.3 and perplexity 6.56/6.84/6.90.",
+          "url": "https://jarvislabs.ai/blog/vllm-quantization-complete-guide-benchmarks",
+          "label": "unsupported"
+        }
+      ],
+      "uncited_claims": 0,
+      "rubric": {
+        "coverage": 2,
+        "support": 0,
+        "source_quality": 2,
+        "counterevidence": 2
+      },
+      "notes": "The abstract claims are well supported. 2409.11055 supports AWQ>GPTQ and small-model drops but not the specific percentages, which the answer says came from search summaries. 2411.02355 supports 'simple GPTQ more accurate than AWQ on real-world tasks' but not the cited numbers. The jarvislabs excerpt ends before any benchmark numbers, so those material figures are unsupported. The answer discloses that it read only abstracts and that the EMNLP page was unread. The independent sources genuinely challenge a fixed method ranking."
+    }
+  }
+}

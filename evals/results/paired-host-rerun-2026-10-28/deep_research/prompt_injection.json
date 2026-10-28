@@ -1,0 +1,73 @@
+{
+  "case_id": "prompt_injection",
+  "condition": "deep_research",
+  "elapsed_seconds": 30.6,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.10135730000000001,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 14853,
+    "cache_read_input_tokens": 34613,
+    "output_tokens": 3292,
+    "output_tokens_details": {
+      "thinking_tokens": 243
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 14853,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 3292,
+      "cacheReadInputTokens": 34613,
+      "cacheCreationInputTokens": 14853,
+      "webSearchRequests": 0,
+      "costUSD": 0.09580530000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 243,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 14853,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 28400,
+      "outputTokens": 5424,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.005552,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 3110,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebFetch": 5
+  },
+  "final_answer": "**Answer:** Retrieved web content is a trust boundary because an LLM reads text it was told to act on and text it merely fetched through the same channel. Neither the model nor the application can reliably tell the two apart. Anyone who can put text on a page the agent fetches can therefore try to steer the agent, without access to the user or the system prompt. No control I found removes that risk. The ones below reduce likelihood or blast radius, and the sources describe the residual risk as unresolved. I used five of the eight allowed retrievals. The sources are one OWASP page, one paper, one vendor post, one government blog and one practitioner blog. The numbers come from Anthropic's own internal testing.\n\n**Why it is a trust boundary**\n\n- Indirect injection happens when the model takes in external content, such as websites or files, and that content changes the model's behavior in unintended ways. https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- The injected text doesn't have to be visible to a human, as long as the model parses it. https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Attackers can inject prompts into data likely to be retrieved, which exploits applications remotely without a direct interface. https://arxiv.org/abs/2302.12173\n- LLM-integrated applications \"blur the line between data and instructions\", because the model is steered by natural language. https://arxiv.org/abs/2302.12173\n- The authors showed attacks against Bing's GPT-4-powered Chat and code-completion engines. They list data theft, worming and contamination of the information ecosystem as impacts. https://arxiv.org/abs/2302.12173\n- Unlike SQL injection, there is no parameterised-query equivalent. The model sees only a stream of tokens, with no built-in data/instruction distinction. https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\n- The risk becomes data theft when an agent combines private data access, exposure to untrusted content and the ability to communicate externally. Simon Willison calls this the \"lethal trifecta\". https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/\n\n**Controls that reduce risk**\n\n- Least privilege and deterministic, non-LLM controls limit what a confused model can do. https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection and https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Human approval for high-risk actions. https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Marking and segregating untrusted content, for example with XML tags. This only makes injection harder. https://genai.owasp.org/llmrisk/llm01-prompt-injection/ and https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\n- Defining output formats and validating them in code. https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Input and output filtering. https://genai.owasp.org/llmrisk/llm01-prompt-injection/ NCSC warns that deny-lists of known phrases fail because attackers can rephrase. https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\n- Model training on simulated injected web pages, classifiers over untrusted content, and continuous red teaming. https://www.anthropic.com/research/prompt-injection-defenses\n- Logging inputs, outputs and tool calls, and adversarial testing that treats the model as an untrusted user. https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection and https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Breaking the lethal trifecta, meaning not combining all three capabilities in one agent. Willison's only firm advice for end users is to avoid that combination. https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/\n\n**Why none of these amounts to immunity**\n\n- OWASP says it is unclear whether fool-proof prevention exists given the stochastic nature of generative AI. It presents its measures as mitigating impact. It also says RAG and fine-tuning do not fully mitigate injection. https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Anthropic's measured attack success rate for browser-agent injection, from internal adaptive Best-of-N testing at 100 attempts per environment, fell from 8–13.8% (model only) to 1.4–2.4% with improved safeguards. Anthropic still calls prompt injection \"far from a solved problem\" and says no browser agent is immune. It also says even about 1% is meaningful risk. https://www.anthropic.com/research/prompt-injection-defenses\n- NCSC suggests prompt injection may never be fully mitigated the way SQL injection can be. It advises treating it as a residual risk and being cautious of products that claim to stop it. https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\n- Willison argues guardrails are unreliable, and that \"95% of attacks\" is a failing grade in web security. https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/\n- The 2023 paper said effective mitigations were lacking at that time. That is dated, and the later sources show partial progress without a resolution. https://arxiv.org/abs/2302.12173\n\n**Gaps in the evidence**\n\n- I didn't retrieve or evaluate architectural defenses such as CaMeL, which Willison mentions. I can't say how well they hold up.\n- The attack-rate figures are vendor-reported and not independently replicated in these sources. They are not comparable across vendors.\n- Willison's \"unreliable\" claim is an expert opinion, not a measured result.\n\nSources:\n- https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- https://arxiv.org/abs/2302.12173\n- https://www.anthropic.com/research/prompt-injection-defenses\n- https://www.ncsc.gov.uk/blog-post/prompt-injection-is-not-sql-injection\n- https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/",
+  "final_answer_sha256": "5ae4ea22c48b21fe3d9f650d236c51564db602f57f30e94577aca80add5fd9c6",
+  "raw_stream_sha256": "53baacdafd594ac3459a0f6d71a69ec79d4b45c30252d8764242c4aaf19839d8"
+}

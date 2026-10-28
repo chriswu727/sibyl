@@ -1,0 +1,74 @@
+{
+  "case_id": "adv02",
+  "condition": "deep_research",
+  "elapsed_seconds": 25.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 5,
+  "cli_reported_cost_usd": 0.1148148,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 13153,
+    "cache_read_input_tokens": 34502,
+    "output_tokens": 1320,
+    "output_tokens_details": {
+      "thinking_tokens": 118
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 13153,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13023,
+      "outputTokens": 2016,
+      "cacheReadInputTokens": 34502,
+      "cacheCreationInputTokens": 13153,
+      "webSearchRequests": 1,
+      "costUSD": 0.1122682,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 118,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 13153,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 19741,
+      "outputTokens": 1145,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0025466000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 920,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "Skill": 1,
+    "WebSearch": 1,
+    "WebFetch": 1
+  },
+  "final_answer": "**Direct answer: no one has. No human has ever walked on Mars, so the question rests on a false premise.** Only uncrewed robotic craft have operated on the surface.\n\n**Claims and sources**\n\n- No human has landed on or walked on Mars. NASA's Mars page lists the planet's population as \"zero\" and calls it a planet inhabited entirely by robots.\n  https://www.nasa.gov/humans-in-space/humans-to-mars/\n\n- Crewed Mars missions are still in development. NASA is working on power, life support, spacesuits, communications and habitats.\n  https://www.nasa.gov/humans-in-space/humans-to-mars/\n\n- NASA's stated goal is to send astronauts to Mars \"as early as the 2030s\", and it uses a 2039 roundtrip as an example. The page says it is being updated for recent Artemis program changes, so these dates may shift.\n  https://www.nasa.gov/humans-in-space/humans-to-mars/\n\n- The closest thing to \"Mars crews\" so far is Earth-based simulation. NASA's first CHAPEA crew finished a 378-day simulated Mars surface mission at Johnson Space Center. It began June 25, 2023, and the crew left the habitat on July 6.\n  https://www.nasa.gov/missions/analog-field-testing/chapea/first-mars-crew-completes-yearlong-simulated-red-planet-nasa-mission/\n\n**Caveats**\n\n- I read one page in full, NASA's Mars page. The CHAPEA claim comes from a search-result snippet, and I didn't open that page.\n- The NASA page doesn't state outright that nobody has landed on Mars. That part is inferred from the \"zero\" population line and the \"still in development\" wording.\n- One search result (theopenknowledge.com) claimed a NASA crew was named for a 2028 Mars mission. It conflicts with NASA's own page and looks unreliable, so I disregarded it.\n- I used two source retrievals, one search and one page read.\n\nSources:\n- [NASA: Humans to Mars](https://www.nasa.gov/humans-in-space/humans-to-mars/)\n- [NASA: First Mars Crew Completes Yearlong Simulated Red Planet Mission](https://www.nasa.gov/missions/analog-field-testing/chapea/first-mars-crew-completes-yearlong-simulated-red-planet-nasa-mission/)",
+  "final_answer_sha256": "bd9252eea591bfcab6c09645fd42976e6fab386c903c65b668e110669973a4ab",
+  "raw_stream_sha256": "ecb3ec5701274182781cf663b103765c5c0e572f15a17ebe7a4699a8be71fd83"
+}

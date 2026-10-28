@@ -1,0 +1,73 @@
+{
+  "case_id": "prompt_injection",
+  "condition": "native",
+  "elapsed_seconds": 22.2,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.0868647,
+  "usage": {
+    "input_tokens": 4,
+    "cache_creation_input_tokens": 3286,
+    "cache_read_input_tokens": 6583,
+    "output_tokens": 1794,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3286,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 14641,
+      "outputTokens": 3141,
+      "cacheReadInputTokens": 6583,
+      "cacheCreationInputTokens": 3286,
+      "webSearchRequests": 1,
+      "costUSD": 0.08449430000000001,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3286,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 13159,
+      "outputTokens": 2109,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0023704,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1581,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Retrieved web content is a trust boundary because the web is written by anyone, and an LLM reads that text in the same channel as its trusted instructions. The model can't reliably tell data it should read from commands it should follow. An attacker who controls a page can therefore steer an agent without touching the model or the application. Controls reduce the likelihood or the impact of an attack. None of the sources I found shows that any control, or any combination, makes a system immune.\n\n**Why it's a trust boundary**\n\n- LLM-integrated applications \"blur the line between data and instructions.\" Attackers can plant instructions in content the application is likely to retrieve, with no direct access to the model.\n  - https://arxiv.org/abs/2302.12173\n- Indirect injection happens when an LLM accepts input from external sources such as websites or files, and that content changes the model's behavior.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Secondary source (a search-tool summary, not read in full): developer instructions and third-party data share one natural-language context, so the model can't reliably track provenance. The sources it cites call this an architectural problem, not a model bug.\n  - https://www.lakera.ai/blog/indirect-prompt-injection\n- This has been observed in the wild, not just in the lab. I only saw Unit 42's description in a search summary and didn't read the page.\n  - https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/\n\n**Controls that reduce risk**\n\n- OWASP lists these:\n  - limiting the model's role in the system prompt\n  - validating output formats with deterministic code\n  - input and output filtering\n  - least privilege, with extensible functions handled in application code\n  - human approval for high-risk actions\n  - separating and labeling untrusted content\n  - regular adversarial testing, treating the model as an untrusted user\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- Further controls come only from the search-tool summary, which I didn't verify on the pages themselves:\n  - Marking and delimiting untrusted content, such as spotlighting and structured prompting.\n  - Instruction hierarchy and adversarial training.\n  - Deny-by-default tool policies, taint tracking, egress restrictions and sandboxing.\n  - Research defenses such as AgentSentry.\n  - https://www.lakera.ai/blog/indirect-prompt-injection\n  - https://arxiv.org/pdf/2609.22712\n  - https://arxiv.org/pdf/2602.22724\n\n**Why none of them confers immunity**\n\n- OWASP says \"it is unclear if there are fool-proof methods of prevention,\" because model behavior is stochastic. It frames the measures as reducing impact, not eliminating injection.\n  - https://genai.owasp.org/llmrisk/llm01-prompt-injection/\n- According to the summary, prompt-based instructions are \"useful, but not a strong boundary.\" Spotlighting and instruction hierarchies give partial reduction, and adaptive attacks remain hard to stop.\n  - https://www.lakera.ai/blog/indirect-prompt-injection\n\n**Limits of the evidence**\n\n- I used four retrievals: one search and three page fetches. I read only two pages directly (OWASP and the arXiv abstract).\n- The mitigation details beyond OWASP rest on a search-tool summary. I didn't verify the effectiveness numbers or the claim that action-constraining designs give \"strong guarantees.\"\n- The evidence doesn't rank the controls or quantify how much each one reduces risk.\n\nSources:\n- [Not what you've signed up for (arXiv 2302.12173)](https://arxiv.org/abs/2302.12173)\n- [OWASP LLM01: Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)\n- [Lakera: Indirect Prompt Injection](https://www.lakera.ai/blog/indirect-prompt-injection)\n- [Unit 42: Web-based indirect prompt injection in the wild](https://unit42.paloaltonetworks.com/ai-agent-prompt-injection/)\n- [Trustworthy Agentic AI (arXiv 2609.22712)](https://arxiv.org/pdf/2609.22712)\n- [AgentSentry (arXiv 2602.22724)](https://arxiv.org/pdf/2602.22724)",
+  "final_answer_sha256": "cc2b321489c9ff8be133dad93641b62a3a1120e803a316c3011b4fb6f1de548e",
+  "raw_stream_sha256": "873a798970b2ac4ffa53265f8b48c5f7028e5b828c637cf036b7c4c5c27206c8"
+}

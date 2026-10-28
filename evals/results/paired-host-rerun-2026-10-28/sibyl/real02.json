@@ -1,0 +1,59 @@
+{
+  "case_id": "real02",
+  "condition": "sibyl",
+  "elapsed_seconds": 36.7,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 8,
+  "cli_reported_cost_usd": 0.22519850000000002,
+  "usage": {
+    "input_tokens": 14,
+    "cache_creation_input_tokens": 24791,
+    "cache_read_input_tokens": 123525,
+    "output_tokens": 2438,
+    "output_tokens_details": {
+      "thinking_tokens": 90
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 24791,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 28396,
+      "outputTokens": 3689,
+      "cacheReadInputTokens": 123525,
+      "cacheCreationInputTokens": 24791,
+      "webSearchRequests": 2,
+      "costUSD": 0.22519850000000002,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 90,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 24791,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "mcp__sibyl__start_research": 1,
+    "WebSearch": 2,
+    "mcp__sibyl__continue_research": 3,
+    "mcp__sibyl__assess_research": 1
+  },
+  "final_answer": "**Direct answer:** Black Condor II (Ryan Kendall) died in *Infinite Crisis* #1 (2005), where Sinestro killed him.\n\nClaims and sources:\n\n- Black Condor dies in *Infinite Crisis* #1. The issue's annotations list \"Black Condor – killed by Sinestro\" under \"Deaths in this issue.\"\n  https://crisisonearthprime.com/infinite-crisis/ic01/\n\n- Sinestro killed him with a yellow power ring, during the Freedom Fighters' encounter with the Society at a Stagg Industries refinery outside Metropolis.\n  https://crisisonearthprime.com/infinite-crisis/ic01/\n\n- A second, independent review of the issue says \"Sinestro kills Black Condor too!\" while describing the Freedom Fighters walking into the villains' ambush.\n  https://www.chrisisoninfiniteearths.com/2017/07/infinite-crisis-1-2005.html\n\n- Ryan Kendall is the second Black Condor, and he was killed at the beginning of the *Infinite Crisis* storyline.\n  https://en.wikipedia.org/wiki/Black_Condor\n\n- DCU Guide also says Black Condor II was killed by Sinestro as the Freedom Fighters were attacked by the Society. It gives no issue number.\n  https://dcuguide.com/Black_Condor_(Ryan_Kendall)\n\n**Gaps and caveats:**\n- The \"December 2005\" cover date comes only from a search-result summary. I didn't read a page that states it, so treat it as unverified.\n- The Fandom and Comic Vine pages returned HTTP 403, so I couldn't read them directly.\n- The two sources that name issue #1 are fan-run annotation and review sites, not DC itself. No source I read named a different issue.\n- He was later revived as a Black Lantern in *Blackest Night*. That doesn't change where he died, and I didn't verify it.",
+  "final_answer_sha256": "c5b83f89388b664314b5c31625b46db167a2f427a75c012e2e2f95b69c4fc570",
+  "raw_stream_sha256": "a6e912cd1b2e3ba45aa5eba264495d51ada13584efc00e0b1d1d7860a231452f"
+}

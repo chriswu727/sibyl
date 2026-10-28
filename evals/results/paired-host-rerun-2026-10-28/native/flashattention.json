@@ -1,0 +1,72 @@
+{
+  "case_id": "flashattention",
+  "condition": "native",
+  "elapsed_seconds": 24.1,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 7,
+  "cli_reported_cost_usd": 0.0416201,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 3331,
+    "cache_read_input_tokens": 10940,
+    "output_tokens": 2422,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 3331,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 6,
+      "outputTokens": 2422,
+      "cacheReadInputTokens": 10940,
+      "cacheCreationInputTokens": 3331,
+      "webSearchRequests": 0,
+      "costUSD": 0.038650000000000004,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 0,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 3331,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 12656,
+      "outputTokens": 3409,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0029701,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 1945,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebFetch": 6
+  },
+  "final_answer": "**Direct answer:** FlashAttention is faster because standard attention is limited by memory traffic, not arithmetic. It computes the same result but reorders the computation so it makes far fewer reads and writes to GPU high-bandwidth memory (HBM). Its benchmark gains are tied to specific hardware, sequence lengths, kernel implementations and baselines, so you can't assume they carry over to other setups.\n\nI only read the arXiv abstracts. They don't give the full mechanism, such as the online softmax or backward-pass recomputation. I also did not check independent benchmarks. Anything beyond the abstracts below is not established by what I retrieved.\n\n**Claims about why it is exact and fast**\n\n- FlashAttention is described as an \"IO-aware exact attention algorithm\". It computes standard attention, not an approximation.\n  https://arxiv.org/abs/2205.14135\n\n- It uses tiling to cut the reads and writes between GPU HBM and on-chip SRAM.\n  https://arxiv.org/abs/2205.14135\n\n- The authors report that it needs fewer HBM accesses than standard attention. They also report it is optimal for a range of SRAM sizes.\n  https://arxiv.org/abs/2205.14135\n\n- The speedup therefore comes from changing the memory access pattern and not from changing the math. This is my inference from the abstract's framing as IO-aware, exact and tiled. The abstract doesn't spell out how exactness is preserved.\n  https://arxiv.org/abs/2205.14135\n\n**Claims about reported gains**\n\n- The original paper reports a 15% end-to-end speedup on BERT-large at sequence length 512. It reports 3× on GPT-2 at length 1K and 2.4× on Long Range Arena at lengths 1K–4K.\n  https://arxiv.org/abs/2205.14135\n\n- The block-sparse extension is approximate. It is separate from the exact algorithm, so \"FlashAttention is exact\" applies only to the dense version.\n  https://arxiv.org/abs/2205.14135\n\n- FlashAttention-2 gets about 2× over FlashAttention by changing work partitioning. It reduces non-matmul FLOPs, adds parallelism across thread blocks and divides work better among warps.\n  https://arxiv.org/abs/2307.08691\n\n- FlashAttention-2 reaches 50–73% of theoretical peak FLOPs/s on A100, versus 25–40% for the original. Its end-to-end GPT training reaches up to 225 TFLOPs/s per A100.\n  https://arxiv.org/abs/2307.08691\n\n- FlashAttention-3 targets Hopper GPUs (H100). It uses asynchronous Tensor Cores, TMA and FP8. The authors say FlashAttention-2 reached only 35% utilization on H100.\n  https://arxiv.org/abs/2407.08608\n\n- On H100, FlashAttention-3 reports 1.5–2.0× over prior versions. It reaches up to 740 TFLOPs/s in FP16 (about 75% utilization) and close to 1.2 PFLOPs/s in FP8.\n  https://arxiv.org/abs/2407.08608\n\n**What limits generalizing the gains**\n\n- Each version's headline numbers come from one hardware generation: A100 for FlashAttention-2 and H100 for FlashAttention-3. The abstracts also show later versions depend on hardware-specific features. The abstracts don't test other GPUs, so transfer there is not established. These are my inferences, not claims the authors make.\n  https://arxiv.org/abs/2307.08691, https://arxiv.org/abs/2407.08608\n\n- The speedups depend on the baseline. The original FlashAttention was compared with standard attention. FlashAttention-2 and -3 are compared with earlier FlashAttention versions. The numbers are not comparable across papers, and they are not all against the same reference.\n  https://arxiv.org/abs/2205.14135, https://arxiv.org/abs/2307.08691, https://arxiv.org/abs/2407.08608\n\n- The end-to-end gains are much smaller than the kernel gains. BERT-large at length 512 improved 15%, versus 3× for GPT-2 at length 1K. Attention is only part of total runtime, and the benefit grows with sequence length. The sequence-length dependence is my inference from the reported range of results. The abstract doesn't state it.\n  https://arxiv.org/abs/2205.14135\n\n- The FP8 accuracy claim is relative. The 2.6× lower error is measured against a baseline FP8 attention, not against FP16 or higher precision. FP8 results are also not \"exact\" in the same sense as FP16.\n  https://arxiv.org/abs/2407.08608\n\n- The abstracts don't list limitations explicitly. A full assessment, such as small-batch behavior, short sequences, other accelerators or memory-bound regimes, would need the full papers or independent benchmarks. I did not retrieve those.",
+  "final_answer_sha256": "4defbb4c2b708556128fcb389994e0eb6cfeea6bf15e9a16c837f35ab5a9e2ec",
+  "raw_stream_sha256": "90611835ae922ef5ddc9bfbe3f4c25bc96af6b64310e296e4a5c2585a81ea348"
+}

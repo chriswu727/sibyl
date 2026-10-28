@@ -1,0 +1,73 @@
+{
+  "case_id": "real03",
+  "condition": "native",
+  "elapsed_seconds": 38.4,
+  "timed_out": false,
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 4,
+  "cli_reported_cost_usd": 0.0691263,
+  "usage": {
+    "input_tokens": 6,
+    "cache_creation_input_tokens": 2830,
+    "cache_read_input_tokens": 11274,
+    "output_tokens": 1240,
+    "output_tokens_details": {
+      "thinking_tokens": 290
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 2830,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [],
+    "speed": "standard",
+    "fallback_credit": null
+  },
+  "model_usage": {
+    "claude-sonnet-5-5": {
+      "inputTokens": 13506,
+      "outputTokens": 1808,
+      "cacheReadInputTokens": 11274,
+      "cacheCreationInputTokens": 2830,
+      "webSearchRequests": 1,
+      "costUSD": 0.0675394,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 290,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 2830,
+      "canonicalModel": "claude-sonnet-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    },
+    "claude-haiku-5-5": {
+      "inputTokens": 12229,
+      "outputTokens": 728,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.0015869,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 396,
+      "cacheCreationEphemeral5mInputTokens": 0,
+      "cacheCreationEphemeral1hInputTokens": 0,
+      "canonicalModel": "claude-haiku-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "tool_calls": {
+    "WebSearch": 1,
+    "WebFetch": 2
+  },
+  "final_answer": "**Direct answer:** Sagg Eco Village is in the Ganderbal district of Kashmir, in the Union Territory of Jammu & Kashmir. The search snippets put it near Lar, in the Harmukh foothills, about 6 km from Ganderbal town. I could only confirm \"Ganderbal\" by reading a page. The finer detail comes from search snippets and is less certain.\n\n**Claims and sources**\n\nConfirmed by reading the page:\n- It is located in Ganderbal, Jammu & Kashmir, India. https://ecovillage.org/map/community/sagg-eco-village/\n- It describes itself as J&K's first eco village, started in 2013, and runs as a natural farm and cultural retreat center. https://ecovillage.org/map/community/sagg-eco-village/\n- Its website is saggecovillage.earth. https://ecovillage.org/map/community/sagg-eco-village/\n\nFrom search snippets only (I didn't open these pages, and the Mapcarta page returned a 403 error):\n- The address is Watlar Wuder, Lar, Ganderbal, PIN 191201. Trip.com gives it as Lar – Chunt Waliwar Road, Ganderbal. https://sg.trip.com/travel-guide/attraction/ganderbal/sagg-eco-village-the-best-offbeat-recreational-destination-in-kashmir-141839954\n- The coordinates are about 34.272°N, 74.760°E. https://mapcarta.com/N5931593287\n- Justdial lists the locality as Warpora, Ganderbal, which differs slightly from the Lar address. https://www.justdial.com/Ganderbal/Sagg-Eco-Village-Ganderbal-ho/9999PX194-X194-220509221200-H3C3_BZDET\n\nI didn't find the \"Harmukh foothills\" or \"6 km from Ganderbal town\" claims in any page I read, so treat them as unverified.",
+  "final_answer_sha256": "c2e3fbe9cda574e04f6f90ee9304836bf267004fd8d67ec1fc126103ca14cc89",
+  "raw_stream_sha256": "d5ab11f885caf1e46874bae58c712979faae4e4de0fafb59d10cc660a6ca9b75"
+}
