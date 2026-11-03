@@ -33,11 +33,11 @@ report = [
     "pillow>=13.0.0",
 ]
 extract = ["trafilatura>=2.0,<3.0"]
-pdf = ["pypdf>=6.21.2,<7"]
+pdf = ["pypdf>=6.21.4,<7"]
 monitor = ["uvicorn>=0.54.0,<1"]
 rerank = ["flashrank>=0.2.10,<0.3"]
 all = [
-    "pypdf>=6.21.2,<7",
+    "pypdf>=6.21.4,<7",
     "uvicorn>=0.54.0,<1",
     "pillow>=13.0.0",
     "fpdf2>=2.7.0",
